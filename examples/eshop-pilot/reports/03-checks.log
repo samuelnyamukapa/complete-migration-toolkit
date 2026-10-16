@@ -1,0 +1,111 @@
+﻿== 03-checks  2026-10-16T15:00:04.4545015+01:00
+-- git pull
+Already up to date.
+-- exit 0
+-- cmtk commit
+3a71a39 Keep Node's experimental-feature warning out of cmtk output
+-- exit 0
+-- npm run build
+
+> build
+> tsc -b packages/core packages/cli packages/mcp
+
+-- exit 0
+canary: scratch CatalogCore now rounds the page count down (Math.Floor)
+-- build probe with the canary
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.56
+
+Workload updates are available. Run `dotnet workload list` for more information.
+-- exit 0
+-- cmtk compare (canary, must be NO PARITY)
+Comparison verdict for eshop-canary: NO PARITY
+Cases: 17 match, 0 drift, 7 different, 0 skipped, 0 error
+  DIFFERENT SVC-1-01 first page of 10: $.TotalPages: 2 vs 1
+  DIFFERENT SVC-1-02 second page holds items 11 and 12: $.TotalPages: 2 vs 1
+  DIFFERENT SVC-1-04 a page past the end is empty: $.TotalPages: 2 vs 1
+  DIFFERENT SVC-1-06 a negative page size returns nothing and -1 pages: $.TotalPages: -1 vs -2
+  DIFFERENT SVC-1-07 a negative page index skips nothing: $.TotalPages: 2 vs 1
+  DIFFERENT SVC-1-08 third page of 5 holds 2 items: $.TotalPages: 3 vs 2
+  DIFFERENT SVC-1-09 page size times index overflows int (RULE-004 suspected defect): $.TotalPages: 1 vs 0
+Report: cmtk\evidence-canary\compare\REPORT.md
+7 cases answered differently.
+Next: for each difference: scrub it if it is noise, approve it as drift in the drift ledger (a named person), or fix the candidate. Then `cmtk compare` again.
+-- exit 1
+canary compare exit 1 (1 means the planted defect was caught)
+canary removed: scratch CatalogCore restored
+-- rebuild probe without the canary
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.52
+
+Workload updates are available. Run `dotnet workload list` for more information.
+-- exit 0
+-- cmtk compare (restored, must be PARITY)
+Comparison verdict for eshop-catalogcore: PARITY
+Cases: 24 match, 0 drift, 0 different, 0 skipped, 0 error
+Report: cmtk\evidence-catalogcore\compare\REPORT.md
+No differences at all.
+Next: a person reviews the report and signs it with `cmtk signoff compare`.
+-- exit 0
+-- record HAR in Edge
+open the catalog: http://localhost:53190/
+next page: http://localhost:53190/?pageSize=10&pageIndex=1
+previous page: http://localhost:53190/?pageSize=10&pageIndex=0
+open an item: http://localhost:53190/Catalog/Details/5
+back to the list: http://localhost:53190/
+open the create form: http://localhost:53190/Catalog/Create
+open an edit form: http://localhost:53190/Catalog/Edit/2
+open a delete confirmation: http://localhost:53190/Catalog/Delete/3
+show 12 per page: http://localhost:53190/Catalog/Index?pageSize=12&pageIndex=0
+brands API: http://localhost:53190/api/brands
+one brand: http://localhost:53190/api/brands/3
+HAR saved: D:\githubProjects\cmtk-pilot-eshop\recording.har
+-- exit 0
+-- cmtk import-har
+Added 17 cases to cmtk\cases\imported\har.yaml; skipped 180 (static files, filtered or duplicates).
+Dropped these headers from every case: accept-encoding, connection, cookie, host, referer, sec-ch-ua, sec-ch-ua-mobile, sec-ch-ua-platform, sec-fetch-dest, sec-fetch-mode, sec-fetch-site, sec-fetch-user, upgrade-insecure-requests, user-agent. Credentials come from headers_from_env at run time.
+Next: name each case's requirement, add `expect:` checks for `cmtk run`, then run it.
+-- exit 0
+-- MCP server from a Windows client
+pass  four tools and no sign-off  (cmtk_compare,cmtk_import_har,cmtk_run,cmtk_status)
+pass  cmtk_status with a Windows path  (run: FAIL on 2026-10-16, not signed)
+pass  import_har refuses out=D:\elsewhere\x.yaml  (cmtk: D:\elsewhere\x.yaml is outside the project folder.)
+pass  import_har refuses out=\\server\share\x.yaml  (cmtk: \\server\share\x.yaml is outside the project folder.)
+pass  import_har refuses out=..\outside.yaml  (cmtk: ..\outside.yaml is outside the project folder.)
+-- exit 0
+raw HAR deleted (it may hold secrets and is not evidence)
+-- init in a folder with a space
+Wrote cmtk.yaml, cmtk/cases/example.yaml and cmtk/drift.yaml.
+Next: edit the example case for your system, then `cmtk run`.
+-- exit 0
+-- run with a relative --manifest
+Test verdict for runbook-check: PASS
+Cases: 1 pass, 0 fail, 0 skipped, 0 error
+Report: cmtk\evidence\run\REPORT.md
+All 1 case passed.
+Next: a person reviews the report and signs it with `cmtk signoff run`.
+-- exit 0
+-- run with a $env: header and evidence past 260 characters
+Test verdict for runbook-check: PASS
+Cases: 1 pass, 0 fail, 0 skipped, 0 error
+Report: cmtk\evidence-segment-001\evidence-segment-002\evidence-segment-003\evidence-segment-004\evidence-segment-005\evidence-segment-006\evidence-segment-007\evidence-segment-008\evidence-segment-009\evidence-segment-010\run\REPORT.md
+All 1 case passed.
+Next: a person reviews the report and signs it with `cmtk signoff run`.
+-- exit 0
+-- scan for long paths and the secret
+longest path: 292 characters (D:\githubProjects\cmtk-pilot-eshop\runbook check\cmtk\evidence-segment-001\evidence-segment-002\evidence-segment-003\evidence-segment-004\evidence-segment-005\evidence-segment-006\evidence-segment-007\evidence-segment-008\evidence-segment-009\evidence-segment-010\run\answers\EXAMPLE-001.json)
+files holding the text: none
+-- exit 0
+-- signoff with piped input must refuse
+cmtk: Sign-off is for a person at a keyboard: run `cmtk signoff` in a terminal yourself. Agents and scripts do not sign.
+-- exit 3
+signoff exit 3 (3 means refused)
+== end 03-checks: exit 0

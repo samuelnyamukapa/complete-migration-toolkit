@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    One probe, built twice from the same source:
+      net472  against the legacy eShopLegacyMVC.dll, built in scratch\legacy from an untouched copy
+      net8.0  against CatalogCore, from a copy in scratch\catalogcore
+    It calls the catalog service the same way on both and prints the result as JSON.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net472;net8.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>CatalogProbe</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Reference Include="eShopLegacyMVC">
+      <HintPath>..\..\..\scratch\legacy\src\eShopLegacyMVC\bin\eShopLegacyMVC.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <ProjectReference Include="..\..\..\scratch\catalogcore\CatalogCore\CatalogCore.csproj" />
+  </ItemGroup>
+</Project>

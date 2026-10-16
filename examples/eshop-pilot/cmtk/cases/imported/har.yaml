@@ -1,0 +1,170 @@
+# Imported from HAR recordings. Add `requirement:` and `expect:` to turn them into tests.
+cases:
+  - id: HAR-001
+    name: GET /items/2/pic
+    request:
+      method: GET
+      path: /items/2/pic
+      headers:
+        Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har
+  - id: HAR-002
+    name: GET /items/3/pic
+    request:
+      method: GET
+      path: /items/3/pic
+      headers:
+        Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har
+  - id: HAR-003
+    name: GET /items/4/pic
+    request:
+      method: GET
+      path: /items/4/pic
+      headers:
+        Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har
+  - id: HAR-004
+    name: GET /items/5/pic
+    request:
+      method: GET
+      path: /items/5/pic
+      headers:
+        Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har
+  - id: HAR-005
+    name: GET /items/6/pic
+    request:
+      method: GET
+      path: /items/6/pic
+      headers:
+        Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har
+  - id: HAR-006
+    name: GET /items/7/pic
+    request:
+      method: GET
+      path: /items/7/pic
+      headers:
+        Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har
+  - id: HAR-007
+    name: GET /items/8/pic
+    request:
+      method: GET
+      path: /items/8/pic
+      headers:
+        Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har
+  - id: HAR-008
+    name: GET /items/9/pic
+    request:
+      method: GET
+      path: /items/9/pic
+      headers:
+        Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har
+  - id: HAR-009
+    name: GET /items/10/pic
+    request:
+      method: GET
+      path: /items/10/pic
+      headers:
+        Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har
+  - id: HAR-010
+    name: GET /?pageSize=10&pageIndex=1
+    request:
+      method: GET
+      path: /?pageSize=10&pageIndex=1
+      headers:
+        Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har
+  - id: HAR-011
+    name: GET /items/11/pic
+    request:
+      method: GET
+      path: /items/11/pic
+      headers:
+        Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har
+  - id: HAR-012
+    name: GET /items/12/pic
+    request:
+      method: GET
+      path: /items/12/pic
+      headers: {}
+      body: null
+    source: har:recording.har
+  - id: HAR-013
+    name: GET /?pageSize=10&pageIndex=0
+    request:
+      method: GET
+      path: /?pageSize=10&pageIndex=0
+      headers:
+        Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har
+  - id: HAR-014
+    name: GET /Catalog/Details/5
+    request:
+      method: GET
+      path: /Catalog/Details/5
+      headers:
+        Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har
+  - id: HAR-015
+    name: GET /Catalog/Edit/2
+    request:
+      method: GET
+      path: /Catalog/Edit/2
+      headers:
+        Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har
+  - id: HAR-016
+    name: GET /Catalog/Delete/3
+    request:
+      method: GET
+      path: /Catalog/Delete/3
+      headers:
+        Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har
+  - id: HAR-017
+    name: GET /api/brands/3
+    request:
+      method: GET
+      path: /api/brands/3
+      headers:
+        Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+        Accept-Language: en-GB,en;q=0.9,en-US;q=0.8
+      body: null
+    source: har:recording.har

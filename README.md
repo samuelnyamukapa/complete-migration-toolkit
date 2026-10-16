@@ -2,7 +2,11 @@
 
 Test any system from its requirements, and prove a migrated system behaves like the old one, with every intended drift approved and signed.
 
-> **Status: 0.1.1, early.** The engine, the `cmtk` command and the MCP server work and are tested on Windows and Linux, against local test servers. The toolkit has not yet run on a real project; the first pilot is the eShop sandbox. See [docs/PLAN.md](docs/PLAN.md).
+> **Status: 0.1.2, early.** The engine, the `cmtk` command and the MCP server work and are tested on Windows and Linux. The first pilot, on the eShop sandbox, has run:
+> - `cmtk run` passed 40 of 41 cases on legacy eShop; the one failure is a legacy defect.
+> - `cmtk compare` found parity with CatalogCore across 24 cases, and caught a planted defect.
+>
+> The reports are waiting for a person's sign-off. See [docs/pilots/eshop.md](docs/pilots/eshop.md) and [docs/PLAN.md](docs/PLAN.md).
 
 ## Why
 
@@ -108,7 +112,8 @@ The MCP server gives an agent the same verbs a person has: `cmtk_run`, `cmtk_com
 | `packages/core` | The engine: settings, cases, adapters, expectations, comparison, contracts, drift, reports |
 | `packages/cli` | The `cmtk` command and the adapter template |
 | `packages/mcp` | The MCP server |
-| `docs/` | Plan, test plan, runbook, settings reference, adapter guide |
+| `docs/` | Plan, test plan, runbook, settings reference, adapter guide, pilot write-ups |
+| `examples/eshop-pilot` | The first pilot's folder, as a worked example: cases, an adapter for a .NET class library, and Windows scripts |
 
 ## Contributing
 

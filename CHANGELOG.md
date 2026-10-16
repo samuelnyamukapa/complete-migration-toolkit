@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.1.2 (2026-10-16)
+
+Fixes from the first pilot, on the eShop sandbox. The write-up is [docs/pilots/eshop.md](docs/pilots/eshop.md).
+
+### Added
+
+- **Targets reached only through an adapter.** A target can leave out `base_url` and give settings instead, such as `{ probe: probes/legacy.exe }`. Adapters receive them in `target`. An HTTP case on such a target is an error that says why.
+- **The eShop pilot as a worked example** in `examples/eshop-pilot`:
+  - its cases;
+  - an adapter that compares a .NET Framework assembly with its .NET 8 rebuild through one C# probe;
+  - the Windows scripts that ran it.
+
+### Fixed
+
+- Node 22 versions before 22.17 no longer print an "ExperimentalWarning" on every command.
+- Imported HAR cases record the file's name, not the folder it was in.
+- The runbook covers the pilot's Windows problems: a broken `npm` command, a `git pull` permission error, and imported cases replaying the browser's `Accept` header.
+
+### Verified
+
+- 41 tests on Windows and Linux.
+- On the pilot machine (Windows 10, PowerShell 5.1, Node.js 22.14), each of these worked:
+  - a case file with Windows line endings;
+  - a folder name with a space, and a relative `--manifest`;
+  - a 292-character evidence path;
+  - credentials from `$env:`;
+  - sign-off refusing piped input;
+  - the MCP server driven by a Windows client.
+
 ## 0.1.1 (2026-10-16)
 
 Fixes from an independent review of 0.1.0. Every fix has a regression test (`packages/core/test/review.test.mjs`).

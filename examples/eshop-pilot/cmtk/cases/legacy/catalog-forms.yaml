@@ -1,0 +1,44 @@
+# CAT-3: the create, edit and delete forms. Only the forms are fetched (GET); nothing is posted.
+# Sources: RULE-009, RULE-016.
+cases:
+  - id: CAT-3-01
+    name: the create form offers every brand and type and carries an anti-forgery token
+    requirement: CAT-3/AC-1
+    request: GET /Catalog/Create
+    expect:
+      status: 200
+      body_contains: ["Create - Catalog manager (MVC)", "__RequestVerificationToken", "Visual Studio", "USB Memory Stick"]
+
+  - id: CAT-3-02
+    name: the edit form loads the item and carries an anti-forgery token
+    requirement: CAT-3/AC-2
+    request: GET /Catalog/Edit/1
+    expect:
+      status: 200
+      body_contains: ["Edit - Catalog manager (MVC)", "__RequestVerificationToken", ".NET Bot Black Hoodie"]
+
+  - id: CAT-3-03
+    name: editing an unknown item gives 404
+    requirement: CAT-3/AC-3
+    request: GET /Catalog/Edit/999
+    expect: { status: 404 }
+
+  - id: CAT-3-04
+    name: editing without an id gives 400
+    requirement: CAT-3/AC-3
+    request: GET /Catalog/Edit
+    expect: { status: 400 }
+
+  - id: CAT-3-05
+    name: the delete page asks for confirmation
+    requirement: CAT-3/AC-4
+    request: GET /Catalog/Delete/1
+    expect:
+      status: 200
+      body_contains: ["Are you sure you want to delete this?", ".NET Bot Black Hoodie"]
+
+  - id: CAT-3-06
+    name: deleting an unknown item gives 404
+    requirement: CAT-3/AC-3
+    request: GET /Catalog/Delete/999
+    expect: { status: 404 }

@@ -1,0 +1,19 @@
+# eShop pilot, part 1: `cmtk run` checks the legacy eShop against the catalog stories.
+# The system under test is a scratch copy of legacy eShop (built by 01-setup, mock data, hosted
+# by IIS Express on port 53190 by 02-start). The sandbox itself is never touched.
+system: eshop-legacy
+
+targets:
+  legacy: { base_url: http://localhost:53190 }
+
+default_target: legacy
+match: exact
+compare_headers: [content-type]
+
+cases: [cmtk/cases/legacy/*.yaml]
+drift: cmtk/drift.yaml
+evidence: cmtk/evidence
+
+allow_unsafe_methods: false   # read-only: GET, HEAD and OPTIONS only
+headers_from_env: {}          # eShop has no login
+timeout_s: 120                # the first request compiles the site

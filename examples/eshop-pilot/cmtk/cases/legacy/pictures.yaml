@@ -1,0 +1,21 @@
+# CAT-4: item pictures. Sources: RULE-010, RULE-032.
+cases:
+  - id: CAT-4-01
+    name: an item's picture is served as PNG
+    requirement: CAT-4/AC-1
+    request: GET /items/1/pic
+    expect:
+      status: 200
+      headers: { Content-Type: image/png }
+
+  - id: CAT-4-02
+    name: picture id 0 gives 400
+    requirement: CAT-4/AC-2
+    request: GET /items/0/pic
+    expect: { status: 400 }
+
+  - id: CAT-4-03
+    name: an unknown item's picture gives 404
+    requirement: CAT-4/AC-2
+    request: GET /items/999/pic
+    expect: { status: 404 }

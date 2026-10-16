@@ -1,0 +1,35 @@
+# The catalog service, called directly on the legacy build and on CatalogCore. Each request path
+# is an operation of the catalog adapter (adapters/catalog/probe/Program.cs). Sources:
+# analysis/eshop/BUSINESS_RULES.md (RULE-004, 005, 011, 013, 014, 030) and DELTA_CATALOG.md (DELTA-023, 029).
+cases:
+  # SVC-1: paging (RULE-004, RULE-005)
+  - { id: SVC-1-01, surface: catalog, requirement: CAT-1/AC-1, name: first page of 10, request: "GET /items?pageSize=10&pageIndex=0" }
+  - { id: SVC-1-02, surface: catalog, requirement: CAT-1/AC-2, name: second page holds items 11 and 12, request: "GET /items?pageSize=10&pageIndex=1" }
+  - { id: SVC-1-03, surface: catalog, requirement: CAT-1/AC-3, name: one page of 12, request: "GET /items?pageSize=12&pageIndex=0" }
+  - { id: SVC-1-04, surface: catalog, requirement: CAT-1/AC-4, name: a page past the end is empty, request: "GET /items?pageSize=10&pageIndex=5" }
+  - { id: SVC-1-05, surface: catalog, requirement: CAT-1/AC-5, name: page size 0 throws, request: "GET /items?pageSize=0&pageIndex=0" }
+  - { id: SVC-1-06, surface: catalog, requirement: CAT-1/AC-6, name: a negative page size returns nothing and -1 pages, request: "GET /items?pageSize=-10&pageIndex=0" }
+  - { id: SVC-1-07, surface: catalog, requirement: CAT-1/AC-6, name: a negative page index skips nothing, request: "GET /items?pageSize=10&pageIndex=-1" }
+  - { id: SVC-1-08, surface: catalog, requirement: CAT-1/AC-3, name: third page of 5 holds 2 items, request: "GET /items?pageSize=5&pageIndex=2" }
+  - { id: SVC-1-09, surface: catalog, requirement: CAT-1/AC-6, name: page size times index overflows int (RULE-004 suspected defect), request: "GET /items?pageSize=2147483647&pageIndex=2" }
+
+  # SVC-2: one item (RULE-016 for the pages built on it)
+  - { id: SVC-2-01, surface: catalog, requirement: CAT-2/AC-1, name: item 1, request: "GET /items/1" }
+  - { id: SVC-2-02, surface: catalog, requirement: CAT-2/AC-1, name: item 12, request: "GET /items/12" }
+  - { id: SVC-2-03, surface: catalog, requirement: CAT-2/AC-2, name: unknown item is null, request: "GET /items/999" }
+  - { id: SVC-2-04, surface: catalog, requirement: CAT-2/AC-2, name: item 0 is null, request: "GET /items/0" }
+
+  # SVC-3: brands and types (RULE-030)
+  - { id: SVC-3-01, surface: catalog, requirement: API-1/AC-1, name: the five brands, request: "GET /brands" }
+  - { id: SVC-3-02, surface: catalog, requirement: CAT-3/AC-1, name: the four types, request: "GET /types" }
+
+  # VAL-1: item validation (RULE-011, RULE-013, RULE-014, DELTA-023, DELTA-029)
+  - { id: VAL-1-01, surface: catalog, requirement: VAL-1/AC-1, name: a normal item is valid, request: "GET /validate?name=Mug&price=19.50&culture=en-US" }
+  - { id: VAL-1-02, surface: catalog, requirement: VAL-1/AC-2, name: a name is required, request: "GET /validate?name=&price=1&culture=en-US" }
+  - { id: VAL-1-03, surface: catalog, requirement: VAL-1/AC-2, name: a name of spaces is not a name, request: "GET /validate?name=%20%20&price=1&culture=en-US" }
+  - { id: VAL-1-04, surface: catalog, requirement: VAL-1/AC-3, name: three decimals are rejected, request: "GET /validate?name=Mug&price=19.999&culture=en-US" }
+  - { id: VAL-1-05, surface: catalog, requirement: VAL-1/AC-3, name: a negative price is rejected, request: "GET /validate?name=Mug&price=-0.01&culture=en-US" }
+  - { id: VAL-1-06, surface: catalog, requirement: VAL-1/AC-4, name: 1000000.50 passes the range check because it rounds first (DELTA-029), request: "GET /validate?name=Mug&price=1000000.50&culture=en-US" }
+  - { id: VAL-1-07, surface: catalog, requirement: VAL-1/AC-4, name: 1000000.51 fails the range check (DELTA-029), request: "GET /validate?name=Mug&price=1000000.51&culture=en-US" }
+  - { id: VAL-1-08, surface: catalog, requirement: VAL-1/AC-5, name: a decimal price fails in a comma-decimal culture (DELTA-023), request: "GET /validate?name=Mug&price=19.50&culture=fr-FR" }
+  - { id: VAL-1-09, surface: catalog, requirement: VAL-1/AC-6, name: stock levels must be 0 to 10 million, request: "GET /validate?name=Mug&price=1&stock=-1&restock=10000001&maxstock=10000000&culture=en-US" }

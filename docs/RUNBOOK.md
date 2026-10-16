@@ -60,6 +60,8 @@ Follow these steps in order. Each one says what to do, what you should see, and 
    2. Save the file in the project folder.
    3. Run `cmtk import-har recording.har`. Cookies, tokens, API keys, images and duplicates are left out, and passwords or tokens in a query string or a request body become `REDACTED`.
    4. If it says it replaced values with REDACTED, open those cases and put in test values, or set up `headers_from_env` for them.
+   5. Imported cases replay the browser's headers, including `Accept`. A Web API may then answer in a different format than it gives other callers, such as XML instead of JSON. Keep the header if that is what consumers send; remove it if not.
+   6. Give each case you keep a `requirement` and an `expect:` block, then move it into a folder your `cases:` setting reads. Delete the HAR file: it is not evidence, and it can hold secrets.
 
 4. **List the contracts consumers rely on** under `contracts:` in `cmtk.yaml`: the OpenAPI JSON and any WSDL, each at its path on both systems. Contracts are locked: every change, even an added operation, shows as a difference until a named person approves it in the drift ledger.
 
@@ -98,3 +100,6 @@ Follow these steps in order. Each one says what to do, what you should see, and 
 | `Sign-off is for a person at a keyboard` | Run `cmtk signoff` yourself, in a terminal |
 | `holds a line break or another control character` | The token variable has a stray newline: set it again, for example with `$env:CMTK_TOKEN = "Bearer …"` |
 | `leads outside the project folder through a link` | `evidence` (or a case file) points through a link to another folder. Use a folder inside the project |
+| `npm` fails with "Cannot find module … npm-cli.js" (Windows) | Your `npm` command points at a missing install. Run Node's own copy: `& 'C:\Program Files\nodejs\npm.cmd' ci` |
+| `git pull` fails with "unable to write file … Permission denied" (Windows) | Run it again as `git -c core.fscache=false -c core.preloadindex=false pull` |
+| `has no base_url, so HTTP cases cannot run on it` | That target is reached through an adapter only. Give the case the adapter's `surface:`, or use a manifest whose cases suit that target |

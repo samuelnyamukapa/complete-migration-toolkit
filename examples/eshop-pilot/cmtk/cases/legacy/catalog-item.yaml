@@ -1,0 +1,21 @@
+# CAT-2: a catalog manager opens one item. Sources: RULE-002, RULE-016.
+cases:
+  - id: CAT-2-01
+    name: an item's details show its name and its picture address
+    requirement: CAT-2/AC-1
+    request: GET /Catalog/Details/1
+    expect:
+      status: 200
+      body_contains: ["Details - Catalog manager (MVC)", ".NET Bot Black Hoodie", "/items/1/pic"]
+
+  - id: CAT-2-02
+    name: an unknown item gives 404
+    requirement: CAT-2/AC-2
+    request: GET /Catalog/Details/999
+    expect: { status: 404 }
+
+  - id: CAT-2-03
+    name: details without an id give 400
+    requirement: CAT-2/AC-3
+    request: GET /Catalog/Details
+    expect: { status: 400 }

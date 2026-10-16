@@ -1,0 +1,23 @@
+# eShop pilot, part 2: `cmtk compare` checks CatalogCore against the legacy catalog.
+# CatalogCore is a .NET 8 class library with no web host yet, so the comparison is made at the
+# catalog service interface: the catalog adapter (adapters/catalog) runs the same probe, built
+# once against the real legacy assembly (.NET Framework 4.7.2) and once against CatalogCore
+# (.NET 8), and each case calls the same service method on both.
+system: eshop-catalogcore
+
+targets:
+  legacy:    { probe: probe/bin/Release/net472/CatalogProbe.exe }   # legacy eShopLegacyMVC.dll
+  candidate: { probe: probe/bin/Release/net8.0/CatalogProbe.exe }   # CatalogCore
+
+reference: legacy
+candidate: candidate
+match: exact
+compare_headers: [content-type]
+
+cases: [cmtk/cases/catalogcore/*.yaml]
+drift: cmtk/drift-catalogcore.yaml
+evidence: cmtk/evidence-catalogcore
+
+allow_unsafe_methods: false
+adapters:
+  catalog: { command: node, args: [adapters/catalog/index.mjs], timeout_s: 60 }

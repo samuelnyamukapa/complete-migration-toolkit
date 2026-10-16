@@ -1,0 +1,3 @@
+# Approved drift: differences a named person accepted. Only a person adds an entry, with id,
+# where (copied from the report), reason and approved_by. An agent may propose one; it never adds it.
+drift: []

@@ -1,0 +1,10 @@
+scratch/
+tools/
+logs/
+checksums/
+cmtk/evidence*/
+runbook check/
+adapters/catalog/probe/bin/
+adapters/catalog/probe/obj/
+pilot-files.tgz
+*.har

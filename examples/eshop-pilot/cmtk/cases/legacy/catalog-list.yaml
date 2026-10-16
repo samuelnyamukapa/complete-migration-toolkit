@@ -1,0 +1,50 @@
+# CAT-1: a catalog manager browses the catalog a page at a time.
+# Sources: analysis/eshop/BUSINESS_RULES.md RULE-004, RULE-005, RULE-006, RULE-030.
+cases:
+  - id: CAT-1-01
+    name: the first page lists items 1 to 10 of the 12 seeded items
+    requirement: CAT-1/AC-1
+    request: GET /
+    expect:
+      status: 200
+      headers: { Content-Type: { matches: "^text/html" } }
+      body_contains: ["Showing 10 of 12 products - Page 1 - 2", ".NET Bot Black Hoodie", ".NET Foundation Sheet"]
+
+  - id: CAT-1-02
+    name: the second page lists items 11 and 12, and the summary still says 10 (RULE-006 quirk)
+    requirement: CAT-1/AC-2
+    request: GET /Catalog/Index?pageSize=10&pageIndex=1
+    expect:
+      status: 200
+      body_contains: ["Showing 10 of 12 products - Page 2 - 2", "Cup&lt;T&gt; Sheet", "Prism White TShirt"]
+
+  - id: CAT-1-03
+    name: a page size of 12 shows the whole catalog on one page
+    requirement: CAT-1/AC-3
+    request: GET /Catalog/Index?pageSize=12&pageIndex=0
+    expect:
+      status: 200
+      body_contains: ["Showing 12 of 12 products - Page 1 - 1"]
+
+  - id: CAT-1-04
+    name: a page past the end is empty, not an error
+    requirement: CAT-1/AC-4
+    request: GET /Catalog/Index?pageSize=10&pageIndex=5
+    expect:
+      status: 200
+      body_contains: ["Showing 10 of 12 products - Page 6 - 2"]
+
+  - id: CAT-1-05
+    name: a page size of 0 fails with a server error (RULE-005 known defect, kept for parity)
+    requirement: CAT-1/AC-5
+    request: GET /Catalog/Index?pageSize=0&pageIndex=0
+    expect:
+      status: 500
+
+  - id: CAT-1-06
+    name: a negative page size is not rejected in mock mode (RULE-004 quirk)
+    requirement: CAT-1/AC-6
+    request: GET /Catalog/Index?pageSize=-10&pageIndex=0
+    expect:
+      status: 200
+      body_contains: ["Showing -10 of 12 products - Page 1 - -1"]

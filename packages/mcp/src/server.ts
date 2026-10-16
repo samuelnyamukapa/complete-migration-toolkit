@@ -16,7 +16,7 @@ import { casesToYaml, compare, describeSignoff, importHar, inside, loadCases, lo
 process.removeAllListeners("warning");
 process.on("warning", (w) => { if (w.name !== "ExperimentalWarning") console.error(`${w.name}: ${w.message}`); });
 
-const server = new McpServer({ name: "cmtk", version: "0.1.1" }, {
+const server = new McpServer({ name: "cmtk", version: "0.1.2" }, {
     instructions:
         "Complete Migration Toolkit. `cmtk_run` checks one system against each case's expectations; `cmtk_compare` sends each case to the " +
         "reference and the candidate and diffs the answers. Pass `manifest` as the absolute path of cmtk.yaml. Never add drift, scrub " +
