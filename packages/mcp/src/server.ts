@@ -11,6 +11,11 @@ import { z } from "zod";
 
 import { casesToYaml, compare, describeSignoff, importHar, inside, loadCases, loadManifest, run, signoffState, type Report } from "@cmtk/core";
 
+// Node 22 before 22.17 flags fs.globSync and path.matchesGlob as experimental and prints a warning
+// on every run. They behave as documented, so keep that one warning out of what people read.
+process.removeAllListeners("warning");
+process.on("warning", (w) => { if (w.name !== "ExperimentalWarning") console.error(`${w.name}: ${w.message}`); });
+
 const server = new McpServer({ name: "cmtk", version: "0.1.1" }, {
     instructions:
         "Complete Migration Toolkit. `cmtk_run` checks one system against each case's expectations; `cmtk_compare` sends each case to the " +

@@ -13,6 +13,11 @@ import {
     readStructured, recordSignoff, run, signoffState, SignoffError, STARTER_MANIFEST, type Case, type Report,
 } from "@cmtk/core";
 
+// Node 22 before 22.17 flags fs.globSync and path.matchesGlob as experimental and prints a warning
+// on every run. They behave as documented, so keep that one warning out of what people read.
+process.removeAllListeners("warning");
+process.on("warning", (w) => { if (w.name !== "ExperimentalWarning") console.error(`${w.name}: ${w.message}`); });
+
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const VERSION = JSON.parse(fs.readFileSync(path.join(HERE, "..", "package.json"), "utf8")).version as string;
 
