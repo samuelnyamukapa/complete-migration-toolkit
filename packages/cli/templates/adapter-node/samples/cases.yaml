@@ -1,0 +1,6 @@
+# Samples the conformance kit (`cmtk adapter check __NAME__`) replays twice against a dummy target.
+cases:
+  - id: SAMPLE-001
+    name: a first sample
+    surface: __NAME__
+    request: { method: GET, path: /sample }
