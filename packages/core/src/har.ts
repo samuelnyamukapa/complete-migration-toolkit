@@ -3,6 +3,7 @@
 // dropped, and credential-like query values and body fields (JSON, forms, XML and SOAP) become REDACTED.
 import crypto from "node:crypto";
 import fs from "node:fs";
+import path from "node:path";
 import YAML from "yaml";
 
 import { JsonNumber, JsonObject, parseJsonExact } from "./json.js";
@@ -141,7 +142,7 @@ export function importHar(files: string[], opts: { include?: string; exclude?: s
                 hidden ||= hit;
             }
             const id = `${prefix}-${String(n).padStart(3, "0")}`;
-            const c: Case = { id, name: `${method} ${p}`.slice(0, 120), request: { method, path: p, headers, body }, source: `har:${file}` };
+            const c: Case = { id, name: `${method} ${p}`.slice(0, 120), request: { method, path: p, headers, body }, source: `har:${path.basename(file)}` }; // the file name only: a full path can name a person's folders
             const k = key(c);
             if (seen.has(k)) { skipped++; continue; }
             seen.add(k);

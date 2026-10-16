@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { compare, loadManifest } from "../dist/index.js";
+import { compare, importHar, loadManifest } from "../dist/index.js";
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "cmtk-pilot-"));
 const write = (dir, rel, text) => {
@@ -38,4 +38,11 @@ adapters:
     assert.throws(() => loadManifest(path.join(dir, "cmtk.yaml")), /http/);
     write(dir, "cmtk.yaml", "system: s\ntargets:\n  legacy: { probe: [a, b] }\n");
     assert.throws(() => loadManifest(path.join(dir, "cmtk.yaml")), /text, a number or true\/false/);
+});
+
+test("imported cases name their HAR file, not the folder it was in", () => {
+    const dir = tmp();
+    write(dir, "private folder/recording.har", JSON.stringify({ log: { entries: [{ request: { method: "GET", url: "http://l/a", headers: [] } }] } }));
+    const r = importHar([path.join(dir, "private folder", "recording.har")]);
+    assert.equal(r.cases[0].source, "har:recording.har");
 });
