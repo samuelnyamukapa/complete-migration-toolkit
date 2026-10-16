@@ -1,5 +1,51 @@
 # Changelog
 
+## 0.1.1 (2026-10-16)
+
+Fixes from an independent review of 0.1.0. Every fix has a regression test (`packages/core/test/review.test.mjs`).
+
+### Fixed
+
+- **Long or endless answers.** The whole answer must now arrive within `timeout_s`, so a streaming endpoint no longer hangs a run. Reading stops at 5 MB, counted after decompression, so a compressed answer cannot exhaust memory.
+- **One bad case no longer ends a run.** An invalid header value, a missing adapter program, a failed reset or an invalid `matches` pattern now makes that case an error, and the run goes on.
+  - Problems with the settings stop the run before any evidence is touched: an unknown surface, a token with a stray newline, or a bad scrub rule.
+  - The evidence is replaced only once a run has finished.
+- **HAR import never writes a credential.** API-key, subscription-key and token headers are dropped. Credential-like values in query strings and request bodies (JSON, forms, XML and SOAP) become `REDACTED`, and the command lists the cases to fill in.
+- **The diff misses less.**
+  - Only an object's own keys are compared.
+  - Key order is kept as sent, including keys that look like numbers.
+  - Numbers keep every digit, also at `semantic`.
+  - Bytes that are not UTF-8 are kept exactly, and a change of encoding is reported at `exact`.
+  - In XML, moved mixed content and leading or trailing spaces in a value are differences at `exact`.
+  - Long values that differ near the end show where they differ.
+- **Every `where` can be approved as drift:** XML positions such as `Item[2]`, and JSON keys with quotes.
+- **Contracts are locked, as the plan says.** Every contract change, additions included, needs a drift entry (`contract:<name>: <finding>`). Breaking changes can now be approved too.
+- **Verdicts.**
+  - A run with `--only` can no longer PASS: it is INCOMPLETE.
+  - A system that is down gives "did not answer" advice instead of "add cases".
+  - After a partial run, drift for cases that did not run is not called unused.
+  - Each report states the reason for its verdict and the next step.
+- **Sign-off.** It records a fingerprint of the evidence in `SIGNOFF.json` and in the report. `cmtk status` shows who signed, or that a signature no longer counts. A report with no evidence cannot be signed. The docs now say plainly that a terminal prompt is not a lock.
+- **Paths.**
+  - Evidence and case files cannot reach outside the project through a link.
+  - `evidence` cannot be the project folder.
+  - The MCP server's path checks now work on Windows.
+- **Other fixes.**
+  - A request body written as a YAML mapping is sent as JSON.
+  - `equals` ignores key order.
+  - `cases:` may be a single glob.
+  - Case ids that would clash as Windows file names are refused.
+  - Proxies are bypassed even when Node is set to use one.
+- `cmtk adapter check` also checks `describe`, and adapters have a `timeout_s`.
+
+### Changed
+
+- Node.js 22.5 or later is required, for `path.matchesGlob`.
+
+### Verified
+
+- 37 tests on Windows and Linux: the 20 from 0.1.0 and 17 regression tests, one or more for each review finding.
+
 ## 0.1.0 (2026-10-16)
 
 First version: the engine, the `cmtk` command and the MCP server.

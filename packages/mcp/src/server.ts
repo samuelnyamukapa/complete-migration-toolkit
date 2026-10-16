@@ -9,9 +9,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-import { casesToYaml, compare, importHar, loadCases, loadManifest, run, type Report } from "@cmtk/core";
+import { casesToYaml, compare, describeSignoff, importHar, inside, loadCases, loadManifest, run, signoffState, type Report } from "@cmtk/core";
 
-const server = new McpServer({ name: "cmtk", version: "0.1.0" }, {
+const server = new McpServer({ name: "cmtk", version: "0.1.1" }, {
     instructions:
         "Complete Migration Toolkit. `cmtk_run` checks one system against each case's expectations; `cmtk_compare` sends each case to the " +
         "reference and the candidate and diffs the answers. Pass `manifest` as the absolute path of cmtk.yaml. Never add drift, scrub " +
@@ -24,8 +24,8 @@ const manifestArg = z.string().describe("Absolute path of the project's cmtk.yam
 const text = (t: string, isError = false) => ({ content: [{ type: "text" as const, text: t }], isError });
 
 function summary(r: Report): string {
-    const lines = [`verdict: ${r.verdict}`, `cases: ${Object.entries(r.counts).map(([k, v]) => `${v} ${k.toLowerCase()}`).join(", ")}`];
-    for (const k of r.contracts) lines.push(`contract ${k.name}: ${k.result}${k.findings.length ? ` — ${k.findings.map((f) => f.what).join("; ")}` : ""}`);
+    const lines = [`verdict: ${r.verdict}${r.partial ? " (partial run)" : ""}`, r.reason, `cases: ${Object.entries(r.counts).map(([k, v]) => `${v} ${k.toLowerCase()}`).join(", ")}`];
+    for (const k of r.contracts) lines.push(`contract ${k.name}: ${k.result}${k.findings.length ? ` — ${k.findings.map((f) => `${f.what}${f.drift ? ` (drift ${f.drift})` : ""}`).join("; ")}` : ""}`);
     for (const c of r.cases.filter((x) => x.result !== "PASS" && x.result !== "MATCH").slice(0, 40)) {
         const detail = c.failures?.map((f) => `${f.check}: expected ${f.expected}, got ${f.actual}`).join("; ")
             ?? c.differences?.map((d) => `${d.where}: ${d.reference} vs ${d.candidate}${d.drift ? ` (drift ${d.drift})` : ""}`).join("; ")
@@ -34,7 +34,8 @@ function summary(r: Report): string {
     }
     if (r.suggested_scrubs.length) lines.push(`probably noise (ask a person before scrubbing): ${r.suggested_scrubs.map((s) => s.where).join(", ")}`);
     if (r.unused_drift.length) lines.push(`drift that matched nothing: ${r.unused_drift.join(", ")}`);
-    lines.push("The full report is REPORT.md in the evidence folder. A person signs it with `cmtk signoff`.");
+    lines.push(`next: ${r.next}`);
+    lines.push("The full report is REPORT.md in the evidence folder. Only a person signs it, with `cmtk signoff`.");
     return lines.join("\n");
 }
 
@@ -70,16 +71,15 @@ server.registerTool("cmtk_import_har", {
     },
 }, async (a) => guarded(() => {
     const m = loadManifest(a.manifest);
-    const files = a.har.map((f) => path.resolve(m.root, f));
-    for (const f of files) if (path.relative(m.root, f).startsWith("..")) throw new Error(`${f} is outside the project folder.`);
-    const out = path.resolve(m.root, a.out ?? "cmtk/cases/har.yaml");
-    if (path.relative(m.root, out).startsWith("..")) throw new Error("`out` is outside the project folder.");
+    const files = a.har.map((f) => inside(m, f));
+    const out = inside(m, a.out ?? "cmtk/cases/har.yaml");
     if (fs.existsSync(out)) throw new Error(`${path.relative(m.root, out)} already exists; choose another \`out\`.`);
     const res = importHar(files, { include: a.include, exclude: a.exclude, existing: loadCases(m) });
     fs.mkdirSync(path.dirname(out), { recursive: true });
     fs.writeFileSync(out, casesToYaml(res.cases), "utf8");
     return { res, out: path.relative(m.root, out) };
-}, ({ res, out }) => `added ${res.cases.length} cases to ${out}; skipped ${res.skipped}; dropped headers: ${res.droppedHeaders.join(", ") || "none"}`));
+}, ({ res, out }) => `added ${res.cases.length} cases to ${out}; skipped ${res.skipped}; dropped headers: ${res.droppedHeaders.join(", ") || "none"}` +
+    (res.redacted.length ? `; credential-like values replaced with REDACTED in ${res.redacted.join(", ")}: a person gives those cases test values` : "")));
 
 server.registerTool("cmtk_status", {
     description: "The latest run and compare verdicts, and whether a person has signed each report.",
@@ -88,12 +88,11 @@ server.registerTool("cmtk_status", {
     const m = loadManifest(a.manifest);
     const out: string[] = [];
     for (const mode of ["run", "compare"]) {
-        const f = path.join(m.root, m.evidence, mode, "REPORT.json");
+        const dir = path.join(m.root, m.evidence, mode);
+        const f = path.join(dir, "REPORT.json");
         if (!fs.existsSync(f)) continue;
         const r = JSON.parse(fs.readFileSync(f, "utf8")) as Report;
-        const md = fs.readFileSync(path.join(path.dirname(f), "REPORT.md"), "utf8");
-        const signed = /^\| Name \| (?!_+ \|)[^|]+\|$/m.test(md);
-        out.push(`${mode}: ${r.verdict} on ${r.date}, ${signed ? "signed" : "not signed"}`);
+        out.push(`${mode}: ${r.verdict} on ${r.date}, ${describeSignoff(signoffState(dir))}`);
     }
     return out.join("\n") || "No reports yet.";
 }, (s) => s));

@@ -1,11 +1,13 @@
 export * from "./types.js";
-export { loadManifest, loadCases, loadDrift, inside, ManifestError, STARTER_MANIFEST, readStructured } from "./manifest.js";
+export { loadManifest, loadCases, loadDrift, inside, ownedFolder, ManifestError, STARTER_MANIFEST, readStructured } from "./manifest.js";
 export { run, compare, matchFor, envHeaders, SAFE_METHODS, type RunOptions } from "./engine.js";
-export { compareObservations, diffJson, diffXml, parseXml, parseJsonKeepingNumbers, scrubberOf, scrubJson, ConfigError, SCRUBBED } from "./diff.js";
+export { compareObservations, diffJson, diffXml, parseXml, parseJsonKeepingNumbers, scrubberOf, scrubJson, shortPair, ConfigError, SCRUBBED } from "./diff.js";
+export { parseJsonExact, JsonNumber, JsonObject, jsonEqual } from "./json.js";
+export { recordSignoff, signoffState, describeSignoff, evidenceFingerprint, SignoffError, DECISIONS, type Signoff, type SignoffState } from "./signoff.js";
 export { checkExpectation } from "./expect.js";
 export { checkContract, diffOpenApi, diffWsdl } from "./contracts.js";
-export { coveringDrift } from "./drift.js";
-export { importHar, casesToYaml, DROPPED_HEADERS } from "./har.js";
+export { coveringDrift, covers } from "./drift.js";
+export { importHar, casesToYaml, looksSecret, redactBody, REDACTED, DROPPED_HEADERS } from "./har.js";
 export { renderReport, summarise } from "./report.js";
-export { send, httpAdapter, processAdapter, MAX_BODY, type Adapter } from "./adapters.js";
+export { send, httpAdapter, processAdapter, decodeBody, MAX_BODY, type Adapter } from "./adapters.js";
 export { parsePath, matches, render, select, PathError } from "./jsonpath.js";

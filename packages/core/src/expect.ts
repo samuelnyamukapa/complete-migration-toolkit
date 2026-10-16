@@ -1,8 +1,17 @@
 // Checks for `cmtk run`: does one system's answer meet what the requirement expects?
 // Every check is code. Nothing here asks a model.
 import { parsePath, render, select } from "./jsonpath.js";
-import { short } from "./diff.js";
+import { ConfigError, short } from "./diff.js";
+import { jsonEqual } from "./json.js";
 import type { Expectation, Failure, JsonCheck, Observation } from "./types.js";
+
+function regex(pattern: string, where: string): RegExp {
+    try {
+        return new RegExp(pattern);
+    } catch (err) {
+        throw new ConfigError(`expect ${where}: ${JSON.stringify(pattern)} is not a valid regular expression (${(err as Error).message}).`);
+    }
+}
 
 const typeOf = (v: unknown) => (v === null ? "null" : Array.isArray(v) ? "array" : typeof v);
 
@@ -15,8 +24,8 @@ function checkJson(path: string, check: JsonCheck, doc: unknown): Failure[] {
     const out: Failure[] = [];
     for (const { at, value } of found) {
         let ok = true;
-        if ("equals" in check) ok = JSON.stringify(value) === JSON.stringify(check.equals);
-        else if ("matches" in check) ok = typeof value === "string" && new RegExp(check.matches).test(value);
+        if ("equals" in check) ok = jsonEqual(value, check.equals);
+        else if ("matches" in check) ok = typeof value === "string" && regex(check.matches, path).test(value);
         else if ("type" in check) ok = typeOf(value) === check.type;
         if (!ok) out.push({ check: found.length > 1 ? render(at) : path, expected: describe(check), actual: short(value) });
     }
@@ -38,7 +47,7 @@ export function checkExpectation(exp: Expectation, obs: Observation): Failure[] 
     }
     for (const [name, want] of Object.entries(exp.headers ?? {})) {
         const got = obs.headers?.[name.toLowerCase()];
-        const ok = typeof want === "string" ? got === want : got !== undefined && new RegExp(want.matches).test(got);
+        const ok = typeof want === "string" ? got === want : got !== undefined && regex(want.matches, `header ${name}`).test(got);
         if (!ok) out.push({ check: `header:${name.toLowerCase()}`, expected: typeof want === "string" ? want : `matches /${want.matches}/`, actual: got ?? "(missing)" });
     }
     if (exp.json) {

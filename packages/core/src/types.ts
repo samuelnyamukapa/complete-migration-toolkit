@@ -58,7 +58,7 @@ export interface Manifest {
     timeout_s: number;
     insecure_tls: boolean;
     /** Adapters beyond the built-in http one: surface name to the program that runs it. */
-    adapters: Record<string, { command: string; args?: string[] }>;
+    adapters: Record<string, { command: string; args?: string[]; timeout_s?: number }>;
     /** Folder the manifest lives in; every relative path is resolved against it. */
     root: string;
 }
@@ -109,6 +109,8 @@ export interface Observation {
     status?: number;
     headers?: Record<string, string>;
     body?: string;
+    /** "utf-8" (the default) or "latin1" when the bytes were not valid UTF-8; latin1 keeps every byte. */
+    body_encoding?: string;
     sha256?: string;
     truncated?: boolean;
     /** Side effects an adapter observed: emails, messages, rows, files. Compared like a JSON body. */
@@ -165,6 +167,10 @@ export interface ContractFinding {
     /** true breaks consumers; false is compatible; null needs a person. */
     breaking: boolean | null;
     what: string;
+    /** "contract:<name>: <what>", for the drift ledger. Every finding is a change, so each needs approval. */
+    where?: string;
+    /** The drift ledger entry that approves this change, if any. */
+    drift?: string;
 }
 
 export interface ContractOutcome {
@@ -192,5 +198,9 @@ export interface Report {
     requirements: { requirement: string; cases: number; passed: number; failed: number; other: number }[];
     unused_drift: string[];
     suggested_scrubs: { where: string; cases: number; why: string }[];
+    /** Only some cases ran (--only), so the verdict cannot be a pass. */
     partial: boolean;
+    /** Why the verdict is what it is, in a sentence, and what to do next. */
+    reason: string;
+    next: string;
 }

@@ -125,6 +125,7 @@ export function checkContract(c: Contract, ref: Observation, cand: Observation):
     } catch (err) {
         return { ...base, result: "ERROR", findings: [{ breaking: false, what: `could not parse: ${(err as Error).message}` }] };
     }
+    for (const x of findings) x.where = `contract:${c.name}: ${x.what}`;
     const result = findings.some((x) => x.breaking === true) ? "BREAKING"
         : findings.some((x) => x.breaking === null) ? "REVIEW"
         : findings.length ? "COMPATIBLE"

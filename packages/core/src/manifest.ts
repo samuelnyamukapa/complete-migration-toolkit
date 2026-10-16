@@ -64,16 +64,38 @@ export function loadManifest(file: string): Manifest {
         scrub: { json_paths: scrub.json_paths ?? [], xml_ignore: scrub.xml_ignore ?? [], regex: scrub.regex ?? [] },
         compare_headers: (raw.compare_headers ?? ["content-type"]).map((h: string) => String(h).toLowerCase()),
         contracts,
-        cases: raw.cases ?? ["cmtk/cases/*.yaml"],
-        drift: raw.drift ?? "cmtk/drift.yaml",
-        evidence: raw.evidence ?? "cmtk/evidence",
+        cases: globsOf(raw.cases),
+        drift: pathOf(raw.drift, "drift", "cmtk/drift.yaml"),
+        evidence: pathOf(raw.evidence, "evidence", "cmtk/evidence"),
         allow_unsafe_methods: raw.allow_unsafe_methods === true,
         headers_from_env: raw.headers_from_env ?? {},
-        timeout_s: Number(raw.timeout_s ?? 30),
+        timeout_s: positive(raw.timeout_s, "timeout_s", 30),
         insecure_tls: raw.insecure_tls === true,
         adapters: adaptersOf(raw.adapters),
         root: path.dirname(path.resolve(file)),
     };
+}
+
+function globsOf(v: unknown): string[] {
+    if (v === undefined || v === null) return ["cmtk/cases/*.yaml"];
+    const list = typeof v === "string" ? [v] : v;
+    if (!Array.isArray(list) || list.length === 0 || !list.every((g) => typeof g === "string" && g.trim())) {
+        throw new ManifestError("`cases` must be a glob or a list of globs, such as [cmtk/cases/*.yaml].");
+    }
+    return list;
+}
+
+function pathOf(v: unknown, key: string, fallback: string): string {
+    if (v === undefined || v === null) return fallback;
+    if (typeof v !== "string" || !v.trim()) throw new ManifestError(`\`${key}\` must be a path inside the project folder, such as ${fallback}.`);
+    return v;
+}
+
+function positive(v: unknown, key: string, fallback: number): number {
+    if (v === undefined || v === null) return fallback;
+    const n = Number(v);
+    if (!Number.isFinite(n) || n <= 0) throw new ManifestError(`\`${key}\` must be a number of seconds above 0.`);
+    return n;
 }
 
 function adaptersOf(raw: unknown): Manifest["adapters"] {
@@ -81,16 +103,35 @@ function adaptersOf(raw: unknown): Manifest["adapters"] {
     for (const [name, spec] of Object.entries((raw ?? {}) as Record<string, any>)) {
         if (!NAME.test(name) || name === "http") throw new ManifestError(`adapters.${name}: the name must be letters, digits, '.', '-' and '_', and not "http" (built in).`);
         if (typeof spec?.command !== "string") throw new ManifestError(`adapters.${name} needs a \`command\`, such as "node".`);
-        out[name] = { command: spec.command, args: Array.isArray(spec.args) ? spec.args.map(String) : [] };
+        out[name] = { command: spec.command, args: Array.isArray(spec.args) ? spec.args.map(String) : [], timeout_s: positive(spec.timeout_s, `adapters.${name}.timeout_s`, 300) };
     }
     return out;
 }
 
-/** Resolve a path from the manifest, refusing anything that leaves the project folder. */
+const within = (root: string, full: string) => {
+    const r = path.relative(root, full);
+    return r === "" || !(r === ".." || r.startsWith(".." + path.sep) || path.isAbsolute(r));
+};
+
+/**
+ * Resolve a path from the manifest, refusing anything that leaves the project folder, in text or
+ * through a link: the deepest part that exists is resolved to its real location first.
+ */
 export function inside(manifest: Pick<Manifest, "root">, rel: string): string {
     const full = path.resolve(manifest.root, rel);
-    const r = path.relative(manifest.root, full);
-    if (r.startsWith("..") || path.isAbsolute(r)) throw new ManifestError(`${rel} is outside the project folder.`);
+    if (!within(manifest.root, full)) throw new ManifestError(`${rel} is outside the project folder.`);
+    let existing = full;
+    const rest: string[] = [];
+    while (!fs.existsSync(existing) && path.dirname(existing) !== existing) { rest.unshift(path.basename(existing)); existing = path.dirname(existing); }
+    const real = path.join(fs.realpathSync.native(existing), ...rest);
+    if (!within(fs.realpathSync.native(manifest.root), real)) throw new ManifestError(`${rel} leads outside the project folder through a link (to ${real}).`);
+    return full;
+}
+
+/** A folder the toolkit may empty and rewrite: inside the project and never the project folder itself. */
+export function ownedFolder(manifest: Pick<Manifest, "root">, rel: string): string {
+    const full = inside(manifest, rel);
+    if (path.relative(manifest.root, full) === "") throw new ManifestError(`${rel} is the project folder itself; the toolkit only rewrites a folder of its own, such as cmtk/evidence.`);
     return full;
 }
 
@@ -105,6 +146,7 @@ function caseFiles(manifest: Manifest): string[] {
 export function loadCases(manifest: Manifest): Case[] {
     const all: Case[] = [];
     const seen = new Set<string>();
+    const RESERVED = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\.|$)/i; // file names Windows refuses
     for (const rel of caseFiles(manifest)) {
         const doc = readStructured(inside(manifest, rel)) as any;
         const list = Array.isArray(doc) ? doc : doc?.cases;
@@ -112,14 +154,25 @@ export function loadCases(manifest: Manifest): Case[] {
         for (const [i, c] of list.entries()) {
             const where = `${rel} case ${i + 1}`;
             if (!c || typeof c.id !== "string" || !NAME.test(c.id)) throw new ManifestError(`${where}: \`id\` must be letters, digits, '.', '-' and '_'.`);
-            if (seen.has(c.id)) throw new ManifestError(`${where}: the id ${c.id} is used twice.`);
-            seen.add(c.id);
+            if (seen.has(c.id.toLowerCase())) throw new ManifestError(`${where}: the id ${c.id} is used twice (ids must differ by more than upper and lower case, because evidence files are named after them).`);
+            if (RESERVED.test(c.id)) throw new ManifestError(`${where}: ${c.id} cannot be an id, because Windows cannot create a file with that name.`);
+            seen.add(c.id.toLowerCase());
             const req = typeof c.request === "string" ? parseRequestLine(c.request, where) : c.request;
             if (!req || typeof req.path !== "string" || !req.path.startsWith("/") || req.path.startsWith("//")) {
                 throw new ManifestError(`${where}: \`request.path\` must start with a single '/': a path, never a host.`);
             }
             if (c.match !== undefined) level(c.match, where);
-            all.push({ ...c, request: { method: String(req.method ?? "GET").toUpperCase(), path: req.path, headers: req.headers ?? {}, body: req.body ?? null }, file: rel });
+            const method = String(req.method ?? "GET").toUpperCase();
+            if (!/^[A-Z]+$/.test(method)) throw new ManifestError(`${where}: the method ${JSON.stringify(req.method)} must be letters only, such as GET or POST.`);
+            const headers: Record<string, string> = {};
+            for (const [k, v] of Object.entries(req.headers ?? {})) headers[k] = String(v);
+            let body: string | null = null;
+            if (typeof req.body === "string") body = req.body;
+            else if (req.body !== undefined && req.body !== null) {
+                body = JSON.stringify(req.body); // a YAML mapping or list is sent as JSON
+                if (!Object.keys(headers).some((h) => h.toLowerCase() === "content-type")) headers["Content-Type"] = "application/json";
+            }
+            all.push({ ...c, request: { method, path: req.path, headers, body }, file: rel });
         }
     }
     return all;

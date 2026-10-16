@@ -1,15 +1,16 @@
 // Adapters drive one kind of boundary. The HTTP adapter (REST, GraphQL, SOAP) is built in.
 // Any other adapter is a program in any language that answers one JSON request per line on
 // stdin with one JSON reply per line on stdout:
-//   {"op":"describe"}                         → {"kinds":["queue"], "settings":[...]}
+//   {"op":"describe"}                         → {"name":"queue","kinds":["queue"],"settings":[...]}
 //   {"op":"run","case":{...},"target":{...}}  → an Observation
 //   {"op":"reset","target":{...}}             → {"ok":true}
 // See docs/ADAPTERS.md. `cmtk adapter new` writes a working template.
-import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { spawn, type ChildProcessByStdio } from "node:child_process";
 import crypto from "node:crypto";
 import http from "node:http";
 import https from "node:https";
 import readline from "node:readline";
+import type { Readable, Writable } from "node:stream";
 import zlib from "node:zlib";
 
 import type { Case, Observation, Target } from "./types.js";
@@ -19,12 +20,15 @@ export const MAX_BODY = 5 * 1024 * 1024;
 export interface Adapter {
     run(c: Case, target: Target, extraHeaders: Record<string, string>): Promise<Observation>;
     reset?(target: Target): Promise<void>;
+    describe?(): Promise<unknown>;
     close?(): Promise<void>;
 }
 
 export interface AdapterSpec {
     command: string;
     args?: string[];
+    /** Longest wait for one answer, in seconds. Default 300. */
+    timeout_s?: number;
 }
 
 export function httpAdapter(opts: { timeoutS: number; insecureTls: boolean }): Adapter {
@@ -33,67 +37,137 @@ export function httpAdapter(opts: { timeoutS: number; insecureTls: boolean }): A
     };
 }
 
-/** One request to one target. Redirects are answers, never followed; proxies are never used. */
+// Agents of our own: the global agent may be set to use a proxy (NODE_USE_ENV_PROXY), and a
+// comparison must reach the target directly.
+const AGENTS = {
+    http: new http.Agent({ keepAlive: false }),
+    https: new https.Agent({ keepAlive: false }),
+    httpsInsecure: new https.Agent({ keepAlive: false, rejectUnauthorized: false }),
+};
+
+const UTF8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+
+/** Bytes as text. UTF-8 when they are valid UTF-8 (allowing a character cut off by the size cap), otherwise Latin-1, which keeps every byte. */
+export function decodeBody(raw: Buffer, truncated: boolean): { body: string; encoding?: string } {
+    for (let cut = 0; cut <= (truncated ? 3 : 0) && cut <= raw.length; cut++) {
+        try {
+            return { body: UTF8.decode(raw.subarray(0, raw.length - cut)) };
+        } catch {
+            // try the next cut, then fall back to Latin-1
+        }
+    }
+    return { body: raw.toString("latin1"), encoding: "latin1" };
+}
+
+/**
+ * One request to one target. Redirects are answers, never followed; proxies are never used.
+ * The whole answer must arrive within the timeout, and reading stops at 5 MB (after decompression).
+ */
 export function send(baseUrl: string, c: Case, extra: Record<string, string>, opts: { timeoutS: number; insecureTls: boolean }): Promise<Observation> {
     const req = c.request;
     if (!req.path.startsWith("/") || req.path.startsWith("//")) return Promise.resolve({ error: "the path must start with a single '/'" });
     const url = new URL(baseUrl + req.path);
-    const lib = url.protocol === "https:" ? https : http;
-    const body = typeof req.body === "string" ? Buffer.from(req.body, "utf8") : undefined;
+    const secure = url.protocol === "https:";
     const headers: Record<string, string> = { ...(req.headers ?? {}), ...extra, "accept-encoding": "identity" };
+    let body: Buffer | undefined;
+    if (typeof req.body === "string") body = Buffer.from(req.body, "utf8");
+    else if (req.body !== null && req.body !== undefined) {
+        body = Buffer.from(JSON.stringify(req.body), "utf8");
+        if (!Object.keys(headers).some((h) => h.toLowerCase() === "content-type")) headers["content-type"] = "application/json";
+    }
     if (body) headers["content-length"] = String(body.length);
+
     return new Promise((resolve) => {
-        const r = lib.request(
-            url,
-            { method: req.method, headers, timeout: opts.timeoutS * 1000, ...(url.protocol === "https:" && opts.insecureTls ? { rejectUnauthorized: false } : {}) },
-            (res) => {
+        let done = false;
+        let r: http.ClientRequest | undefined;
+        const finish = (o: Observation) => {
+            if (done) return;
+            done = true;
+            clearTimeout(deadline);
+            r?.destroy();
+            resolve(o);
+        };
+        const deadline = setTimeout(() => finish({ error: `ETIMEDOUT: no complete answer within ${opts.timeoutS}s` }), opts.timeoutS * 1000);
+        try {
+            r = (secure ? https : http).request(url, {
+                method: req.method,
+                headers,
+                agent: secure ? (opts.insecureTls ? AGENTS.httpsInsecure : AGENTS.https) : AGENTS.http,
+            }, (res) => {
+                const h: Record<string, string> = {};
+                for (const [k, v] of Object.entries(res.headers)) if (v !== undefined) h[k.toLowerCase()] = Array.isArray(v) ? v.join(", ") : String(v);
+                const enc = String(res.headers["content-encoding"] ?? "").trim().toLowerCase();
+                const flush = { finishFlush: zlib.constants.Z_SYNC_FLUSH };
+                const stream: Readable = enc === "gzip" || enc === "x-gzip" ? res.pipe(zlib.createGunzip(flush))
+                    : enc === "deflate" ? res.pipe(zlib.createInflate(flush))
+                    : enc === "br" ? res.pipe(zlib.createBrotliDecompress({ finishFlush: zlib.constants.BROTLI_OPERATION_FLUSH }))
+                    : res;
                 const chunks: Buffer[] = [];
                 let size = 0;
-                let truncated = false;
-                res.on("data", (d: Buffer) => {
-                    if (size >= MAX_BODY) { truncated = true; return; }
-                    chunks.push(d);
-                    size += d.length;
-                });
-                res.on("end", () => {
+                const complete = (truncated: boolean) => {
                     let raw = Buffer.concat(chunks);
                     if (raw.length > MAX_BODY) { raw = raw.subarray(0, MAX_BODY); truncated = true; }
-                    const enc = String(res.headers["content-encoding"] ?? "").toLowerCase();
-                    try {
-                        if (enc === "gzip") raw = zlib.gunzipSync(raw);
-                        else if (enc === "deflate") raw = zlib.inflateSync(raw);
-                        else if (enc === "br") raw = zlib.brotliDecompressSync(raw);
-                    } catch {
-                        // keep the bytes as they came
-                    }
-                    const h: Record<string, string> = {};
-                    for (const [k, v] of Object.entries(res.headers)) if (v !== undefined) h[k.toLowerCase()] = Array.isArray(v) ? v.join(", ") : String(v);
-                    resolve({ status: res.statusCode, headers: h, body: raw.toString("utf8"), sha256: crypto.createHash("sha256").update(raw).digest("hex"), ...(truncated ? { truncated } : {}) });
+                    const { body: text, encoding } = decodeBody(raw, truncated);
+                    finish({
+                        status: res.statusCode, headers: h, body: text, ...(encoding ? { body_encoding: encoding } : {}),
+                        sha256: crypto.createHash("sha256").update(raw).digest("hex"), ...(truncated ? { truncated } : {}),
+                    });
+                };
+                stream.on("data", (d: Buffer) => {
+                    chunks.push(d);
+                    size += d.length;
+                    if (size >= MAX_BODY) { complete(true); if (stream !== res) stream.destroy(); res.destroy(); }
                 });
-                res.on("error", (err) => resolve({ error: `${err.name}: ${err.message}` }));
-            },
-        );
-        r.on("timeout", () => r.destroy(new Error(`no answer within ${opts.timeoutS}s`)));
-        r.on("error", (err) => resolve({ error: `${(err as NodeJS.ErrnoException).code ?? err.name}: ${err.message}` }));
-        if (body) r.write(body);
-        r.end();
+                stream.on("end", () => complete(false));
+                stream.on("error", (err) => finish({ error: enc && stream !== res ? `content-encoding ${enc}: the answer could not be decoded (${err.message})` : `${err.name}: ${err.message}` }));
+                res.on("error", (err) => finish({ error: `${err.name}: ${err.message}` }));
+            });
+            r.on("error", (err) => finish({ error: `${(err as NodeJS.ErrnoException).code ?? err.name}: ${err.message}` }));
+            if (body) r.write(body);
+            r.end();
+        } catch (err) {
+            // An invalid method or header value: Node names the header, never its value.
+            finish({ error: `${(err as NodeJS.ErrnoException).code ?? "Error"}: ${(err as Error).message}` });
+        }
     });
 }
 
-/** An adapter in its own process, speaking JSON lines. */
+/** An adapter in its own process, speaking JSON lines. Its standard error is passed through. */
 export function processAdapter(name: string, spec: AdapterSpec, cwd: string): Adapter {
-    let child: ChildProcessWithoutNullStreams | undefined;
+    let child: ChildProcessByStdio<Writable, Readable, null> | undefined;
     let lines: AsyncIterator<string> | undefined;
+    let startError: Error | undefined;
+    const timeoutMs = (spec.timeout_s ?? 300) * 1000;
+    const stop = () => {
+        child?.kill();
+        child = undefined;
+        lines = undefined;
+    };
     const start = () => {
         if (child) return;
-        child = spawn(spec.command, spec.args ?? [], { cwd, stdio: ["pipe", "pipe", "pipe"], shell: false });
-        lines = readline.createInterface({ input: child.stdout })[Symbol.asyncIterator]();
+        startError = undefined;
+        const c = spawn(spec.command, spec.args ?? [], { cwd, stdio: ["pipe", "pipe", "inherit"], shell: false });
+        c.on("error", (err) => { startError = err; });
+        c.stdin.on("error", () => { /* the process ended; the next read reports it */ });
+        child = c;
+        lines = readline.createInterface({ input: c.stdout })[Symbol.asyncIterator]();
     };
     const call = async (msg: unknown): Promise<any> => {
         start();
+        const it = lines!;
         child!.stdin.write(JSON.stringify(msg) + "\n");
-        const next = await lines!.next();
-        if (next.done) throw new Error(`adapter ${name} stopped answering`);
+        let timer: NodeJS.Timeout | undefined;
+        const timeout = new Promise<"timeout">((res) => { timer = setTimeout(() => res("timeout"), timeoutMs); });
+        const next = await Promise.race([it.next(), timeout]).finally(() => clearTimeout(timer));
+        if (next === "timeout") {
+            stop();
+            throw new Error(`adapter ${name} gave no answer within ${timeoutMs / 1000}s`);
+        }
+        if (next.done) {
+            const why = startError ? `could not start ${spec.command}: ${(startError as NodeJS.ErrnoException).code ?? startError.message}` : "stopped answering";
+            stop();
+            throw new Error(`adapter ${name} ${why}`);
+        }
         try {
             return JSON.parse(next.value);
         } catch {
@@ -104,17 +178,26 @@ export function processAdapter(name: string, spec: AdapterSpec, cwd: string): Ad
         async run(c, target, extra) {
             try {
                 const reply = await call({ op: "run", case: c, target, headers: extra });
-                return reply && typeof reply === "object" ? (reply as Observation) : { error: `adapter ${name} gave no observation` };
+                if (!reply || typeof reply !== "object" || Array.isArray(reply)) return { error: `adapter ${name} gave no observation` };
+                if (reply.error !== undefined && typeof reply.error !== "string") return { error: `adapter ${name} gave an error that is not text` };
+                return reply as Observation;
             } catch (err) {
                 return { error: (err as Error).message };
             }
         },
         async reset(target) {
-            await call({ op: "reset", target });
+            const reply = await call({ op: "reset", target });
+            if (!reply || reply.ok !== true) {
+                throw new Error(`adapter ${name} could not reset ${target.name}: ${typeof reply?.error === "string" ? reply.error : 'it did not answer {"ok":true}'}`);
+            }
+        },
+        async describe() {
+            return call({ op: "describe" });
         },
         async close() {
             if (child) child.stdin.end();
             child = undefined;
+            lines = undefined;
         },
     };
 }

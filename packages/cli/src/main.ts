@@ -9,8 +9,8 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
 import {
-    casesToYaml, compare, ConfigError, importHar, loadCases, loadManifest, ManifestError, PathError, processAdapter, readStructured, run,
-    STARTER_MANIFEST, type Case, type Report,
+    casesToYaml, compare, ConfigError, describeSignoff, importHar, inside, loadCases, loadManifest, ManifestError, PathError, processAdapter,
+    readStructured, recordSignoff, run, signoffState, SignoffError, STARTER_MANIFEST, type Case, type Report,
 } from "@cmtk/core";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -25,7 +25,7 @@ Usage:
   cmtk run [--target <name>] [--only <id,id>] [--allow-unsafe]      check one system against each case's expect: block
   cmtk compare [--only <id,id>] [--allow-unsafe]                    send each case to the reference and the candidate, and diff
   cmtk status                                                       the latest verdicts
-  cmtk signoff run|compare                                          a person signs a report (asks at the keyboard; never for agents)
+  cmtk signoff run|compare                                          a person signs a report, at a terminal (never an agent)
   cmtk adapter new <name>                                           write a new adapter from the template
   cmtk adapter check <name>                                         the conformance kit for an adapter
 
@@ -57,19 +57,8 @@ function printReport(r: Report, json: boolean, manifestRoot: string, evidence: s
     }
     const report = path.relative(process.cwd(), path.join(manifestRoot, evidence, r.mode, "REPORT.md")) || "REPORT.md";
     console.log(`Report: ${report}`);
-    console.log(`Next: ${nextStep(r)}`);
-}
-
-function nextStep(r: Report): string {
-    switch (r.verdict) {
-        case "PASS": return "a person reviews the report and signs it with `cmtk signoff run`.";
-        case "PARITY":
-        case "DRIFT ONLY": return "a person reviews the report and signs it with `cmtk signoff compare`.";
-        case "FAIL": return "fix what failed (or correct an expectation with the person who owns the requirement), then `cmtk run` again.";
-        case "NO PARITY": return "for each difference: scrub it if it is noise, approve it as drift in the drift ledger (a named person), or fix the candidate. Then `cmtk compare` again.";
-        case "INCOMPLETE": return "see why cases were skipped or failed to run, fix that, and run again.";
-        default: return "add cases (cmtk/cases/*.yaml, or `cmtk import-har`), then run again.";
-    }
+    console.log(r.reason);
+    console.log(`Next: ${r.next}`);
 }
 
 async function main(argv: string[]): Promise<number> {
@@ -120,12 +109,13 @@ async function main(argv: string[]): Promise<number> {
             const manifest = loadManifest(manifestFile);
             const existing = loadCases(manifest);
             const res = importHar(rest.map((f) => path.resolve(f)), { include: values.include, exclude: values.exclude, existing });
-            const out = path.resolve(manifest.root, values.out ?? "cmtk/cases/har.yaml");
+            const out = inside(manifest, values.out ?? "cmtk/cases/har.yaml");
             if (fs.existsSync(out)) throw new UsageError(`${path.relative(process.cwd(), out)} already exists; pass --out <new file>.`);
             fs.mkdirSync(path.dirname(out), { recursive: true });
             fs.writeFileSync(out, casesToYaml(res.cases), "utf8");
             console.log(`Added ${res.cases.length} cases to ${path.relative(process.cwd(), out)}; skipped ${res.skipped} (static files, filtered or duplicates).`);
             if (res.droppedHeaders.length) console.log(`Dropped these headers from every case: ${res.droppedHeaders.join(", ")}. Credentials come from headers_from_env at run time.`);
+            if (res.redacted.length) console.log(`Replaced credential-like values with REDACTED in ${res.redacted.length} case${res.redacted.length === 1 ? "" : "s"} (${res.redacted.slice(0, 10).join(", ")}${res.redacted.length > 10 ? ", …" : ""}). Give those cases test values before they run.`);
             console.log("Next: name each case's requirement, add `expect:` checks for `cmtk run`, then run it.");
             return 0;
         }
@@ -142,12 +132,12 @@ async function main(argv: string[]): Promise<number> {
             const manifest = loadManifest(manifestFile);
             let any = false;
             for (const mode of ["run", "compare"]) {
-                const f = path.join(manifest.root, manifest.evidence, mode, "REPORT.json");
+                const dir = path.join(manifest.root, manifest.evidence, mode);
+                const f = path.join(dir, "REPORT.json");
                 if (!fs.existsSync(f)) continue;
                 any = true;
                 const r = JSON.parse(fs.readFileSync(f, "utf8")) as Report;
-                const signed = /\|\s*Name\s*\|\s*(?!_+\s*\|)[^|\s][^|]*\|/.test(fs.readFileSync(path.join(path.dirname(f), "REPORT.md"), "utf8"));
-                console.log(`${mode}: ${r.verdict} on ${r.date}${signed ? ", signed" : ", not signed"}`);
+                console.log(`${mode}: ${r.verdict} on ${r.date}, ${describeSignoff(signoffState(dir))}`);
             }
             if (!any) console.log("No reports yet. Next: `cmtk run` or `cmtk compare`.");
             return 0;
@@ -162,26 +152,22 @@ async function main(argv: string[]): Promise<number> {
 async function signoff(manifestFile: string, mode: string | undefined): Promise<number> {
     if (mode !== "run" && mode !== "compare") throw new UsageError("`cmtk signoff` needs `run` or `compare`.");
     if (!process.stdin.isTTY || !process.stdout.isTTY) {
-        throw new UsageError("Sign-off is for a person at a keyboard: run `cmtk signoff` in a terminal yourself. Agents and scripts cannot sign.");
+        throw new UsageError("Sign-off is for a person at a keyboard: run `cmtk signoff` in a terminal yourself. Agents and scripts do not sign.");
     }
     const manifest = loadManifest(manifestFile);
-    const file = path.join(manifest.root, manifest.evidence, mode, "REPORT.md");
-    if (!fs.existsSync(file)) throw new UsageError(`There is no ${mode} report yet. Run \`cmtk ${mode}\` first.`);
-    const report = JSON.parse(fs.readFileSync(path.join(path.dirname(file), "REPORT.json"), "utf8")) as Report;
-    console.log(`${mode} report for ${report.system}: ${report.verdict} (${report.date}).`);
+    const dir = path.join(manifest.root, manifest.evidence, mode);
+    const json = path.join(dir, "REPORT.json");
+    if (!fs.existsSync(json)) throw new UsageError(`There is no ${mode} report yet. Run \`cmtk ${mode}\` first.`);
+    const report = JSON.parse(fs.readFileSync(json, "utf8")) as Report;
+    console.log(`${mode} report for ${report.system}: ${report.verdict} (${report.date}). ${report.reason}`);
+    console.log(`Read it first: ${path.relative(process.cwd(), path.join(dir, "REPORT.md"))}`);
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     try {
-        const name = (await rl.question("Your full name: ")).trim();
-        const role = (await rl.question("Your role: ")).trim();
-        const decision = (await rl.question("Decision (accept / accept with conditions / reject): ")).trim().toLowerCase();
-        if (!name || !role || !["accept", "accept with conditions", "reject"].includes(decision)) throw new UsageError("Name, role and one of the three decisions are all needed. Nothing was signed.");
-        const date = new Date().toISOString().slice(0, 10);
-        const cell = (v: string) => v.replace(/\|/g, "\\|");
-        let text = fs.readFileSync(file, "utf8");
-        text = text.replace(/^\| Name \|.*\|$/m, `| Name | ${cell(name)} |`).replace(/^\| Role \|.*\|$/m, `| Role | ${cell(role)} |`)
-            .replace(/^\| Date \|.*\|$/m, `| Date | ${date} |`).replace(/^\| Decision \|.*\|$/m, `| Decision | ${decision} |`);
-        fs.writeFileSync(file, text, "utf8");
-        console.log(`Signed: ${name}, ${role}, ${decision}, ${date}.`);
+        const name = await rl.question("Your full name: ");
+        const role = await rl.question("Your role: ");
+        const decision = await rl.question("Decision (accept / accept with conditions / reject): ");
+        const s = recordSignoff(dir, { name, role, decision }, new Date().toISOString().slice(0, 10));
+        console.log(`Signed: ${s.name}, ${s.role}, ${s.decision}, ${s.date}. Evidence fingerprint ${s.evidence_sha256.slice(0, 12)}…`);
         return 0;
     } finally {
         rl.close();
@@ -222,8 +208,10 @@ async function adapterCheck(name: string, dir: string, manifestFile: string): Pr
     const secret = `cmtk-check-${Math.random().toString(36).slice(2)}`;
     const target = { name: "check", base_url: "http://127.0.0.1:9" };
     const checks: [string, boolean, string?][] = [];
-    const adapter = processAdapter(name, spec, path.dirname(manifestFile));
+    const adapter = processAdapter(name, { ...spec, timeout_s: 60 }, path.dirname(manifestFile));
     try {
+        const d = (await adapter.describe!().catch((err: Error) => ({ error: err.message }))) as { name?: unknown; kinds?: unknown; error?: string };
+        checks.push(["answers describe with a name and its kinds", typeof d?.name === "string" && Array.isArray(d?.kinds), d?.error ?? 'reply {"name":"…","kinds":["…"],"settings":[]}']);
         checks.push(["has at least one sample case", samples.length > 0, "add cases to samples/cases.yaml"]);
         for (const c of samples) {
             const a = await adapter.run(c, target, { "X-Cmtk-Check": secret });
@@ -267,7 +255,7 @@ drift: []
 main(process.argv.slice(2)).then(
     (code) => process.exit(code),
     (err) => {
-        if (err instanceof UsageError || err instanceof ManifestError || err instanceof ConfigError || err instanceof PathError) console.error(`cmtk: ${err.message}`);
+        if (err instanceof UsageError || err instanceof ManifestError || err instanceof ConfigError || err instanceof PathError || err instanceof SignoffError) console.error(`cmtk: ${err.message}`);
         else console.error(`cmtk: ${err?.stack ?? err}`);
         process.exit(3);
     },

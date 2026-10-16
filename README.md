@@ -2,7 +2,7 @@
 
 Test any system from its requirements, and prove a migrated system behaves like the old one, with every intended drift approved and signed.
 
-> **Status: 0.1.0, early.** The engine, the `cmtk` command and the MCP server work and are tested on Windows and Linux, against local test servers. The toolkit has not yet run on a real project; the first pilot is the eShop sandbox. See [docs/PLAN.md](docs/PLAN.md).
+> **Status: 0.1.1, early.** The engine, the `cmtk` command and the MCP server work and are tested on Windows and Linux, against local test servers. The toolkit has not yet run on a real project; the first pilot is the eShop sandbox. See [docs/PLAN.md](docs/PLAN.md).
 
 ## Why
 
@@ -24,7 +24,7 @@ Both modes write a report per requirement, keep every answer as evidence, and en
 
 ## Quick start
 
-The toolkit is not on npm yet. From a clone:
+The toolkit is not on npm yet. You need Node.js 22.5 or later. From a clone:
 
 ```sh
 npm install
@@ -64,9 +64,11 @@ cases:
 
 | Level | What must match | Typical use |
 |---|---|---|
-| `exact` (default) | status, the listed headers, and the body as sent: number formats, key order, whitespace | anything third parties parse |
+| `exact` (default) | status, the listed headers, and the body as sent: number formats, key order, text encoding, XML text as written | anything third parties parse |
 | `semantic` | the same data; formatting may differ | internal endpoints, reskinned pages |
 | `contract` | the status only; the contracts are still checked | endpoints being retired |
+
+JSON whitespace and string escapes (`\u00e9` for `é`) are not compared at any level, because every JSON parser reads them the same way.
 
 Set one level for the system, then loosen it per path (`overrides`) or per case. The modes in a migration are presets, not fixed choices: an upgrade with a reskinned UI keeps its APIs `exact` while its pages compare at `semantic`.
 
@@ -90,9 +92,10 @@ The MCP server gives an agent the same verbs a person has: `cmtk_run`, `cmtk_com
 
 - **Requests go only to the targets in `cmtk.yaml`.** A case holds a path, never a host.
 - **Only GET, HEAD and OPTIONS run by default.** Anything that changes data needs two switches: `allow_unsafe_methods: true` in `cmtk.yaml`, and `--allow-unsafe` on the run.
-- **Credentials are never stored.** They come from environment variables named in `headers_from_env`, are read at run time, and are never written to the manifest or a report. HAR imports drop cookies and authorization headers.
-- **No hidden behaviour.** Redirects are compared, not followed; proxies are not used.
-- **Sign-off needs a person at a keyboard.** It refuses scripts and agents.
+- **Credentials are never stored.** They come from environment variables named in `headers_from_env`, are read at run time, and are never written to the manifest or a report. HAR imports drop cookie, authorization and API-key headers, and replace credential-like query values and body fields (JSON, forms, XML and SOAP) with `REDACTED`.
+- **No hidden behaviour.** Redirects are compared, not followed; proxies are not used, even when Node is set to use one.
+- **Nothing outside the project is touched.** Every path, including through links, must stay inside the folder `cmtk.yaml` is in, and a run replaces its evidence only once it has finished.
+- **Sign-off is a person's job.** `cmtk signoff` asks at a terminal and records a fingerprint of the evidence, so a signature never carries over to other evidence. The MCP server has no sign-off tool. A terminal prompt is not a lock against a determined script: where a signature must be binding, keep the evidence under version control and review the commit that adds `SIGNOFF.json`.
 
 ## Exit codes
 

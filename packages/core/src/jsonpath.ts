@@ -1,3 +1,5 @@
+import { entriesOf, isJsonObject } from "./json.js";
+
 // A small JSON path subset, enough to name a value in a report and to match it in a rule:
 //   $.a.b    $..id    $.items[*].price    $.items[0]    $['odd key']    $.*
 export type Token =
@@ -7,7 +9,7 @@ export type Token =
 
 export class PathError extends Error {}
 
-const TOKEN = /\.\.(?<desc>[^.[\]]+)|\.(?<key>[^.[\]]+)|\[(?<idx>\*|\d+)\]|\['(?<qkey>[^']*)'\]/y;
+const TOKEN = /\.\.(?<desc>[^.[\]]+)|\.(?<key>[^.[\]]+)|\[(?<idx>\*|\d+)\]|\['(?<qkey>(?:[^'\\]|\\.)*)'\]/y;
 
 export function parsePath(expr: string): Token[] {
     if (typeof expr !== "string" || !expr.startsWith("$")) throw new PathError(`JSON path ${JSON.stringify(expr)} must start with '$'.`);
@@ -20,7 +22,7 @@ export function parsePath(expr: string): Token[] {
         const g = m.groups;
         if (g.desc !== undefined) out.push({ kind: "desc", name: g.desc });
         else if (g.key !== undefined) out.push({ kind: "key", name: g.key });
-        else if (g.qkey !== undefined) out.push({ kind: "key", name: g.qkey });
+        else if (g.qkey !== undefined) out.push({ kind: "key", name: g.qkey.replace(/\\(.)/g, "$1") });
         else out.push({ kind: "idx", index: g.idx === "*" ? "*" : Number(g.idx) });
         pos = TOKEN.lastIndex;
     }
@@ -53,7 +55,7 @@ export function render(at: Location): string {
     for (const step of at) {
         if (typeof step === "number") out += `[${step}]`;
         else if (/^[A-Za-z_][A-Za-z0-9_-]*$/.test(step)) out += `.${step}`;
-        else out += `['${step}']`;
+        else out += `['${step.replace(/[\\']/g, "\\$&")}']`;
     }
     return out;
 }
@@ -69,7 +71,7 @@ export function select(doc: unknown, pattern: Token[]): { at: Location; value: u
     const walk = (value: unknown, at: Location) => {
         if (matches(pattern, at)) out.push({ at, value });
         if (Array.isArray(value)) value.forEach((v, i) => walk(v, [...at, i]));
-        else if (value !== null && typeof value === "object") for (const [k, v] of Object.entries(value)) walk(v, [...at, k]);
+        else if (isJsonObject(value)) for (const [k, v] of entriesOf(value)) walk(v, [...at, k]);
     };
     walk(doc, []);
     return out;

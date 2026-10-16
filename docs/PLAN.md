@@ -20,7 +20,7 @@ The toolkit is two things that share one engine and one set of adapters:
 | Phase | Builds | Pilot | Done when |
 |---|---|---|---|
 | 0 | `/modernize:parity` in [modernize-for-copilot](https://github.com/samuelnyamukapa/modernize-for-copilot) 1.1 | the billing fixture | a planted difference is caught and nothing else is flagged |
-| 1 | **This repo, 0.1.0:** engine, `cmtk run` and `cmtk compare`, HTTP and SOAP, contracts, drift ledger, reports, CLI, MCP server | eShop sandbox | `cmtk run` and `cmtk compare` give a signed report on eShop |
+| 1 | **This repo, 0.1.x:** engine, `cmtk run` and `cmtk compare`, HTTP and SOAP, contracts, drift ledger, reports, CLI, MCP server | eShop sandbox | `cmtk run` and `cmtk compare` give a signed report on eShop |
 | 1b | The AI tester: skills that turn stories and runbooks into case files, explore against a charter, and draft defects | eShop, then one real sprint | testers on one team keep using it after the sprint |
 | 2 | Adapters: queues, workers, files, database, email, SMS, payment sandboxes; an adapter marketplace | a Windows service rebuilt as a Worker Service; CardDemo batch files | someone outside the core team adds a working adapter in a day |
 | 3 | UI: web journeys through e2e or Playwright (structure for a reskin, goals for a new UI), desktop through computer use, MFA with test authenticators | eShop reskinned, then with a new front end | the same journeys pass on both systems, replayed without a model |

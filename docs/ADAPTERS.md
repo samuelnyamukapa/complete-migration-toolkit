@@ -4,13 +4,13 @@ The HTTP adapter (REST, GraphQL, SOAP) is built in. Everything else (queues, Win
 
 ## The protocol
 
-The toolkit starts the adapter once per run and writes one JSON request per line to its standard input. The adapter answers each one with one JSON line on standard output. Nothing else may go to standard output; diagnostics go to standard error.
+The toolkit starts the adapter once per run and writes one JSON request per line to its standard input. The adapter answers each one with one JSON line on standard output. Nothing else may go to standard output; diagnostics go to standard error, which the toolkit passes through to your terminal. An adapter that gives no answer within its `timeout_s` (default 300 seconds) is stopped, and that case is reported as an error.
 
 | Request | Answer |
 |---|---|
-| `{"op":"describe"}` | `{"name":"mailbox","kinds":["mailbox"],"settings":[]}` |
+| `{"op":"describe"}` | `{"name":"mailbox","kinds":["mailbox"],"settings":[]}`. The conformance kit asks for it |
 | `{"op":"run","case":{…},"target":{"name":"legacy","base_url":"…"},"headers":{…}}` | An observation (below) |
-| `{"op":"reset","target":{…}}` | `{"ok":true}`, once the target is back in its starting state. Called before each case in `cmtk compare` |
+| `{"op":"reset","target":{…}}` | `{"ok":true}`, once the target is back in its starting state. Called before each case in `cmtk compare`. Any other answer, such as `{"ok":false,"error":"database locked"}`, makes that case an error |
 
 An observation:
 
@@ -30,6 +30,7 @@ An observation:
    - **Queue:** publish the case's message, then report what reached the output queue;
    - **Worker:** drop the input file, wait until the worker has finished, then report the output folder.
 3. Run `cmtk adapter check mailbox`. The conformance kit checks that:
+   - it answers `describe` with its name and kinds;
    - each sample case gives an observation;
    - the same case twice gives the same observation;
    - no header value leaks into what the adapter reports.
