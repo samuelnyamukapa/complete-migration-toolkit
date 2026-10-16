@@ -108,11 +108,11 @@ The MCP server gives an agent the same verbs a person has: `cmtk_run`, `cmtk_com
 | `packages/core` | The engine: settings, cases, adapters, expectations, comparison, contracts, drift, reports |
 | `packages/cli` | The `cmtk` command and the adapter template |
 | `packages/mcp` | The MCP server |
-| `docs/` | Plan, runbook, settings reference, adapter guide |
+| `docs/` | Plan, test plan, runbook, settings reference, adapter guide |
 
 ## Contributing
 
-Adapters for third-party dependencies are the most useful contribution: see [docs/ADAPTERS.md](docs/ADAPTERS.md). Run `npm test` before opening a pull request; CI runs it on Windows and Linux.
+Adapters for third-party dependencies are the most useful contribution: see [docs/ADAPTERS.md](docs/ADAPTERS.md), and ask for one with the adapter request issue template. The work is planned in [milestones and issues](https://github.com/samuelnyamukapa/complete-migration-toolkit/milestones), one epic per phase, and [docs/TEST-PLAN.md](docs/TEST-PLAN.md) says what each phase must prove. Run `npm test` before opening a pull request; CI runs it on Windows and Linux.
 
 ## Licence
 

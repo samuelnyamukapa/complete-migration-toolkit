@@ -46,7 +46,7 @@ Fixes from an independent review of 0.1.0. Every fix has a regression test (`pac
 
 ### Verified
 
-- 38 tests on Windows and Linux: the 20 from 0.1.0 and 18 regression tests, one or more for each review finding. The reviewer then re-ran each original reproduction against the fixes.
+- 39 tests on Windows and Linux: the 20 from 0.1.0 and 19 regression tests, one or more for each review finding. The reviewer then re-ran each original reproduction against the fixes.
 
 ## 0.1.0 (2026-10-16)
 

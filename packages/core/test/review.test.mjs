@@ -124,6 +124,23 @@ test("a mapping as a request body is sent as JSON", async () => {
     }
 });
 
+test("changing data needs both switches: each one alone sends nothing", async () => {
+    let posts = 0;
+    const s = await server((req, res) => { if (req.method === "POST") posts++; res.end("{}"); });
+    const dir = tmp();
+    write(dir, "cmtk/cases/a.yaml", "cases:\n  - { id: PAY, request: { method: POST, path: /pay, body: '{}' }, expect: { status: 200 } }\n");
+    const m = (allow) => { write(dir, "cmtk.yaml", `system: s\ntargets:\n  candidate: ${s.url}\nallow_unsafe_methods: ${allow}\n`); return loadManifest(path.join(dir, "cmtk.yaml")); };
+    try {
+        assert.equal((await run(m(true))).cases[0].result, "SKIPPED", "the setting without the flag");
+        assert.equal((await run(m(false), { allowUnsafe: true })).cases[0].result, "SKIPPED", "the flag without the setting");
+        assert.equal(posts, 0);
+        assert.equal((await run(m(true), { allowUnsafe: true })).cases[0].result, "PASS");
+        assert.equal(posts, 1);
+    } finally {
+        await s.close();
+    }
+});
+
 // ---------------------------------------------------------------- 3: one bad input never ends the run
 
 test("bad input stops before evidence is touched, and a failing case never ends the run", async () => {

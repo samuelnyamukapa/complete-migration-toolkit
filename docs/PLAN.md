@@ -26,11 +26,13 @@ The toolkit is two things that share one engine and one set of adapters:
 | 3 | UI: web journeys through e2e or Playwright (structure for a reskin, goals for a new UI), desktop through computer use, MFA with test authenticators | eShop reskinned, then with a new front end | the same journeys pass on both systems, replayed without a model |
 | 4 | Shadow traffic, long-running comparison, packaging and 1.0 | one real service rebuilt behind a locked contract | every migration mode proven on a pilot |
 
+Each phase has a [milestone](https://github.com/samuelnyamukapa/complete-migration-toolkit/milestones) and an epic issue (#35 to #39) listing its work, and [TEST-PLAN.md](TEST-PLAN.md) says what each phase must prove.
+
 ## Next steps
 
-1. Run the eShop pilot:
+1. Run the eShop pilot (#35):
     - `cmtk init` in the eShop sandbox, with cases for the catalog pages and API;
     - `cmtk run` against the legacy system;
     - `cmtk compare` against the transformed CatalogCore.
-2. Write the AI tester skills: `/cmtk:plan` (stories to case files), `/cmtk:triage` (differences to scrub, drift or defect, always with a person) and `/cmtk:explore`.
-3. Publish to npm as `complete-migration-toolkit`, so `npx cmtk` works.
+2. Write the AI tester skills (#36): `/cmtk:plan` (stories to case files), `/cmtk:triage` (differences to scrub, drift or defect, always with a person) and `/cmtk:explore`.
+3. Publish to npm as `complete-migration-toolkit`, so `npx cmtk` works (#32).
