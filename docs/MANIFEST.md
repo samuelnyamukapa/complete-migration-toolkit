@@ -7,7 +7,7 @@
 | Key | Default | Meaning |
 |---|---|---|
 | `system` | (required) | A name for the system under test |
-| `targets` | (required) | Name to `{ base_url }`. A string is accepted as the URL |
+| `targets` | (required) | Name to `{ base_url }`. A string is accepted as the URL. A target reached only through an adapter, such as a class library or a queue, can leave out `base_url` and give its adapter settings instead: `{ probe: probes/legacy.exe }`. Every setting is passed to the adapter as part of `target` |
 | `default_target` | `candidate`, or the first | The target `cmtk run` uses |
 | `reference` | `legacy`, if present | `cmtk compare`'s reference: today's system |
 | `candidate` | `candidate`, if present | `cmtk compare`'s system under test |

@@ -115,6 +115,9 @@ function evidenceDir(manifest: Manifest, mode: string) {
 
 const failed = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
+/** How a report names a target: its address, or its adapter settings. */
+const where = (t: Target) => t.base_url ?? Object.entries(t).filter(([k]) => k !== "name").map(([k, v]) => `${k}=${v}`).join(", ");
+
 const writeJson = (file: string, data: unknown) => fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8");
 
 function target(manifest: Manifest, name: string | undefined, role: string): Target {
@@ -151,7 +154,7 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
     } finally {
         await adapters.closeAll();
     }
-    const report = summarise({ mode: "run", manifest, targets: { [t.name]: t.base_url }, cases: out, contracts: [], drift: [], usedDrift: new Set(), date: opts.date ?? today(), partial: !!opts.only?.length });
+    const report = summarise({ mode: "run", manifest, targets: { [t.name]: where(t) }, cases: out, contracts: [], drift: [], usedDrift: new Set(), date: opts.date ?? today(), partial: !!opts.only?.length });
     writeJson(path.join(dir, "REPORT.json"), report);
     fs.writeFileSync(path.join(dir, "REPORT.md"), renderReport(report), "utf8");
     ev.commit();
@@ -221,7 +224,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
     } finally {
         await adapters.closeAll();
     }
-    const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: ref.base_url, [cand.name]: cand.base_url }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length });
+    const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length });
     writeJson(path.join(dir, "REPORT.json"), report);
     fs.writeFileSync(path.join(dir, "REPORT.md"), renderReport(report), "utf8");
     ev.commit();

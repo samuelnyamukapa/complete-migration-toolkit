@@ -33,7 +33,8 @@ export interface AdapterSpec {
 
 export function httpAdapter(opts: { timeoutS: number; insecureTls: boolean }): Adapter {
     return {
-        run: (c, target, extra) => send(target.base_url, c, extra, opts),
+        run: (c, target, extra) => (target.base_url ? send(target.base_url, c, extra, opts)
+            : Promise.resolve({ error: `target ${target.name} has no base_url, so HTTP cases cannot run on it` })),
     };
 }
 

@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
 
-import { MATCH_LEVELS, type Case, type Drift, type Manifest, type MatchLevel } from "./types.js";
+import { MATCH_LEVELS, type Case, type Drift, type Manifest, type MatchLevel, type Target } from "./types.js";
 
 export class ManifestError extends Error {}
 
@@ -33,9 +33,19 @@ export function loadManifest(file: string): Manifest {
     const targets: Manifest["targets"] = {};
     for (const [name, t] of Object.entries((raw.targets ?? {}) as Record<string, any>)) {
         if (!NAME.test(name)) throw new ManifestError(`Target name ${JSON.stringify(name)} must be letters, digits, '.', '-' and '_'.`);
-        const url = typeof t === "string" ? t : t?.base_url;
-        if (typeof url !== "string" || !URL_RE.test(url)) throw new ManifestError(`targets.${name}.base_url must be an http:// or https:// URL.`);
-        targets[name] = { name, base_url: url.replace(/\/+$/, "") };
+        const spec: Record<string, unknown> = typeof t === "string" ? { base_url: t } : t && typeof t === "object" && !Array.isArray(t) ? t : {};
+        if (Object.keys(spec).length === 0) throw new ManifestError(`targets.${name} needs a base_url, such as http://localhost:5002, or settings for its adapter.`);
+        const target: Target = { name };
+        for (const [k, v] of Object.entries(spec)) {
+            if (k === "name") throw new ManifestError(`targets.${name}: \`name\` is set from the key; remove it.`);
+            if (!["string", "number", "boolean"].includes(typeof v)) throw new ManifestError(`targets.${name}.${k} must be text, a number or true/false.`);
+            target[k] = v as string | number | boolean;
+        }
+        if (target.base_url !== undefined) {
+            if (typeof target.base_url !== "string" || !URL_RE.test(target.base_url)) throw new ManifestError(`targets.${name}.base_url must be an http:// or https:// URL.`);
+            target.base_url = target.base_url.replace(/\/+$/, "");
+        }
+        targets[name] = target;
     }
     if (Object.keys(targets).length === 0) throw new ManifestError("`targets` needs at least one system, such as `candidate: { base_url: http://localhost:5002 }`.");
     const names = Object.keys(targets);

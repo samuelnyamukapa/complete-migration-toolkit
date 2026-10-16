@@ -5,10 +5,14 @@
 export type MatchLevel = "exact" | "semantic" | "contract";
 export const MATCH_LEVELS: readonly MatchLevel[] = ["exact", "semantic", "contract"];
 
-/** One system the toolkit can send cases to. */
+/**
+ * One system the toolkit can send cases to. `base_url` is needed for HTTP cases; any other
+ * setting (a queue name, a folder, a program to run) is passed as it is to the adapters.
+ */
 export interface Target {
     name: string;
-    base_url: string;
+    base_url?: string;
+    [setting: string]: string | number | boolean | undefined;
 }
 
 export interface Override {
