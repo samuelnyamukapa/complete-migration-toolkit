@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import YAML from "yaml";
 
+import { JsonNumber, JsonObject, parseJsonExact } from "./json.js";
 import type { Case } from "./types.js";
 
 const STATIC = /\.(js|mjs|css|map|png|jpe?g|gif|svg|ico|woff2?|ttf|eot|webp|mp4|webm)$/i;
@@ -25,41 +26,48 @@ export interface HarImport {
 
 export const REDACTED = "REDACTED";
 
-/** Names that usually carry a credential: dropped as headers, replaced as query values and body fields. */
-export function looksSecret(name: string): boolean {
+/**
+ * Names that usually carry a credential: dropped as headers, replaced as query values and body
+ * fields. A header whose name ends in "key" (X-Functions-Key, X-Goog-Api-Key) is always one.
+ */
+export function looksSecret(name: string, kind: "header" | "field" = "field"): boolean {
     const n = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (kind === "header" && n.endsWith("key")) return true;
     if (["key", "code", "sig", "sid", "pin", "otp", "totp", "mfa", "session", "jwt", "pass", "pwd", "secret", "token", "hash", "nonce", "pan"].includes(n)) return true;
-    return /token|secret|passw|apikey|subscriptionkey|accesskey|privatekey|signature|sessionid|credential|^x?auth(orization|key|code|header)?$|cookie|csrf|xsrf|bearer|pincode|cvv|cvc|cardnumber/.test(n);
+    return /token|secret|passw|apikey|subscriptionkey|accesskey|privatekey|functionkey|signature|sessionid|credential|^x?auth(orization|key|code|header)?$|cookie|csrf|xsrf|bearer|pincode|cvv|cvc|cardnumber/.test(n);
 }
 
-function redactJson(v: unknown): [unknown, boolean] {
-    if (Array.isArray(v)) {
-        let hit = false;
-        const out = v.map((x) => { const [y, h] = redactJson(x); hit ||= h; return y; });
-        return [out, hit];
-    }
-    if (v && typeof v === "object") {
-        let hit = false;
-        const out: Record<string, unknown> = {};
-        for (const [k, x] of Object.entries(v)) {
-            if (looksSecret(k) && x !== null && typeof x !== "object") { out[k] = REDACTED; hit = true; continue; }
-            const [y, h] = redactJson(x);
-            out[k] = y;
-            hit ||= h;
+/** Redact in place, keeping key order and the exact text of every number. */
+function redactJson(v: unknown): boolean {
+    let hit = false;
+    if (Array.isArray(v)) for (const x of v) hit = redactJson(x) || hit;
+    else if (v instanceof JsonObject) {
+        for (const [k, x] of v) {
+            if (looksSecret(k) && x !== null) { v.set(k, REDACTED); hit = true; }
+            else hit = redactJson(x) || hit;
         }
-        return [out, hit];
     }
-    return [v, false];
+    return hit;
 }
 
-/** A request body with every credential-like field replaced: JSON, form fields and XML or SOAP elements. */
+function stringifyExact(v: unknown): string {
+    if (v instanceof JsonNumber) return v.source;
+    if (Array.isArray(v)) return `[${v.map(stringifyExact).join(",")}]`;
+    if (v instanceof JsonObject) return `{${[...v].map(([k, x]) => `${JSON.stringify(k)}:${stringifyExact(x)}`).join(",")}}`;
+    return JSON.stringify(v);
+}
+
+const ATTR = /(\s)((?:[\w.-]+:)?([\w.-]+))(\s*=\s*)("[^"]*"|'[^']*')/g;
+const ELEMENT = /<((?:[\w.-]+:)?([\w.-]+))(\s[^>]*)?>((?:<!\[CDATA\[[\s\S]*?\]\]>)|[^<]*)<\/\1>/g;
+
+/** A request body with every credential-like field replaced: JSON, form fields, and XML or SOAP elements, attributes and CDATA. */
 export function redactBody(text: string, contentType: string): [string, boolean] {
     const ct = contentType.toLowerCase();
     const trimmed = text.trimStart();
     if (ct.includes("json") || trimmed.startsWith("{") || trimmed.startsWith("[")) {
         try {
-            const [v, hit] = redactJson(JSON.parse(text));
-            return hit ? [JSON.stringify(v), true] : [text, false];
+            const doc = parseJsonExact(text);
+            return redactJson(doc) ? [stringifyExact(doc), true] : [text, false];
         } catch {
             // not JSON after all; fall through
         }
@@ -72,11 +80,17 @@ export function redactBody(text: string, contentType: string): [string, boolean]
     }
     if (ct.includes("xml") || ct.includes("soap") || trimmed.startsWith("<")) {
         let hit = false;
-        const out = text.replace(/<((?:[\w.-]+:)?([\w.-]+))(\s[^>]*)?>([^<]*)<\/\1>/g, (m, tag: string, local: string, attrs: string | undefined, inner: string) => {
-            if (!looksSecret(local) || !inner.trim()) return m;
-            hit = true;
-            return `<${tag}${attrs ?? ""}>${REDACTED}</${tag}>`;
-        });
+        const out = text
+            .replace(/<[A-Za-z][^>]*>/g, (tag) => tag.replace(ATTR, (m, sp: string, name: string, local: string, eq: string, quoted: string) => {
+                if (!looksSecret(local) || quoted.length <= 2) return m;
+                hit = true;
+                return `${sp}${name}${eq}${quoted[0]}${REDACTED}${quoted[0]}`;
+            }))
+            .replace(ELEMENT, (m, tag: string, local: string, attrs: string | undefined, inner: string) => {
+                if (!looksSecret(local) || !inner.replace(/^<!\[CDATA\[|\]\]>$/g, "").trim()) return m;
+                hit = true;
+                return `<${tag}${attrs ?? ""}>${REDACTED}</${tag}>`;
+            });
         return [out, hit];
     }
     // Any other format: keep it only if nothing in it looks like a credential.
@@ -112,7 +126,7 @@ export function importHar(files: string[], opts: { include?: string; exclude?: s
             for (const h of r.headers ?? []) {
                 const name = String(h?.name ?? "");
                 if (!name || name.startsWith(":")) continue;
-                if (DROPPED_HEADERS.has(name.toLowerCase()) || looksSecret(name)) { dropped.add(name.toLowerCase()); continue; }
+                if (DROPPED_HEADERS.has(name.toLowerCase()) || looksSecret(name, "header")) { dropped.add(name.toLowerCase()); continue; }
                 headers[name] = String(h.value ?? "");
             }
             const method = String(r.method ?? "GET").toUpperCase();

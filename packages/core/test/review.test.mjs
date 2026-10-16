@@ -188,6 +188,21 @@ test("HAR import keeps credentials out of query strings, bodies and headers", ()
     assert.deepEqual(r.redacted, ["HAR-001", "HAR-002", "HAR-003", "HAR-004"]);
 });
 
+test("HAR import: key headers, XML attributes and CDATA; the rest of a body is kept exactly", () => {
+    const dir = tmp();
+    const entries = [
+        { request: { method: "GET", url: "http://l/api/run", headers: [{ name: "x-functions-key", value: "fnkey123" }, { name: "Accept", value: "*/*" }] } },
+        { request: { method: "POST", url: "http://l/Login.svc", headers: [], postData: { mimeType: "text/xml", text: '<Login user="ann" password="attr123"/><Pwd><![CDATA[cdata123]]></Pwd><Note><![CDATA[keep me]]></Note>' } } },
+        { request: { method: "POST", url: "http://l/login", headers: [], postData: { mimeType: "application/json", text: '{"id":12345678901234567890,"price":10.0,"2":"b","1":"a","password":"pw"}' } } },
+    ];
+    write(dir, "w.har", JSON.stringify({ log: { entries } }));
+    const r = importHar([path.join(dir, "w.har")]);
+    const yaml = casesToYaml(r.cases);
+    for (const secret of ["fnkey123", "attr123", "cdata123"]) assert.ok(!yaml.includes(secret), secret);
+    assert.ok(yaml.includes('user="ann"') && yaml.includes("keep me"));
+    assert.equal(r.cases[2].request.body, '{"id":12345678901234567890,"price":10.0,"2":"b","1":"a","password":"REDACTED"}');
+});
+
 // ---------------------------------------------------------------- 5: the diff misses nothing real
 
 test("JSON: own keys only, key order as sent, every digit of a number", () => {
@@ -295,6 +310,13 @@ test("sign-off is tied to the evidence and refuses a report with no evidence", a
         await compare(p.m());
         assert.equal(signoffState(dir).state, "none", "running again clears it");
         assert.throws(() => recordSignoff(dir, { name: "", role: "x", decision: "accept" }, "2026-10-16"), /Nothing was signed/);
+
+        recordSignoff(dir, { name: "Ann $& Co", role: "Lead $1 $'", decision: "accept" }, "2026-10-16");
+        const md = path.join(dir, "REPORT.md");
+        assert.match(fs.readFileSync(md, "utf8"), /^\| Name \| Ann \$& Co \|$/m, "typed text is written as typed");
+        assert.match(fs.readFileSync(md, "utf8"), /^\| Role \| Lead \$1 \$' \|$/m);
+        fs.writeFileSync(md, fs.readFileSync(md, "utf8").replace("**Verdict: PARITY**", "**Verdict: PASS**"));
+        assert.equal(signoffState(dir).state, "stale", "editing the report text voids the signature");
     } finally {
         await p.close();
     }

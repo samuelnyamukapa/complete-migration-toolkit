@@ -132,9 +132,9 @@ export function send(baseUrl: string, c: Case, extra: Record<string, string>, op
     });
 }
 
-/** An adapter in its own process, speaking JSON lines. Its standard error is passed through. */
+/** An adapter in its own process, speaking JSON lines. Its standard error is passed on, a line at a time, marked with its name. */
 export function processAdapter(name: string, spec: AdapterSpec, cwd: string): Adapter {
-    let child: ChildProcessByStdio<Writable, Readable, null> | undefined;
+    let child: ChildProcessByStdio<Writable, Readable, Readable> | undefined;
     let lines: AsyncIterator<string> | undefined;
     let startError: Error | undefined;
     const timeoutMs = (spec.timeout_s ?? 300) * 1000;
@@ -146,8 +146,9 @@ export function processAdapter(name: string, spec: AdapterSpec, cwd: string): Ad
     const start = () => {
         if (child) return;
         startError = undefined;
-        const c = spawn(spec.command, spec.args ?? [], { cwd, stdio: ["pipe", "pipe", "inherit"], shell: false });
+        const c = spawn(spec.command, spec.args ?? [], { cwd, stdio: ["pipe", "pipe", "pipe"], shell: false });
         c.on("error", (err) => { startError = err; });
+        readline.createInterface({ input: c.stderr }).on("line", (line) => process.stderr.write(`[adapter ${name}] ${line}\n`));
         c.stdin.on("error", () => { /* the process ended; the next read reports it */ });
         child = c;
         lines = readline.createInterface({ input: c.stdout })[Symbol.asyncIterator]();

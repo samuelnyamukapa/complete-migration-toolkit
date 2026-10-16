@@ -10,7 +10,7 @@ Fixes from an independent review of 0.1.0. Every fix has a regression test (`pac
 - **One bad case no longer ends a run.** An invalid header value, a missing adapter program, a failed reset or an invalid `matches` pattern now makes that case an error, and the run goes on.
   - Problems with the settings stop the run before any evidence is touched: an unknown surface, a token with a stray newline, or a bad scrub rule.
   - The evidence is replaced only once a run has finished.
-- **HAR import never writes a credential.** API-key, subscription-key and token headers are dropped. Credential-like values in query strings and request bodies (JSON, forms, XML and SOAP) become `REDACTED`, and the command lists the cases to fill in.
+- **HAR import leaves out far more credentials.** Headers that carry keys or tokens (such as `X-API-Key` and `X-Functions-Key`) are dropped. Credential-like values in query strings and request bodies become `REDACTED`, in JSON, forms, and XML or SOAP elements, attributes and CDATA. The rest of the body is kept exactly, numbers included. The command lists the cases to fill in. A credential under an unusual name can still get through, so read imported cases before committing them.
 - **The diff misses less.**
   - Only an object's own keys are compared.
   - Key order is kept as sent, including keys that look like numbers.
@@ -25,7 +25,7 @@ Fixes from an independent review of 0.1.0. Every fix has a regression test (`pac
   - A system that is down gives "did not answer" advice instead of "add cases".
   - After a partial run, drift for cases that did not run is not called unused.
   - Each report states the reason for its verdict and the next step.
-- **Sign-off.** It records a fingerprint of the evidence in `SIGNOFF.json` and in the report. `cmtk status` shows who signed, or that a signature no longer counts. A report with no evidence cannot be signed. The docs now say plainly that a terminal prompt is not a lock.
+- **Sign-off.** It records a fingerprint of the evidence (the answers, REPORT.json, and REPORT.md above its sign-off table) in `SIGNOFF.json` and in the report. `cmtk status` shows who signed, or that a signature no longer counts. A report with no evidence cannot be signed. The docs now say plainly that a terminal prompt is not a lock.
 - **Paths.**
   - Evidence and case files cannot reach outside the project through a link.
   - `evidence` cannot be the project folder.
@@ -41,10 +41,12 @@ Fixes from an independent review of 0.1.0. Every fix has a regression test (`pac
 ### Changed
 
 - Node.js 22.5 or later is required, for `path.matchesGlob`.
+- **CI:** a run with `--only` now exits with 2 (INCOMPLETE), not 0. A pipeline that runs only some cases on purpose should accept exit code 2, or run every case.
+- An adapter's standard error is shown a line at a time, marked `[adapter <name>]`.
 
 ### Verified
 
-- 37 tests on Windows and Linux: the 20 from 0.1.0 and 17 regression tests, one or more for each review finding.
+- 38 tests on Windows and Linux: the 20 from 0.1.0 and 18 regression tests, one or more for each review finding. The reviewer then re-ran each original reproduction against the fixes.
 
 ## 0.1.0 (2026-10-16)
 

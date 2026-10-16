@@ -24,22 +24,25 @@ export interface Signoff {
 
 export class SignoffError extends Error {}
 
-const SKIP = new Set(["REPORT.md", "SIGNOFF.json"]);
-
-/** One fingerprint for every file in the evidence folder except the report text and the signature. */
+/**
+ * One fingerprint for every file in the evidence folder: the answers, REPORT.json, and REPORT.md
+ * down to its sign-off table (which signing fills in). SIGNOFF.json is the signature itself.
+ */
 export function evidenceFingerprint(dir: string): string {
     const files: string[] = [];
     const walk = (d: string) => {
         for (const e of fs.readdirSync(d, { withFileTypes: true })) {
             const full = path.join(d, e.name);
             if (e.isDirectory()) walk(full);
-            else if (e.isFile() && !(d === dir && SKIP.has(e.name))) files.push(full);
+            else if (e.isFile() && !(d === dir && e.name === "SIGNOFF.json")) files.push(full);
         }
     };
     walk(dir);
     const h = crypto.createHash("sha256");
     for (const f of files.map((f) => path.relative(dir, f).split(path.sep).join("/")).sort()) {
-        h.update(f).update("\0").update(crypto.createHash("sha256").update(fs.readFileSync(path.join(dir, f))).digest("hex")).update("\n");
+        let bytes = fs.readFileSync(path.join(dir, f));
+        if (f === "REPORT.md") bytes = Buffer.from(bytes.toString("utf8").split(/\r?\n## Sign-off\r?\n/)[0]!, "utf8");
+        h.update(f).update("\0").update(crypto.createHash("sha256").update(bytes).digest("hex")).update("\n");
     }
     return h.digest("hex");
 }
@@ -77,10 +80,9 @@ export function recordSignoff(dir: string, who: { name: string; role: string; de
     if (!name || !role || !(DECISIONS as readonly string[]).includes(decision)) throw new SignoffError(`Name, role and one of ${DECISIONS.join(" / ")} are all needed. Nothing was signed.`);
     const s: Signoff = { name, role, decision: decision as Signoff["decision"], date, verdict: report.verdict, evidence_sha256: evidenceFingerprint(dir) };
     const cell = (v: string) => v.replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
-    const text = fs.readFileSync(md, "utf8")
-        .replace(/^\| Name \|.*\|$/m, `| Name | ${cell(name)} |`).replace(/^\| Role \|.*\|$/m, `| Role | ${cell(role)} |`)
-        .replace(/^\| Date \|.*\|$/m, `| Date | ${date} |`).replace(/^\| Decision \|.*\|$/m, `| Decision | ${decision} |`)
-        .replace(/^\| Evidence \|.*\|$/m, `| Evidence | sha256 ${s.evidence_sha256} |`);
+    const row = (label: string, value: string) => (t: string) => t.replace(new RegExp(`^\\| ${label} \\|.*\\|$`, "m"), () => `| ${label} | ${value} |`);
+    const text = [row("Name", cell(name)), row("Role", cell(role)), row("Date", date), row("Decision", decision), row("Evidence", `sha256 ${s.evidence_sha256}`)]
+        .reduce((t, f) => f(t), fs.readFileSync(md, "utf8"));
     fs.writeFileSync(path.join(dir, "SIGNOFF.json"), JSON.stringify(s, null, 2) + "\n", "utf8");
     fs.writeFileSync(md, text, "utf8");
     return s;
