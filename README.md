@@ -45,6 +45,12 @@ cmtk compare      # the same cases on both systems, diffed
 cmtk signoff run  # a person signs, at a keyboard
 ```
 
+Other commands:
+- `cmtk check`: checks the settings and case files, without sending anything;
+- `cmtk probe <target> "GET /path"`: sends one read-only request;
+- `cmtk review`: a person accepts or rejects draft cases and proposals;
+- `cmtk defects run`: drafts defects from a report.
+
 A person who has never seen the toolkit can follow [docs/RUNBOOK.md](docs/RUNBOOK.md) step by step.
 
 ## A case
@@ -84,12 +90,36 @@ Set one level for the system, then loosen it per path (`overrides`) or per case.
   - WSDL and XSD: removed operations or elements, type changes, a changed target namespace.
 - **Anything else, through adapters:** queues, workers, files, email, SMS and payment sandboxes report their side effects as JSON, and the engine compares and checks them like a body. `cmtk adapter new` writes a working adapter, and `cmtk adapter check` runs the conformance kit. See [docs/ADAPTERS.md](docs/ADAPTERS.md).
 
-## For AI agents
+## The AI tester
 
-The MCP server gives an agent the same verbs a person has: `cmtk_run`, `cmtk_compare`, `cmtk_import_har` and `cmtk_status`. Sign-off is deliberately not a tool.
+The **cmtk plugin** for GitHub Copilot and Claude Code adds five skills that do the grind of testing:
+
+| Skill | Does |
+|---|---|
+| `/cmtk:test` | Start here. Takes any project from requirements to a signed report |
+| `/cmtk:plan` | Turns stories, runbooks or an OpenAPI file into a test plan and draft cases, with questions where the requirements are unclear |
+| `/cmtk:triage` | Sorts the differences in a comparison into noise, intended drift and defects |
+| `/cmtk:explore` | Explores against a charter, read-only and within a budget |
+| `/cmtk:defects` | Drafts defects with their evidence; files them only after you say yes |
+
+**Agents propose; people decide.**
+- Whatever an agent writes is a draft case or a proposal, and doesn't count until a person accepts it.
+- A person accepts or rejects drafts with `cmtk review`, and signs a report with `cmtk signoff`.
+- Both commands refuse to run from a script, and the MCP server has no tool that approves or signs.
+
+Install it from this repository: see [plugin/README.md](plugin/README.md). To try it, use the bookshop in [examples/bookshop](examples/bookshop), which has planted bugs. For the steps without an agent, see [docs/TESTER-RUNBOOK.md](docs/TESTER-RUNBOOK.md).
+
+The MCP server's tools are:
+- running: `cmtk_init`, `cmtk_check`, `cmtk_run`, `cmtk_compare`, `cmtk_import_har`, `cmtk_status`;
+- proposing: `cmtk_propose`, `cmtk_proposals`;
+- exploring: `cmtk_explore_start`, `cmtk_explore_request`, `cmtk_explore_finding`, `cmtk_explore_end`;
+- defects: `cmtk_defects`;
+- `cmtk_commands_for_person`, which gives the exact commands a person types.
+
+To use the server without the plugin:
 
 ```json
-{ "mcpServers": { "cmtk": { "command": "node", "args": ["<clone>/packages/mcp/dist/server.js"] } } }
+{ "mcpServers": { "cmtk": { "command": "node", "args": ["<clone>/plugin/server/cmtk-mcp.mjs"] } } }
 ```
 
 ## Safety
@@ -112,7 +142,9 @@ The MCP server gives an agent the same verbs a person has: `cmtk_run`, `cmtk_com
 | `packages/core` | The engine: settings, cases, adapters, expectations, comparison, contracts, drift, reports |
 | `packages/cli` | The `cmtk` command and the adapter template |
 | `packages/mcp` | The MCP server |
+| `plugin` | The cmtk plugin for Copilot and Claude Code: the skills, and the server and command bundled |
 | `docs/` | Plan, test plan, runbook, settings reference, adapter guide, pilot write-ups |
+| `examples/bookshop` | A small API with planted bugs, its stories and a CI example: the place to try the AI tester |
 | `examples/eshop-pilot` | The first pilot's folder, as a worked example: cases, an adapter for a .NET class library, and Windows scripts |
 
 ## Contributing

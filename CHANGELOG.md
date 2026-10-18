@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.2.0 (2026-10-18)
+
+The AI tester: skills that do the grind of testing, while people keep the judgement. Works on any project, not only migrations.
+
+### Added
+
+- **The cmtk plugin** for GitHub Copilot (CLI and app) and Claude Code, installed from this repository's marketplaces. It has five skills:
+  - `/cmtk:test`: start here;
+  - `/cmtk:plan`: stories, runbooks or OpenAPI become a test plan and draft cases;
+  - `/cmtk:triage`: noise, drift or defect for each group of differences;
+  - `/cmtk:explore`: charter-based exploration, read-only and within a budget;
+  - `/cmtk:defects`: defect drafts with their evidence.
+
+  The MCP server and the `cmtk` command are bundled inside, so the plugin needs only Node.js.
+- **Draft cases** (`draft: true`): reported as SKIPPED until a person accepts them.
+- **Proposals** (`cmtk/proposals.yaml`): agents propose scrubs, drift, defects and new expectations; nothing is applied until a person decides.
+- **`cmtk review`**: a person accepts or rejects each draft and proposal at a keyboard. Accepted items are applied with that person's name, and comments and line endings in the files survive. Rejected drafts are kept, with the reason, in `cmtk/rejected.yaml`.
+- **Exploration sessions**: a charter, a target, and a budget of requests and minutes. Sessions only read, log every answer as evidence, turn findings into draft cases, and end with `SESSION.md`.
+- **`cmtk defects run|compare`**: one draft per cause, with steps, expected, actual and evidence, and credentials removed. Drafts don't affect a signature.
+- **`cmtk check`** (sends nothing) and **`cmtk probe`** (one read-only request).
+- **`cmtk init` with only `--candidate`**: writes settings for testing one system, with nothing about migrations.
+- **MCP tools**: `cmtk_init`, `cmtk_check`, `cmtk_propose`, `cmtk_proposals`, the `cmtk_explore_*` tools, `cmtk_defects` and `cmtk_commands_for_person`. There is still no tool that decides or signs.
+- **[docs/TESTER-RUNBOOK.md](docs/TESTER-RUNBOOK.md)**: from stories to a signed report, in four ways of working (requirements, runbook, explore, regression).
+- **[examples/bookshop](examples/bookshop)**: a small API with planted bugs, a version 2 with planted noise, drift and a defect, and a CI workflow example.
+
 ## 0.1.2 (2026-10-16)
 
 Fixes from the first pilot, on the eShop sandbox. The write-up is [docs/pilots/eshop.md](docs/pilots/eshop.md).

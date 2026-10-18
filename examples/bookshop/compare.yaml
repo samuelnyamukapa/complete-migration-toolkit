@@ -1,0 +1,22 @@
+# Compare version 2 (the rewrite) with version 1. Start both: node server.mjs, and node server.mjs --v2
+# Then: cmtk compare --manifest compare.yaml, and /cmtk:triage to sort the differences.
+system: bookshop-v2
+
+targets:
+  legacy:    { base_url: http://localhost:4100 }   # version 1: today's system
+  candidate: { base_url: http://localhost:4101 }   # version 2: the rewrite
+
+match: exact
+scrub:
+  json_paths: []
+  xml_ignore: []
+  regex: []
+compare_headers: [content-type]
+
+cases: [cmtk/cases/*.yaml]
+drift: cmtk/drift.yaml
+proposals: cmtk/proposals-compare.yaml
+evidence: cmtk/evidence-compare
+
+allow_unsafe_methods: false
+timeout_s: 10

@@ -1,0 +1,12 @@
+# Test the bookshop (version 1) against its stories. Start it first: node server.mjs
+system: bookshop
+
+targets:
+  candidate: { base_url: http://localhost:4100 }
+
+cases: [cmtk/cases/*.yaml]    # one case per acceptance criterion; agents' drafts wait for `cmtk review`
+evidence: cmtk/evidence
+
+allow_unsafe_methods: false
+headers_from_env: {}
+timeout_s: 10

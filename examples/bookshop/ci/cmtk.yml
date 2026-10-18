@@ -1,0 +1,32 @@
+# Example GitHub Actions workflow: run the accepted cases on every pull request and keep the report.
+# Copy to .github/workflows/cmtk.yml in your project and change the "Start the system" step.
+name: cmtk
+on: [pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Start the system under test
+        run: |
+          node examples/bookshop/server.mjs &
+          for i in $(seq 1 30); do curl -sf http://localhost:4100/health && break; sleep 1; done
+      - name: Install cmtk
+        run: |
+          git clone --depth 1 https://github.com/samuelnyamukapa/complete-migration-toolkit "$RUNNER_TEMP/cmtk"
+          echo "CMTK=$RUNNER_TEMP/cmtk/plugin/server/cmtk.mjs" >> "$GITHUB_ENV"
+      - name: Run the accepted cases
+        working-directory: examples/bookshop
+        # Exit codes: 0 PASS, 1 FAIL, 2 INCOMPLETE (such as drafts not yet reviewed), 3 a settings problem.
+        run: node "$CMTK" run
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cmtk-report
+          path: examples/bookshop/cmtk/evidence/run/

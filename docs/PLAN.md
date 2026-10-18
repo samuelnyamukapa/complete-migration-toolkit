@@ -21,7 +21,7 @@ The toolkit is two things that share one engine and one set of adapters:
 |---|---|---|---|
 | 0 | `/modernize:parity` in [modernize-for-copilot](https://github.com/samuelnyamukapa/modernize-for-copilot) 1.1 | the billing fixture | a planted difference is caught and nothing else is flagged |
 | 1 | **Done (0.1.2): signed reports on eShop, 18 Oct 2026. See [docs/pilots/eshop.md](pilots/eshop.md).** Engine, `cmtk run` and `cmtk compare`, HTTP and SOAP, contracts, drift ledger, reports, CLI, MCP server | eShop sandbox | `cmtk run` and `cmtk compare` give a signed report on eShop |
-| 1b | The AI tester: skills that turn stories and runbooks into case files, explore against a charter, and draft defects | eShop, then one real sprint | testers on one team keep using it after the sprint |
+| 1b | **Built in 0.2.0; the sprint with a real team is next (#15).** The AI tester: skills that turn stories and runbooks into case files, explore against a charter, and draft defects | eShop, then one real sprint | testers on one team keep using it after the sprint |
 | 2 | Adapters: queues, workers, files, database, email, SMS, payment sandboxes; an adapter marketplace | a Windows service rebuilt as a Worker Service; CardDemo batch files | someone outside the core team adds a working adapter in a day |
 | 3 | UI: web journeys through e2e or Playwright (structure for a reskin, goals for a new UI), desktop through computer use, MFA with test authenticators | eShop reskinned, then with a new front end | the same journeys pass on both systems, replayed without a model |
 | 4 | Shadow traffic, long-running comparison, packaging and 1.0 | one real service rebuilt behind a locked contract | every migration mode proven on a pilot |
@@ -30,7 +30,7 @@ Each phase has a [milestone](https://github.com/samuelnyamukapa/complete-migrati
 
 ## Next steps
 
-1. Write the AI tester skills (#36): `/cmtk:plan` (stories to case files), `/cmtk:triage` (differences to scrub, drift or defect, always with a person) and `/cmtk:explore`.
+1. Try the AI tester with one real team for one sprint, and measure whether they keep using it (#15).
 2. Publish to npm as `complete-migration-toolkit`, so `npx cmtk` works (#32).
 3. Two items are left from Phase 1:
    - #7: a person follows the runbook by hand on Windows;

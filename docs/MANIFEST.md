@@ -25,6 +25,7 @@
 | `headers_from_env` | `{}` | Header name to environment variable name; read at run time, never written |
 | `timeout_s` | `30` | Per request: the whole answer must arrive within it |
 | `insecure_tls` | `false` | Accept self-signed certificates, for test systems only |
+| `proposals` | `cmtk/proposals.yaml` | Agents' proposals (scrubs, drift, defects, new expectations) waiting for a person. Only `cmtk review` decides them |
 | `adapters` | `{}` | Surface name to `{ command, args, timeout_s }` (`timeout_s`, default 300, is the longest wait for one answer). See [ADAPTERS.md](ADAPTERS.md) |
 
 ## Case files
@@ -41,6 +42,9 @@ A case file holds `cases:`, a list. Each case:
 | `surface` | no | The adapter that runs it. Default `http` |
 | `match` | no | This case's level, overriding everything else |
 | `safe` | no | `true` when a person has confirmed a non-GET request changes nothing, such as a read-only SOAP call |
+| `draft` | no | `true` for a case an agent wrote that no person has accepted yet. It is reported as SKIPPED until `cmtk review` accepts it |
+| `draft_note` | no | Why the drafter wrote it this way, and any question for the reviewer. Removed on acceptance |
+| `accepted_by`, `accepted_on` | no | Written by `cmtk review` when a person accepts a draft |
 
 ### expect
 

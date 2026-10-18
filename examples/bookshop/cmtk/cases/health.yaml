@@ -1,0 +1,11 @@
+# Written and accepted by a person: the one case the example starts with.
+cases:
+  - id: OPS-1-01
+    name: the health check says ok
+    requirement: OPS-1/AC-1
+    request: GET /health
+    expect:
+      status: 200
+      headers: { Content-Type: { matches: "^application/json" } }
+      json:
+        "$.status": { equals: ok }
