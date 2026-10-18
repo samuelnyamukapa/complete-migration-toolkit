@@ -47,6 +47,7 @@ An adapter can be written in any language, C# included: register its executable 
 ## Rules every adapter keeps
 
 - **Sandboxes only for money and messages.** Refuse live payment keys, such as Stripe's `sk_live_`, and real SMS or email delivery.
+- **GET, HEAD and OPTIONS only read.** Exploration sessions send these methods to adapters too, and promise people that nothing changes. An adapter must only observe for them.
 - **Report facts, not opinions.** The engine decides what differs and what passes.
 - **Leave out what changes on every run,** such as message ids and timestamps, or report it in a field the project can scrub.
 - **Never print a secret,** not even in an error.

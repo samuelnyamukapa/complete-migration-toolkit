@@ -20,6 +20,9 @@ export interface Signoff {
     date: string;
     verdict: Report["verdict"];
     evidence_sha256: string;
+    /** The settings file that produced the report, as the report records it. */
+    manifest?: string;
+    manifest_sha256?: string;
 }
 
 export class SignoffError extends Error {}
@@ -74,14 +77,29 @@ export function describeSignoff(st: SignoffState): string {
 }
 
 /** Record a person's decision on the report in `dir`. */
-export function recordSignoff(dir: string, who: { name: string; role: string; decision: string }, date: string): Signoff {
+/**
+ * Record a person's decision on the report in `dir`. `manifest` is the settings file the person
+ * named: the report must have been produced by that same file, so a report run from another
+ * settings file (with other scrubs or drift) can't be signed by mistake.
+ */
+export function recordSignoff(dir: string, who: { name: string; role: string; decision: string }, date: string, manifest?: { root: string; file: string }): Signoff {
     const json = path.join(dir, "REPORT.json"), md = path.join(dir, "REPORT.md");
     if (!fs.existsSync(json) || !fs.existsSync(md)) throw new SignoffError("There is no report in this folder yet.");
     const report = JSON.parse(fs.readFileSync(json, "utf8")) as Report;
     if (report.verdict === "NO EVIDENCE") throw new SignoffError("This report holds no evidence, so there is nothing to sign. Add cases and run again.");
+    if (manifest && report.settings) {
+        const named = path.relative(manifest.root, manifest.file).split(path.sep).join("/");
+        if (named !== report.settings.manifest) {
+            throw new SignoffError(`This report was produced from ${report.settings.manifest}, not ${named}. Read ${report.settings.manifest}, then sign with --manifest ${report.settings.manifest}, or run again with ${named}.`);
+        }
+    }
     const name = who.name.trim(), role = who.role.trim(), decision = who.decision.trim().toLowerCase();
     if (!name || !role || !(DECISIONS as readonly string[]).includes(decision)) throw new SignoffError(`Name, role and one of ${DECISIONS.join(" / ")} are all needed. Nothing was signed.`);
-    const s: Signoff = { name, role, decision: decision as Signoff["decision"], date, verdict: report.verdict, evidence_sha256: evidenceFingerprint(dir) };
+    if (/[\u0000-\u001f\u007f-\u009f]/.test(name + role)) throw new SignoffError("Name and role must be plain text. Nothing was signed.");
+    const s: Signoff = {
+        name, role, decision: decision as Signoff["decision"], date, verdict: report.verdict, evidence_sha256: evidenceFingerprint(dir),
+        ...(report.settings ? { manifest: report.settings.manifest, manifest_sha256: report.settings.manifest_sha256 } : {}),
+    };
     const cell = (v: string) => v.replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
     const row = (label: string, value: string) => (t: string) => t.replace(new RegExp(`^\\| ${label} \\|.*\\|$`, "m"), () => `| ${label} | ${value} |`);
     const text = [row("Name", cell(name)), row("Role", cell(role)), row("Date", date), row("Decision", decision), row("Evidence", `sha256 ${s.evidence_sha256}`)]

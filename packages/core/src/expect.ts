@@ -62,5 +62,9 @@ export function checkExpectation(exp: Expectation, obs: Observation): Failure[] 
     for (const text of exp.body_contains ?? []) {
         if (!(obs.body ?? "").includes(text)) out.push({ check: "body", expected: `contains ${short(text, 60)}`, actual: "not found" });
     }
+    for (const text of exp.body_excludes ?? []) {
+        const at = (obs.body ?? "").indexOf(text);
+        if (at >= 0) out.push({ check: "body", expected: `never contains ${short(text, 60)}`, actual: `found: ${short((obs.body ?? "").slice(Math.max(0, at - 20), at + text.length + 40), 100)}` });
+    }
     return out;
 }

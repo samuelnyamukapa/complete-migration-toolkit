@@ -100,7 +100,7 @@ export function redactBody(text: string, contentType: string): [string, boolean]
 
 const key = (c: Case) => crypto.createHash("sha256").update(JSON.stringify([c.request.method, c.request.path, c.request.body ?? ""])).digest("hex");
 
-export function importHar(files: string[], opts: { include?: string; exclude?: string; prefix?: string; existing?: Case[] } = {}): HarImport {
+export function importHar(files: string[], opts: { include?: string; exclude?: string; prefix?: string; existing?: Case[]; draft?: boolean } = {}): HarImport {
     const inc = opts.include ? new RegExp(opts.include) : undefined;
     const exc = opts.exclude ? new RegExp(opts.exclude) : undefined;
     const seen = new Set((opts.existing ?? []).map(key));
@@ -142,7 +142,10 @@ export function importHar(files: string[], opts: { include?: string; exclude?: s
                 hidden ||= hit;
             }
             const id = `${prefix}-${String(n).padStart(3, "0")}`;
-            const c: Case = { id, name: `${method} ${p}`.slice(0, 120), request: { method, path: p, headers, body }, source: `har:${path.basename(file)}` }; // the file name only: a full path can name a person's folders
+            const c: Case = {
+                id, name: `${method} ${p}`.slice(0, 120), request: { method, path: p, headers, body }, source: `har:${path.basename(file)}`, // the file name only: a full path can name a person's folders
+                ...(opts.draft ? { draft: true, draft_note: "Imported from a recording by an agent: a person checks it holds no secrets, names its requirement and accepts it." } : {}),
+            };
             const k = key(c);
             if (seen.has(k)) { skipped++; continue; }
             seen.add(k);

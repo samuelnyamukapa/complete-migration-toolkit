@@ -25,7 +25,8 @@
 | `headers_from_env` | `{}` | Header name to environment variable name; read at run time, never written |
 | `timeout_s` | `30` | Per request: the whole answer must arrive within it |
 | `insecure_tls` | `false` | Accept self-signed certificates, for test systems only |
-| `proposals` | `cmtk/proposals.yaml` | Agents' proposals (scrubs, drift, defects, new expectations) waiting for a person. Only `cmtk review` decides them |
+| `proposals` | `cmtk/proposals.yaml` | Agents' proposals (scrubs, drift, defects, new expectations) waiting for a person. Only `cmtk review` decides them. Draft cases a person rejects are kept, with the reason, in `rejected.yaml` in the same folder |
+| `explore_requests_per_day` | `1000` | The most requests exploration may send in one day (UTC), across all sessions. An open session counts its whole budget |
 | `adapters` | `{}` | Surface name to `{ command, args, timeout_s }` (`timeout_s`, default 300, is the longest wait for one answer). See [ADAPTERS.md](ADAPTERS.md) |
 
 ## Case files
@@ -59,7 +60,10 @@ expect:
     "$.error": { exists: false }
     "$.id": { matches: "^ORD-[0-9]+$" }
   body_contains: ["Thank you for your order"]
+  body_excludes: ["Exception", "at System."]   # text that must never appear, such as a stack trace
 ```
+
+Cases run in file order, but each case must stand alone: a case never depends on what an earlier one did.
 
 A check on a path that matches several values (with `[*]` or `..`) must hold for each of them.
 

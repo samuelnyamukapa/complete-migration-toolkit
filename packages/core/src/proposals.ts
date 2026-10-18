@@ -63,13 +63,14 @@ export function editYaml(file: string, fallback: string, fn: (doc: Document) => 
     fs.writeFileSync(file, out, "utf8");
 }
 
-/** The sequence under `key` (or the root sequence), created if missing. */
-function seqAt(doc: Document, key: string): YAMLSeq {
-    if (isSeq(doc.contents)) return doc.contents;
+/** The sequence under `key` (or the root sequence), created if missing. An empty `[]` becomes a block list, so people can read what is added. */
+export function seqAt(doc: Document, key: string): YAMLSeq {
+    const block = (s: YAMLSeq) => { if (s.flow && s.items.length === 0) s.flow = false; return s; };
+    if (isSeq(doc.contents)) return block(doc.contents);
     if (!isMap(doc.contents)) doc.contents = doc.createNode({}) as YAMLMap;
     const map = doc.contents as YAMLMap;
     const found: unknown = map.get(key, true);
-    if (isSeq(found)) return found;
+    if (isSeq(found)) return block(found);
     const s = new YAMLSeq();
     map.set(key, s);
     return s;
@@ -85,11 +86,18 @@ export function loadProposals(manifest: Manifest): Proposal[] {
     return list.filter((p) => p && typeof p.id === "string");
 }
 
+/** Control characters (terminal escapes among them) could make a person see something other than what is applied. */
+const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/;
+
 const text = (v: unknown, what: string, max = 2000): string => {
     if (typeof v !== "string" || !v.trim()) throw new ManifestError(`${what} is required.`);
     if (v.length > max) throw new ManifestError(`${what} is longer than ${max} characters.`);
+    if (CONTROL.test(v)) throw new ManifestError(`${what} holds control characters; write plain text.`);
     return v.trim();
 };
+
+/** Any text shown to a person, made safe for a terminal. */
+export const plain = (v: unknown): string => String(v ?? "").replace(new RegExp(CONTROL.source, "g"), (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`);
 
 function checkScrub(rule: unknown): ScrubRule {
     const r = (rule ?? {}) as ScrubRule;
@@ -107,7 +115,7 @@ function checkScrub(rule: unknown): ScrubRule {
     return r;
 }
 
-const EXPECT_KEYS = new Set(["status", "headers", "json", "body_contains"]);
+const EXPECT_KEYS = new Set(["status", "headers", "json", "body_contains", "body_excludes"]);
 
 export function addProposal(manifest: Manifest, input: ProposalInput, date: string): Proposal {
     if (!PROPOSAL_KINDS.includes(input.kind)) throw new ManifestError(`kind must be one of ${PROPOSAL_KINDS.join(", ")}.`);
@@ -130,6 +138,7 @@ export function addProposal(manifest: Manifest, input: ProposalInput, date: stri
     if (input.kind === "drift") {
         p.case = input.case === undefined || input.case === "*" ? "*" : known(input.case, "case");
         p.where = text(input.where, "where", 500);
+        if (p.where.replace(/[*$.[\]\s:]/g, "").length < 2) throw new ManifestError("`where` must name a place from a report, such as $.items[*].price or header:content-type; a wildcard alone would approve everything.");
     }
     if (input.kind === "defect") {
         p.title = text(input.title, "title", 200);
@@ -146,7 +155,8 @@ export function addProposal(manifest: Manifest, input: ProposalInput, date: stri
         p.expect = e as Expectation;
     }
     const existing = loadProposals(manifest);
-    const same = existing.find((x) => x.status === "pending" && x.kind === p.kind && JSON.stringify([x.case, x.where, x.rule, x.title]) === JSON.stringify([p.case, p.where, p.rule, p.title]));
+    const key = (x: Proposal) => JSON.stringify([x.kind, x.case, x.where, x.rule, x.title, x.cases, x.expect]);
+    const same = existing.find((x) => x.status === "pending" && key(x) === key(p));
     if (same) throw new ManifestError(`The same proposal is already waiting for a person: ${same.id}.`);
     p.id = `P-${String(1 + Math.max(0, ...existing.map((x) => Number(/^P-(\d+)$/.exec(x.id)?.[1] ?? 0)))).padStart(3, "0")}`;
     editYaml(inside(manifest, manifest.proposals), HEADER + "proposals: []\n", (doc) => {
@@ -159,12 +169,13 @@ export function addProposal(manifest: Manifest, input: ProposalInput, date: stri
 
 /** How a proposal reads to the person deciding it. */
 export function describeProposal(p: Proposal): string {
-    const lines = [`${p.id}  ${p.kind}, proposed by ${p.proposed_by} on ${p.proposed_on}`];
-    if (p.kind === "scrub") lines.push(`  hide on every run: ${JSON.stringify(p.rule)}`);
-    if (p.kind === "drift") lines.push(`  approve the difference at ${p.where} for case ${p.case}`);
-    if (p.kind === "defect") lines.push(`  defect: ${p.title}`, `  cases: ${p.cases?.join(", ")}`, ...(p.summary ? [`  ${p.summary}`] : []));
-    if (p.kind === "expectation") lines.push(`  change what case ${p.case} expects to: ${JSON.stringify(p.expect)}`);
-    lines.push(`  why: ${p.reason}`);
+    const q = (v: unknown) => JSON.stringify(v ?? null); // quoted and escaped: exactly what would be applied
+    const lines = [`${plain(p.id)}  ${plain(p.kind)}, proposed by ${plain(p.proposed_by)} on ${plain(p.proposed_on)}`];
+    if (p.kind === "scrub") lines.push(`  hide on every run: ${q(p.rule)}`);
+    if (p.kind === "drift") lines.push(`  approve the difference at ${q(p.where)} for ${p.case === "*" ? "EVERY case" : `case ${q(p.case)}`}`);
+    if (p.kind === "defect") lines.push(`  defect: ${q(p.title)}`, `  cases: ${q(p.cases)}`, ...(p.summary ? [`  summary: ${plain(p.summary)}`] : []));
+    if (p.kind === "expectation") lines.push(`  change what case ${q(p.case)} expects to: ${q(p.expect)}`);
+    lines.push(`  why: ${plain(p.reason)}`);
     return lines.join("\n");
 }
 
@@ -193,10 +204,11 @@ function caseNode(doc: Document, caseId: string): { seq: YAMLSeq; index: number;
  * A person's decision. `person` must come from a person at a keyboard: the CLI's `cmtk review`
  * is the only caller, and the MCP server offers no way to reach this.
  */
-export function decideProposal(manifest: Manifest, id: string, accept: boolean, person: string, date: string, note?: string): Proposal {
+export function decideProposal(manifest: Manifest, id: string, accept: boolean, person: string, date: string, note?: string, shown?: Proposal): Proposal {
     const p = loadProposals(manifest).find((x) => x.id === id);
     if (!p) throw new ManifestError(`There is no proposal ${id}.`);
     if (p.status !== "pending") throw new ManifestError(`${id} was already ${p.status}.`);
+    if (shown && JSON.stringify(p) !== JSON.stringify(shown)) throw new ManifestError(`${id} changed after it was shown to you. Nothing was applied; run \`cmtk review\` again.`);
     const who = text(person, "Your name", 100);
     if (!accept) {
         setStatus(manifest, id, { status: "rejected", decided_by: who, decided_on: date, ...(note ? { decision_note: note } : {}) });
@@ -241,10 +253,11 @@ export function decideProposal(manifest: Manifest, id: string, accept: boolean, 
 
 // ---------------------------------------------------------------- draft cases
 
-export function acceptDraft(manifest: Manifest, caseId: string, person: string, date: string): void {
+export function acceptDraft(manifest: Manifest, caseId: string, person: string, date: string, shown?: Case): void {
     const who = text(person, "Your name", 100);
     const { c, file } = caseFileOf(manifest, caseId);
     if (!c.draft) throw new ManifestError(`${caseId} is not a draft.`);
+    if (shown && JSON.stringify(c) !== JSON.stringify(shown)) throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was accepted; run \`cmtk review\` again.`);
     editYaml(file, "", (doc) => {
         const { node } = caseNode(doc, caseId);
         node.delete("draft");
@@ -260,14 +273,14 @@ export function rejectDraft(manifest: Manifest, caseId: string, person: string, 
     const why = text(reason, "A reason", 1000);
     const { c, file } = caseFileOf(manifest, caseId);
     if (!c.draft) throw new ManifestError(`${caseId} is not a draft.`);
-    let removed: unknown;
-    editYaml(file, "", (doc) => {
-        const { seq, index, node } = caseNode(doc, caseId);
-        removed = node.toJSON();
-        seq.items.splice(index, 1);
-    });
+    // Keep the record first, so a failure can never lose the draft.
+    const { file: _f, ...kept } = c;
     const rejected = inside(manifest, path.join(path.dirname(manifest.proposals), "rejected.yaml"));
     editYaml(rejected, "# Draft cases a person rejected, with the reason. Kept so the same draft is not proposed again.\nrejected: []\n", (doc) => {
-        seqAt(doc, "rejected").add(doc.createNode({ ...(removed as object), rejected_by: who, rejected_on: date, rejected_because: why }));
+        seqAt(doc, "rejected").add(doc.createNode({ ...kept, rejected_by: who, rejected_on: date, rejected_because: why }));
+    });
+    editYaml(file, "", (doc) => {
+        const { seq, index } = caseNode(doc, caseId);
+        seq.items.splice(index, 1);
     });
 }

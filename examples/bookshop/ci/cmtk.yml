@@ -22,8 +22,9 @@ jobs:
           echo "CMTK=$RUNNER_TEMP/cmtk/plugin/server/cmtk.mjs" >> "$GITHUB_ENV"
       - name: Run the accepted cases
         working-directory: examples/bookshop
-        # Exit codes: 0 PASS, 1 FAIL, 2 INCOMPLETE (such as drafts not yet reviewed), 3 a settings problem.
-        run: node "$CMTK" run
+        # Exit codes: 0 PASS, 1 FAIL, 2 INCOMPLETE, 3 a settings problem.
+        # --accepted-only: drafts nobody has reviewed yet are left out, so they don't fail the build.
+        run: node "$CMTK" run --accepted-only
       - name: Keep the report
         if: always()
         uses: actions/upload-artifact@v4

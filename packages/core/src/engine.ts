@@ -3,17 +3,19 @@
 //   compare  the reference and the candidate, every case sent to both and the answers diffed,
 //            with approved drift expected and everything else reported
 // Both write their evidence and a report into the evidence folder. Neither signs anything.
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
 import { httpAdapter, processAdapter, type Adapter } from "./adapters.js";
 import { checkContract } from "./contracts.js";
+import { cleanUrl } from "./defects.js";
 import { compareObservations, scrubberOf } from "./diff.js";
 import { coveringDrift } from "./drift.js";
 import { checkExpectation } from "./expect.js";
 import { loadCases, loadDrift, ManifestError, ownedFolder } from "./manifest.js";
 import { renderReport, summarise } from "./report.js";
-import type { Case, CaseOutcome, ContractOutcome, Manifest, MatchLevel, Report, Target } from "./types.js";
+import type { Case, CaseOutcome, ContractOutcome, Drift, Manifest, MatchLevel, Report, ReportSettings, Target } from "./types.js";
 
 export const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -22,6 +24,8 @@ export interface RunOptions {
     allowUnsafe?: boolean;
     /** Only these case ids. */
     only?: string[];
+    /** Leave draft cases out entirely, as CI does, instead of reporting them as SKIPPED. */
+    acceptedOnly?: boolean;
     /** cmtk run: the target to test (default: default_target). */
     target?: string;
     /** Today's date (tests pass a fixed one). */
@@ -67,7 +71,13 @@ export function adaptersFor(manifest: Manifest) {
     };
 }
 
-function selectCases(manifest: Manifest, only?: string[]): Case[] {
+function selectCases(manifest: Manifest, only?: string[], acceptedOnly = false): Case[] & { excluded: number } {
+    const picked = pick(manifest, only);
+    if (!acceptedOnly) return Object.assign(picked, { excluded: 0 });
+    return Object.assign(picked.filter((c) => !c.draft), { excluded: picked.filter((c) => c.draft).length });
+}
+
+function pick(manifest: Manifest, only?: string[]): Case[] {
     const all = loadCases(manifest);
     for (const c of all) {
         const s = c.surface ?? "http";
@@ -83,7 +93,7 @@ function selectCases(manifest: Manifest, only?: string[]): Case[] {
 const requirementsOf = (c: Case) => (c.requirement === undefined ? [] : Array.isArray(c.requirement) ? c.requirement.map(String) : [String(c.requirement)]);
 
 function base(c: Case): Omit<CaseOutcome, "result"> {
-    return { id: c.id, name: c.name ?? `${c.request.method} ${c.request.path}`, requirement: requirementsOf(c), surface: c.surface ?? "http" };
+    return { id: c.id, name: c.name ?? `${c.request.method} ${c.request.path}`, request: `${c.request.method} ${c.request.path}`, requirement: requirementsOf(c), surface: c.surface ?? "http" };
 }
 
 function unsafe(c: Case, manifest: Manifest, opts: RunOptions) {
@@ -116,8 +126,21 @@ function evidenceDir(manifest: Manifest, mode: string) {
 
 const failed = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
+/** What produced a report: the settings file and everything in it that hides or approves a difference. */
+export function settingsOf(manifest: Manifest, drift: Drift[]): ReportSettings {
+    return {
+        manifest: path.relative(manifest.root, manifest.file).split(path.sep).join("/"),
+        manifest_sha256: crypto.createHash("sha256").update(fs.readFileSync(manifest.file)).digest("hex"),
+        match: manifest.match,
+        overrides: manifest.overrides,
+        scrub: manifest.scrub,
+        drift_file: manifest.drift,
+        drift_entries: drift.length,
+    };
+}
+
 /** How a report names a target: its address, or its adapter settings. */
-const where = (t: Target) => t.base_url ?? Object.entries(t).filter(([k]) => k !== "name").map(([k, v]) => `${k}=${v}`).join(", ");
+const where = (t: Target) => (t.base_url ? cleanUrl(t.base_url) : undefined) ?? Object.entries(t).filter(([k]) => k !== "name").map(([k, v]) => `${k}=${v}`).join(", ");
 
 const writeJson = (file: string, data: unknown) => fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8");
 
@@ -131,7 +154,7 @@ function target(manifest: Manifest, name: string | undefined, role: string): Tar
 /** cmtk run: one target, checked against expectations. */
 export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Report> {
     const t = target(manifest, opts.target ?? manifest.default_target, "default_target");
-    const cases = selectCases(manifest, opts.only);
+    const cases = selectCases(manifest, opts.only, opts.acceptedOnly);
     const extra = envHeaders(manifest);
     const adapters = adaptersFor(manifest);
     const ev = evidenceDir(manifest, "run");
@@ -156,7 +179,7 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
     } finally {
         await adapters.closeAll();
     }
-    const report = summarise({ mode: "run", manifest, targets: { [t.name]: where(t) }, cases: out, contracts: [], drift: [], usedDrift: new Set(), date: opts.date ?? today(), partial: !!opts.only?.length });
+    const report = summarise({ mode: "run", manifest, targets: { [t.name]: where(t) }, cases: out, contracts: [], drift: [], usedDrift: new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, []), excludedDrafts: cases.excluded });
     writeJson(path.join(dir, "REPORT.json"), report);
     fs.writeFileSync(path.join(dir, "REPORT.md"), renderReport(report), "utf8");
     ev.commit();
@@ -168,7 +191,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
     const ref = target(manifest, manifest.reference, "reference");
     const cand = target(manifest, manifest.candidate, "candidate");
     if (ref.name === cand.name) throw new ManifestError("The reference and the candidate are the same target; comparing needs two systems.");
-    const cases = selectCases(manifest, opts.only);
+    const cases = selectCases(manifest, opts.only, opts.acceptedOnly);
     const drift = loadDrift(manifest);
     scrubberOf(manifest); // a bad scrub rule stops the run here, before any evidence is touched
     const extra = envHeaders(manifest);
@@ -227,7 +250,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
     } finally {
         await adapters.closeAll();
     }
-    const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length });
+    const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), excludedDrafts: cases.excluded });
     writeJson(path.join(dir, "REPORT.json"), report);
     fs.writeFileSync(path.join(dir, "REPORT.md"), renderReport(report), "utf8");
     ev.commit();

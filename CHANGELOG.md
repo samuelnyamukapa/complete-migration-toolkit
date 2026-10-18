@@ -24,6 +24,31 @@ The AI tester: skills that do the grind of testing, while people keep the judgem
 - **MCP tools**: `cmtk_init`, `cmtk_check`, `cmtk_propose`, `cmtk_proposals`, the `cmtk_explore_*` tools, `cmtk_defects` and `cmtk_commands_for_person`. There is still no tool that decides or signs.
 - **[docs/TESTER-RUNBOOK.md](docs/TESTER-RUNBOOK.md)**: from stories to a signed report, in four ways of working (requirements, runbook, explore, regression).
 - **[examples/bookshop](examples/bookshop)**: a small API with planted bugs, a version 2 with planted noise, drift and a defect, and a CI workflow example.
+- **`--accepted-only`** for `cmtk run` and `cmtk compare` (and `accepted_only` on the MCP tools): drafts are left out, and the report says how many. CI uses it.
+- **`body_excludes`** in `expect:`: text that must never appear, such as a stack trace.
+- **Settings in every report:** the settings file and its SHA-256, the match level, the scrub rules and the drift ledger in force. `cmtk status` shows which settings file a report came from.
+- **`explore_requests_per_day`** (default 1000): a limit on exploration requests per day, across sessions.
+
+### Fixed before release
+
+An independent review checked every route by which an agent could decide, sign, or reach further than it should. All its findings are fixed, each with a regression test (`packages/core/test/tester-review.test.mjs`, and the MCP tests):
+
+- `cmtk init` and `cmtk_init` refuse an address that could write other settings into `cmtk.yaml`, and quote the addresses they write.
+- Sign-off refuses a report produced from another settings file, and records the settings file and its fingerprint.
+- `cmtk review` refuses an item that changed after it was shown, and refuses text with control characters (which could hide what a person reads). A drift proposal for every case and every path is refused; one for every case says so in capitals.
+- Exploration sends one request at a time per session, refuses method-override headers, and counts open sessions' whole budget against the daily limit.
+- Defect drafts remove credential-like query values, credentials in request bodies, and a user name or password in a target's address.
+- HAR files imported by an agent through MCP become draft cases.
+- The commands handed to a person are quoted for their shell, so an unusual folder name can't run anything else.
+- `cmtk review` keeps going when one item fails, says which, and stops cleanly when the terminal closes.
+
+### Verified
+
+- 58 tests on Windows and Linux.
+- The skills were tried by agents on the bookshop example and on the eShop pilot's rules, and judged against what was planted:
+  - `/cmtk:explore` found the three planted bugs in version 1 (a negative page, a non-numeric id, a page size of 0), within its budget and without changing data;
+  - `/cmtk:triage` sorted every planted difference in version 2 correctly: two kinds of noise, the currency drift, the title-sort defect, and the health version as a question for a person;
+  - `/cmtk:plan` on the eShop rules: 43 of 44 drafted cases were judged acceptable or better. It missed three areas of scope, so the skill now requires a case for everything the scope names, plus the entry point and an unknown address.
 
 ## 0.1.2 (2026-10-16)
 

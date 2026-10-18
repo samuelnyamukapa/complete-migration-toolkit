@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { loadManifest, ManifestError, STARTER_MANIFEST } from "./manifest.js";
+import { isBaseUrl, loadManifest, ManifestError, STARTER_MANIFEST } from "./manifest.js";
 
 export const EXAMPLE_CASES = `# Cases for \`cmtk run\` (one system, checked against expectations) and \`cmtk compare\`
 # (the same request to the reference and the candidate). Each case says which requirement it answers for.
@@ -30,7 +30,12 @@ drift: []
 /** Write cmtk.yaml and a first case file (and a drift ledger, when there is a legacy system). Refuses to overwrite. Returns the files written. */
 export function initProject(manifestFile: string, o: { candidate: string; legacy?: string; system?: string }): string[] {
     if (fs.existsSync(manifestFile)) throw new ManifestError(`${path.basename(manifestFile)} already exists; edit it instead.`);
+    if (!/\.ya?ml$/i.test(manifestFile)) throw new ManifestError("The settings file must be a .yaml file, such as cmtk.yaml.");
     const root = path.dirname(manifestFile);
+    if (!fs.existsSync(root)) throw new ManifestError(`${root} does not exist. cmtk init only writes into an existing project folder.`);
+    for (const [k, v] of Object.entries({ candidate: o.candidate, legacy: o.legacy })) {
+        if (v !== undefined && !isBaseUrl(v)) throw new ManifestError(`--${k} must be an http:// or https:// URL, such as http://localhost:5002.`);
+    }
     const system = (o.system ?? path.basename(root)).replace(/[^A-Za-z0-9_.-]/g, "-").replace(/^[^A-Za-z0-9]+/, "") || "system";
     fs.mkdirSync(path.join(root, "cmtk", "cases"), { recursive: true });
     fs.writeFileSync(manifestFile, STARTER_MANIFEST(system, o.legacy, o.candidate), "utf8");

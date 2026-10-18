@@ -32,7 +32,9 @@ Usage:
   cmtk init --candidate <url> [--legacy <url>] [--system <name>]   write cmtk.yaml and a first case file
   cmtk import-har <file.har>... [--include <regex>] [--exclude <regex>] [--out <file>]
                                                                     turn recorded traffic into cases
-  cmtk run [--target <name>] [--only <id,id>] [--allow-unsafe]      check one system against each case's expect: block
+  cmtk run [--target <name>] [--only <id,id>] [--allow-unsafe] [--accepted-only]
+                                                                    check one system against each case's expect: block
+                                                                    (--accepted-only leaves draft cases out, as in CI)
   cmtk compare [--only <id,id>] [--allow-unsafe]                    send each case to the reference and the candidate, and diff
   cmtk status                                                       the latest verdicts
   cmtk check                                                        check settings and case files; sends nothing
@@ -85,6 +87,7 @@ async function main(argv: string[]): Promise<number> {
             target: { type: "string" },
             only: { type: "string" },
             "allow-unsafe": { type: "boolean", default: false },
+            "accepted-only": { type: "boolean", default: false },
             candidate: { type: "string" },
             legacy: { type: "string" },
             system: { type: "string" },
@@ -129,8 +132,8 @@ async function main(argv: string[]): Promise<number> {
         case "compare": {
             const manifest = loadManifest(manifestFile);
             const report = cmd === "run"
-                ? await run(manifest, { target: values.target, only, allowUnsafe: values["allow-unsafe"] })
-                : await compare(manifest, { only, allowUnsafe: values["allow-unsafe"] });
+                ? await run(manifest, { target: values.target, only, allowUnsafe: values["allow-unsafe"], acceptedOnly: values["accepted-only"] })
+                : await compare(manifest, { only, allowUnsafe: values["allow-unsafe"], acceptedOnly: values["accepted-only"] });
             printReport(report, values.json!, manifest.root, manifest.evidence);
             return exitFor(report.verdict);
         }
@@ -143,7 +146,7 @@ async function main(argv: string[]): Promise<number> {
                 if (!fs.existsSync(f)) continue;
                 any = true;
                 const r = JSON.parse(fs.readFileSync(f, "utf8")) as Report;
-                console.log(`${mode}: ${r.verdict} on ${r.date}, ${describeSignoff(signoffState(dir))}`);
+                console.log(`${mode}: ${r.verdict} on ${r.date}${r.settings ? ` from ${r.settings.manifest}` : ""}, ${describeSignoff(signoffState(dir))}`);
             }
             if (!any) console.log("No reports yet. Next: `cmtk run` or `cmtk compare`.");
             return 0;
@@ -181,13 +184,18 @@ async function signoff(manifestFile: string, mode: string | undefined): Promise<
     if (!fs.existsSync(json)) throw new UsageError(`There is no ${mode} report yet. Run \`cmtk ${mode}\` first.`);
     const report = JSON.parse(fs.readFileSync(json, "utf8")) as Report;
     console.log(`${mode} report for ${report.system}: ${report.verdict} (${report.date}). ${report.reason}`);
+    if (report.settings) {
+        const st = report.settings;
+        const scrubs = [...st.scrub.json_paths, ...st.scrub.xml_ignore.map((e) => `XML ${e}`), ...st.scrub.regex.map((x) => `regex ${x.pattern}`)];
+        console.log(`Produced from ${st.manifest}.${mode === "compare" ? ` Hidden by scrubs: ${scrubs.length ? scrubs.join(", ") : "nothing"}. Approved drift: ${st.drift_entries} entries in ${st.drift_file}.` : ""}`);
+    } else console.log("This report does not record which settings produced it (made by cmtk before 0.2.0).");
     console.log(`Read it first: ${path.relative(process.cwd(), path.join(dir, "REPORT.md"))}`);
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     try {
         const name = await rl.question("Your full name: ");
         const role = await rl.question("Your role: ");
         const decision = await rl.question("Decision (accept / accept with conditions / reject): ");
-        const s = recordSignoff(dir, { name, role, decision }, new Date().toISOString().slice(0, 10));
+        const s = recordSignoff(dir, { name, role, decision }, new Date().toISOString().slice(0, 10), manifest);
         console.log(`Signed: ${s.name}, ${s.role}, ${s.decision}, ${s.date}. Evidence fingerprint ${s.evidence_sha256.slice(0, 12)}…`);
         return 0;
     } finally {
@@ -208,10 +216,12 @@ async function review(manifestFile: string): Promise<number> {
     console.log("For each: a = accept, r = reject (you give a reason), s = skip for now, q = stop.\n");
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const date = new Date().toISOString().slice(0, 10);
-    const tally = { accepted: 0, rejected: 0, skipped: 0 };
+    const tally = { accepted: 0, rejected: 0, skipped: 0, failed: 0 };
+    let stopped = false;
+    rl.on("close", () => { stopped = true; });
     try {
         const name = (await rl.question("Your full name: ")).trim();
-        if (!name) throw new UsageError("A name is needed: it goes on everything you accept or reject. Nothing was changed.");
+        if (!name || name.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(name)) throw new UsageError("A name of up to 100 characters is needed: it goes on everything you accept or reject. Nothing was changed.");
         const ask = async (): Promise<"a" | "r" | "s" | "q"> => {
             for (;;) {
                 const v = (await rl.question("Accept, reject, skip or quit? [a/r/s/q] ")).trim().toLowerCase();
@@ -224,7 +234,7 @@ async function review(manifestFile: string): Promise<number> {
                 console.log(`\nDraft case ${c.id} in ${c.file}:\n${YAML.stringify(shown, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
                 const v = await ask();
                 if (v === "q") return false;
-                if (v === "a") { acceptDraft(m, c.id, name, date); tally.accepted++; }
+                if (v === "a") { acceptDraft(m, c.id, name, date, c); tally.accepted++; }
                 if (v === "r") { rejectDraft(m, c.id, name, date, (await rl.question("Why reject it? ")).trim() || "no reason given"); tally.rejected++; }
                 if (v === "s") tally.skipped++;
                 return true;
@@ -233,17 +243,29 @@ async function review(manifestFile: string): Promise<number> {
                 console.log(`\n${describeProposal(p)}`);
                 const v = await ask();
                 if (v === "q") return false;
-                if (v === "a") { const d = decideProposal(m, p.id, true, name, date); console.log(`  applied: ${d.applied}`); tally.accepted++; }
-                if (v === "r") { decideProposal(m, p.id, false, name, date, (await rl.question("Why reject it? ")).trim() || "no reason given"); tally.rejected++; }
+                if (v === "a") { const d = decideProposal(m, p.id, true, name, date, undefined, p); console.log(`  applied: ${d.applied}`); tally.accepted++; }
+                if (v === "r") { decideProposal(m, p.id, false, name, date, (await rl.question("Why reject it? ")).trim() || "no reason given", p); tally.rejected++; }
                 if (v === "s") tally.skipped++;
                 return true;
             }),
         ];
-        for (const item of items) if (!(await item())) break;
+        for (const item of items) {
+            if (stopped) break;
+            try {
+                if (!(await item())) break;
+            } catch (err) {
+                if (stopped || (err as Error).name === "AbortError") break;
+                // One item that can't be applied never ends the review: say why, change nothing for it, and go on.
+                console.log(`  not changed: ${(err as Error).message}`);
+                tally.failed++;
+            }
+        }
+    } catch (err) {
+        if (!(stopped || (err as Error).name === "AbortError")) throw err;
     } finally {
         rl.close();
     }
-    console.log(`\nAccepted ${tally.accepted}, rejected ${tally.rejected}, skipped ${tally.skipped}. Next: \`cmtk check\`, then run again.`);
+    console.log(`\n${stopped ? "Stopped. " : ""}Accepted ${tally.accepted}, rejected ${tally.rejected}, skipped ${tally.skipped}${tally.failed ? `, ${tally.failed} could not be applied` : ""}. Next: \`cmtk check\`, then run again.`);
     return 0;
 }
 

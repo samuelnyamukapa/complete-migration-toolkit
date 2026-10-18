@@ -57,6 +57,8 @@ export interface Manifest {
     drift: string;
     /** Proposals from agents (scrubs, drift, defects, expectation changes) waiting for a person. */
     proposals: string;
+    /** The most requests exploration may send in one day, across all sessions. */
+    explore_requests_per_day: number;
     evidence: string;
     allow_unsafe_methods: boolean;
     /** Header name to environment variable name. Values are read at run time and never written. */
@@ -86,6 +88,8 @@ export interface Expectation {
     /** JSON path to a check. */
     json?: Record<string, JsonCheck>;
     body_contains?: string[];
+    /** Text that must never appear, such as a stack trace. */
+    body_excludes?: string[];
 }
 
 export type JsonCheck =
@@ -168,6 +172,8 @@ export interface Failure {
 export interface CaseOutcome {
     id: string;
     name: string;
+    /** "GET /path": what was sent, so a reader of REPORT.json needs no case file. */
+    request?: string;
     requirement: string[];
     surface: string;
     match?: MatchLevel;
@@ -200,6 +206,17 @@ export type Verdict =
     | "PARITY" | "DRIFT ONLY" | "NO PARITY"  // cmtk compare
     | "INCOMPLETE" | "NO EVIDENCE";
 
+export interface ReportSettings {
+    /** The settings file, relative to the project folder, and a fingerprint of its text. */
+    manifest: string;
+    manifest_sha256: string;
+    match: MatchLevel;
+    overrides: Override[];
+    scrub: Scrub;
+    drift_file: string;
+    drift_entries: number;
+}
+
 export interface Report {
     tool: "cmtk";
     mode: "run" | "compare";
@@ -215,6 +232,10 @@ export interface Report {
     suggested_scrubs: { where: string; cases: number; why: string }[];
     /** Only some cases ran (--only), so the verdict cannot be a pass. */
     partial: boolean;
+    /** Draft cases left out with --accepted-only. */
+    excluded_drafts?: number;
+    /** The settings that produced this report, so a signer sees exactly what was hidden or approved. */
+    settings?: ReportSettings;
     /** Why the verdict is what it is, in a sentence, and what to do next. */
     reason: string;
     next: string;

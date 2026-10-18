@@ -32,6 +32,9 @@ for (const [entry, file] of [["packages/mcp/dist/server.js", "cmtk-mcp.mjs"], ["
     }
 }
 
+// The licence travels with the plugin.
+for (const f of ["LICENSE", "NOTICE"]) fs.copyFileSync(path.join(root, f), path.join(root, "plugin", f));
+
 // The adapter template `cmtk adapter new` copies.
 fs.cpSync(path.join(root, "packages", "cli", "templates"), path.join(root, "plugin", "templates"), { recursive: true });
 

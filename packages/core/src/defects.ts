@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { looksSecret } from "./har.js";
+import { looksSecret, redactBody } from "./har.js";
 import { inside, loadCases, ManifestError } from "./manifest.js";
 import { loadProposals } from "./proposals.js";
 import type { Case, Manifest, Report } from "./types.js";
@@ -37,13 +37,36 @@ export function redactor(manifest: Manifest): (s: string) => string {
 
 const norm = (where: string) => where.replace(/\[\d+\]/g, "[*]");
 
+/** A path with credential-like query values removed. */
+function cleanPath(p: string, clean: (s: string) => string): string {
+    const q = p.indexOf("?");
+    if (q < 0) return clean(p);
+    const params = new URLSearchParams(p.slice(q + 1));
+    for (const k of [...new Set(params.keys())]) if (looksSecret(k)) params.set(k, REMOVED);
+    return clean(`${p.slice(0, q)}?${params.toString()}`);
+}
+
+/** A target's address without any user name or password in it. */
+export function cleanUrl(u: string): string {
+    try {
+        const url = new URL(u);
+        if (!url.username && !url.password) return u;
+        url.username = "";
+        url.password = "";
+        return url.toString().replace(/\/$/, "");
+    } catch {
+        return u.replace(/\/\/[^/@]*@/, "//");
+    }
+}
+
 function stepsFor(c: Case | undefined, target: string, clean: (s: string) => string): string[] {
     if (!c) return ["(the case is no longer in the case files)"];
     const headers = Object.entries(c.request.headers ?? {}).map(([k, v]) => `${k}: ${looksSecret(k, "header") ? REMOVED : clean(v)}`);
+    const contentType = Object.entries(c.request.headers ?? {}).find(([k]) => k.toLowerCase() === "content-type")?.[1] ?? "";
     return [
-        `Send \`${c.request.method} ${c.request.path}\` to ${target}${c.surface && c.surface !== "http" ? ` through the ${c.surface} adapter` : ""}.`,
+        `Send \`${c.request.method} ${cleanPath(c.request.path, clean)}\` to ${target}${c.surface && c.surface !== "http" ? ` through the ${c.surface} adapter` : ""}.`,
         ...(headers.length ? [`With headers: ${headers.join("; ")}.`] : []),
-        ...(c.request.body ? [`With the body: ${clean(String(c.request.body)).slice(0, 500)}`] : []),
+        ...(c.request.body ? [`With the body: ${clean(redactBody(String(c.request.body), contentType)[0]).slice(0, 500)}`] : []),
     ];
 }
 
@@ -55,7 +78,7 @@ export function draftDefects(manifest: Manifest, mode: "run" | "compare"): { fil
     const clean = redactor(manifest);
     const cases = new Map(loadCases(manifest).map((c) => [c.id, c]));
     const [targetName, targetWhere] = Object.entries(report.targets).at(-1) ?? ["the target", ""];
-    const target = `${targetName}${targetWhere ? ` (${targetWhere})` : ""}`;
+    const target = `${targetName}${targetWhere ? ` (${clean(cleanUrl(targetWhere))})` : ""}`;
     const groups = new Map<string, { title: string; ids: string[]; expected: string; actual: string }>();
 
     for (const c of report.cases) {

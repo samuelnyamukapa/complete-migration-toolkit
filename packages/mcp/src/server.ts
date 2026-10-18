@@ -67,18 +67,20 @@ async function guarded<T>(fn: () => Promise<T> | T, render: (v: T) => string) {
 const only = z.array(z.string()).optional().describe("Only these case ids.");
 const allowUnsafe = z.boolean().optional().describe("Also run requests that change data. Only after a person agreed, and only when cmtk.yaml allows it too.");
 
+const acceptedOnly = z.boolean().optional().describe("Leave draft cases out entirely instead of reporting them as SKIPPED.");
+
 server.registerTool("cmtk_run", {
-    description: "Check one system against each case's `expect:` block, and write REPORT.md and REPORT.json with results per requirement.",
-    inputSchema: { manifest: manifestArg, target: z.string().optional().describe("Target name; default is default_target."), only, allow_unsafe: allowUnsafe },
-}, async (a) => guarded(() => run(loadManifest(a.manifest), { target: a.target, only: a.only, allowUnsafe: a.allow_unsafe }), summary));
+    description: "Check one system against each case's `expect:` block, and write REPORT.md and REPORT.json with results per requirement. Draft cases are skipped until a person accepts them.",
+    inputSchema: { manifest: manifestArg, target: z.string().optional().describe("Target name; default is default_target."), only, allow_unsafe: allowUnsafe, accepted_only: acceptedOnly },
+}, async (a) => guarded(() => run(loadManifest(a.manifest), { target: a.target, only: a.only, allowUnsafe: a.allow_unsafe, acceptedOnly: a.accepted_only }), summary));
 
 server.registerTool("cmtk_compare", {
     description: "Send each case to the reference and the candidate, check the contracts, diff the answers against the drift ledger, and write REPORT.md and REPORT.json.",
-    inputSchema: { manifest: manifestArg, only, allow_unsafe: allowUnsafe },
-}, async (a) => guarded(() => compare(loadManifest(a.manifest), { only: a.only, allowUnsafe: a.allow_unsafe }), summary));
+    inputSchema: { manifest: manifestArg, only, allow_unsafe: allowUnsafe, accepted_only: acceptedOnly },
+}, async (a) => guarded(() => compare(loadManifest(a.manifest), { only: a.only, allowUnsafe: a.allow_unsafe, acceptedOnly: a.accepted_only }), summary));
 
 server.registerTool("cmtk_import_har", {
-    description: "Turn HAR recordings into a new case file. Credentials, static files and duplicates are dropped.",
+    description: "Turn HAR recordings into a new file of draft cases (draft: true), for a person to accept with cmtk review. Credentials, static files and duplicates are dropped.",
     inputSchema: {
         manifest: manifestArg,
         har: z.array(z.string()).min(1).describe("HAR files inside the project folder."),
@@ -91,11 +93,12 @@ server.registerTool("cmtk_import_har", {
     const files = a.har.map((f) => inside(m, f));
     const out = inside(m, a.out ?? "cmtk/cases/har.yaml");
     if (fs.existsSync(out)) throw new Error(`${path.relative(m.root, out)} already exists; choose another \`out\`.`);
-    const res = importHar(files, { include: a.include, exclude: a.exclude, existing: loadCases(m) });
+    // An agent's import is a set of drafts, like every case an agent writes.
+    const res = importHar(files, { include: a.include, exclude: a.exclude, existing: loadCases(m), draft: true });
     fs.mkdirSync(path.dirname(out), { recursive: true });
     fs.writeFileSync(out, casesToYaml(res.cases), "utf8");
     return { res, out: path.relative(m.root, out) };
-}, ({ res, out }) => `added ${res.cases.length} cases to ${out}; skipped ${res.skipped}; dropped headers: ${res.droppedHeaders.join(", ") || "none"}` +
+}, ({ res, out }) => `added ${res.cases.length} draft cases to ${out}, for a person to review; skipped ${res.skipped}; dropped headers: ${res.droppedHeaders.join(", ") || "none"}` +
     (res.redacted.length ? `; credential-like values replaced with REDACTED in ${res.redacted.join(", ")}: a person gives those cases test values` : "")));
 
 server.registerTool("cmtk_init", {
@@ -112,11 +115,14 @@ server.registerTool("cmtk_commands_for_person", {
     description: "The exact commands a person types in a terminal on this machine for the steps only a person may do: reviewing drafts and proposals, and signing a report. Give these to the person; never run them yourself.",
     inputSchema: { manifest: manifestArg },
 }, async (a) => guarded(() => {
-    const q = (s: string) => (/[\s"]/.test(s) ? `"${s}"` : s);
-    const base = `node ${q(CLI)}`;
-    const m = `--manifest ${q(a.manifest)}`;
+    if (!fs.existsSync(a.manifest)) throw new Error(`${a.manifest} does not exist.`);
+    // Single quotes work in PowerShell and POSIX shells alike, and nothing inside them is expanded.
+    const win = process.platform === "win32";
+    const q = (s: string) => (win ? `'${s.replace(/'/g, "''")}'` : `'${s.replace(/'/g, `'\\''`)}'`);
+    const base = `${win ? "& " : ""}node ${q(CLI)}`;
+    const m = `--manifest ${q(path.resolve(a.manifest))}`;
     return [
-        "A person runs these in a terminal (they ask for a name, and refuse to run from a script):",
+        `A person runs these in a terminal${win ? " (PowerShell)" : ""}. They ask for a name, and refuse to run from a script:`,
         `  review drafts and proposals:  ${base} review ${m}`,
         `  sign the run report:          ${base} signoff run ${m}`,
         `  sign the compare report:      ${base} signoff compare ${m}`,
@@ -169,6 +175,7 @@ server.registerTool("cmtk_explore_start", {
     inputSchema: {
         manifest: manifestArg,
         charter: z.string().describe("One or two sentences, such as: try to break catalog paging with odd page sizes and indexes."),
+        plan: z.string().optional().describe("How you mean to spend the budget, area by area. It goes in the session report."),
         target: z.string().optional().describe("A target name from cmtk.yaml; default is default_target."),
         surface: z.string().optional().describe("An adapter surface; default http."),
         budget_requests: z.number().int().min(1).max(500).optional().describe("Default 50."),

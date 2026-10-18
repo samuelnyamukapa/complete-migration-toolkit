@@ -8,7 +8,16 @@ import { MATCH_LEVELS, type Case, type Drift, type Manifest, type MatchLevel, ty
 export class ManifestError extends Error {}
 
 const NAME = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
-const URL_RE = /^https?:\/\/[^/\s]+/;
+/** An http(s) URL with a host, and nothing that could break out of a YAML or shell value. */
+export function isBaseUrl(v: unknown): v is string {
+    if (typeof v !== "string" || v.length > 500 || /[\s"'`{}\[\],#&*!|>%@\\]|[\u0000-\u001f\u007f-\u009f]/.test(v.replace(/^https?:\/\/[^/]*@/, "https://"))) return false;
+    try {
+        const u = new URL(v);
+        return (u.protocol === "http:" || u.protocol === "https:") && !!u.hostname;
+    } catch {
+        return false;
+    }
+}
 
 export function readStructured(file: string): unknown {
     const text = fs.readFileSync(file, "utf8");
@@ -42,7 +51,7 @@ export function loadManifest(file: string): Manifest {
             target[k] = v as string | number | boolean;
         }
         if (target.base_url !== undefined) {
-            if (typeof target.base_url !== "string" || !URL_RE.test(target.base_url)) throw new ManifestError(`targets.${name}.base_url must be an http:// or https:// URL.`);
+            if (!isBaseUrl(target.base_url)) throw new ManifestError(`targets.${name}.base_url must be an http:// or https:// URL, such as http://localhost:5002.`);
             target.base_url = target.base_url.replace(/\/+$/, "");
         }
         targets[name] = target;
@@ -77,6 +86,7 @@ export function loadManifest(file: string): Manifest {
         cases: globsOf(raw.cases),
         drift: pathOf(raw.drift, "drift", "cmtk/drift.yaml"),
         proposals: pathOf(raw.proposals, "proposals", "cmtk/proposals.yaml"),
+        explore_requests_per_day: positive(raw.explore_requests_per_day, "explore_requests_per_day", 1000),
         evidence: pathOf(raw.evidence, "evidence", "cmtk/evidence"),
         allow_unsafe_methods: raw.allow_unsafe_methods === true,
         headers_from_env: raw.headers_from_env ?? {},
@@ -217,7 +227,7 @@ const TESTER_MANIFEST = (system: string, candidate: string) => `# Complete Migra
 system: ${system}
 
 targets:
-  candidate: { base_url: ${candidate} }   # the system under test
+  candidate: { base_url: ${JSON.stringify(candidate)} }   # the system under test
 
 cases: [cmtk/cases/*.yaml]    # one case per acceptance criterion; agents' drafts wait for \`cmtk review\`
 evidence: cmtk/evidence
@@ -234,8 +244,8 @@ const MIGRATION_MANIFEST = (system: string, reference: string, candidate: string
 system: ${system}
 
 targets:
-  legacy:    { base_url: ${reference} }   # the reference: today's system
-  candidate: { base_url: ${candidate} }   # the system under test
+  legacy:    { base_url: ${JSON.stringify(reference)} }   # the reference: today's system
+  candidate: { base_url: ${JSON.stringify(candidate)} }   # the system under test
 
 # How strict \`cmtk compare\` is: exact | semantic | contract. Loosen per path with overrides.
 match: exact

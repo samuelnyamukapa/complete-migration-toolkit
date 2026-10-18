@@ -1,5 +1,5 @@
 // Verdicts and the report a person reads and signs. The numbers come from the run; nobody types them.
-import type { CaseOutcome, ContractOutcome, Drift, Manifest, Report, Verdict } from "./types.js";
+import type { CaseOutcome, ContractOutcome, Drift, Manifest, Report, ReportSettings, Verdict } from "./types.js";
 
 const NOISE: [string, RegExp][] = [
     ["a GUID", /^"?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"?$/],
@@ -34,11 +34,15 @@ export function summarise(x: {
     usedDrift: Set<string>;
     date: string;
     partial: boolean;
+    settings?: ReportSettings;
+    excludedDrafts?: number;
 }): Report {
     const counts: Record<string, number> = {};
     const keys = x.mode === "run" ? ["PASS", "FAIL", "SKIPPED", "ERROR"] : ["MATCH", "DRIFT", "DIFFERENT", "SKIPPED", "ERROR"];
     for (const k of keys) counts[k] = x.cases.filter((c) => c.result === k).length;
-    const { verdict, reason, next } = decide(x, counts);
+    const decided = decide(x, counts);
+    const { verdict, next } = decided;
+    const reason = decided.reason + (x.excludedDrafts ? ` ${x.excludedDrafts} draft case${x.excludedDrafts === 1 ? " was" : "s were"} left out (--accepted-only).` : "");
 
     const reqs = new Map<string, { cases: number; passed: number; failed: number; other: number }>();
     for (const c of x.cases) {
@@ -65,6 +69,8 @@ export function summarise(x: {
         unused_drift: unusedDrift(x),
         suggested_scrubs: x.mode === "compare" ? noise(x.cases) : [],
         partial: x.partial,
+        ...(x.excludedDrafts ? { excluded_drafts: x.excludedDrafts } : {}),
+        ...(x.settings ? { settings: x.settings } : {}),
         reason,
         next,
     };
@@ -133,6 +139,17 @@ export function renderReport(r: Report): string {
     for (const [name, url] of Object.entries(r.targets)) L.push(`- ${name}: \`${url}\``);
     L.push(`- Cases: ${Object.entries(r.counts).map(([k, v]) => `${v} ${k.toLowerCase()}`).join(", ")}`, "");
     L.push("Written by `cmtk " + r.mode + "` from the files in this folder. Do not edit the numbers: run it again.", "");
+    if (r.settings) {
+        const s = r.settings;
+        const scrubs = [...s.scrub.json_paths.map((p) => `\`${p}\``), ...s.scrub.xml_ignore.map((e) => `XML \`${e}\``), ...s.scrub.regex.map((x) => `regex \`${x.pattern}\``)];
+        L.push("## Settings", "", "What produced this report. Check what is hidden or approved before you sign.", "",
+            `- Settings file: \`${s.manifest}\` (sha256 ${s.manifest_sha256.slice(0, 16)}…)`,
+            ...(r.mode === "compare" ? [
+                `- Match level: ${s.match}${s.overrides.length ? `; overrides: ${s.overrides.map((o) => `\`${o.path}\` ${o.match}`).join(", ")}` : ""}`,
+                `- Scrubbed (hidden from every comparison): ${scrubs.length ? scrubs.join(", ") : "nothing"}`,
+                `- Approved drift: ${s.drift_entries} entr${s.drift_entries === 1 ? "y" : "ies"} in \`${s.drift_file}\``,
+            ] : []), "");
+    }
 
     L.push("## Requirements", "", "| Requirement | Cases | Passed | Failed | Not run |", "| --- | --- | --- | --- | --- |");
     for (const q of r.requirements) L.push(`| ${cell(q.requirement)} | ${q.cases} | ${q.passed} | ${q.failed} | ${q.other} |`);

@@ -62,8 +62,45 @@ test("the plugin: bundled server and command, one version everywhere, five skill
         const init = await client.callTool({ name: "cmtk_init", arguments: { manifest: path.join(dir, "cmtk.yaml"), candidate: "http://127.0.0.1:9" } });
         assert.equal(init.isError, false, init.content[0].text);
         const cmds = await client.callTool({ name: "cmtk_commands_for_person", arguments: { manifest: path.join(dir, "cmtk.yaml") } });
-        assert.match(cmds.content[0].text, /server[\\/]cmtk\.mjs"? review/);
+        assert.match(cmds.content[0].text, /server[\\/]cmtk\.mjs'? review/);
     } finally {
         await client.close();
+    }
+});
+
+test("an agent's HAR import is drafts, CI can leave drafts out, and the person's commands are quoted", async () => {
+    const srv = http.createServer((req, res) => { res.writeHead(200, { "content-type": "application/json" }); res.end('{"ok":true}'); });
+    await new Promise((r) => srv.listen(0, "127.0.0.1", r));
+    const url = `http://127.0.0.1:${srv.address().port}`;
+    // A folder name a shell would otherwise split or expand.
+    const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "cmtk-mcp-")), "it's $(here)");
+    fs.mkdirSync(path.join(dir, "cmtk/cases"), { recursive: true });
+    const manifest = path.join(dir, "cmtk.yaml");
+    fs.writeFileSync(manifest, `system: s\ntargets:\n  candidate: { base_url: "${url}" }\n`);
+    fs.writeFileSync(path.join(dir, "cmtk/cases/a.yaml"), "cases:\n  - { id: OK, request: GET /, expect: { status: 200 } }\n");
+    fs.writeFileSync(path.join(dir, "w.har"), JSON.stringify({ log: { entries: [{ request: { method: "GET", url: `${url}/b`, headers: [] }, response: { status: 200 } }] } }));
+
+    const client = new Client({ name: "test", version: "1" });
+    await client.connect(new StdioClientTransport({ command: process.execPath, args: [SERVER] }));
+    try {
+        const imp = await client.callTool({ name: "cmtk_import_har", arguments: { manifest, har: ["w.har"] } });
+        assert.equal(imp.isError, false, imp.content[0].text);
+        assert.match(imp.content[0].text, /added 1 draft cases/);
+        assert.match(fs.readFileSync(path.join(dir, "cmtk/cases/har.yaml"), "utf8"), /draft: true/);
+
+        const all = await client.callTool({ name: "cmtk_run", arguments: { manifest } });
+        assert.match(all.content[0].text, /verdict: INCOMPLETE/);
+        const ci = await client.callTool({ name: "cmtk_run", arguments: { manifest, accepted_only: true } });
+        assert.match(ci.content[0].text, /verdict: PASS/);
+        assert.match(ci.content[0].text, /1 draft case was left out/);
+
+        const cmds = (await client.callTool({ name: "cmtk_commands_for_person", arguments: { manifest } })).content[0].text;
+        const quoted = process.platform === "win32" ? `'${manifest.replace(/'/g, "''")}'` : `'${manifest.replace(/'/g, "'\\''")}'`;
+        assert.ok(cmds.includes(`review --manifest ${quoted}`), cmds);
+        const missing = await client.callTool({ name: "cmtk_commands_for_person", arguments: { manifest: path.join(dir, "nope.yaml") } });
+        assert.equal(missing.isError, true);
+    } finally {
+        await client.close();
+        srv.close();
     }
 });

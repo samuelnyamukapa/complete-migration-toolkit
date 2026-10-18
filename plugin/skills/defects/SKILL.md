@@ -1,6 +1,6 @@
 ---
 name: defects
-description: "Draft defects from the latest cmtk run or compare report: one per cause, with steps to reproduce, expected and actual results, and links to the evidence, credentials removed. Files them in a tracker only after a person approves each one. Usage: /cmtk:defects [run|compare] [--file]"
+description: "Draft defects from the latest cmtk run or compare report: one per cause, with steps to reproduce, expected and actual results, and links to the evidence, credentials removed. Files them in a tracker only after a person approves each one. Usage: /cmtk:defects [run|compare] [--file] [--manifest <file>]"
 ---
 
 ## Inputs
@@ -12,7 +12,7 @@ If that line shows the literal text `$ARGUMENTS` or is empty, the skill was star
 - **`run` or `compare`**: which report to use. If not given, use the more recent of the two that has failures, and say which.
 - **`--file`**: after drafting, offer to file the drafts in the project's tracker, one at a time, each only after the person says yes.
 
-The **project** is the current working directory, with `cmtk.yaml` at its root. Pass `manifest` to the cmtk tools as the absolute path of `cmtk.yaml`.
+The **project** is the current working directory. The settings are `cmtk.yaml` at its root, unless `--manifest <file>` names another. Pass `manifest` to every cmtk tool as the absolute path of that file.
 
 **Tools.** `cmtk_defects` on the `cmtk` MCP server writes `DEFECTS.md` and `DEFECTS.json` in the report's evidence folder. To file a defect, use whatever tracker tool this session already has, such as GitHub's `gh issue create` or a Jira or Azure DevOps connector, and only with the person's yes for that defect.
 

@@ -105,7 +105,7 @@ It shows the verdict and asks for your name, role and decision: accept, accept w
 
 [examples/bookshop/ci/cmtk.yml](../examples/bookshop/ci/cmtk.yml) is a GitHub Actions workflow that:
 1. starts the system;
-2. runs `cmtk run`;
+2. runs `cmtk run --accepted-only`, which leaves out drafts nobody has reviewed yet;
 3. keeps the report as a build artifact.
 
 The exit code tells the pipeline the verdict:
@@ -114,7 +114,7 @@ The exit code tells the pipeline the verdict:
 - `2`: INCOMPLETE or NO EVIDENCE;
 - `3`: a settings problem.
 
-Drafts never run in CI until a person accepts them. Sign-off stays with a person, at a keyboard, after reading the report.
+Drafts never run in CI until a person accepts them; the report says how many were left out. Sign-off stays with a person, at a keyboard, after reading the report.
 
 ## When something goes wrong
 
