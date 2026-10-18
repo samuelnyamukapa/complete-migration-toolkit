@@ -1,6 +1,6 @@
 export * from "./types.js";
 export { loadManifest, loadCases, loadDrift, inside, ownedFolder, ManifestError, STARTER_MANIFEST, readStructured } from "./manifest.js";
-export { run, compare, matchFor, envHeaders, SAFE_METHODS, type RunOptions } from "./engine.js";
+export { run, compare, matchFor, envHeaders, adaptersFor, SAFE_METHODS, type RunOptions } from "./engine.js";
 export { compareObservations, diffJson, diffXml, parseXml, parseJsonKeepingNumbers, scrubberOf, scrubJson, shortPair, ConfigError, SCRUBBED } from "./diff.js";
 export { parseJsonExact, JsonNumber, JsonObject, jsonEqual } from "./json.js";
 export { recordSignoff, signoffState, describeSignoff, evidenceFingerprint, SignoffError, DECISIONS, type Signoff, type SignoffState } from "./signoff.js";
@@ -11,3 +11,7 @@ export { importHar, casesToYaml, looksSecret, redactBody, REDACTED, DROPPED_HEAD
 export { renderReport, summarise } from "./report.js";
 export { send, httpAdapter, processAdapter, decodeBody, MAX_BODY, type Adapter } from "./adapters.js";
 export { parsePath, matches, render, select, PathError } from "./jsonpath.js";
+export { check, describeCheck, type CheckResult } from "./check.js";
+export { addProposal, decideProposal, describeProposal, loadProposals, acceptDraft, rejectDraft, editYaml, PROPOSAL_KINDS, type Proposal, type ProposalInput, type ProposalKind, type ScrubRule } from "./proposals.js";
+export { startSession, exploreRequest, addFinding, endSession, type Session, type FindingInput, type Probe } from "./explore.js";
+export { draftDefects, redactor, type DefectDraft } from "./defects.js";

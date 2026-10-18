@@ -55,6 +55,8 @@ export interface Manifest {
     /** Globs, relative to the manifest, of the case files. */
     cases: string[];
     drift: string;
+    /** Proposals from agents (scrubs, drift, defects, expectation changes) waiting for a person. */
+    proposals: string;
     evidence: string;
     allow_unsafe_methods: boolean;
     /** Header name to environment variable name. Values are read at run time and never written. */
@@ -65,6 +67,8 @@ export interface Manifest {
     adapters: Record<string, { command: string; args?: string[]; timeout_s?: number }>;
     /** Folder the manifest lives in; every relative path is resolved against it. */
     root: string;
+    /** The manifest file itself. */
+    file: string;
 }
 
 export interface Request {
@@ -106,6 +110,13 @@ export interface Case {
     source?: string;
     /** Set by the loader: the file the case was read from, relative to the manifest. */
     file?: string;
+    /** Drafted by an agent and not yet accepted by a person: reported as SKIPPED until `cmtk review` accepts it. */
+    draft?: boolean;
+    /** Why the drafter wrote the case this way, and any question for the reviewer. */
+    draft_note?: string;
+    /** Who accepted the draft, and when. Written by `cmtk review`. */
+    accepted_by?: string;
+    accepted_on?: string;
 }
 
 /** What one target answered to one case. Adapters return this shape. */

@@ -8,9 +8,12 @@ import readline from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
+import YAML from "yaml";
+
 import {
-    casesToYaml, compare, ConfigError, describeSignoff, importHar, inside, loadCases, loadManifest, ManifestError, PathError, processAdapter,
-    readStructured, recordSignoff, run, signoffState, SignoffError, STARTER_MANIFEST, type Case, type Report,
+    acceptDraft, adaptersFor, casesToYaml, check, compare, ConfigError, decideProposal, describeCheck, describeProposal, describeSignoff, draftDefects,
+    envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
+    rejectDraft, run, SAFE_METHODS, signoffState, SignoffError, STARTER_MANIFEST, type Case, type Report,
 } from "@cmtk/core";
 
 // Node 22 before 22.17 flags fs.globSync and path.matchesGlob as experimental and prints a warning
@@ -30,6 +33,10 @@ Usage:
   cmtk run [--target <name>] [--only <id,id>] [--allow-unsafe]      check one system against each case's expect: block
   cmtk compare [--only <id,id>] [--allow-unsafe]                    send each case to the reference and the candidate, and diff
   cmtk status                                                       the latest verdicts
+  cmtk check                                                        check settings and case files; sends nothing
+  cmtk review                                                       a person accepts or rejects draft cases and proposals
+  cmtk defects run|compare                                          draft defects from the latest report
+  cmtk probe <target> "GET /path" [--surface <name>]                send one read-only request and show the answer
   cmtk signoff run|compare                                          a person signs a report, at a terminal (never an agent)
   cmtk adapter new <name>                                           write a new adapter from the template
   cmtk adapter check <name>                                         the conformance kit for an adapter
@@ -82,6 +89,7 @@ async function main(argv: string[]): Promise<number> {
             include: { type: "string" },
             exclude: { type: "string" },
             out: { type: "string" },
+            surface: { type: "string" },
             help: { type: "boolean", short: "h", default: false },
             version: { type: "boolean", short: "v", default: false },
         },
@@ -103,9 +111,9 @@ async function main(argv: string[]): Promise<number> {
             const example = path.join(root, "cmtk", "cases", "example.yaml");
             if (!fs.existsSync(example)) fs.writeFileSync(example, EXAMPLE_CASES, "utf8");
             const drift = path.join(root, "cmtk", "drift.yaml");
-            if (!fs.existsSync(drift)) fs.writeFileSync(drift, DRIFT_HEADER, "utf8");
+            if (values.legacy && !fs.existsSync(drift)) fs.writeFileSync(drift, DRIFT_HEADER, "utf8");
             loadManifest(manifestFile); // proves what was written is valid
-            console.log(`Wrote ${path.relative(process.cwd(), manifestFile)}, cmtk/cases/example.yaml and cmtk/drift.yaml.`);
+            console.log(`Wrote ${path.relative(process.cwd(), manifestFile)}, cmtk/cases/example.yaml${values.legacy ? " and cmtk/drift.yaml" : ""}.`);
             console.log(`Next: edit the example case for your system, then \`cmtk run\`${values.legacy ? " and `cmtk compare`" : ""}.`);
             return 0;
         }
@@ -148,6 +156,21 @@ async function main(argv: string[]): Promise<number> {
             return 0;
         }
         case "signoff": return signoff(manifestFile, rest[0]);
+        case "review": return review(manifestFile);
+        case "check": {
+            console.log(describeCheck(check(loadManifest(manifestFile))));
+            return 0;
+        }
+        case "defects": {
+            const mode = rest[0];
+            if (mode !== "run" && mode !== "compare") throw new UsageError("`cmtk defects` needs `run` or `compare`.");
+            const m = loadManifest(manifestFile);
+            const { file, drafts } = draftDefects(m, mode);
+            console.log(drafts.length ? `Drafted ${drafts.length} defect${drafts.length === 1 ? "" : "s"} in ${path.relative(process.cwd(), path.join(m.root, file))}.` : `Nothing failed, so there are no defects to draft (${file}).`);
+            if (drafts.length) console.log("Next: a person checks each draft and files it in your tracker.");
+            return 0;
+        }
+        case "probe": return probe(manifestFile, rest, values.surface);
         case "adapter": return adapterCommand(rest, manifestFile);
         default:
             throw new UsageError(`Unknown command ${cmd}. Run \`cmtk help\`.`);
@@ -176,6 +199,82 @@ async function signoff(manifestFile: string, mode: string | undefined): Promise<
         return 0;
     } finally {
         rl.close();
+    }
+}
+
+/** A person at the keyboard accepts or rejects each draft case and each proposal. Agents can propose; only this decides. */
+async function review(manifestFile: string): Promise<number> {
+    if (!process.stdin.isTTY || !process.stdout.isTTY) {
+        throw new UsageError("Review is for a person at a keyboard: run `cmtk review` in a terminal yourself. Agents propose; people decide.");
+    }
+    const m = loadManifest(manifestFile);
+    const drafts = loadCases(m).filter((c) => c.draft);
+    const pending = loadProposals(m).filter((p) => p.status === "pending");
+    if (!drafts.length && !pending.length) { console.log("Nothing to review: no draft cases and no proposals."); return 0; }
+    console.log(`${drafts.length} draft case${drafts.length === 1 ? "" : "s"} and ${pending.length} proposal${pending.length === 1 ? "" : "s"} to review.`);
+    console.log("For each: a = accept, r = reject (you give a reason), s = skip for now, q = stop.\n");
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const date = new Date().toISOString().slice(0, 10);
+    const tally = { accepted: 0, rejected: 0, skipped: 0 };
+    try {
+        const name = (await rl.question("Your full name: ")).trim();
+        if (!name) throw new UsageError("A name is needed: it goes on everything you accept or reject. Nothing was changed.");
+        const ask = async (): Promise<"a" | "r" | "s" | "q"> => {
+            for (;;) {
+                const v = (await rl.question("Accept, reject, skip or quit? [a/r/s/q] ")).trim().toLowerCase();
+                if (["a", "r", "s", "q"].includes(v)) return v as "a" | "r" | "s" | "q";
+            }
+        };
+        const items: (() => Promise<boolean>)[] = [
+            ...drafts.map((c) => async () => {
+                const { file: _file, draft: _d, ...shown } = c;
+                console.log(`\nDraft case ${c.id} in ${c.file}:\n${YAML.stringify(shown, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
+                const v = await ask();
+                if (v === "q") return false;
+                if (v === "a") { acceptDraft(m, c.id, name, date); tally.accepted++; }
+                if (v === "r") { rejectDraft(m, c.id, name, date, (await rl.question("Why reject it? ")).trim() || "no reason given"); tally.rejected++; }
+                if (v === "s") tally.skipped++;
+                return true;
+            }),
+            ...pending.map((p) => async () => {
+                console.log(`\n${describeProposal(p)}`);
+                const v = await ask();
+                if (v === "q") return false;
+                if (v === "a") { const d = decideProposal(m, p.id, true, name, date); console.log(`  applied: ${d.applied}`); tally.accepted++; }
+                if (v === "r") { decideProposal(m, p.id, false, name, date, (await rl.question("Why reject it? ")).trim() || "no reason given"); tally.rejected++; }
+                if (v === "s") tally.skipped++;
+                return true;
+            }),
+        ];
+        for (const item of items) if (!(await item())) break;
+    } finally {
+        rl.close();
+    }
+    console.log(`\nAccepted ${tally.accepted}, rejected ${tally.rejected}, skipped ${tally.skipped}. Next: \`cmtk check\`, then run again.`);
+    return 0;
+}
+
+/** One read-only request to a target, shown in full: for a person looking around. */
+async function probe(manifestFile: string, args: string[], surface = "http"): Promise<number> {
+    const [targetName, line] = args;
+    const m = loadManifest(manifestFile);
+    const target = targetName ? m.targets[targetName] : undefined;
+    if (!target) throw new UsageError(`Name a target: ${Object.keys(m.targets).join(", ")}. For example: cmtk probe ${Object.keys(m.targets)[0]} "GET /"`);
+    const r = /^([A-Za-z]+)\s+(\/(?!\/)\S*)$/.exec(String(line ?? "").trim());
+    if (!r) throw new UsageError('Write the request as one argument, such as "GET /api/items".');
+    const method = r[1]!.toUpperCase();
+    if (!SAFE_METHODS.has(method)) throw new UsageError(`probe only reads: use GET, HEAD or OPTIONS, not ${method}.`);
+    const adapters = adaptersFor(m);
+    try {
+        const o = await adapters.get(surface).run({ id: "probe", request: { method, path: r[2]!, headers: {}, body: null }, surface }, target, envHeaders(m));
+        if (o.error) { console.log(`Error: ${o.error}`); return 2; }
+        console.log(`${o.status ?? ""} ${o.headers?.["content-type"] ?? ""}`.trim());
+        if (o.effects) console.log(`effects: ${JSON.stringify(o.effects)}`);
+        const body = o.body ?? "";
+        console.log(body.length > 4000 ? `${body.slice(0, 4000)}\n… ${body.length - 4000} more characters` : body);
+        return 0;
+    } finally {
+        await adapters.closeAll();
     }
 }
 

@@ -24,6 +24,9 @@ export interface Signoff {
 
 export class SignoffError extends Error {}
 
+/** The signature itself, and defect drafts written from the report after it. */
+const SKIP = new Set(["SIGNOFF.json", "DEFECTS.md", "DEFECTS.json"]);
+
 /**
  * One fingerprint for every file in the evidence folder: the answers, REPORT.json, and REPORT.md
  * down to its sign-off table (which signing fills in). SIGNOFF.json is the signature itself.
@@ -34,7 +37,7 @@ export function evidenceFingerprint(dir: string): string {
         for (const e of fs.readdirSync(d, { withFileTypes: true })) {
             const full = path.join(d, e.name);
             if (e.isDirectory()) walk(full);
-            else if (e.isFile() && !(d === dir && e.name === "SIGNOFF.json")) files.push(full);
+            else if (e.isFile() && !(d === dir && SKIP.has(e.name))) files.push(full);
         }
     };
     walk(dir);

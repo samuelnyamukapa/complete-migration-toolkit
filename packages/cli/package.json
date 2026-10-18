@@ -4,9 +4,15 @@
   "description": "The cmtk command: test any system from its requirements, and prove a migrated system behaves like the old one.",
   "license": "Apache-2.0",
   "type": "module",
-  "bin": { "cmtk": "dist/main.js" },
-  "files": ["dist", "templates"],
+  "bin": {
+    "cmtk": "dist/main.js"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
   "dependencies": {
-    "@cmtk/core": "^0.1.2"
+    "@cmtk/core": "^0.1.2",
+    "yaml": "^2.9.1"
   }
 }

@@ -25,8 +25,9 @@ test("tools: run, compare, import, status, and no sign-off", async () => {
     await client.connect(new StdioClientTransport({ command: process.execPath, args: [SERVER] }));
     try {
         const names = (await client.listTools()).tools.map((t) => t.name).sort();
-        assert.deepEqual(names, ["cmtk_compare", "cmtk_import_har", "cmtk_run", "cmtk_status"]);
-        assert.ok(!names.some((n) => /sign/.test(n)));
+        assert.deepEqual(names, ["cmtk_check", "cmtk_compare", "cmtk_defects", "cmtk_explore_end", "cmtk_explore_finding", "cmtk_explore_request",
+            "cmtk_explore_start", "cmtk_import_har", "cmtk_proposals", "cmtk_propose", "cmtk_run", "cmtk_status"]);
+        assert.ok(!names.some((n) => /sign|review|approve|accept|decide/.test(n)), "no tool lets an agent decide");
         const r = await client.callTool({ name: "cmtk_run", arguments: { manifest: path.join(dir, "cmtk.yaml") } });
         assert.equal(r.isError, false);
         assert.match(r.content[0].text, /verdict: PASS/);

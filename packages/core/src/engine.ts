@@ -49,7 +49,7 @@ export function matchFor(c: Case, manifest: Manifest): MatchLevel {
     return c.match ?? level;
 }
 
-function adaptersFor(manifest: Manifest) {
+export function adaptersFor(manifest: Manifest) {
     const cache = new Map<string, Adapter>();
     return {
         get(surface: string): Adapter {
@@ -91,6 +91,7 @@ function unsafe(c: Case, manifest: Manifest, opts: RunOptions) {
     return !safe && !(manifest.allow_unsafe_methods && opts.allowUnsafe);
 }
 
+const DRAFT_WHY = "a draft: a person accepts it with `cmtk review` before it counts";
 const UNSAFE_WHY = "changes data: needs allow_unsafe_methods in cmtk.yaml and --allow-unsafe on this run";
 
 /**
@@ -139,6 +140,7 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
     try {
         for (const c of cases) {
             const b = base(c);
+            if (c.draft) { out.push({ ...b, result: "SKIPPED", why: DRAFT_WHY }); continue; }
             if (!c.expect) { out.push({ ...b, result: "SKIPPED", why: "no `expect:` block, so there is nothing to check on one system" }); continue; }
             if (unsafe(c, manifest, opts)) { out.push({ ...b, result: "SKIPPED", why: UNSAFE_WHY }); continue; }
             try {
@@ -193,6 +195,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
         }
         for (const c of cases) {
             const b = { ...base(c), match: matchFor(c, manifest) };
+            if (c.draft) { out.push({ ...b, result: "SKIPPED", why: DRAFT_WHY }); continue; }
             if (unsafe(c, manifest, opts)) { out.push({ ...b, result: "SKIPPED", why: UNSAFE_WHY }); continue; }
             try {
                 const adapter = adapters.get(b.surface);

@@ -76,6 +76,7 @@ export function loadManifest(file: string): Manifest {
         contracts,
         cases: globsOf(raw.cases),
         drift: pathOf(raw.drift, "drift", "cmtk/drift.yaml"),
+        proposals: pathOf(raw.proposals, "proposals", "cmtk/proposals.yaml"),
         evidence: pathOf(raw.evidence, "evidence", "cmtk/evidence"),
         allow_unsafe_methods: raw.allow_unsafe_methods === true,
         headers_from_env: raw.headers_from_env ?? {},
@@ -83,6 +84,7 @@ export function loadManifest(file: string): Manifest {
         insecure_tls: raw.insecure_tls === true,
         adapters: adaptersOf(raw.adapters),
         root: path.dirname(path.resolve(file)),
+        file: path.resolve(file),
     };
 }
 
@@ -172,6 +174,7 @@ export function loadCases(manifest: Manifest): Case[] {
                 throw new ManifestError(`${where}: \`request.path\` must start with a single '/': a path, never a host.`);
             }
             if (c.match !== undefined) level(c.match, where);
+            if (c.draft !== undefined && typeof c.draft !== "boolean") throw new ManifestError(`${where}: \`draft\` must be true or false.`);
             const method = String(req.method ?? "GET").toUpperCase();
             if (!/^[A-Z]+$/.test(method)) throw new ManifestError(`${where}: the method ${JSON.stringify(req.method)} must be letters only, such as GET or POST.`);
             const headers: Record<string, string> = {};
@@ -208,12 +211,31 @@ export function loadDrift(manifest: Manifest): Drift[] {
     });
 }
 
-export const STARTER_MANIFEST = (system: string, reference: string | undefined, candidate: string) => `# Complete Migration Toolkit: one system under test.
+/** Settings for testing one system against its requirements: nothing about migrations. */
+const TESTER_MANIFEST = (system: string, candidate: string) => `# Complete Migration Toolkit: test one system against its requirements.
+# Docs: https://github.com/samuelnyamukapa/complete-migration-toolkit/blob/main/docs/TESTER-RUNBOOK.md
+system: ${system}
+
+targets:
+  candidate: { base_url: ${candidate} }   # the system under test
+
+cases: [cmtk/cases/*.yaml]    # one case per acceptance criterion; agents' drafts wait for \`cmtk review\`
+evidence: cmtk/evidence
+
+allow_unsafe_methods: false   # POST, PUT, PATCH, DELETE only against disposable test data
+headers_from_env: {}          # e.g. { Authorization: CMTK_TOKEN }: read at run time, never stored
+timeout_s: 30
+`;
+
+export const STARTER_MANIFEST = (system: string, reference: string | undefined, candidate: string) => reference ? MIGRATION_MANIFEST(system, reference, candidate) : TESTER_MANIFEST(system, candidate);
+
+const MIGRATION_MANIFEST = (system: string, reference: string, candidate: string) => `# Complete Migration Toolkit: one system under test.
 # Docs: https://github.com/samuelnyamukapa/complete-migration-toolkit/blob/main/docs/MANIFEST.md
 system: ${system}
 
 targets:
-${reference ? `  legacy:    { base_url: ${reference} }   # the reference: today's system\n` : ""}  candidate: { base_url: ${candidate} }   # the system under test
+  legacy:    { base_url: ${reference} }   # the reference: today's system
+  candidate: { base_url: ${candidate} }   # the system under test
 
 # How strict \`cmtk compare\` is: exact | semantic | contract. Loosen per path with overrides.
 match: exact

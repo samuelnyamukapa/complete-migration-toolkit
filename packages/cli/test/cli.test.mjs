@@ -104,3 +104,33 @@ test("adapter new writes a working adapter that passes the conformance kit", asy
     assert.match(r.stdout, /FAIL  SAMPLE-001: no header value appears/);
     assert.equal((await cmtk(dir, "adapter", "new", "http")).status, 3, "http is built in");
 });
+
+test("tester commands: init for one system, check, probe, review only at a keyboard, defects", async () => {
+    const sys = await server('{"name":"shop"}');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cmtk-cli-tester-"));
+    try {
+        assert.equal((await cmtk(dir, "init", "--candidate", sys.url)).status, 0);
+        const yaml = fs.readFileSync(path.join(dir, "cmtk.yaml"), "utf8");
+        assert.ok(!/^(match|scrub|contracts|drift):/m.test(yaml), "no migration settings for one system");
+        assert.ok(!fs.existsSync(path.join(dir, "cmtk", "drift.yaml")));
+        fs.appendFileSync(path.join(dir, "cmtk/cases/example.yaml"), "  - { id: DRAFT-1, request: GET /x, draft: true }\n");
+        const c = await cmtk(dir, "check");
+        assert.equal(c.status, 0);
+        assert.match(c.stdout, /1 draft cases wait for a person/);
+        const p = await cmtk(dir, "probe", "candidate", "GET /");
+        assert.equal(p.status, 0);
+        assert.match(p.stdout, /^200 application\/json\n\{"name":"shop"\}/);
+        const post = await cmtk(dir, "probe", "candidate", "POST /");
+        assert.equal(post.status, 3);
+        assert.match(post.stderr, /only reads/);
+        const r = await cmtk(dir, "review");
+        assert.equal(r.status, 3);
+        assert.match(r.stderr, /person at a keyboard/);
+        assert.equal((await cmtk(dir, "run")).status, 2, "a draft keeps the run INCOMPLETE");
+        const d = await cmtk(dir, "defects", "run");
+        assert.equal(d.status, 0);
+        assert.match(d.stdout, /no defects to draft/);
+    } finally {
+        await sys.close();
+    }
+});
