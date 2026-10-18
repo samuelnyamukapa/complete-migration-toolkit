@@ -12,7 +12,7 @@ The folder used is kept as a worked example in [examples/eshop-pilot](../../exam
 | Planted defect in CatalogCore (the canary) | **NO PARITY**: caught in 7 cases, every one at `$.TotalPages` |
 | The eShop sandbox | Unchanged: all 1,199 files match the checksums taken before the pilot |
 | Windows | Every check passed: spaces and long paths, line endings, `$env:` credentials, sign-off and the MCP server |
-| Sign-off | **Waiting for a person.** Both reports are ready to sign |
+| Sign-off | **Both reports signed and accepted on 18 October 2026**: the run by the architect, the comparison by the manager |
 
 It took about 25 minutes from the first script to the final reports, on the machine that hosts the sandbox.
 
@@ -89,7 +89,7 @@ Nothing was added to either system. The check belongs with the phase that gives 
 - **Web pages and the HTTP API on the new system.** CatalogCore has no host yet, so only the service interface was compared.
 - **The SQL path.** Legacy ran on mock data, so Entity Framework 6 against a future EF Core is untested.
 - **Changes to data.** The pilot was read-only. Create, update and delete on the mock are covered by the modernize plugin's characterization suite (63 cases on each build).
-- **A person's review.** Every expectation was drafted by an agent from the business rules, and the HAR cases were reviewed by an agent. A person must review them before the reports are signed (issues #3 and #4).
+- **That the expectations are complete.** An agent drafted every expectation from the business rules and reviewed the HAR cases. The people who signed accepted both reports, but a requirement with no case can't show up as a failure.
 
 ## What we learnt
 
@@ -122,17 +122,23 @@ All ran from scripts on Windows 10 with PowerShell 5.1 and Node.js 22.14. Long p
 
 **Still to do for #7:** a person following the runbook by hand, and signing in Windows Terminal and in the VS Code terminal.
 
-## To finish the pilot (issue #8)
+## Sign-off (issue #8)
 
-A person, in a terminal in the pilot folder:
+On 18 October 2026 both reports were signed in a terminal on the pilot machine, with `cmtk signoff`:
 
-1. Reads `cmtk\evidence\run\REPORT.md` and `cmtk\evidence-catalogcore\compare\REPORT.md`, and the case files they came from.
-2. Signs each report:
+| Report | Verdict | Signed by (role) | Decision |
+|---|---|---|---|
+| `cmtk run`, legacy against the stories | FAIL (LEG-1 only) | Architect | accept |
+| `cmtk compare`, legacy against CatalogCore | PARITY | Manager | accept |
 
-   ```powershell
-   .\cmtk.cmd signoff run
-   .\cmtk.cmd signoff compare --manifest compare-catalogcore.yaml
-   ```
+Each signature is stored in `SIGNOFF.json` with a fingerprint of its evidence. `cmtk status` names each signer.
 
-   The run report is a FAIL because of LEG-1, so "accept with conditions" fits if the person agrees it is a legacy defect.
-3. Runs `.\cmtk.cmd status` and `.\cmtk.cmd status --manifest compare-catalogcore.yaml`. Each should name the signer.
+#8 also asks whether a signature survives a change to its evidence. This was checked on copies of the signed folders:
+
+| Change to the copy | What `cmtk status` said |
+|---|---|
+| None | still signed |
+| One answer file edited | "the signature … is for different evidence, so it no longer counts" |
+| The verdict line in REPORT.md edited | "the signature … is for different evidence, so it no longer counts" |
+
+This means Phase 1's goal is met: `cmtk run` and `cmtk compare` gave signed reports on eShop.

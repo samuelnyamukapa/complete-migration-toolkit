@@ -6,7 +6,7 @@ Test any system from its requirements, and prove a migrated system behaves like 
 > - `cmtk run` passed 40 of 41 cases on legacy eShop; the one failure is a legacy defect.
 > - `cmtk compare` found parity with CatalogCore across 24 cases, and caught a planted defect.
 >
-> The reports are waiting for a person's sign-off. See [docs/pilots/eshop.md](docs/pilots/eshop.md) and [docs/PLAN.md](docs/PLAN.md).
+> Both reports were signed and accepted on 18 October 2026. See [docs/pilots/eshop.md](docs/pilots/eshop.md) and [docs/PLAN.md](docs/PLAN.md).
 
 ## Why
 
