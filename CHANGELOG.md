@@ -48,7 +48,7 @@ An independent review checked every route by which an agent could decide, sign, 
 - The skills were tried by agents on the bookshop example and on the eShop pilot's rules, and judged against what was planted:
   - `/cmtk:explore` found the three planted bugs in version 1 (a negative page, a non-numeric id, a page size of 0), within its budget and without changing data;
   - `/cmtk:triage` sorted every planted difference in version 2 correctly: two kinds of noise, the currency drift, the title-sort defect, and the health version as a question for a person;
-  - `/cmtk:plan` on the eShop rules: 43 of 44 drafted cases were judged acceptable or better. It missed three areas of scope, so the skill now requires a case for everything the scope names, plus the entry point and an unknown address.
+  - `/cmtk:plan` on the eShop rules: 43 of 44 drafted cases were judged acceptable or better. It missed three areas of scope, so the skill now requires a case for everything the scope names, plus the entry point and an unknown address. A second try covered every area, with a question wherever the rules say nothing.
 
 ## 0.1.2 (2026-10-16)
 
