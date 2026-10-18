@@ -13,7 +13,7 @@ import YAML from "yaml";
 import {
     acceptDraft, adaptersFor, casesToYaml, check, compare, ConfigError, decideProposal, describeCheck, describeProposal, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
-    rejectDraft, run, SAFE_METHODS, signoffState, SignoffError, STARTER_MANIFEST, type Case, type Report,
+    initProject, rejectDraft, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report,
 } from "@cmtk/core";
 
 // Node 22 before 22.17 flags fs.globSync and path.matchesGlob as experimental and prints a warning
@@ -22,7 +22,9 @@ process.removeAllListeners("warning");
 process.on("warning", (w) => { if (w.name !== "ExperimentalWarning") console.error(`${w.name}: ${w.message}`); });
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = JSON.parse(fs.readFileSync(path.join(HERE, "..", "package.json"), "utf8")).version as string;
+// A bundled copy (the plugin's server/cmtk.mjs) has the version built in; otherwise read it from package.json.
+declare const __CMTK_VERSION__: string | undefined;
+const VERSION = typeof __CMTK_VERSION__ === "string" ? __CMTK_VERSION__ : (JSON.parse(fs.readFileSync(path.join(HERE, "..", "package.json"), "utf8")).version as string);
 
 const HELP = `cmtk ${VERSION}: test any system from its requirements, and prove a migrated system behaves like the old one.
 
@@ -103,17 +105,8 @@ async function main(argv: string[]): Promise<number> {
     switch (cmd) {
         case "init": {
             if (!values.candidate) throw new UsageError("`cmtk init` needs --candidate <url> (and --legacy <url> to compare two systems).");
-            if (fs.existsSync(manifestFile)) throw new UsageError(`${path.basename(manifestFile)} already exists; edit it instead.`);
-            const system = values.system ?? path.basename(path.dirname(manifestFile));
-            fs.writeFileSync(manifestFile, STARTER_MANIFEST(system.replace(/[^A-Za-z0-9_.-]/g, "-"), values.legacy, values.candidate), "utf8");
-            const root = path.dirname(manifestFile);
-            fs.mkdirSync(path.join(root, "cmtk", "cases"), { recursive: true });
-            const example = path.join(root, "cmtk", "cases", "example.yaml");
-            if (!fs.existsSync(example)) fs.writeFileSync(example, EXAMPLE_CASES, "utf8");
-            const drift = path.join(root, "cmtk", "drift.yaml");
-            if (values.legacy && !fs.existsSync(drift)) fs.writeFileSync(drift, DRIFT_HEADER, "utf8");
-            loadManifest(manifestFile); // proves what was written is valid
-            console.log(`Wrote ${path.relative(process.cwd(), manifestFile)}, cmtk/cases/example.yaml${values.legacy ? " and cmtk/drift.yaml" : ""}.`);
+            const written = initProject(manifestFile, { candidate: values.candidate, legacy: values.legacy, system: values.system });
+            console.log(`Wrote ${written.map((f) => path.relative(process.cwd(), f)).join(", ")}.`);
             console.log(`Next: edit the example case for your system, then \`cmtk run\`${values.legacy ? " and `cmtk compare`" : ""}.`);
             return 0;
         }
@@ -333,28 +326,6 @@ async function adapterCheck(name: string, dir: string, manifestFile: string): Pr
     console.log(failed ? `${failed} check${failed === 1 ? "" : "s"} failed.` : `Adapter ${name} passes the conformance kit.`);
     return failed ? 1 : 0;
 }
-
-const EXAMPLE_CASES = `# Cases for \`cmtk run\` (one system, checked against expectations) and \`cmtk compare\`
-# (the same request to the reference and the candidate). Each case says which requirement it answers for.
-cases:
-  - id: EXAMPLE-001
-    name: the home page answers
-    requirement: REQ-1
-    request: GET /
-    expect:
-      status: 200
-`;
-
-const DRIFT_HEADER = `# Approved drift: differences between the reference and the candidate that a named person accepted.
-# Only a person adds an entry. Each needs id, where (from a report), reason and approved_by.
-#  - id: DRIFT-001
-#    case: "*"                      # or one case id
-#    where: "header:content-type"   # a where value from REPORT.md; JSON paths may use [*]
-#    reason: charset added to every JSON answer; consumers ignore it
-#    approved_by: Jane Smith
-#    date: 2026-10-16
-drift: []
-`;
 
 main(process.argv.slice(2)).then(
     (code) => process.exit(code),

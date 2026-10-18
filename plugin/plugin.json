@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "cmtk",
+  "version": "0.2.0",
+  "description": "An AI tester that does the grind while people keep the judgement: turn stories into test cases, run them, sort differences between an old and a new system, explore within a charter, and draft defects. Agents propose; people review and sign.",
+  "author": { "name": "Samuel Nyamukapa", "url": "https://github.com/samuelnyamukapa" },
+  "homepage": "https://github.com/samuelnyamukapa/complete-migration-toolkit",
+  "repository": "https://github.com/samuelnyamukapa/complete-migration-toolkit",
+  "license": "Apache-2.0",
+  "keywords": ["testing", "test-automation", "migration", "parity", "api-testing", "exploratory-testing"]
+}

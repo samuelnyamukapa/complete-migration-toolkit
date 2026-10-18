@@ -1,0 +1,16 @@
+{
+  "name": "complete-migration-toolkit",
+  "owner": { "name": "Samuel Nyamukapa" },
+  "metadata": { "description": "The Complete Migration Toolkit's AI tester for GitHub Copilot CLI and the Copilot app." },
+  "plugins": [
+    {
+      "name": "cmtk",
+      "source": "./plugin",
+      "version": "0.2.0",
+      "description": "Turn stories into test cases, run them, sort differences, explore within a charter and draft defects. Agents propose; people review and sign.",
+      "license": "Apache-2.0",
+      "category": "testing",
+      "keywords": ["testing", "migration", "parity", "api-testing"]
+    }
+  ]
+}

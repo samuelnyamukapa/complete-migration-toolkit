@@ -4,6 +4,7 @@
 // Nothing here writes to stdout except the MCP connection.
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -11,7 +12,7 @@ import { z } from "zod";
 
 import {
     addFinding, addProposal, casesToYaml, check, compare, describeCheck, describeProposal, describeSignoff, draftDefects, endSession, exploreRequest,
-    importHar, inside, loadCases, loadManifest, loadProposals, PROPOSAL_KINDS, run, signoffState, startSession, type Report,
+    importHar, initProject, inside, loadCases, loadManifest, loadProposals, PROPOSAL_KINDS, run, signoffState, startSession, type Report,
 } from "@cmtk/core";
 
 // Node 22 before 22.17 flags fs.globSync and path.matchesGlob as experimental and prints a warning
@@ -19,7 +20,14 @@ import {
 process.removeAllListeners("warning");
 process.on("warning", (w) => { if (w.name !== "ExperimentalWarning") console.error(`${w.name}: ${w.message}`); });
 
-const server = new McpServer({ name: "cmtk", version: "0.1.2" }, {
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+// A bundled copy (the plugin's server/cmtk-mcp.mjs) has the version built in; otherwise read it from package.json.
+declare const __CMTK_VERSION__: string | undefined;
+const VERSION = typeof __CMTK_VERSION__ === "string" ? __CMTK_VERSION__ : (JSON.parse(fs.readFileSync(path.join(HERE, "..", "package.json"), "utf8")).version as string);
+/** The cmtk command a person runs: beside this server in the plugin, or the CLI package in a clone. */
+const CLI = fs.existsSync(path.join(HERE, "cmtk.mjs")) ? path.join(HERE, "cmtk.mjs") : path.join(HERE, "..", "..", "cli", "dist", "main.js");
+
+const server = new McpServer({ name: "cmtk", version: VERSION }, {
     instructions:
         "Complete Migration Toolkit. `cmtk_run` checks one system against each case's expectations; `cmtk_compare` sends each case to the " +
         "reference and the candidate and diffs the answers. Pass `manifest` as the absolute path of cmtk.yaml. Agents propose and " +
@@ -89,6 +97,32 @@ server.registerTool("cmtk_import_har", {
     return { res, out: path.relative(m.root, out) };
 }, ({ res, out }) => `added ${res.cases.length} cases to ${out}; skipped ${res.skipped}; dropped headers: ${res.droppedHeaders.join(", ") || "none"}` +
     (res.redacted.length ? `; credential-like values replaced with REDACTED in ${res.redacted.join(", ")}: a person gives those cases test values` : "")));
+
+server.registerTool("cmtk_init", {
+    description: "Start a project: write cmtk.yaml, a first case file, and a drift ledger when there is a legacy system. Refuses to overwrite. Ask the person for the system's address; never guess one.",
+    inputSchema: {
+        manifest: manifestArg,
+        candidate: z.string().describe("The base URL of the system under test, such as http://localhost:5002."),
+        legacy: z.string().optional().describe("For a migration: the base URL of today's system."),
+        system: z.string().optional().describe("A short name for the system."),
+    },
+}, async (a) => guarded(() => initProject(a.manifest, a), (files) => `wrote ${files.join(", ")}`));
+
+server.registerTool("cmtk_commands_for_person", {
+    description: "The exact commands a person types in a terminal on this machine for the steps only a person may do: reviewing drafts and proposals, and signing a report. Give these to the person; never run them yourself.",
+    inputSchema: { manifest: manifestArg },
+}, async (a) => guarded(() => {
+    const q = (s: string) => (/[\s"]/.test(s) ? `"${s}"` : s);
+    const base = `node ${q(CLI)}`;
+    const m = `--manifest ${q(a.manifest)}`;
+    return [
+        "A person runs these in a terminal (they ask for a name, and refuse to run from a script):",
+        `  review drafts and proposals:  ${base} review ${m}`,
+        `  sign the run report:          ${base} signoff run ${m}`,
+        `  sign the compare report:      ${base} signoff compare ${m}`,
+        `  see what is signed:           ${base} status ${m}`,
+    ].join("\n");
+}, (s) => s));
 
 server.registerTool("cmtk_check", {
     description: "Check cmtk.yaml, the case files, the drift ledger and the proposals without sending any request. Lists draft cases and proposals waiting for a person, and warnings such as cases with no requirement. Run it after writing case files.",
