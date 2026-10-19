@@ -17,7 +17,7 @@ If that line shows the literal text `$ARGUMENTS` or is empty, the skill was star
 
 The **project** is the folder that holds the manifest. Pass `manifest` to every cmtk tool as its absolute path. Read the project's requirements (stories and rules), if there are any, before you start: they tell you what "wrong" means.
 
-**Tools,** on the `cmtk` MCP server. Send every request through `cmtk_explore_request`, never any other way. That keeps it within the targets, the budget and the read-only rule, and logs it as evidence.
+**Tools,** on the `cmtk` MCP server. Send every request through `cmtk_explore_request`, never any other way. That keeps it within the targets, the budget and the read-only rule, and logs it as evidence. Send them **one at a time**, waiting for each answer: the tool refuses a request while another in the same session is running.
 
 | Tool | Example arguments |
 |---|---|
