@@ -262,6 +262,8 @@ export function acceptDraft(manifest: Manifest, caseId: string, person: string, 
         const { node } = caseNode(doc, caseId);
         node.delete("draft");
         node.delete("draft_note");
+        // The drafter's note says where the case came from and what it depends on: keep it.
+        if (c.draft_note) node.set("note", c.draft_note);
         node.set("accepted_by", who);
         node.set("accepted_on", date);
     });

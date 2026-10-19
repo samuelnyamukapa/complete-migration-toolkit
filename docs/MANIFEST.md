@@ -44,7 +44,8 @@ A case file holds `cases:`, a list. Each case:
 | `match` | no | This case's level, overriding everything else |
 | `safe` | no | `true` when a person has confirmed a non-GET request changes nothing, such as a read-only SOAP call |
 | `draft` | no | `true` for a case an agent wrote that no person has accepted yet. It is reported as SKIPPED until `cmtk review` accepts it |
-| `draft_note` | no | Why the drafter wrote it this way, and any question for the reviewer. Removed on acceptance |
+| `draft_note` | no | Why the drafter wrote it this way, and any question for the reviewer. Kept as `note` when a person accepts the draft |
+| `note` | no | Where the case came from and what it depends on, in words |
 | `accepted_by`, `accepted_on` | no | Written by `cmtk review` when a person accepts a draft |
 
 ### expect

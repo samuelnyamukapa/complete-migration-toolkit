@@ -116,8 +116,10 @@ export interface Case {
     file?: string;
     /** Drafted by an agent and not yet accepted by a person: reported as SKIPPED until `cmtk review` accepts it. */
     draft?: boolean;
-    /** Why the drafter wrote the case this way, and any question for the reviewer. */
+    /** Why the drafter wrote the case this way, and any question for the reviewer. Kept as `note` when the draft is accepted. */
     draft_note?: string;
+    /** Where the case came from and what it depends on, in words. */
+    note?: string;
     /** Who accepted the draft, and when. Written by `cmtk review`. */
     accepted_by?: string;
     accepted_on?: string;

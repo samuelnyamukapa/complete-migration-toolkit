@@ -61,7 +61,8 @@ test("draft cases are skipped until a person accepts them, and a rejected draft 
         rejectDraft(p.m(), "D2", "Pat Tester", DAY, "duplicates OK");
         const text = read(p.dir, "cmtk/cases/a.yaml");
         assert.ok(text.includes("\r\n"), "Windows line endings survive the edit");
-        assert.ok(!/draft/.test(text) && /accepted_by: Pat Tester/.test(text));
+        assert.ok(!/draft(_note)?:/.test(text) && /accepted_by: Pat Tester/.test(text));
+        assert.equal(loadCases(p.m()).find((c) => c.id === "D1").note, "drafted from story R1", "the drafter's note is kept");
         assert.deepEqual(loadCases(p.m()).map((c) => c.id), ["OK", "D1"]);
         assert.match(read(p.dir, "cmtk/rejected.yaml"), /rejected_because: duplicates OK/);
         assert.equal((await run(p.m())).verdict, "PASS");
