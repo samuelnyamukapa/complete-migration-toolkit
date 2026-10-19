@@ -15336,6 +15336,8 @@ function acceptDraft(manifest, caseId, person, date, shown) {
     const { node } = caseNode(doc, caseId);
     node.delete("draft");
     node.delete("draft_note");
+    if (c.draft_note)
+      node.set("note", c.draft_note);
     node.set("accepted_by", who);
     node.set("accepted_on", date);
   });

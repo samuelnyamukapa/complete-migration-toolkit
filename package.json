@@ -12,7 +12,7 @@
     "build": "tsc -b packages/core packages/cli packages/mcp",
     "test": "npm run build && node --test --test-reporter=spec \"packages/*/test/*.test.mjs\"",
     "clean": "tsc -b --clean packages/core packages/cli packages/mcp",
-    "bundle": "node scripts/bundle.mjs"
+    "bundle": "npm run build && node scripts/bundle.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
