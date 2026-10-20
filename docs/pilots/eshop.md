@@ -145,7 +145,7 @@ This means Phase 1's goal is met: `cmtk run` and `cmtk compare` gave signed repo
 
 ## Part 2: the AI tester (19 and 20 October 2026)
 
-The same machine and legacy eShop, with cmtk 0.2.0 and its plugin installed in the GitHub Copilot desktop app. The files are in [examples/eshop-pilot/tester](../../examples/eshop-pilot/tester), and the reports are the `tester-*` files in [reports](../../examples/eshop-pilot/reports). The signed reports from part 1 were not touched: `cmtk status` still showed both signatures afterwards.
+The same machine and legacy eShop, with cmtk 0.2.0 (fixes released in 0.2.1) and its plugin installed in the GitHub Copilot desktop app. The files are in [examples/eshop-pilot/tester](../../examples/eshop-pilot/tester), and the reports are the `tester-*` files in [reports](../../examples/eshop-pilot/reports). The signed reports from part 1 were not touched: `cmtk status` still showed both signatures afterwards.
 
 | Step | Result |
 |---|---|

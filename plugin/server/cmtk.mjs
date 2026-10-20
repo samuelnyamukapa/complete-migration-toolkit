@@ -16267,7 +16267,7 @@ process.on("warning", (w) => {
     console.error(`${w.name}: ${w.message}`);
 });
 var HERE = path8.dirname(fileURLToPath(import.meta.url));
-var VERSION = true ? "0.2.0" : JSON.parse(fs9.readFileSync(path8.join(HERE, "..", "package.json"), "utf8")).version;
+var VERSION = true ? "0.2.1" : JSON.parse(fs9.readFileSync(path8.join(HERE, "..", "package.json"), "utf8")).version;
 var HELP = `cmtk ${VERSION}: test any system from its requirements, and prove a migrated system behaves like the old one.
 
 Usage:
