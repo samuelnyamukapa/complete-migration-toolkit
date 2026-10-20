@@ -1,5 +1,46 @@
 # Changelog
 
+## 0.3.0 (2026-10-20)
+
+Discover: the parity suite's first step, with REA. Before a migration is compared, every boundary of the legacy system is listed, so none is left out by accident.
+
+### Added
+
+- **`cmtk discover`**, the `cmtk_discover` MCP tool and the **`/cmtk:discover`** skill. They list every boundary of the legacy system:
+  - what it serves: web pages, APIs, SOAP services, jobs, screens;
+  - everything it calls, stores, sends or reads: databases, files, queues, email, SMS, payments, other web services, logs.
+
+  Each boundary says where it was found, and which adapter covers it. The rest are flagged as **uncovered**. The inventory is written to `cmtk/discovery/BOUNDARIES.md`, and each run adds to it unless you pass `--fresh`.
+- **Sources:**
+  - .NET assemblies, read by [REA (Reverse Engineer Anything)](https://github.com/morluto/rea) without running them;
+  - REA's saved output;
+  - `Web.config`, `App.config` and `appsettings.json`;
+  - HAR recordings;
+  - modernize's `topology.json`;
+  - an agent's findings, each with its evidence.
+
+  REA is optional: `npm install --global rea-agents`, or set `CMTK_REA`.
+- **`covers:`** on an adapter in `cmtk.yaml`: the kinds of boundary it checks.
+- **`cmtk check`** reports the last discovery, and warns about each uncovered boundary.
+
+### Safety
+
+- Connection strings give only their server and database. URLs lose their user name, password and query.
+- The skill uses REA only on systems the person owns, only its free engines, and never runs the legacy system.
+- Only a person decides that a boundary is out of scope.
+
+### Verified
+
+- 64 tests on Windows and Linux.
+- On eShop: REA read `eShopLegacyMVC.dll` in about 2 seconds, with no other tools. With its `Web.config`, discovery listed 8 boundaries:
+  - 5 controllers;
+  - the catalog database, matched to its connection string;
+  - picture and customisation files;
+  - log4net.
+
+  The last three are flagged as uncovered.
+- REA's member comparison can't lock a library across a namespace move, such as `eShopLegacyMVC.*` to `CatalogCore.*`; that is #44.
+
 ## 0.2.1 (2026-10-20)
 
 Fixes from part 2 of the eShop pilot: the AI tester run from the GitHub Copilot desktop app on Windows. The write-up is part 2 of [docs/pilots/eshop.md](docs/pilots/eshop.md).

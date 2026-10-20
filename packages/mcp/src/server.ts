@@ -13,6 +13,7 @@ import { z } from "zod";
 import {
     addFinding, addProposal, casesToYaml, check, compare, describeCheck, describeProposal, describeSignoff, draftDefects, endSession, exploreRequest,
     importHar, initProject, inside, loadCases, loadManifest, loadProposals, PROPOSAL_KINDS, run, signoffState, startSession, type Report,
+    BOUNDARY_KINDS, describeDiscovery, discover,
 } from "@cmtk/core";
 
 // Node 22 before 22.17 flags fs.globSync and path.matchesGlob as experimental and prints a warning
@@ -228,6 +229,29 @@ server.registerTool("cmtk_defects", {
     inputSchema: { manifest: manifestArg, mode: z.enum(["run", "compare"]) },
 }, async (a) => guarded(() => draftDefects(loadManifest(a.manifest), a.mode),
     ({ file, drafts }) => drafts.length ? `${drafts.length} draft defects in ${file}:\n${drafts.map((d) => `${d.id}: ${d.title} [${d.cases.join(", ")}]`).join("\n")}` : `Nothing failed; ${file} says so.`));
+
+server.registerTool("cmtk_discover", {
+    description: "The parity suite's first step: list every boundary of the legacy system (what it serves, and what it calls, stores, sends or reads), say where each was found, and flag the ones no adapter covers. Reads assemblies with REA (when installed; it never runs them), REA's saved output, Web.config or appsettings.json, HAR files and modernize's topology.json. Add what you found in the code as `found`, each with its evidence. Writes cmtk/discovery/BOUNDARIES.md. Adds to the last discovery unless `fresh`.",
+    inputSchema: {
+        manifest: manifestArg,
+        assemblies: z.array(z.string()).optional().describe(".NET assemblies inside the project, read by REA (`rea` on PATH, or CMTK_REA)."),
+        rea_json: z.array(z.string()).optional().describe("Saved output of `rea inspect-managed-members <dll> --json`, inside the project."),
+        configs: z.array(z.string()).optional().describe("Web.config, App.config or appsettings*.json files inside the project. Credentials are never copied."),
+        har: z.array(z.string()).optional().describe("HAR recordings of the legacy system, inside the project."),
+        topology: z.array(z.string()).optional().describe("modernize's analysis/<system>/topology.json."),
+        found: z.array(z.object({
+            kind: z.enum(BOUNDARY_KINDS),
+            name: z.string(),
+            where: z.string().optional(),
+            direction: z.enum(["in", "out"]).optional(),
+            evidence: z.string().describe("Where you saw it, such as \"src/Billing/Mailer.cs:42 calls SmtpClient.Send\"."),
+        })).optional().describe("Boundaries you found by reading the code or the system's documents."),
+        agent: z.string().optional().describe("Your name, required with `found`."),
+        fresh: z.boolean().optional().describe("Start from nothing instead of adding to the last discovery."),
+    },
+}, async (a) => guarded(() => discover(loadManifest(a.manifest), { assemblies: a.assemblies, reaJson: a.rea_json, configs: a.configs, har: a.har, topology: a.topology, found: a.found, agent: a.agent, fresh: a.fresh }),
+    ({ file, discovery }) => [`${describeDiscovery(discovery)} Inventory: ${file}.`,
+        ...discovery.boundaries.map((b) => `${b.covered_by ? "covered" : "UNCOVERED"} ${b.kind} ${b.direction}: ${b.name}${b.where ? ` (${b.where})` : ""}${b.covered_by ? ` by ${b.covered_by}` : ""}`)].join("\n")));
 
 server.registerTool("cmtk_status", {
     description: "The latest run and compare verdicts, and whether a person has signed each report.",

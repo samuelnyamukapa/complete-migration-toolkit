@@ -3,6 +3,10 @@
 
 /** How strict a comparison is. Set for the whole system, then loosened per path or per case. */
 export type MatchLevel = "exact" | "semantic" | "contract";
+/** The kinds of boundary `cmtk discover` lists, and an adapter's `covers` names. */
+export const BOUNDARY_KINDS = ["http", "soap", "outbound-http", "database", "files", "email", "sms", "queue", "payments", "worker", "ui", "logs"] as const;
+export type BoundaryKind = (typeof BOUNDARY_KINDS)[number];
+
 export const MATCH_LEVELS: readonly MatchLevel[] = ["exact", "semantic", "contract"];
 
 /**
@@ -66,7 +70,7 @@ export interface Manifest {
     timeout_s: number;
     insecure_tls: boolean;
     /** Adapters beyond the built-in http one: surface name to the program that runs it. */
-    adapters: Record<string, { command: string; args?: string[]; timeout_s?: number }>;
+    adapters: Record<string, { command: string; args?: string[]; timeout_s?: number; covers?: string[] }>;
     /** Folder the manifest lives in; every relative path is resolved against it. */
     root: string;
     /** The manifest file itself. */

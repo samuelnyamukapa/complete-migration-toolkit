@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
 
-import { MATCH_LEVELS, type Case, type Drift, type Manifest, type MatchLevel, type Target } from "./types.js";
+import { BOUNDARY_KINDS, MATCH_LEVELS, type Case, type Drift, type Manifest, type MatchLevel, type Target } from "./types.js";
 
 export class ManifestError extends Error {}
 
@@ -125,7 +125,10 @@ function adaptersOf(raw: unknown): Manifest["adapters"] {
     for (const [name, spec] of Object.entries((raw ?? {}) as Record<string, any>)) {
         if (!NAME.test(name) || name === "http") throw new ManifestError(`adapters.${name}: the name must be letters, digits, '.', '-' and '_', and not "http" (built in).`);
         if (typeof spec?.command !== "string") throw new ManifestError(`adapters.${name} needs a \`command\`, such as "node".`);
-        out[name] = { command: spec.command, args: Array.isArray(spec.args) ? spec.args.map(String) : [], timeout_s: positive(spec.timeout_s, `adapters.${name}.timeout_s`, 300) };
+        if (spec.covers !== undefined && (!Array.isArray(spec.covers) || !spec.covers.every((k: unknown) => typeof k === "string" && (BOUNDARY_KINDS as readonly string[]).includes(k)))) {
+            throw new ManifestError(`adapters.${name}.covers must be a list of boundary kinds: ${BOUNDARY_KINDS.join(", ")}.`);
+        }
+        out[name] = { command: spec.command, args: Array.isArray(spec.args) ? spec.args.map(String) : [], timeout_s: positive(spec.timeout_s, `adapters.${name}.timeout_s`, 300), ...(spec.covers ? { covers: spec.covers } : {}) };
     }
     return out;
 }

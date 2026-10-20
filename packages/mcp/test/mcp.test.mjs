@@ -25,7 +25,7 @@ test("tools: run, compare, import, status, and no sign-off", async () => {
     await client.connect(new StdioClientTransport({ command: process.execPath, args: [SERVER] }));
     try {
         const names = (await client.listTools()).tools.map((t) => t.name).sort();
-        assert.deepEqual(names, ["cmtk_check", "cmtk_commands_for_person", "cmtk_compare", "cmtk_defects", "cmtk_explore_end", "cmtk_explore_finding", "cmtk_explore_request",
+        assert.deepEqual(names, ["cmtk_check", "cmtk_commands_for_person", "cmtk_compare", "cmtk_defects", "cmtk_discover", "cmtk_explore_end", "cmtk_explore_finding", "cmtk_explore_request",
             "cmtk_explore_start", "cmtk_import_har", "cmtk_init", "cmtk_proposals", "cmtk_propose", "cmtk_run", "cmtk_status"]);
         assert.ok(!names.some((n) => /sign|review|approve|accept|decide/.test(n)), "no tool lets an agent decide");
         const r = await client.callTool({ name: "cmtk_run", arguments: { manifest: path.join(dir, "cmtk.yaml") } });
@@ -42,13 +42,13 @@ test("tools: run, compare, import, status, and no sign-off", async () => {
     }
 });
 
-test("the plugin: bundled server and command, one version everywhere, five skills", async () => {
+test("the plugin: bundled server and command, one version everywhere, six skills", async () => {
     const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
     const plugin = path.join(root, "plugin");
     const version = JSON.parse(fs.readFileSync(path.join(root, "packages", "cli", "package.json"), "utf8")).version;
     for (const f of ["plugin.json", ".claude-plugin/plugin.json"]) assert.equal(JSON.parse(fs.readFileSync(path.join(plugin, f), "utf8")).version, version, f);
     assert.equal(JSON.parse(fs.readFileSync(path.join(root, ".github/plugin/marketplace.json"), "utf8")).plugins[0].version, version);
-    for (const s of ["test", "plan", "triage", "explore", "defects"]) {
+    for (const s of ["test", "plan", "discover", "triage", "explore", "defects"]) {
         const md = fs.readFileSync(path.join(plugin, "skills", s, "SKILL.md"), "utf8");
         assert.match(md, new RegExp(`^---\\nname: ${s}\\ndescription: "`), `${s} frontmatter`);
     }
@@ -56,7 +56,7 @@ test("the plugin: bundled server and command, one version everywhere, five skill
     await client.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(plugin, "server", "cmtk-mcp.mjs")] }));
     try {
         const names = (await client.listTools()).tools.map((t) => t.name);
-        assert.equal(names.length, 14);
+        assert.equal(names.length, 15);
         assert.ok(!names.some((n) => /sign|review|approve|accept|decide/.test(n)));
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cmtk-plugin-"));
         const init = await client.callTool({ name: "cmtk_init", arguments: { manifest: path.join(dir, "cmtk.yaml"), candidate: "http://127.0.0.1:9" } });

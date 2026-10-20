@@ -11,7 +11,7 @@ import { parseArgs } from "node:util";
 import YAML from "yaml";
 
 import {
-    acceptDraft, adaptersFor, casesToYaml, check, compare, ConfigError, decideProposal, describeCheck, describeProposal, describeSignoff, draftDefects,
+    acceptDraft, adaptersFor, casesToYaml, check, compare, ConfigError, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
     initProject, rejectDraft, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report,
 } from "@cmtk/core";
@@ -38,6 +38,9 @@ Usage:
   cmtk compare [--only <id,id>] [--allow-unsafe]                    send each case to the reference and the candidate, and diff
   cmtk status                                                       the latest verdicts
   cmtk check                                                        check settings and case files; sends nothing
+  cmtk discover [--assembly <dll>]... [--rea-json <file>]... [--config <file>]... [--har <file>]... [--topology <file>]... [--fresh]
+                                                                    list every boundary of the legacy system, and flag the uncovered ones
+                                                                    (--assembly needs REA: npm install --global rea-agents)
   cmtk review                                                       a person accepts or rejects draft cases and proposals
   cmtk defects run|compare                                          draft defects from the latest report
   cmtk probe <target> "GET /path" [--surface <name>]                send one read-only request and show the answer
@@ -95,6 +98,12 @@ async function main(argv: string[]): Promise<number> {
             exclude: { type: "string" },
             out: { type: "string" },
             surface: { type: "string" },
+            assembly: { type: "string", multiple: true },
+            "rea-json": { type: "string", multiple: true },
+            config: { type: "string", multiple: true },
+            har: { type: "string", multiple: true },
+            topology: { type: "string", multiple: true },
+            fresh: { type: "boolean", default: false },
             help: { type: "boolean", short: "h", default: false },
             version: { type: "boolean", short: "v", default: false },
         },
@@ -164,6 +173,16 @@ async function main(argv: string[]): Promise<number> {
             const { file, drafts } = draftDefects(m, mode);
             console.log(drafts.length ? `Drafted ${drafts.length} defect${drafts.length === 1 ? "" : "s"} in ${path.relative(process.cwd(), path.join(m.root, file))}.` : `Nothing failed, so there are no defects to draft (${file}).`);
             if (drafts.length) console.log("Next: a person checks each draft and files it in your tracker.");
+            return 0;
+        }
+        case "discover": {
+            const m = loadManifest(manifestFile);
+            const { file, discovery } = discover(m, { assemblies: values.assembly, reaJson: values["rea-json"], configs: values.config, har: values.har, topology: values.topology, fresh: values.fresh });
+            if (values.json) { console.log(JSON.stringify(discovery, null, 2)); return 0; }
+            console.log(`Boundaries for ${discovery.system}: ${describeDiscovery(discovery)}`);
+            for (const b of discovery.boundaries.filter((x) => !x.covered_by)) console.log(`  uncovered ${b.kind} ${b.direction}: ${b.name}${b.where ? ` (${b.where})` : ""}`);
+            console.log(`Inventory: ${path.relative(process.cwd(), path.join(m.root, file))}`);
+            console.log(discovery.boundaries.some((x) => !x.covered_by) ? "Next: for each uncovered kind, add an adapter (`cmtk adapter new <name>`, then `covers:` in cmtk.yaml) or have a person record why it is out of scope." : "Next: write cases for each boundary, then `cmtk compare`.");
             return 0;
         }
         case "probe": return probe(manifestFile, rest, values.surface);

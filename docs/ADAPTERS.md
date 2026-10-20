@@ -39,8 +39,10 @@ An observation:
 
    ```yaml
    adapters:
-     mailbox: { command: node, args: [adapters/mailbox/index.mjs] }
+     mailbox: { command: node, args: [adapters/mailbox/index.mjs], covers: [email] }
    ```
+
+   `covers` lists the kinds of boundary the adapter checks, so `cmtk discover` stops flagging them as uncovered. The kinds are `http`, `soap`, `outbound-http`, `database`, `files`, `email`, `sms`, `queue`, `payments`, `worker`, `ui` and `logs`.
 
 An adapter can be written in any language, C# included: register its executable as the `command`.
 

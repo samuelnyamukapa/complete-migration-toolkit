@@ -173,3 +173,24 @@ The same machine and legacy eShop, with cmtk 0.2.0 (fixes released in 0.2.1) and
 | `02-start.cmd` reruns part 1's run and compare, which would replace the signed reports; Copilot suggested it when legacy hung | **Pilot:** the README says to use `06-start-legacy.cmd` for the AI tester |
 | `copilot plugin update` failed: a running Copilot session held the plugin folder | Known: the plugin README says to close every session first |
 | The first start script was removed from the pilot folder while the pilot ran, and its name could not be reused; the cause is unknown | **Pilot:** the script is now `steps\start-legacy.ps1` |
+
+## Part 3: Discover, with REA (20 October 2026)
+
+Read-only copies of legacy eShop's own assembly (`eShopLegacyMVC.dll`) and its `Web.config` were taken from the pilot folder. `cmtk discover` was run on them with REA 6.7.0 (`rea-agents`), using only its built-in .NET analysis. The result is [reports/discover.BOUNDARIES.md](../../examples/eshop-pilot/reports/discover.BOUNDARIES.md).
+
+| Found | From |
+|---|---|
+| 5 controllers: `CatalogController`, `PicController`, `Api.CatalogController2`, and the Web API's `BrandsController` and `FilesController` | REA: the types that call `System.Web.Mvc.Controller` or `System.Web.Http.ApiController` |
+| The catalog database: LocalDB, `Microsoft.eShopOnContainers.Services.CatalogDb` | The connection string `CatalogDBContext`, matched to REA's finding that the type `CatalogDBContext` uses Entity Framework |
+| Files: pictures read by `PicController`, and the customisation zip unpacked by `CatalogDBInitializer` | REA: calls to `System.IO.File` and `ZipFile` |
+| Logs: log4net | REA |
+
+The controllers are covered by the built-in HTTP adapter. The database, files and logs are flagged as **uncovered**: no adapter checks them yet. That matches what the business rules say eShop does (RULE-008, RULE-019, RULE-023, RULE-025).
+
+### What we learnt
+
+| What happened | What we did |
+|---|---|
+| REA read the assembly in about 2 seconds, with no other tools installed | Assemblies are a Discover source; REA is an optional companion |
+| Routes are guessed from controller names, so `PicController` shows `/Pic` where the real route is `/items/{id}/pic`. REA lists `[Route]` attributes but doesn't decode their arguments | **#46** |
+| REA's member comparison found almost nothing in common between the legacy catalog service and CatalogCore, because the namespace moved. It is built for two builds of one assembly | **#44**: compare a library's public surface after a namespace map |

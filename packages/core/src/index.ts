@@ -16,3 +16,4 @@ export { addProposal, decideProposal, describeProposal, loadProposals, acceptDra
 export { startSession, exploreRequest, addFinding, endSession, type Session, type FindingInput, type Probe } from "./explore.js";
 export { draftDefects, redactor, type DefectDraft } from "./defects.js";
 export { initProject } from "./init.js";
+export { discover, loadDiscovery, describeDiscovery, renderDiscovery, describeConnection, runRea, discoveryFolder, type Boundary, type Discovery, type DiscoverInput, type FoundInput } from "./discover.js";

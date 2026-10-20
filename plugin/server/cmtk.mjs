@@ -109,17 +109,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP2;
     visit.REMOVE = REMOVE;
-    function visit_(key2, node, visitor, path9) {
-      const ctrl = callVisitor(key2, node, visitor, path9);
+    function visit_(key2, node, visitor, path10) {
+      const ctrl = callVisitor(key2, node, visitor, path10);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key2, path9, ctrl);
-        return visit_(key2, ctrl, visitor, path9);
+        replaceNode(key2, path10, ctrl);
+        return visit_(key2, ctrl, visitor, path10);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path9 = Object.freeze(path9.concat(node));
+          path10 = Object.freeze(path10.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = visit_(i, node.items[i], visitor, path9);
+            const ci = visit_(i, node.items[i], visitor, path10);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -130,13 +130,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path9 = Object.freeze(path9.concat(node));
-          const ck = visit_("key", node.key, visitor, path9);
+          path10 = Object.freeze(path10.concat(node));
+          const ck = visit_("key", node.key, visitor, path10);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path9);
+          const cv = visit_("value", node.value, visitor, path10);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -157,17 +157,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP2;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key2, node, visitor, path9) {
-      const ctrl = await callVisitor(key2, node, visitor, path9);
+    async function visitAsync_(key2, node, visitor, path10) {
+      const ctrl = await callVisitor(key2, node, visitor, path10);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key2, path9, ctrl);
-        return visitAsync_(key2, ctrl, visitor, path9);
+        replaceNode(key2, path10, ctrl);
+        return visitAsync_(key2, ctrl, visitor, path10);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path9 = Object.freeze(path9.concat(node));
+          path10 = Object.freeze(path10.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = await visitAsync_(i, node.items[i], visitor, path9);
+            const ci = await visitAsync_(i, node.items[i], visitor, path10);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -178,13 +178,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path9 = Object.freeze(path9.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path9);
+          path10 = Object.freeze(path10.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path10);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path9);
+          const cv = await visitAsync_("value", node.value, visitor, path10);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -211,23 +211,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key2, node, visitor, path9) {
+    function callVisitor(key2, node, visitor, path10) {
       if (typeof visitor === "function")
-        return visitor(key2, node, path9);
+        return visitor(key2, node, path10);
       if (identity.isMap(node))
-        return visitor.Map?.(key2, node, path9);
+        return visitor.Map?.(key2, node, path10);
       if (identity.isSeq(node))
-        return visitor.Seq?.(key2, node, path9);
+        return visitor.Seq?.(key2, node, path10);
       if (identity.isPair(node))
-        return visitor.Pair?.(key2, node, path9);
+        return visitor.Pair?.(key2, node, path10);
       if (identity.isScalar(node))
-        return visitor.Scalar?.(key2, node, path9);
+        return visitor.Scalar?.(key2, node, path10);
       if (identity.isAlias(node))
-        return visitor.Alias?.(key2, node, path9);
+        return visitor.Alias?.(key2, node, path10);
       return void 0;
     }
-    function replaceNode(key2, path9, node) {
-      const parent = path9[path9.length - 1];
+    function replaceNode(key2, path10, node) {
+      const parent = path10[path10.length - 1];
       if (identity.isCollection(parent)) {
         parent.items[key2] = node;
       } else if (identity.isPair(parent)) {
@@ -839,10 +839,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path9, value) {
+    function collectionFromPath(schema, path10, value) {
       let v = value;
-      for (let i = path9.length - 1; i >= 0; --i) {
-        const k = path9[i];
+      for (let i = path10.length - 1; i >= 0; --i) {
+        const k = path10[i];
         if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
           const a = [];
           a[k] = v;
@@ -861,7 +861,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path9) => path9 == null || typeof path9 === "object" && !!path9[Symbol.iterator]().next().done;
+    var isEmptyPath = (path10) => path10 == null || typeof path10 === "object" && !!path10[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -891,11 +891,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path9, value) {
-        if (isEmptyPath(path9))
+      addIn(path10, value) {
+        if (isEmptyPath(path10))
           this.add(value);
         else {
-          const [key2, ...rest] = path9;
+          const [key2, ...rest] = path10;
           const node = this.get(key2, true);
           if (identity.isCollection(node))
             node.addIn(rest, value);
@@ -909,8 +909,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path9) {
-        const [key2, ...rest] = path9;
+      deleteIn(path10) {
+        const [key2, ...rest] = path10;
         if (rest.length === 0)
           return this.delete(key2);
         const node = this.get(key2, true);
@@ -924,8 +924,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path9, keepScalar) {
-        const [key2, ...rest] = path9;
+      getIn(path10, keepScalar) {
+        const [key2, ...rest] = path10;
         const node = this.get(key2, true);
         if (rest.length === 0)
           return !keepScalar && identity.isScalar(node) ? node.value : node;
@@ -943,8 +943,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path9) {
-        const [key2, ...rest] = path9;
+      hasIn(path10) {
+        const [key2, ...rest] = path10;
         if (rest.length === 0)
           return this.has(key2);
         const node = this.get(key2, true);
@@ -954,8 +954,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path9, value) {
-        const [key2, ...rest] = path9;
+      setIn(path10, value) {
+        const [key2, ...rest] = path10;
         if (rest.length === 0) {
           this.set(key2, value);
         } else {
@@ -3470,9 +3470,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path9, value) {
+      addIn(path10, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path9, value);
+          this.contents.addIn(path10, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3547,14 +3547,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path9) {
-        if (Collection.isEmptyPath(path9)) {
+      deleteIn(path10) {
+        if (Collection.isEmptyPath(path10)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path9) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path10) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3569,10 +3569,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path9, keepScalar) {
-        if (Collection.isEmptyPath(path9))
+      getIn(path10, keepScalar) {
+        if (Collection.isEmptyPath(path10))
           return !keepScalar && identity.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity.isCollection(this.contents) ? this.contents.getIn(path9, keepScalar) : void 0;
+        return identity.isCollection(this.contents) ? this.contents.getIn(path10, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -3583,10 +3583,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path9) {
-        if (Collection.isEmptyPath(path9))
+      hasIn(path10) {
+        if (Collection.isEmptyPath(path10))
           return this.contents !== void 0;
-        return identity.isCollection(this.contents) ? this.contents.hasIn(path9) : false;
+        return identity.isCollection(this.contents) ? this.contents.hasIn(path10) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3603,13 +3603,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path9, value) {
-        if (Collection.isEmptyPath(path9)) {
+      setIn(path10, value) {
+        if (Collection.isEmptyPath(path10)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path9), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path10), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path9, value);
+          this.contents.setIn(path10, value);
         }
       }
       /**
@@ -4630,7 +4630,7 @@ var require_resolve_flow_scalar = __commonJS({
       const { offset, type, source, end } = scalar;
       let _type;
       let value;
-      const _onError = (rel, code, msg) => onError(offset + rel, code, msg);
+      const _onError = (rel2, code, msg) => onError(offset + rel2, code, msg);
       switch (type) {
         case "scalar":
           _type = Scalar.Scalar.PLAIN;
@@ -5570,9 +5570,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP2;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path9) => {
+    visit.itemAtPath = (cst, path10) => {
       let item = cst;
-      for (const [field, index] of path9) {
+      for (const [field, index] of path10) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -5581,23 +5581,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path9) => {
-      const parent = visit.itemAtPath(cst, path9.slice(0, -1));
-      const field = path9[path9.length - 1][0];
+    visit.parentCollection = (cst, path10) => {
+      const parent = visit.itemAtPath(cst, path10.slice(0, -1));
+      const field = path10[path10.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path9, item, visitor) {
-      let ctrl = visitor(item, path9);
+    function _visit(path10, item, visitor) {
+      let ctrl = visitor(item, path10);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i = 0; i < token.items.length; ++i) {
-            const ci = _visit(Object.freeze(path9.concat([[field, i]])), token.items[i], visitor);
+            const ci = _visit(Object.freeze(path10.concat([[field, i]])), token.items[i], visitor);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -5608,10 +5608,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path9);
+            ctrl = ctrl(item, path10);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path9) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path10) : ctrl;
     }
     exports.visit = visit;
   }
@@ -6913,14 +6913,14 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs10 = this.flowScalar(this.type);
+              const fs11 = this.flowScalar(this.type);
               if (atNextItem || it.value) {
-                map.items.push({ start, key: fs10, sep: [] });
+                map.items.push({ start, key: fs11, sep: [] });
                 this.onKeyLine = true;
               } else if (it.sep) {
-                this.stack.push(fs10);
+                this.stack.push(fs11);
               } else {
-                Object.assign(it, { key: fs10, sep: [] });
+                Object.assign(it, { key: fs11, sep: [] });
                 this.onKeyLine = true;
               }
               return;
@@ -7048,13 +7048,13 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs10 = this.flowScalar(this.type);
+              const fs11 = this.flowScalar(this.type);
               if (!it || it.value)
-                fc.items.push({ start: [], key: fs10, sep: [] });
+                fc.items.push({ start: [], key: fs11, sep: [] });
               else if (it.sep)
-                this.stack.push(fs10);
+                this.stack.push(fs11);
               else
-                Object.assign(it, { key: fs10, sep: [] });
+                Object.assign(it, { key: fs11, sep: [] });
               return;
             }
             case "flow-map-end":
@@ -13843,13 +13843,14 @@ var require_lib = __commonJS({
 
 // packages/cli/dist/main.js
 var import_yaml4 = __toESM(require_dist(), 1);
-import fs9 from "node:fs";
-import path8 from "node:path";
+import fs10 from "node:fs";
+import path9 from "node:path";
 import readline2 from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
 // packages/core/dist/types.js
+var BOUNDARY_KINDS = ["http", "soap", "outbound-http", "database", "files", "email", "sms", "queue", "payments", "worker", "ui", "logs"];
 var MATCH_LEVELS = ["exact", "semantic", "contract"];
 
 // packages/core/dist/manifest.js
@@ -13990,7 +13991,10 @@ function adaptersOf(raw) {
       throw new ManifestError(`adapters.${name}: the name must be letters, digits, '.', '-' and '_', and not "http" (built in).`);
     if (typeof spec?.command !== "string")
       throw new ManifestError(`adapters.${name} needs a \`command\`, such as "node".`);
-    out[name] = { command: spec.command, args: Array.isArray(spec.args) ? spec.args.map(String) : [], timeout_s: positive(spec.timeout_s, `adapters.${name}.timeout_s`, 300) };
+    if (spec.covers !== void 0 && (!Array.isArray(spec.covers) || !spec.covers.every((k) => typeof k === "string" && BOUNDARY_KINDS.includes(k)))) {
+      throw new ManifestError(`adapters.${name}.covers must be a list of boundary kinds: ${BOUNDARY_KINDS.join(", ")}.`);
+    }
+    out[name] = { command: spec.command, args: Array.isArray(spec.args) ? spec.args.map(String) : [], timeout_s: positive(spec.timeout_s, `adapters.${name}.timeout_s`, 300), ...spec.covers ? { covers: spec.covers } : {} };
   }
   return out;
 }
@@ -13998,10 +14002,10 @@ var within = (root, full) => {
   const r = path.relative(root, full);
   return r === "" || !(r === ".." || r.startsWith(".." + path.sep) || path.isAbsolute(r));
 };
-function inside(manifest, rel) {
-  const full = path.resolve(manifest.root, rel);
+function inside(manifest, rel2) {
+  const full = path.resolve(manifest.root, rel2);
   if (!within(manifest.root, full))
-    throw new ManifestError(`${rel} is outside the project folder.`);
+    throw new ManifestError(`${rel2} is outside the project folder.`);
   let existing = full;
   const rest = [];
   while (!fs.existsSync(existing) && path.dirname(existing) !== existing) {
@@ -14010,13 +14014,13 @@ function inside(manifest, rel) {
   }
   const real = path.join(fs.realpathSync.native(existing), ...rest);
   if (!within(fs.realpathSync.native(manifest.root), real))
-    throw new ManifestError(`${rel} leads outside the project folder through a link (to ${real}).`);
+    throw new ManifestError(`${rel2} leads outside the project folder through a link (to ${real}).`);
   return full;
 }
-function ownedFolder(manifest, rel) {
-  const full = inside(manifest, rel);
+function ownedFolder(manifest, rel2) {
+  const full = inside(manifest, rel2);
   if (path.relative(manifest.root, full) === "")
-    throw new ManifestError(`${rel} is the project folder itself; the toolkit only rewrites a folder of its own, such as cmtk/evidence.`);
+    throw new ManifestError(`${rel2} is the project folder itself; the toolkit only rewrites a folder of its own, such as cmtk/evidence.`);
   return full;
 }
 function caseFiles(manifest) {
@@ -14031,13 +14035,13 @@ function loadCases(manifest) {
   const all = [];
   const seen = /* @__PURE__ */ new Set();
   const RESERVED = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\.|$)/i;
-  for (const rel of caseFiles(manifest)) {
-    const doc = readStructured(inside(manifest, rel));
+  for (const rel2 of caseFiles(manifest)) {
+    const doc = readStructured(inside(manifest, rel2));
     const list = Array.isArray(doc) ? doc : doc?.cases;
     if (!Array.isArray(list))
-      throw new ManifestError(`${rel} must hold a list of cases (or \`cases:\` with a list).`);
+      throw new ManifestError(`${rel2} must hold a list of cases (or \`cases:\` with a list).`);
     for (const [i, c] of list.entries()) {
-      const where2 = `${rel} case ${i + 1}`;
+      const where2 = `${rel2} case ${i + 1}`;
       if (!c || typeof c.id !== "string" || !NAME.test(c.id))
         throw new ManifestError(`${where2}: \`id\` must be letters, digits, '.', '-' and '_'.`);
       if (seen.has(c.id.toLowerCase()))
@@ -14067,7 +14071,7 @@ function loadCases(manifest) {
         if (!Object.keys(headers).some((h) => h.toLowerCase() === "content-type"))
           headers["Content-Type"] = "application/json";
       }
-      all.push({ ...c, request: { method, path: req.path, headers, body }, file: rel });
+      all.push({ ...c, request: { method, path: req.path, headers, body }, file: rel2 });
     }
   }
   return all;
@@ -15378,15 +15382,15 @@ function whyOf(c) {
   const line = /^Why it looks wrong:\s*(.+)$/im.exec(note)?.[1]?.trim();
   return (line ?? note).slice(0, 1e3);
 }
-function cleanPath(p, clean) {
+function cleanPath(p, clean2) {
   const q = p.indexOf("?");
   if (q < 0)
-    return clean(p);
+    return clean2(p);
   const params = new URLSearchParams(p.slice(q + 1));
   for (const k of [...new Set(params.keys())])
     if (looksSecret(k))
       params.set(k, REMOVED);
-  return clean(`${p.slice(0, q)}?${params.toString()}`);
+  return clean2(`${p.slice(0, q)}?${params.toString()}`);
 }
 function cleanUrl(u) {
   try {
@@ -15400,15 +15404,15 @@ function cleanUrl(u) {
     return u.replace(/\/\/[^/@]*@/, "//");
   }
 }
-function stepsFor(c, target2, clean) {
+function stepsFor(c, target2, clean2) {
   if (!c)
     return ["(the case is no longer in the case files)"];
-  const headers = Object.entries(c.request.headers ?? {}).map(([k, v]) => `${k}: ${looksSecret(k, "header") ? REMOVED : clean(v)}`);
+  const headers = Object.entries(c.request.headers ?? {}).map(([k, v]) => `${k}: ${looksSecret(k, "header") ? REMOVED : clean2(v)}`);
   const contentType = Object.entries(c.request.headers ?? {}).find(([k]) => k.toLowerCase() === "content-type")?.[1] ?? "";
   return [
-    `Send \`${c.request.method} ${cleanPath(c.request.path, clean)}\` to ${target2}${c.surface && c.surface !== "http" ? ` through the ${c.surface} adapter` : ""}.`,
+    `Send \`${c.request.method} ${cleanPath(c.request.path, clean2)}\` to ${target2}${c.surface && c.surface !== "http" ? ` through the ${c.surface} adapter` : ""}.`,
     ...headers.length ? [`With headers: ${headers.join("; ")}.`] : [],
-    ...c.request.body ? [`With the body: ${clean(redactBody(String(c.request.body), contentType)[0]).slice(0, 500)}`] : []
+    ...c.request.body ? [`With the body: ${clean2(redactBody(String(c.request.body), contentType)[0]).slice(0, 500)}`] : []
   ];
 }
 function draftDefects(manifest, mode) {
@@ -15417,10 +15421,10 @@ function draftDefects(manifest, mode) {
   if (!fs4.existsSync(reportFile))
     throw new ManifestError(`There is no ${mode} report yet. Run \`cmtk ${mode}\` first.`);
   const report = JSON.parse(fs4.readFileSync(reportFile, "utf8"));
-  const clean = redactor(manifest);
+  const clean2 = redactor(manifest);
   const cases = new Map(loadCases(manifest).map((c) => [c.id, c]));
   const [targetName, targetWhere] = Object.entries(report.targets).at(-1) ?? ["the target", ""];
-  const target2 = `${targetName}${targetWhere ? ` (${clean(cleanUrl(targetWhere))})` : ""}`;
+  const target2 = `${targetName}${targetWhere ? ` (${clean2(cleanUrl(targetWhere))})` : ""}`;
   const groups = /* @__PURE__ */ new Map();
   for (const c of report.cases) {
     if (mode === "run" && c.result === "FAIL") {
@@ -15456,13 +15460,13 @@ function draftDefects(manifest, mode) {
   };
   const drafts = [...groups.values()].map((g, i) => ({
     id: `D-${String(i + 1).padStart(2, "0")}`,
-    title: clean(named(g.ids) ?? g.title).slice(0, 200) + (g.ids.length > 1 ? ` (${g.ids.length} cases)` : ""),
+    title: clean2(named(g.ids) ?? g.title).slice(0, 200) + (g.ids.length > 1 ? ` (${g.ids.length} cases)` : ""),
     requirements: [...new Set(g.ids.flatMap((id) => report.cases.find((c) => c.id === id)?.requirement ?? []))],
     cases: g.ids,
-    steps: stepsFor(cases.get(g.ids[0]), target2, clean),
-    ...whyOf(cases.get(g.ids[0])) ? { why: clean(whyOf(cases.get(g.ids[0]))) } : {},
-    expected: clean(g.expected),
-    actual: clean(g.actual),
+    steps: stepsFor(cases.get(g.ids[0]), target2, clean2),
+    ...whyOf(cases.get(g.ids[0])) ? { why: clean2(whyOf(cases.get(g.ids[0]))) } : {},
+    expected: clean2(g.expected),
+    actual: clean2(g.actual),
     evidence: g.ids.flatMap(answer),
     source: mode
   }));
@@ -15470,12 +15474,12 @@ function draftDefects(manifest, mode) {
     for (const p of loadProposals(manifest).filter((x) => x.kind === "defect" && x.status === "accepted")) {
       drafts.push({
         id: `D-${String(drafts.length + 1).padStart(2, "0")}`,
-        title: clean(p.title ?? p.id),
+        title: clean2(p.title ?? p.id),
         requirements: [],
         cases: p.cases ?? [],
-        steps: stepsFor(cases.get(p.cases?.[0] ?? ""), target2, clean),
+        steps: stepsFor(cases.get(p.cases?.[0] ?? ""), target2, clean2),
         expected: "(see the summary)",
-        actual: clean(p.summary ?? p.reason),
+        actual: clean2(p.summary ?? p.reason),
         evidence: (p.cases ?? []).flatMap(answer),
         source: "triage"
       });
@@ -15525,24 +15529,24 @@ function regex(pattern, where2) {
   }
 }
 var typeOf = (v) => v === null ? "null" : Array.isArray(v) ? "array" : typeof v;
-function checkJson(path9, check2, doc) {
-  const found = select(doc, parsePath(path9));
+function checkJson(path10, check2, doc) {
+  const found = select(doc, parsePath(path10));
   if ("exists" in check2) {
-    return found.length > 0 === check2.exists ? [] : [{ check: path9, expected: check2.exists ? "present" : "absent", actual: found.length ? short(found[0].value) : "(missing)" }];
+    return found.length > 0 === check2.exists ? [] : [{ check: path10, expected: check2.exists ? "present" : "absent", actual: found.length ? short(found[0].value) : "(missing)" }];
   }
   if (found.length === 0)
-    return [{ check: path9, expected: describe(check2), actual: "(missing)" }];
+    return [{ check: path10, expected: describe(check2), actual: "(missing)" }];
   const out = [];
   for (const { at, value } of found) {
     let ok = true;
     if ("equals" in check2)
       ok = jsonEqual(value, check2.equals);
     else if ("matches" in check2)
-      ok = typeof value === "string" && regex(check2.matches, path9).test(value);
+      ok = typeof value === "string" && regex(check2.matches, path10).test(value);
     else if ("type" in check2)
       ok = typeOf(value) === check2.type;
     if (!ok)
-      out.push({ check: found.length > 1 ? render(at) : path9, expected: describe(check2), actual: short(value) });
+      out.push({ check: found.length > 1 ? render(at) : path10, expected: describe(check2), actual: short(value) });
   }
   return out;
 }
@@ -15575,8 +15579,8 @@ function checkExpectation(exp, obs) {
     } catch {
       return [...out, { check: "body", expected: "JSON", actual: short(obs.body ?? "", 60) }];
     }
-    for (const [path9, check2] of Object.entries(exp.json))
-      out.push(...checkJson(path9, check2, doc));
+    for (const [path10, check2] of Object.entries(exp.json))
+      out.push(...checkJson(path10, check2, doc));
   }
   for (const text2 of exp.body_contains ?? []) {
     if (!(obs.body ?? "").includes(text2))
@@ -16004,11 +16008,11 @@ async function compare(manifest, opts = {}) {
       for (const k of manifest.contracts) {
         const probe2 = { id: `contract-${k.name}`, request: { method: "GET", path: k.path } };
         const [a, b] = [await http2.run(probe2, ref, extra), await http2.run(probe2, cand, extra)];
-        const slug = k.name.replace(/[^A-Za-z0-9_.-]/g, "_").slice(0, 64);
+        const slug2 = k.name.replace(/[^A-Za-z0-9_.-]/g, "_").slice(0, 64);
         if (a.body !== void 0)
-          fs5.writeFileSync(path5.join(dir, "answers", `contract-${slug}.reference.txt`), a.body, "utf8");
+          fs5.writeFileSync(path5.join(dir, "answers", `contract-${slug2}.reference.txt`), a.body, "utf8");
         if (b.body !== void 0)
-          fs5.writeFileSync(path5.join(dir, "answers", `contract-${slug}.candidate.txt`), b.body, "utf8");
+          fs5.writeFileSync(path5.join(dir, "answers", `contract-${slug2}.candidate.txt`), b.body, "utf8");
         const outcome = checkContract(k, a, b);
         for (const f of outcome.findings) {
           const hit = f.where ? coveringDrift(drift, `contract-${k.name}`, f.where) : void 0;
@@ -16154,16 +16158,404 @@ function recordSignoff(dir, who, date, manifest) {
     evidence_sha256: evidenceFingerprint(dir),
     ...report.settings ? { manifest: report.settings.manifest, manifest_sha256: report.settings.manifest_sha256 } : {}
   };
-  const cell2 = (v) => v.replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
+  const cell3 = (v) => v.replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
   const row = (label, value) => (t) => t.replace(new RegExp(`^\\| ${label} \\|.*\\|$`, "m"), () => `| ${label} | ${value} |`);
-  const text2 = [row("Name", cell2(name)), row("Role", cell2(role)), row("Date", date), row("Decision", decision), row("Evidence", `sha256 ${s.evidence_sha256}`)].reduce((t, f) => f(t), fs6.readFileSync(md, "utf8"));
+  const text2 = [row("Name", cell3(name)), row("Role", cell3(role)), row("Date", date), row("Decision", decision), row("Evidence", `sha256 ${s.evidence_sha256}`)].reduce((t, f) => f(t), fs6.readFileSync(md, "utf8"));
   fs6.writeFileSync(path6.join(dir, "SIGNOFF.json"), JSON.stringify(s, null, 2) + "\n", "utf8");
   fs6.writeFileSync(md, text2, "utf8");
   return s;
 }
 
 // packages/core/dist/check.js
+import fs8 from "node:fs";
+
+// packages/core/dist/discover.js
+import { spawnSync } from "node:child_process";
 import fs7 from "node:fs";
+import path7 from "node:path";
+var CONTROL2 = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f​-‏‪-‮⁦-⁩]/;
+var clean = (v, what, max = 500) => {
+  if (typeof v !== "string" || !v.trim())
+    throw new ManifestError(`${what} is required.`);
+  if (CONTROL2.test(v))
+    throw new ManifestError(`${what} holds control characters; write plain text.`);
+  return v.trim().slice(0, max);
+};
+var slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "unnamed";
+var rel = (m, f) => path7.relative(m.root, f).split(path7.sep).join("/");
+var CALL_RULES = [
+  [/^System\.ServiceModel\.(ServiceHost|ServiceHostBase)$/, "soap", "in"],
+  [/^System\.ServiceModel\.(ClientBase`1|ChannelFactory`1)$/, "soap", "out"],
+  [/^System\.Net\.Http\.HttpClient$|^System\.Net\.(WebClient|HttpWebRequest|WebRequest)$|^RestSharp\.|^Flurl\./, "outbound-http", "out"],
+  [/^System\.Data\.(Entity|SqlClient|OleDb|Odbc)\.|^Microsoft\.Data\.(SqlClient|Sqlite)\.|^Microsoft\.EntityFrameworkCore\.?|^(Npgsql|MySql|MySqlConnector|Oracle|Dapper|MongoDB|StackExchange\.Redis)\b/, "database", "out"],
+  [/^System\.IO\.(File|FileInfo|FileStream|Directory|DirectoryInfo|FileSystemWatcher)$|^System\.IO\.Compression\.ZipFile$/, "files", "out"],
+  [/^System\.Net\.Mail\.|^(MailKit|MimeKit|SendGrid)\./, "email", "out"],
+  [/^System\.Messaging\.|^(RabbitMQ|Confluent\.Kafka|Amazon\.SQS|MassTransit|NServiceBus)\b|^Azure\.Messaging\.|^Microsoft\.Azure\.ServiceBus/, "queue", "out"],
+  [/^Twilio\./, "sms", "out"],
+  [/^(Stripe|Braintree|PayPal|Adyen|Square)\./, "payments", "out"],
+  [/^System\.ServiceProcess\.ServiceBase$|^Microsoft\.Extensions\.Hosting\.BackgroundService$|^(Quartz|Hangfire)\./, "worker", "in"],
+  [/^(log4net|NLog|Serilog)\./, "logs", "out"]
+];
+var MVC = /^System\.Web\.Mvc\.(Controller|ControllerBase)$|^Microsoft\.AspNetCore\.Mvc\.(Controller|ControllerBase)$/;
+var WEB_API = /^System\.Web\.Http\.ApiController$/;
+function readReaMembers(raw, what) {
+  const j = raw;
+  const n = j?.normalized_result ?? j;
+  if (!Array.isArray(n?.methods) || !Array.isArray(n?.call_edges)) {
+    throw new ManifestError(`${what} is not the output of \`rea inspect-managed-members <dll> --json\`: it has no methods and call_edges.`);
+  }
+  const assembly = path7.basename(String(j?.subject?.name ?? n?.artifact?.path ?? what));
+  return { assembly, members: n };
+}
+function fromReaMembers(assembly, n, source) {
+  const typeOf2 = new Map(n.methods.map((m) => [m.token, m.declaring_type ?? ""]));
+  const callerType = (e) => {
+    const t = e.caller_token && typeOf2.get(e.caller_token) || "";
+    return t.startsWith("<") ? "" : t;
+  };
+  const out = [];
+  const controllers = /* @__PURE__ */ new Map();
+  const byKind = /* @__PURE__ */ new Map();
+  for (const e of n.call_edges) {
+    const target2 = e.target_declaring_type ?? "";
+    const caller = callerType(e);
+    if (!target2 || !caller)
+      continue;
+    if (MVC.test(target2)) {
+      if (!controllers.has(caller))
+        controllers.set(caller, "mvc");
+      continue;
+    }
+    if (WEB_API.test(target2)) {
+      controllers.set(caller, "api");
+      continue;
+    }
+    const rule = CALL_RULES.find(([re]) => re.test(target2));
+    if (!rule)
+      continue;
+    const key2 = `${rule[1]}|${rule[2]}`;
+    const k = byKind.get(key2) ?? { kind: rule[1], direction: rule[2], uses: /* @__PURE__ */ new Map() };
+    k.uses.set(caller, (k.uses.get(caller) ?? /* @__PURE__ */ new Set()).add(target2));
+    byKind.set(key2, k);
+  }
+  for (const [type, style] of [...controllers].sort()) {
+    const short2 = type.split(".").pop().replace(/Controller\d*$/, (m) => m.replace("Controller", ""));
+    const route = style === "api" ? `/api/${short2.toLowerCase()}` : `/${short2}`;
+    out.push({
+      kind: "http",
+      direction: "in",
+      name: type,
+      where: `${route} (by naming convention; check the real route)`,
+      found_in: [{ source, detail: `${type} is ${style === "api" ? "a Web API" : "an MVC"} controller` }]
+    });
+  }
+  for (const k of byKind.values()) {
+    const users = [...k.uses].sort(([a], [b]) => a.localeCompare(b));
+    const short2 = (t) => t.replace(/`\d+$/, "").split(".").pop();
+    const listed = users.slice(0, 6).map(([t, targets]) => {
+      const ts = [...targets].sort();
+      return `${t} (${ts.slice(0, 3).map(short2).join(", ")}${ts.length > 3 ? ", \u2026" : ""})`;
+    });
+    out.push({
+      kind: k.kind,
+      direction: k.direction,
+      name: `${assembly}: ${k.kind}`,
+      users: users.map(([t]) => t),
+      found_in: [{ source, detail: `used by ${listed.join("; ")}${users.length > 6 ? `; and ${users.length - 6} more types` : ""}` }]
+    });
+  }
+  return out;
+}
+function runRea(file) {
+  const set = process.env.CMTK_REA?.trim();
+  const [cmd, pre] = set ? /\.(m?js|cjs)$/i.test(set) ? [process.execPath, [set]] : [set, []] : [process.platform === "win32" ? "rea.cmd" : "rea", []];
+  const shell = process.platform === "win32" && /\.(cmd|bat)$/i.test(cmd);
+  if (shell && /["%^&|<>!\r\n]/.test(file))
+    throw new ManifestError(`${file}: the path holds a character the Windows shell would read; rename the file or folder.`);
+  const args = [...pre, "inspect-managed-members", shell ? `"${file}"` : file, "--json"];
+  const r = spawnSync(cmd, args, { encoding: "utf8", maxBuffer: 512 * 1024 * 1024, timeout: 3e5, shell, windowsHide: true });
+  if (r.error && r.error.code === "ENOENT" || shell && r.status !== 0 && /not recognized/i.test(r.stderr ?? "")) {
+    throw new ManifestError("REA is not installed. Install it with `npm install --global rea-agents` (it needs Node.js 22.19 or later), or set CMTK_REA to its command. Or run `rea inspect-managed-members <dll> --json` elsewhere and pass the saved output with --rea-json.");
+  }
+  if (r.error)
+    throw new ManifestError(`REA failed on ${path7.basename(file)}: ${r.error.message}`);
+  if (r.status !== 0)
+    throw new ManifestError(`REA failed on ${path7.basename(file)}: ${(r.stderr || r.stdout || "").trim().split("\n")[0]?.slice(0, 300) ?? `exit ${r.status}`}`);
+  try {
+    return JSON.parse(r.stdout);
+  } catch {
+    throw new ManifestError(`REA's output for ${path7.basename(file)} is not JSON.`);
+  }
+}
+function describeConnection(cs) {
+  const parts = /* @__PURE__ */ new Map();
+  for (const p of cs.split(";")) {
+    const i = p.indexOf("=");
+    if (i > 0)
+      parts.set(p.slice(0, i).trim().toLowerCase(), p.slice(i + 1).trim());
+  }
+  const server = parts.get("data source") ?? parts.get("server") ?? parts.get("host") ?? parts.get("address") ?? parts.get("addr") ?? parts.get("network address");
+  const db = parts.get("initial catalog") ?? parts.get("database");
+  if (!server && !db)
+    return /^[a-z]+:\/\//i.test(cs) ? cleanUrl(cs).replace(/\?.*$/, "") : "(not recognised)";
+  return [server && `server ${server}`, db && `database ${db}`].filter(Boolean).join(", ");
+}
+var URL_RE = /^https?:\/\/[^\s"'<>]+$/i;
+var origin = (u) => {
+  try {
+    const x = new URL(u);
+    x.username = "";
+    x.password = "";
+    return `${x.protocol}//${x.host}`;
+  } catch {
+    return u;
+  }
+};
+function walkXml(n, visit, at = []) {
+  const here = [...at, n.local];
+  visit(n, here);
+  for (const c of n.children)
+    walkXml(c, visit, here);
+}
+function fromXmlConfig(text2, source) {
+  const out = [];
+  walkXml(parseXml(text2), (n, at) => {
+    const parent = at[at.length - 2];
+    const a = (k) => n.attrs.get(k);
+    if (parent === "connectionStrings" && n.local === "add" && a("name")) {
+      out.push({ kind: "database", direction: "out", name: a("name"), where: describeConnection(a("connectionString") ?? ""), found_in: [{ source, detail: `connection string "${a("name")}"${a("providerName") ? ` (${a("providerName")})` : ""}` }] });
+    } else if (parent === "appSettings" && n.local === "add" && a("key") && a("value")) {
+      const v = a("value").trim();
+      if (URL_RE.test(v))
+        out.push({ kind: "outbound-http", direction: "out", name: a("key"), where: origin(v), found_in: [{ source, detail: `appSettings "${a("key")}"` }] });
+      else if (/^formatname:|\\private\$\\/i.test(v))
+        out.push({ kind: "queue", direction: "out", name: a("key"), where: v, found_in: [{ source, detail: `appSettings "${a("key")}" names a message queue` }] });
+      else if (/^\\\\[^\\]+\\[^\\]+/.test(v))
+        out.push({ kind: "files", direction: "out", name: a("key"), where: v, found_in: [{ source, detail: `appSettings "${a("key")}" names a file share` }] });
+    } else if (n.local === "smtp" && at.includes("mailSettings")) {
+      const host = n.children.find((c) => c.local === "network")?.attrs.get("host");
+      out.push({ kind: "email", direction: "out", name: "smtp", where: host ?? a("pickupDirectoryLocation") ?? a("deliveryMethod") ?? "(not set)", found_in: [{ source, detail: "system.net/mailSettings/smtp" }] });
+    } else if (n.local === "endpoint" && parent === "client" && at.includes("system.serviceModel")) {
+      out.push({ kind: "soap", direction: "out", name: a("name") ?? a("contract") ?? "client endpoint", where: a("address") ? origin(a("address")) : void 0, found_in: [{ source, detail: `WCF client endpoint for ${a("contract") ?? "a contract"}` }] });
+    } else if (n.local === "service" && parent === "services" && at.includes("system.serviceModel")) {
+      out.push({ kind: "soap", direction: "in", name: a("name") ?? "service", found_in: [{ source, detail: "WCF service" }] });
+    }
+  });
+  return out;
+}
+function fromJsonConfig(value, source) {
+  const out = [];
+  const walk = (v, at) => {
+    if (v && typeof v === "object" && !Array.isArray(v)) {
+      for (const [k, x] of Object.entries(v))
+        walk(x, [...at, k]);
+      return;
+    }
+    if (Array.isArray(v)) {
+      v.forEach((x, i) => walk(x, [...at, String(i)]));
+      return;
+    }
+    if (typeof v !== "string")
+      return;
+    const key2 = at.join(":");
+    if (at.length === 2 && at[0].toLowerCase() === "connectionstrings") {
+      out.push({ kind: "database", direction: "out", name: at[1], where: describeConnection(v), found_in: [{ source, detail: `ConnectionStrings:${at[1]}` }] });
+    } else if (URL_RE.test(v.trim())) {
+      out.push({ kind: "outbound-http", direction: "out", name: key2, where: origin(v.trim()), found_in: [{ source, detail: key2 }] });
+    } else if (/smtp/i.test(key2) && /host|server/i.test(at[at.length - 1] ?? "")) {
+      out.push({ kind: "email", direction: "out", name: key2, where: v, found_in: [{ source, detail: key2 }] });
+    }
+  };
+  walk(value, []);
+  return out;
+}
+function fromHar(raw, source, ownHosts) {
+  const entries = raw?.log?.entries;
+  if (!Array.isArray(entries))
+    throw new ManifestError(`${source} is not a HAR file: it has no log.entries.`);
+  const byOrigin = /* @__PURE__ */ new Map();
+  for (const e of entries) {
+    try {
+      const u = new URL(String(e?.request?.url));
+      const o = `${u.protocol}//${u.host}`;
+      byOrigin.set(o, (byOrigin.get(o) ?? /* @__PURE__ */ new Set()).add(`${String(e.request.method ?? "GET").toUpperCase()} ${u.pathname}`));
+    } catch {
+    }
+  }
+  return [...byOrigin].map(([o, paths]) => {
+    const own = ownHosts.has(new URL(o).host);
+    return {
+      kind: own ? "http" : "outbound-http",
+      direction: own ? "in" : "out",
+      name: o,
+      where: o,
+      found_in: [{ source, detail: `${paths.size} distinct request${paths.size === 1 ? "" : "s"}${own ? "" : ", made by the browser"}` }]
+    };
+  });
+}
+function fromTopology(raw, source) {
+  const out = [];
+  if (!raw?.root)
+    throw new ManifestError(`${source} is not modernize's topology.json: it has no root.`);
+  const walk = (n) => {
+    if (!n || typeof n !== "object")
+      return;
+    const name = String(n.name ?? n.id ?? "");
+    if (n.kind === "datastore")
+      out.push({ kind: /file|folder|share|csv|vsam|dataset/i.test(name) ? "files" : "database", direction: "out", name, found_in: [{ source, detail: `data store ${n.id ?? name}` }] });
+    if (n.kind === "job")
+      out.push({ kind: "worker", direction: "in", name, found_in: [{ source, detail: `job ${n.id ?? name}` }] });
+    if (n.kind === "screen")
+      out.push({ kind: "ui", direction: "in", name, found_in: [{ source, detail: `screen ${n.id ?? name}` }] });
+    for (const c of Array.isArray(n.children) ? n.children : [])
+      walk(c);
+  };
+  walk(raw.root);
+  return out;
+}
+function coveredBy(b, m) {
+  if (b.direction === "in" && (b.kind === "http" || b.kind === "soap"))
+    return "http (built in)";
+  for (const [name, a] of Object.entries(m.adapters))
+    if (name === b.kind || (a.covers ?? []).includes(b.kind))
+      return name;
+  return void 0;
+}
+function discoveryFolder(m) {
+  return inside(m, path7.join(path7.dirname(m.proposals), "discovery"));
+}
+function loadDiscovery(m) {
+  const f = path7.join(discoveryFolder(m), "boundaries.json");
+  if (!fs7.existsSync(f))
+    return void 0;
+  const d = JSON.parse(fs7.readFileSync(f, "utf8"));
+  for (const b of d.boundaries)
+    b.covered_by = coveredBy(b, m);
+  return d;
+}
+function discover(m, input, date = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)) {
+  const found = [];
+  const sources = [];
+  const file = (f, what) => {
+    const full = inside(m, f);
+    if (!fs7.existsSync(full) || !fs7.statSync(full).isFile())
+      throw new ManifestError(`${what} ${f} does not exist.`);
+    return full;
+  };
+  for (const f of input.assemblies ?? []) {
+    const full = file(f, "The assembly");
+    const { assembly, members } = readReaMembers(runRea(full), rel(m, full));
+    found.push(...fromReaMembers(assembly, members, `REA: ${rel(m, full)}`));
+    sources.push(`REA on ${rel(m, full)}`);
+  }
+  for (const f of input.reaJson ?? []) {
+    const full = file(f, "REA's output");
+    const { assembly, members } = readReaMembers(JSON.parse(fs7.readFileSync(full, "utf8")), rel(m, full));
+    found.push(...fromReaMembers(assembly, members, `REA: ${rel(m, full)}`));
+    sources.push(`REA's saved output ${rel(m, full)}`);
+  }
+  for (const f of input.configs ?? []) {
+    const full = file(f, "The settings file");
+    const text2 = fs7.readFileSync(full, "utf8").replace(/^﻿/, "");
+    found.push(.../\.json$/i.test(full) ? fromJsonConfig(JSON.parse(text2), rel(m, full)) : fromXmlConfig(text2, rel(m, full)));
+    sources.push(rel(m, full));
+  }
+  const ownHosts = new Set(Object.values(m.targets).flatMap((t) => {
+    try {
+      return t.base_url ? [new URL(t.base_url).host] : [];
+    } catch {
+      return [];
+    }
+  }));
+  for (const f of input.har ?? []) {
+    const full = file(f, "The HAR file");
+    found.push(...fromHar(JSON.parse(fs7.readFileSync(full, "utf8")), rel(m, full), ownHosts));
+    sources.push(rel(m, full));
+  }
+  for (const f of input.topology ?? []) {
+    const full = file(f, "The topology file");
+    found.push(...fromTopology(JSON.parse(fs7.readFileSync(full, "utf8")), rel(m, full)));
+    sources.push(rel(m, full));
+  }
+  if (input.found?.length) {
+    const who = clean(input.agent, "The agent's name", 100);
+    for (const [i, x] of input.found.entries()) {
+      const kind = clean(x.kind, `found[${i}].kind`, 40);
+      if (!BOUNDARY_KINDS.includes(kind))
+        throw new ManifestError(`found[${i}].kind must be one of: ${BOUNDARY_KINDS.join(", ")}.`);
+      found.push({
+        kind,
+        direction: x.direction === "in" ? "in" : x.direction === "out" ? "out" : kind === "http" || kind === "soap" || kind === "worker" || kind === "ui" ? "in" : "out",
+        name: clean(x.name, `found[${i}].name`, 200),
+        ...x.where ? { where: cleanUrl(clean(x.where, `found[${i}].where`, 300)) } : {},
+        found_in: [{ source: `agent: ${who.replace(/^agent:\s*/i, "")}`, detail: clean(x.evidence, `found[${i}].evidence`, 500) }]
+      });
+    }
+    sources.push(`findings from agent ${who.replace(/^agent:\s*/i, "")}`);
+  }
+  if (!sources.length)
+    throw new ManifestError("Give discover something to read: --assembly, --rea-json, --config, --har or --topology (or findings, from an agent).");
+  for (const db of found.filter((f) => f.kind === "database" && f.users)) {
+    const named = found.find((f) => f.kind === "database" && !f.users && db.users.some((u) => u.split(".").pop() === f.name));
+    if (named) {
+      named.found_in.push(...db.found_in);
+      found.splice(found.indexOf(db), 1);
+    }
+  }
+  const previous = input.fresh ? void 0 : loadDiscovery(m);
+  const byId = new Map((previous?.boundaries ?? []).map((b) => [b.id, b]));
+  for (const f of found) {
+    const id = `${f.kind}:${slug(f.name)}`;
+    const b = byId.get(id) ?? { id, kind: f.kind, direction: f.direction, name: f.name, found_in: [] };
+    if (!b.where && f.where)
+      b.where = f.where;
+    for (const e of f.found_in)
+      if (!b.found_in.some((x) => x.source === e.source && x.detail === e.detail))
+        b.found_in.push(e);
+    byId.set(id, b);
+  }
+  const boundaries = [...byId.values()].map((b) => ({ ...b, covered_by: coveredBy(b, m) })).sort((a, b) => Number(!!a.covered_by) - Number(!!b.covered_by) || BOUNDARY_KINDS.indexOf(a.kind) - BOUNDARY_KINDS.indexOf(b.kind) || a.name.localeCompare(b.name));
+  const discovery = { system: m.system, date, sources: [.../* @__PURE__ */ new Set([...previous?.sources ?? [], ...sources])], boundaries };
+  const dir = discoveryFolder(m);
+  fs7.mkdirSync(dir, { recursive: true });
+  fs7.writeFileSync(path7.join(dir, "boundaries.json"), JSON.stringify(discovery, null, 2) + "\n", "utf8");
+  fs7.writeFileSync(path7.join(dir, "BOUNDARIES.md"), renderDiscovery(discovery), "utf8");
+  return { file: rel(m, path7.join(dir, "BOUNDARIES.md")), discovery };
+}
+var cell2 = (s) => (s ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
+function describeDiscovery(d) {
+  const open = d.boundaries.filter((b) => !b.covered_by);
+  return `${d.boundaries.length} boundar${d.boundaries.length === 1 ? "y" : "ies"}: ${d.boundaries.length - open.length} covered by an adapter, ${open.length} uncovered.`;
+}
+function renderDiscovery(d) {
+  const open = d.boundaries.filter((b) => !b.covered_by);
+  const L = [
+    `# Boundaries: ${d.system}`,
+    "",
+    `Written by \`cmtk discover\` on ${d.date}. ${describeDiscovery(d)}`,
+    "",
+    "A boundary is anything the system serves, or calls, stores, sends or reads through. Each one needs cases, and an adapter to run them, before parity can be claimed for it. Run `cmtk discover` again after adding a source or an adapter.",
+    "",
+    `Sources: ${d.sources.join("; ")}.`,
+    "",
+    "| Boundary | Kind | Direction | Where | Covered by | Found in |",
+    "|---|---|---|---|---|---|"
+  ];
+  for (const b of d.boundaries) {
+    L.push(`| ${cell2(b.name)} | ${b.kind} | ${b.direction} | ${cell2(b.where)} | ${b.covered_by ? cell2(b.covered_by) : "**uncovered**"} | ${cell2(b.found_in.map((f) => `${f.source}: ${f.detail}`).join("; "))} |`);
+  }
+  L.push("");
+  if (open.length) {
+    L.push("## Uncovered", "", "No adapter covers these, so no case can check them yet. For each kind, either:", "- write an adapter with `cmtk adapter new <name>` and list the kind under its `covers` in `cmtk.yaml`; or", "- have a person record why it is out of scope.", "");
+    for (const k of [...new Set(open.map((b) => b.kind))])
+      L.push(`- **${k}**: ${open.filter((b) => b.kind === k).map((b) => cell2(b.name)).join(", ")}`);
+    L.push("");
+  }
+  L.push("## Limits", "", "- Assemblies are read by REA, never run. Calls made through reflection, dependency injection resolved at run time, or configuration may be missed.", "- A controller's route is guessed from its name. Check it against the real routes.", "- Discovery lists what its sources show. It never proves that nothing else exists: add sources (configuration, recordings, the map) until the list stops growing.", "");
+  return L.join("\n");
+}
+
+// packages/core/dist/check.js
 function check(manifest) {
   const cases = loadCases(manifest);
   loadDrift(manifest);
@@ -16181,13 +16573,17 @@ function check(manifest) {
   }
   if (!cases.length)
     warnings.push(`No case files match ${manifest.cases.join(", ")}.`);
-  if (!fs7.existsSync(inside(manifest, manifest.evidence)))
+  if (!fs8.existsSync(inside(manifest, manifest.evidence)))
     warnings.push(`${manifest.evidence} does not exist yet: the first run creates it.`);
+  const d = loadDiscovery(manifest);
+  for (const b of d?.boundaries.filter((x) => !x.covered_by) ?? [])
+    warnings.push(`boundary ${b.name} (${b.kind}) is uncovered: no adapter covers ${b.kind}.`);
   return {
     cases: cases.length,
     drafts: cases.filter((c) => c.draft).map((c) => c.id),
     requirements: new Set(cases.flatMap((c) => c.requirement === void 0 ? [] : [c.requirement].flat().map(String))).size,
     pendingProposals: proposals.filter((p) => p.status === "pending").map((p) => p.id),
+    ...d ? { discovery: `Boundaries (cmtk discover, ${d.date}): ${describeDiscovery(d)}` } : {},
     warnings
   };
 }
@@ -16195,7 +16591,8 @@ function describeCheck(r) {
   const lines = [
     `Settings and case files are valid: ${r.cases} cases for ${r.requirements} requirements.`,
     r.drafts.length ? `${r.drafts.length} draft cases wait for a person (\`cmtk review\`): ${r.drafts.slice(0, 20).join(", ")}${r.drafts.length > 20 ? ", \u2026" : ""}` : "No draft cases.",
-    r.pendingProposals.length ? `${r.pendingProposals.length} proposals wait for a person (\`cmtk review\`): ${r.pendingProposals.join(", ")}` : "No proposals waiting."
+    r.pendingProposals.length ? `${r.pendingProposals.length} proposals wait for a person (\`cmtk review\`): ${r.pendingProposals.join(", ")}` : "No proposals waiting.",
+    ...r.discovery ? [r.discovery] : []
   ];
   for (const w of r.warnings)
     lines.push(`Warning: ${w}`);
@@ -16203,8 +16600,8 @@ function describeCheck(r) {
 }
 
 // packages/core/dist/init.js
-import fs8 from "node:fs";
-import path7 from "node:path";
+import fs9 from "node:fs";
+import path8 from "node:path";
 var EXAMPLE_CASES = `# Cases for \`cmtk run\` (one system, checked against expectations) and \`cmtk compare\`
 # (the same request to the reference and the candidate). Each case says which requirement it answers for.
 cases:
@@ -16226,35 +16623,35 @@ var DRIFT_HEADER = `# Approved drift: differences between the reference and the 
 drift: []
 `;
 function initProject(manifestFile, o) {
-  if (fs8.existsSync(manifestFile))
-    throw new ManifestError(`${path7.basename(manifestFile)} already exists; edit it instead.`);
+  if (fs9.existsSync(manifestFile))
+    throw new ManifestError(`${path8.basename(manifestFile)} already exists; edit it instead.`);
   if (!/\.ya?ml$/i.test(manifestFile))
     throw new ManifestError("The settings file must be a .yaml file, such as cmtk.yaml.");
-  const root = path7.dirname(manifestFile);
-  if (!fs8.existsSync(root))
+  const root = path8.dirname(manifestFile);
+  if (!fs9.existsSync(root))
     throw new ManifestError(`${root} does not exist. cmtk init only writes into an existing project folder.`);
   for (const [k, v] of Object.entries({ candidate: o.candidate, legacy: o.legacy })) {
     if (v !== void 0 && !isBaseUrl(v))
       throw new ManifestError(`--${k} must be an http:// or https:// URL, such as http://localhost:5002.`);
   }
-  const system = (o.system ?? path7.basename(root)).replace(/[^A-Za-z0-9_.-]/g, "-").replace(/^[^A-Za-z0-9]+/, "") || "system";
-  fs8.mkdirSync(path7.join(root, "cmtk", "cases"), { recursive: true });
-  fs8.writeFileSync(manifestFile, STARTER_MANIFEST(system, o.legacy, o.candidate), "utf8");
+  const system = (o.system ?? path8.basename(root)).replace(/[^A-Za-z0-9_.-]/g, "-").replace(/^[^A-Za-z0-9]+/, "") || "system";
+  fs9.mkdirSync(path8.join(root, "cmtk", "cases"), { recursive: true });
+  fs9.writeFileSync(manifestFile, STARTER_MANIFEST(system, o.legacy, o.candidate), "utf8");
   const written = [manifestFile];
   try {
     loadManifest(manifestFile);
   } catch (err) {
-    fs8.rmSync(manifestFile);
+    fs9.rmSync(manifestFile);
     throw err;
   }
-  const example = path7.join(root, "cmtk", "cases", "example.yaml");
-  if (!fs8.existsSync(example)) {
-    fs8.writeFileSync(example, EXAMPLE_CASES, "utf8");
+  const example = path8.join(root, "cmtk", "cases", "example.yaml");
+  if (!fs9.existsSync(example)) {
+    fs9.writeFileSync(example, EXAMPLE_CASES, "utf8");
     written.push(example);
   }
-  const drift = path7.join(root, "cmtk", "drift.yaml");
-  if (o.legacy && !fs8.existsSync(drift)) {
-    fs8.writeFileSync(drift, DRIFT_HEADER, "utf8");
+  const drift = path8.join(root, "cmtk", "drift.yaml");
+  if (o.legacy && !fs9.existsSync(drift)) {
+    fs9.writeFileSync(drift, DRIFT_HEADER, "utf8");
     written.push(drift);
   }
   return written;
@@ -16266,8 +16663,8 @@ process.on("warning", (w) => {
   if (w.name !== "ExperimentalWarning")
     console.error(`${w.name}: ${w.message}`);
 });
-var HERE = path8.dirname(fileURLToPath(import.meta.url));
-var VERSION = true ? "0.2.1" : JSON.parse(fs9.readFileSync(path8.join(HERE, "..", "package.json"), "utf8")).version;
+var HERE = path9.dirname(fileURLToPath(import.meta.url));
+var VERSION = true ? "0.3.0" : JSON.parse(fs10.readFileSync(path9.join(HERE, "..", "package.json"), "utf8")).version;
 var HELP = `cmtk ${VERSION}: test any system from its requirements, and prove a migrated system behaves like the old one.
 
 Usage:
@@ -16280,6 +16677,9 @@ Usage:
   cmtk compare [--only <id,id>] [--allow-unsafe]                    send each case to the reference and the candidate, and diff
   cmtk status                                                       the latest verdicts
   cmtk check                                                        check settings and case files; sends nothing
+  cmtk discover [--assembly <dll>]... [--rea-json <file>]... [--config <file>]... [--har <file>]... [--topology <file>]... [--fresh]
+                                                                    list every boundary of the legacy system, and flag the uncovered ones
+                                                                    (--assembly needs REA: npm install --global rea-agents)
   cmtk review                                                       a person accepts or rejects draft cases and proposals
   cmtk defects run|compare                                          draft defects from the latest report
   cmtk probe <target> "GET /path" [--surface <name>]                send one read-only request and show the answer
@@ -16313,7 +16713,7 @@ function printReport(r, json, manifestRoot, evidence) {
     })() : c.why ?? "";
     console.log(`  ${c.result} ${c.id} ${c.name}: ${first}`);
   }
-  const report = path8.relative(process.cwd(), path8.join(manifestRoot, evidence, r.mode, "REPORT.md")) || "REPORT.md";
+  const report = path9.relative(process.cwd(), path9.join(manifestRoot, evidence, r.mode, "REPORT.md")) || "REPORT.md";
   console.log(`Report: ${report}`);
   console.log(r.reason);
   console.log(`Next: ${r.next}`);
@@ -16336,6 +16736,12 @@ async function main(argv) {
       exclude: { type: "string" },
       out: { type: "string" },
       surface: { type: "string" },
+      assembly: { type: "string", multiple: true },
+      "rea-json": { type: "string", multiple: true },
+      config: { type: "string", multiple: true },
+      har: { type: "string", multiple: true },
+      topology: { type: "string", multiple: true },
+      fresh: { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
       version: { type: "boolean", short: "v", default: false }
     }
@@ -16349,14 +16755,14 @@ async function main(argv) {
     console.log(HELP);
     return 0;
   }
-  const manifestFile = path8.resolve(values.manifest);
+  const manifestFile = path9.resolve(values.manifest);
   const only = values.only ? values.only.split(",").map((s) => s.trim()).filter(Boolean) : void 0;
   switch (cmd) {
     case "init": {
       if (!values.candidate)
         throw new UsageError("`cmtk init` needs --candidate <url> (and --legacy <url> to compare two systems).");
       const written = initProject(manifestFile, { candidate: values.candidate, legacy: values.legacy, system: values.system });
-      console.log(`Wrote ${written.map((f) => path8.relative(process.cwd(), f)).join(", ")}.`);
+      console.log(`Wrote ${written.map((f) => path9.relative(process.cwd(), f)).join(", ")}.`);
       console.log(`Next: edit the example case for your system, then \`cmtk run\`${values.legacy ? " and `cmtk compare`" : ""}.`);
       return 0;
     }
@@ -16365,13 +16771,13 @@ async function main(argv) {
         throw new UsageError("`cmtk import-har` needs at least one .har file.");
       const manifest = loadManifest(manifestFile);
       const existing = loadCases(manifest);
-      const res = importHar(rest.map((f) => path8.resolve(f)), { include: values.include, exclude: values.exclude, existing });
+      const res = importHar(rest.map((f) => path9.resolve(f)), { include: values.include, exclude: values.exclude, existing });
       const out = inside(manifest, values.out ?? "cmtk/cases/har.yaml");
-      if (fs9.existsSync(out))
-        throw new UsageError(`${path8.relative(process.cwd(), out)} already exists; pass --out <new file>.`);
-      fs9.mkdirSync(path8.dirname(out), { recursive: true });
-      fs9.writeFileSync(out, casesToYaml(res.cases), "utf8");
-      console.log(`Added ${res.cases.length} cases to ${path8.relative(process.cwd(), out)}; skipped ${res.skipped} (static files, filtered or duplicates).`);
+      if (fs10.existsSync(out))
+        throw new UsageError(`${path9.relative(process.cwd(), out)} already exists; pass --out <new file>.`);
+      fs10.mkdirSync(path9.dirname(out), { recursive: true });
+      fs10.writeFileSync(out, casesToYaml(res.cases), "utf8");
+      console.log(`Added ${res.cases.length} cases to ${path9.relative(process.cwd(), out)}; skipped ${res.skipped} (static files, filtered or duplicates).`);
       if (res.droppedHeaders.length)
         console.log(`Dropped these headers from every case: ${res.droppedHeaders.join(", ")}. Credentials come from headers_from_env at run time.`);
       if (res.redacted.length)
@@ -16390,12 +16796,12 @@ async function main(argv) {
       const manifest = loadManifest(manifestFile);
       let any = false;
       for (const mode of ["run", "compare"]) {
-        const dir = path8.join(manifest.root, manifest.evidence, mode);
-        const f = path8.join(dir, "REPORT.json");
-        if (!fs9.existsSync(f))
+        const dir = path9.join(manifest.root, manifest.evidence, mode);
+        const f = path9.join(dir, "REPORT.json");
+        if (!fs10.existsSync(f))
           continue;
         any = true;
-        const r = JSON.parse(fs9.readFileSync(f, "utf8"));
+        const r = JSON.parse(fs10.readFileSync(f, "utf8"));
         console.log(`${mode}: ${r.verdict} on ${r.date}${r.settings ? ` from ${r.settings.manifest}` : ""}, ${describeSignoff(signoffState(dir))}`);
       }
       if (!any)
@@ -16416,9 +16822,23 @@ async function main(argv) {
         throw new UsageError("`cmtk defects` needs `run` or `compare`.");
       const m = loadManifest(manifestFile);
       const { file, drafts } = draftDefects(m, mode);
-      console.log(drafts.length ? `Drafted ${drafts.length} defect${drafts.length === 1 ? "" : "s"} in ${path8.relative(process.cwd(), path8.join(m.root, file))}.` : `Nothing failed, so there are no defects to draft (${file}).`);
+      console.log(drafts.length ? `Drafted ${drafts.length} defect${drafts.length === 1 ? "" : "s"} in ${path9.relative(process.cwd(), path9.join(m.root, file))}.` : `Nothing failed, so there are no defects to draft (${file}).`);
       if (drafts.length)
         console.log("Next: a person checks each draft and files it in your tracker.");
+      return 0;
+    }
+    case "discover": {
+      const m = loadManifest(manifestFile);
+      const { file, discovery } = discover(m, { assemblies: values.assembly, reaJson: values["rea-json"], configs: values.config, har: values.har, topology: values.topology, fresh: values.fresh });
+      if (values.json) {
+        console.log(JSON.stringify(discovery, null, 2));
+        return 0;
+      }
+      console.log(`Boundaries for ${discovery.system}: ${describeDiscovery(discovery)}`);
+      for (const b of discovery.boundaries.filter((x) => !x.covered_by))
+        console.log(`  uncovered ${b.kind} ${b.direction}: ${b.name}${b.where ? ` (${b.where})` : ""}`);
+      console.log(`Inventory: ${path9.relative(process.cwd(), path9.join(m.root, file))}`);
+      console.log(discovery.boundaries.some((x) => !x.covered_by) ? "Next: for each uncovered kind, add an adapter (`cmtk adapter new <name>`, then `covers:` in cmtk.yaml) or have a person record why it is out of scope." : "Next: write cases for each boundary, then `cmtk compare`.");
       return 0;
     }
     case "probe":
@@ -16436,11 +16856,11 @@ async function signoff(manifestFile, mode) {
     throw new UsageError("Sign-off is for a person at a keyboard: run `cmtk signoff` in a terminal yourself. Agents and scripts do not sign.");
   }
   const manifest = loadManifest(manifestFile);
-  const dir = path8.join(manifest.root, manifest.evidence, mode);
-  const json = path8.join(dir, "REPORT.json");
-  if (!fs9.existsSync(json))
+  const dir = path9.join(manifest.root, manifest.evidence, mode);
+  const json = path9.join(dir, "REPORT.json");
+  if (!fs10.existsSync(json))
     throw new UsageError(`There is no ${mode} report yet. Run \`cmtk ${mode}\` first.`);
-  const report = JSON.parse(fs9.readFileSync(json, "utf8"));
+  const report = JSON.parse(fs10.readFileSync(json, "utf8"));
   console.log(`${mode} report for ${report.system}: ${report.verdict} (${report.date}). ${report.reason}`);
   if (report.settings) {
     const st = report.settings;
@@ -16448,7 +16868,7 @@ async function signoff(manifestFile, mode) {
     console.log(`Produced from ${st.manifest}.${mode === "compare" ? ` Hidden by scrubs: ${scrubs.length ? scrubs.join(", ") : "nothing"}. Approved drift: ${st.drift_entries} entries in ${st.drift_file}.` : ""}`);
   } else
     console.log("This report does not record which settings produced it (made by cmtk before 0.2.0).");
-  console.log(`Read it first: ${path8.relative(process.cwd(), path8.join(dir, "REPORT.md"))}`);
+  console.log(`Read it first: ${path9.relative(process.cwd(), path9.join(dir, "REPORT.md"))}`);
   const rl = readline2.createInterface({ input: process.stdin, output: process.stdout });
   try {
     const name = await rl.question("Your full name: ");
@@ -16590,16 +17010,16 @@ async function adapterCommand(args, manifestFile) {
   const [sub, name] = args;
   if (!name || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(name) || name === "http")
     throw new UsageError("Give the adapter a name of letters, digits, '.', '-' and '_' (not http, which is built in).");
-  const root = path8.dirname(manifestFile);
-  const dir = path8.join(root, "adapters", name);
+  const root = path9.dirname(manifestFile);
+  const dir = path9.join(root, "adapters", name);
   if (sub === "new") {
-    if (fs9.existsSync(dir))
+    if (fs10.existsSync(dir))
       throw new UsageError(`adapters/${name} already exists.`);
-    const tpl = path8.join(HERE, "..", "templates", "adapter-node");
-    fs9.cpSync(tpl, dir, { recursive: true });
-    for (const f of ["index.mjs", "README.md", path8.join("samples", "cases.yaml")]) {
-      const p = path8.join(dir, f);
-      fs9.writeFileSync(p, fs9.readFileSync(p, "utf8").replaceAll("__NAME__", name), "utf8");
+    const tpl = path9.join(HERE, "..", "templates", "adapter-node");
+    fs10.cpSync(tpl, dir, { recursive: true });
+    for (const f of ["index.mjs", "README.md", path9.join("samples", "cases.yaml")]) {
+      const p = path9.join(dir, f);
+      fs10.writeFileSync(p, fs10.readFileSync(p, "utf8").replaceAll("__NAME__", name), "utf8");
     }
     console.log(`Wrote adapters/${name}/. Next: write run() in index.mjs, then \`cmtk adapter check ${name}\`.`);
     console.log(`Register it in cmtk.yaml:
@@ -16612,19 +17032,19 @@ async function adapterCommand(args, manifestFile) {
   throw new UsageError("`cmtk adapter` takes `new <name>` or `check <name>`.");
 }
 async function adapterCheck(name, dir, manifestFile) {
-  let spec = { command: process.execPath, args: [path8.join(dir, "index.mjs")] };
-  if (fs9.existsSync(manifestFile)) {
+  let spec = { command: process.execPath, args: [path9.join(dir, "index.mjs")] };
+  if (fs10.existsSync(manifestFile)) {
     const m = loadManifest(manifestFile);
     if (m.adapters[name])
       spec = { command: m.adapters[name].command, args: m.adapters[name].args ?? [] };
   }
-  const samplesFile = path8.join(dir, "samples", "cases.yaml");
-  const doc = fs9.existsSync(samplesFile) ? readStructured(samplesFile) : {};
+  const samplesFile = path9.join(dir, "samples", "cases.yaml");
+  const doc = fs10.existsSync(samplesFile) ? readStructured(samplesFile) : {};
   const samples = doc.cases ?? [];
   const secret = `cmtk-check-${Math.random().toString(36).slice(2)}`;
   const target2 = { name: "check", base_url: "http://127.0.0.1:9" };
   const checks = [];
-  const adapter = processAdapter(name, { ...spec, timeout_s: 60 }, path8.dirname(manifestFile));
+  const adapter = processAdapter(name, { ...spec, timeout_s: 60 }, path9.dirname(manifestFile));
   try {
     const d = await adapter.describe().catch((err) => ({ error: err.message }));
     checks.push(["answers describe with a name and its kinds", typeof d?.name === "string" && Array.isArray(d?.kinds), d?.error ?? 'reply {"name":"\u2026","kinds":["\u2026"],"settings":[]}']);

@@ -51,11 +51,23 @@ Follow these steps in order. Each one says what to do, what you should see, and 
 
 ## Part 2: compare a migrated system with the old one
 
-1. **Start both systems,** for example the legacy one on `http://localhost:5001` and the new one on `http://localhost:5002`.
+1. **List every boundary first.** Point `cmtk discover` at what you have of the legacy system:
 
-2. **Make sure `cmtk.yaml` names both** under `targets:` as `legacy` and `candidate`. With a new project, `cmtk init --legacy <url> --candidate <url>` does this.
+   ```sh
+   cmtk discover --assembly legacy/bin/MyApp.dll --config legacy/Web.config --har recording.har
+   ```
 
-3. **Add cases.** The cases from Part 1 work as they are. You can also record real use of the legacy system:
+   - `--assembly` reads a .NET assembly without running it, through REA (`npm install --global rea-agents`, which needs Node.js 22.19 or later). Give only the system's own assemblies, not `System.*` or NuGet packages.
+   - `--config` reads `Web.config`, `App.config` or `appsettings.json`. Only the server and database of a connection string are copied, never a user name or password.
+   - `--har` reads a recording; `--topology` reads modernize's `analysis/<system>/topology.json`.
+
+   Give the assembly and its settings in the same call, so a database context is matched to its connection string. `cmtk/discovery/BOUNDARIES.md` lists each boundary, where it was found, and which adapter covers it. For each **uncovered** kind, either write an adapter and list the kind under its `covers:` (see [ADAPTERS.md](ADAPTERS.md)), or have a person record why it is out of scope. Run `cmtk discover` again after adding a source: it adds to the inventory.
+
+2. **Start both systems,** for example the legacy one on `http://localhost:5001` and the new one on `http://localhost:5002`.
+
+3. **Make sure `cmtk.yaml` names both** under `targets:` as `legacy` and `candidate`. With a new project, `cmtk init --legacy <url> --candidate <url>` does this.
+
+4. **Add cases.** The cases from Part 1 work as they are. You can also record real use of the legacy system:
    1. In the browser, open the developer tools, use the old system, then export the traffic from the Network tab with Export HAR.
    2. Save the file in the project folder.
    3. Run `cmtk import-har recording.har`. Cookies, tokens, API keys, images and duplicates are left out, and passwords or tokens in a query string or a request body become `REDACTED`.
@@ -63,22 +75,22 @@ Follow these steps in order. Each one says what to do, what you should see, and 
    5. Imported cases replay the browser's headers, including `Accept`. A Web API may then answer in a different format than it gives other callers, such as XML instead of JSON. Keep the header if that is what consumers send; remove it if not.
    6. Give each case you keep a `requirement` and an `expect:` block, then move it into a folder your `cases:` setting reads. Delete the HAR file: it is not evidence, and it can hold secrets.
 
-4. **List the contracts consumers rely on** under `contracts:` in `cmtk.yaml`: the OpenAPI JSON and any WSDL, each at its path on both systems. Contracts are locked: every change, even an added operation, shows as a difference until a named person approves it in the drift ledger.
+5. **List the contracts consumers rely on** under `contracts:` in `cmtk.yaml`: the OpenAPI JSON and any WSDL, each at its path on both systems. Contracts are locked: every change, even an added operation, shows as a difference until a named person approves it in the drift ledger.
 
-5. **Run the comparison:**
+6. **Run the comparison:**
 
    ```sh
    cmtk compare
    ```
 
-6. **Go through every difference** in `cmtk/evidence/compare/REPORT.md`. Each one is one of three things:
+7. **Go through every difference** in `cmtk/evidence/compare/REPORT.md`. Each one is one of three things:
    - **Noise** (a timestamp or an ID that changes on every call): the report lists likely ones under "Probably noise". Add the path under `scrub:` in `cmtk.yaml`, but only if you agree, because a scrub hides that value from every later run.
    - **An intended change** (a fix, or a format change consumers accepted): a named person adds it to `cmtk/drift.yaml` with an id, the `where` from the report, a reason and their name.
    - **A defect in the new system:** fix the new system.
 
    Run `cmtk compare` again after every change.
 
-7. **The verdict tells you where you stand:**
+8. **The verdict tells you where you stand:**
 
    | Verdict | Meaning |
    |---|---|
@@ -87,7 +99,7 @@ Follow these steps in order. Each one says what to do, what you should see, and 
    | NO PARITY | At least one unexplained difference, or a breaking contract change |
    | INCOMPLETE | Something could not be checked; the report says what |
 
-8. **Sign it** with `cmtk signoff compare`.
+9. **Sign it** with `cmtk signoff compare`.
 
 ## When something goes wrong
 

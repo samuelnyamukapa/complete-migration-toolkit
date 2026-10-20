@@ -2,11 +2,13 @@
 
 Test any system from its requirements, and prove a migrated system behaves like the old one, with every intended drift approved and signed.
 
-> **Status: 0.1.2, early.** The engine, the `cmtk` command and the MCP server work and are tested on Windows and Linux. The first pilot, on the eShop sandbox, has run:
+> **Status: 0.3.0, early.** The engine, the `cmtk` command, the MCP server and the plugin's six skills are tested on Windows and Linux. On the eShop sandbox:
 > - `cmtk run` passed 40 of 41 cases on legacy eShop; the one failure is a legacy defect.
-> - `cmtk compare` found parity with CatalogCore across 24 cases, and caught a planted defect.
+> - `cmtk compare` found parity with CatalogCore across 24 cases, and caught a planted defect. Both reports were signed and accepted on 18 October 2026.
+> - The AI tester ran from the GitHub Copilot desktop app: it drafted a plan and cases the owner accepted, explored, and drafted defects (0.2.1).
+> - `cmtk discover` listed eShop's boundaries from its assembly, read by REA, and its `Web.config` (0.3.0).
 >
-> Both reports were signed and accepted on 18 October 2026. See [docs/pilots/eshop.md](docs/pilots/eshop.md) and [docs/PLAN.md](docs/PLAN.md).
+> See [docs/pilots/eshop.md](docs/pilots/eshop.md) and [docs/PLAN.md](docs/PLAN.md).
 
 ## Why
 
@@ -23,6 +25,14 @@ The toolkit does the grind (writing, running, re-running and gathering evidence)
 | Verdicts | PASS, FAIL, INCOMPLETE, NO EVIDENCE | PARITY, DRIFT ONLY, NO PARITY, INCOMPLETE, NO EVIDENCE |
 
 Both modes write a report per requirement, keep every answer as evidence, and end with a sign-off table that only a person fills in.
+
+**For a migration, discover first.** `cmtk discover` lists every boundary of the legacy system: what it serves, and everything it calls, stores, sends or reads (databases, files, queues, email, other services). It says where each one was found and which adapter covers it, and flags the rest as **uncovered**, so no boundary is left out of the comparison by accident. It reads:
+- the system's .NET assemblies, through [REA (Reverse Engineer Anything)](https://github.com/morluto/rea), without running them;
+- its settings files;
+- recordings of real use;
+- the map from [modernize](https://github.com/samuelnyamukapa/modernize-for-copilot).
+
+REA is optional: install it with `npm install --global rea-agents`.
 
 **Drift is allowed, but never by accident.** A difference becomes acceptable only when a named person records it in the drift ledger (`cmtk/drift.yaml`). Everything else is reported. When the only differences are approved ones, the verdict is DRIFT ONLY.
 
@@ -92,12 +102,13 @@ Set one level for the system, then loosen it per path (`overrides`) or per case.
 
 ## The AI tester
 
-The **cmtk plugin** for GitHub Copilot and Claude Code adds five skills that do the grind of testing:
+The **cmtk plugin** for GitHub Copilot and Claude Code adds six skills that do the grind of testing:
 
 | Skill | Does |
 |---|---|
 | `/cmtk:test` | Start here. Takes any project from requirements to a signed report |
 | `/cmtk:plan` | Turns stories, runbooks or an OpenAPI file into a test plan and draft cases, with questions where the requirements are unclear |
+| `/cmtk:discover` | Lists every boundary of a legacy system, with REA where there is no source, and flags the ones no adapter covers |
 | `/cmtk:triage` | Sorts the differences in a comparison into noise, intended drift and defects |
 | `/cmtk:explore` | Explores against a charter, read-only and within a budget |
 | `/cmtk:defects` | Drafts defects with their evidence; files them only after you say yes |

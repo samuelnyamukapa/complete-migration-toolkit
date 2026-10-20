@@ -2,6 +2,7 @@
 // writing case files; people run it before a run.
 import fs from "node:fs";
 
+import { describeDiscovery, loadDiscovery } from "./discover.js";
 import { scrubberOf } from "./diff.js";
 import { inside, loadCases, loadDrift } from "./manifest.js";
 import { loadProposals } from "./proposals.js";
@@ -12,6 +13,8 @@ export interface CheckResult {
     drafts: string[];
     requirements: number;
     pendingProposals: string[];
+    /** From the last `cmtk discover`, if there was one. */
+    discovery?: string;
     warnings: string[];
 }
 
@@ -30,11 +33,14 @@ export function check(manifest: Manifest): CheckResult {
     }
     if (!cases.length) warnings.push(`No case files match ${manifest.cases.join(", ")}.`);
     if (!fs.existsSync(inside(manifest, manifest.evidence))) warnings.push(`${manifest.evidence} does not exist yet: the first run creates it.`);
+    const d = loadDiscovery(manifest);
+    for (const b of d?.boundaries.filter((x) => !x.covered_by) ?? []) warnings.push(`boundary ${b.name} (${b.kind}) is uncovered: no adapter covers ${b.kind}.`);
     return {
         cases: cases.length,
         drafts: cases.filter((c) => c.draft).map((c) => c.id),
         requirements: new Set(cases.flatMap((c) => (c.requirement === undefined ? [] : [c.requirement].flat().map(String)))).size,
         pendingProposals: proposals.filter((p) => p.status === "pending").map((p) => p.id),
+        ...(d ? { discovery: `Boundaries (cmtk discover, ${d.date}): ${describeDiscovery(d)}` } : {}),
         warnings,
     };
 }
@@ -44,6 +50,7 @@ export function describeCheck(r: CheckResult): string {
         `Settings and case files are valid: ${r.cases} cases for ${r.requirements} requirements.`,
         r.drafts.length ? `${r.drafts.length} draft cases wait for a person (\`cmtk review\`): ${r.drafts.slice(0, 20).join(", ")}${r.drafts.length > 20 ? ", …" : ""}` : "No draft cases.",
         r.pendingProposals.length ? `${r.pendingProposals.length} proposals wait for a person (\`cmtk review\`): ${r.pendingProposals.join(", ")}` : "No proposals waiting.",
+        ...(r.discovery ? [r.discovery] : []),
     ];
     for (const w of r.warnings) lines.push(`Warning: ${w}`);
     return lines.join("\n");
