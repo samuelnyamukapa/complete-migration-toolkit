@@ -156,6 +156,8 @@ The same machine and legacy eShop, with cmtk 0.2.0 and its plugin installed in t
 | The owner's review of the findings | All 3 accepted |
 | `cmtk_run` again | **FAIL**: 30 pass, 2 fail (the two leaking error pages), 10 skipped |
 | `/cmtk:defects run` | 2 defect drafts with steps, expected, actual and evidence. Nothing filed |
+| Filing | The owner had D-01 filed in a local defect log (`tester\defects.md`) exactly as drafted, with only a date and status added. D-02 is not filed |
+| `/cmtk:triage --manifest compare-canary.yaml` on part 1's canary comparison | One defect proposal for all 7 differences (`$.TotalPages` one lower than legacy, against RULE-005). It also noted that today's CatalogCore source rounds up, so the 16 October report may be stale and should be run again before anything is fixed. That is right: the planted defect had been removed. The settings file says the canary has a planted defect, and the agent said it read that |
 
 ### What we learnt
 

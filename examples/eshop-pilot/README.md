@@ -39,7 +39,9 @@ Double-click these in order. Each writes `logs\<step>.log`.
    IIS Express keeps its logs in `scratch\iisexpress-home`, not Documents: with them in Documents
    (synced by OneDrive) legacy stopped answering after its first request.
 8. `07-ping-legacy.cmd`: checks that legacy answers, and writes `logs\07-ping-legacy.log`.
-9. `09-stop.cmd`: stops legacy, if it is still running.
+9. `08-review-canary.cmd`: starts `cmtk review` for the AI tester's triage of the canary comparison
+   (`/cmtk:triage --manifest compare-canary.yaml`), where a person accepts or rejects each proposal.
+10. `09-stop.cmd`: stops legacy, if it is still running.
 
 To run cmtk by hand from this folder:
 
