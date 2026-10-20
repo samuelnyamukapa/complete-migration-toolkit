@@ -52,8 +52,10 @@ To try it without a system of your own, use the bookshop example in the toolkit 
 ## Updating
 
 - **Copilot:** run `copilot plugin marketplace update complete-migration-toolkit`, then `copilot plugin update cmtk@complete-migration-toolkit`.
-- **Claude Code:** run `/plugin marketplace update complete-migration-toolkit`.
-- **On Windows:** close every session first, because a running session can keep the plugin folder busy.
+- **Claude Code:** run `claude plugin marketplace update complete-migration-toolkit`, then `claude plugin update cmtk@complete-migration-toolkit`.
+- **On Windows:** close every session first, because a running session can keep the plugin folder busy. If an update fails with a lock on the plugin folder, that is the cause.
+
+**For maintainers:** raise the version for every change to the plugin. Claude Code keeps each version in a folder of its own, and `claude plugin update` reports "already at the latest version" for a change made under the same number. The version must match in the three npm packages, both plugin manifests and `.github/plugin/marketplace.json`; `npm test` checks this.
 
 ## What is inside
 
