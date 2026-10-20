@@ -31,7 +31,15 @@ Double-click these in order. Each writes `logs\<step>.log`.
    records a HAR of real use in Edge and imports it, and runs the Windows checks (paths with spaces
    and over 260 characters, `$env:` credentials, sign-off refusing piped input, the MCP server).
 5. `04-final.cmd`: the final `cmtk run` and `cmtk compare`, then stops legacy.
-6. `09-stop.cmd`: stops legacy, if it is still running.
+6. `05-review-plan.cmd`: the AI tester's part (added 19 October 2026). `/cmtk:plan` drafted a test plan
+   and 39 draft cases from the eShop business rules. This step checks them and starts `cmtk review`,
+   where a person accepts or rejects each draft. Read `tester\cmtk\plans\catalog.md` first.
+7. `06-start-legacy.cmd`: starts legacy on port 53190 and nothing else, for the AI tester. Use it instead
+   of `02-start.cmd`, which also reruns `cmtk run` and `cmtk compare` and so replaces the signed reports.
+   IIS Express keeps its logs in `scratch\iisexpress-home`, not Documents: with them in Documents
+   (synced by OneDrive) legacy stopped answering after its first request.
+8. `07-ping-legacy.cmd`: checks that legacy answers, and writes `logs\07-ping-legacy.log`.
+9. `09-stop.cmd`: stops legacy, if it is still running.
 
 To run cmtk by hand from this folder:
 
@@ -53,4 +61,5 @@ To run cmtk by hand from this folder:
 | `compare-canary.yaml` | the same comparison with a planted defect, to prove it is caught |
 | `cmtk\cases\imported\har.yaml` | the raw HAR import, before review; the reviewed cases are `cmtk\cases\legacy\har-journeys.yaml` |
 | `reports\` | the final reports from the pilot, and the log of the Windows checks |
+| `tester\` | the AI tester's plan (`cmtk\plans\catalog.md`), its draft cases and their source rules; `tester\cmtk.yaml` tests legacy on its own |
 | `scratch\`, `tools\`, `logs\` | working copies, cmtk itself and step logs; never evidence |

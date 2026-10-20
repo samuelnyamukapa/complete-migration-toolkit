@@ -142,3 +142,32 @@ Each signature is stored in `SIGNOFF.json` with a fingerprint of its evidence. `
 | The verdict line in REPORT.md edited | "the signature … is for different evidence, so it no longer counts" |
 
 This means Phase 1's goal is met: `cmtk run` and `cmtk compare` gave signed reports on eShop.
+
+## Part 2: the AI tester (19 and 20 October 2026)
+
+The same machine and legacy eShop, with cmtk 0.2.0 and its plugin installed in the GitHub Copilot desktop app. The files are in [examples/eshop-pilot/tester](../../examples/eshop-pilot/tester), and the reports are the `tester-*` files in [reports](../../examples/eshop-pilot/reports). The signed reports from part 1 were not touched: `cmtk status` still showed both signatures afterwards.
+
+| Step | Result |
+|---|---|
+| `/cmtk:plan` on the 33 rules extracted from the eShop code | 39 draft cases covering every area of the scope, and 12 questions where the rules say nothing |
+| The owner's review with `cmtk review` | All 39 accepted unchanged, none rejected |
+| `cmtk_run` from Copilot | **INCOMPLETE**: 30 pass and 0 fail. 9 are skipped until the questions are answered |
+| `/cmtk:explore` with a budget of 30 requests | 12 requests, all GET, and 3 findings. Error pages show the server's folder path, "not found" pictures hide a stack trace, and odd paging values fall back to the first page (`pageIndex=2147483647` shows "Page -2147483648") |
+| The owner's review of the findings | All 3 accepted |
+| `cmtk_run` again | **FAIL**: 30 pass, 2 fail (the two leaking error pages), 10 skipped |
+| `/cmtk:defects run` | 2 defect drafts with steps, expected, actual and evidence. Nothing filed |
+
+### What we learnt
+
+| What happened | What we did |
+|---|---|
+| Accepting a draft deleted its note, which said which rule the case came from and which question it waits on | **Fixed:** the note is kept as `note` |
+| The explorer sent ten requests at once; the tool refused nine, as designed | **Fixed:** the explore skill says to send them one at a time |
+| The test skill offered to "add expectations" to accepted cases that were waiting for the owner's answers | **Fixed:** it points to the open question instead |
+| Legacy stopped answering after its first request, every time. IIS Express writes its logs to Documents, which OneDrive syncs on this machine | **Pilot:** `06-start-legacy.cmd` sets `IIS_USER_HOME` to a folder in `scratch\` and checks a second request |
+| Each case then waited out its 120-second timeout, so a run of 42 cases would have taken over an hour, and Copilot gave up on the tool call while the run went on | **Fixed:** after 3 requests in a row get no answer, the run stops and says why |
+| A second run could have started while the abandoned one was still writing the same evidence folder | **Fixed:** one run at a time per evidence folder |
+| Defect drafts were titled with the failed check, such as `body: expected never contains "Physical Path"` | **Fixed:** a draft is titled with its case's name when the case has one |
+| `02-start.cmd` reruns part 1's run and compare, which would replace the signed reports; Copilot suggested it when legacy hung | **Pilot:** the README says to use `06-start-legacy.cmd` for the AI tester |
+| `copilot plugin update` failed: a running Copilot session held the plugin folder | Known: the plugin README says to close every session first |
+| The first start script was removed from the pilot folder while the pilot ran, and its name could not be reused; the cause is unknown | **Pilot:** the script is now `steps\start-legacy.ps1` |

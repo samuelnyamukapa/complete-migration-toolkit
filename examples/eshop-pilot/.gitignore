@@ -8,3 +8,4 @@ adapters/catalog/probe/bin/
 adapters/catalog/probe/obj/
 pilot-files.tgz
 *.har
+tester/cmtk/evidence/

@@ -1,0 +1,374 @@
+# Draft cases for the catalog test plan (cmtk/plans/catalog.md).
+# Source: inputs/BUSINESS_RULES.md (rules extracted from the legacy eShop code).
+# Every case is a read-only GET. Every case is a draft until a person accepts it with `cmtk review`.
+# Test data: the built-in seed catalog (RULE-030), unchanged since seeding; see Q-1 in the plan.
+
+cases:
+  # --- Entry point and unknown address -------------------------------------
+
+  - id: CAT-ENTRY-01
+    name: the site's entry point answers
+    requirement: REQ-1/AC-1
+    request: "GET /"
+    expect:
+      status: 200
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-NOTFOUND-01
+    name: an unknown address answers 404
+    requirement: REQ-2/AC-1
+    request: "GET /cmtk-no-such-page"
+    expect:
+      status: 404
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  # --- Catalog list and paging ---------------------------------------------
+
+  - id: CAT-LIST-01
+    name: the list opens on page 1 with items 1-10 and the pager summary
+    requirement: [ RULE-004/AC-1, RULE-005/AC-1, RULE-006/AC-1, RULE-006/AC-2, RULE-002/AC-1 ]
+    request: "GET /Catalog/Index"
+    expect:
+      status: 200
+      body_contains: [ "Showing 10 of 12 products - Page 1 - 2", "/items/1/pic", "/items/10/pic", "esh-pager-item--hidden", "pageIndex=1" ]
+      body_excludes: [ "/items/11/pic", "/items/12/pic" ]
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PAGE-01
+    name: page 2 of 2 shows only items 11 and 12, with Next hidden
+    requirement: [ RULE-004/AC-2, RULE-006/AC-3, RULE-002/AC-1 ]
+    request: "GET /Catalog/Index?pageSize=10&pageIndex=1"
+    expect:
+      status: 200
+      body_contains: [ "/items/11/pic", "/items/12/pic", "of 12 products - Page 2 - 2", "esh-pager-item--hidden" ]
+      body_excludes: [ "/items/1/pic", "/items/10/pic" ]
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PAGE-02
+    name: the first page past the end is empty, not an error
+    requirement: RULE-004/AC-3
+    request: "GET /Catalog/Index?pageSize=10&pageIndex=2"
+    expect:
+      status: 200
+      body_excludes: [ "/items/1/pic", "/items/11/pic", "/items/12/pic" ]
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PAGE-03
+    name: a page far past the end is empty, not an error
+    requirement: RULE-004/AC-3
+    request: "GET /Catalog/Index?pageSize=10&pageIndex=5"
+    expect:
+      status: 200
+      body_excludes: [ "/items/1/pic", "/items/11/pic", "/items/12/pic" ]
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PAGE-04
+    name: a middle page skips 5 and shows items 6-10, with both pager links active
+    requirement: [ RULE-004/AC-2, RULE-005/AC-1, RULE-006/AC-1, RULE-006/AC-4, RULE-002/AC-1 ]
+    request: "GET /Catalog/Index?pageSize=5&pageIndex=1"
+    expect:
+      status: 200
+      body_contains: [ "Showing 5 of 12 products - Page 2 - 3", "/items/6/pic", "/items/10/pic" ]
+      body_excludes: [ "/items/5/pic", "/items/11/pic", "esh-pager-item--hidden" ]
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PAGE-05
+    name: a negative page index (answer to be decided)
+    requirement: [ RULE-004/AC-5, RULE-028/AC-1 ]
+    request: "GET /Catalog/Index?pageSize=10&pageIndex=-1"
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PAGE-06
+    name: a very large page size (answer to be decided)
+    requirement: RULE-004/AC-6
+    request: "GET /Catalog/Index?pageSize=1000&pageIndex=0"
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PAGE-07
+    name: page size times page index past the int range (answer to be decided)
+    requirement: RULE-004/AC-7
+    request: "GET /Catalog/Index?pageSize=1000000&pageIndex=10000"
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PAGE-08
+    name: a page size of 0 (answer to be decided)
+    requirement: [ RULE-005/AC-3, RULE-028/AC-1 ]
+    request: "GET /Catalog/Index?pageSize=0&pageIndex=0"
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PAGE-09
+    name: a negative page size (answer to be decided)
+    requirement: [ RULE-005/AC-4, RULE-028/AC-1 ]
+    request: "GET /Catalog/Index?pageSize=-1&pageIndex=0"
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PAGE-10
+    name: a page size equal to the item count gives one page
+    requirement: [ RULE-005/AC-1, RULE-006/AC-1 ]
+    request: "GET /Catalog/Index?pageSize=12&pageIndex=0"
+    expect:
+      status: 200
+      body_contains: [ "Showing 12 of 12 products - Page 1 - 1", "/items/1/pic", "/items/12/pic" ]
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PAGE-11
+    name: a page size one below the item count gives two pages
+    requirement: [ RULE-004/AC-2, RULE-005/AC-1, RULE-006/AC-1 ]
+    request: "GET /Catalog/Index?pageSize=11&pageIndex=0"
+    expect:
+      status: 200
+      body_contains: [ "Showing 11 of 12 products - Page 1 - 2", "/items/11/pic" ]
+      body_excludes: [ "/items/12/pic" ]
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  # --- Details page --------------------------------------------------------
+
+  - id: CAT-DETAILS-01
+    name: the details page of an existing item opens and shows its picture URL
+    requirement: [ RULE-016/AC-4, RULE-002/AC-1 ]
+    request: "GET /Catalog/Details/1"
+    expect:
+      status: 200
+      body_contains: [ "/items/1/pic" ]
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-DETAILS-02
+    name: the details page with no id is a bad request
+    requirement: RULE-016/AC-1
+    request: "GET /Catalog/Details"
+    expect:
+      status: 400
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-DETAILS-03
+    name: the details page of an unknown item is not found
+    requirement: RULE-016/AC-2
+    request: "GET /Catalog/Details/9999"
+    expect:
+      status: 404
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-DETAILS-04
+    name: the details page with a non-numeric id is a bad request
+    requirement: RULE-016/AC-3
+    request: "GET /Catalog/Details/abc"
+    expect:
+      status: 400
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-DETAILS-05
+    name: the details page for id 0 is not found
+    requirement: RULE-016/AC-2
+    request: "GET /Catalog/Details/0"
+    expect:
+      status: 404
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  # --- Create form (GET only) ----------------------------------------------
+
+  - id: CAT-CREATE-01
+    name: the create form carries an anti-forgery token and the brand and type lists
+    requirement: [ RULE-009/AC-1, RULE-009/AC-2 ]
+    request: "GET /Catalog/Create"
+    expect:
+      status: 200
+      body_contains: [ "__RequestVerificationToken", "Azure", ".NET", "Visual Studio", "SQL Server", "Other", "Mug", "T-Shirt", "Sheet", "USB Memory Stick" ]
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-CREATE-02
+    name: the create form has no picture field
+    requirement: RULE-033/AC-2
+    request: "GET /Catalog/Create"
+    expect:
+      status: 200
+      body_excludes: [ 'name="PictureFileName"' ]
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  # --- Edit form (GET only) ------------------------------------------------
+
+  - id: CAT-EDIT-01
+    name: the edit form of an existing item carries an anti-forgery token and the brand and type lists
+    requirement: [ RULE-016/AC-4, RULE-009/AC-1, RULE-009/AC-2 ]
+    request: "GET /Catalog/Edit/1"
+    expect:
+      status: 200
+      body_contains: [ "__RequestVerificationToken", "Azure", ".NET", "Visual Studio", "SQL Server", "Other", "Mug", "T-Shirt", "Sheet", "USB Memory Stick" ]
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-EDIT-02
+    name: the edit form with no id is a bad request
+    requirement: RULE-016/AC-1
+    request: "GET /Catalog/Edit"
+    expect:
+      status: 400
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-EDIT-03
+    name: the edit form of an unknown item is not found
+    requirement: RULE-016/AC-2
+    request: "GET /Catalog/Edit/9999"
+    expect:
+      status: 404
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-EDIT-04
+    name: the edit form marks a field read-only
+    requirement: RULE-007/AC-1
+    request: "GET /Catalog/Edit/1"
+    expect:
+      status: 200
+      body_contains: [ "readonly" ]
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  # --- Delete confirmation page (GET only) ---------------------------------
+
+  - id: CAT-DELETE-01
+    name: the delete confirmation page of an existing item opens with an anti-forgery token
+    requirement: [ RULE-016/AC-4, RULE-009/AC-1, RULE-009/AC-3 ]
+    request: "GET /Catalog/Delete/1"
+    expect:
+      status: 200
+      body_contains: [ "__RequestVerificationToken" ]
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-DELETE-02
+    name: the delete page with no id is a bad request
+    requirement: RULE-016/AC-1
+    request: "GET /Catalog/Delete"
+    expect:
+      status: 400
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-DELETE-03
+    name: the delete page of an unknown item is not found
+    requirement: RULE-016/AC-2
+    request: "GET /Catalog/Delete/9999"
+    expect:
+      status: 404
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  # --- Item pictures -------------------------------------------------------
+
+  - id: CAT-PIC-01
+    name: the first item's picture is served as a PNG
+    requirement: [ RULE-010/AC-1, RULE-032/AC-1 ]
+    request: "GET /items/1/pic"
+    expect:
+      status: 200
+      headers: { Content-Type: { matches: "^image/png" } }
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PIC-02
+    name: picture id 0 is a bad request
+    requirement: RULE-010/AC-2
+    request: "GET /items/0/pic"
+    expect:
+      status: 400
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PIC-03
+    name: a negative picture id is a bad request
+    requirement: RULE-010/AC-2
+    request: "GET /items/-1/pic"
+    expect:
+      status: 400
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PIC-04
+    name: the picture of an unknown item is not found
+    requirement: RULE-010/AC-3
+    request: "GET /items/9999/pic"
+    expect:
+      status: 404
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PIC-05
+    name: the last seed item's picture is served as a PNG
+    requirement: [ RULE-010/AC-1, RULE-032/AC-1 ]
+    request: "GET /items/12/pic"
+    expect:
+      status: 200
+      headers: { Content-Type: { matches: "^image/png" } }
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: CAT-PIC-06
+    name: a non-numeric picture id matches no address
+    requirement: [ RULE-010/AC-4, REQ-2/AC-1 ]
+    request: "GET /items/abc/pic"
+    expect:
+      status: 404
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  # --- HTTP API ------------------------------------------------------------
+
+  - id: API-ROOT-01
+    name: the API root (answer to be decided)
+    requirement: REQ-3/AC-1
+    request: "GET /api"
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: API-BRANDS-01
+    name: the brand list from the API (answer to be decided)
+    requirement: REQ-4/AC-1
+    request: "GET /api/brands"
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: API-BRANDS-02
+    name: one existing brand from the API (answer to be decided)
+    requirement: REQ-4/AC-2
+    request: "GET /api/brands/1"
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: API-BRANDS-03
+    name: an unknown brand from the API (answer to be decided)
+    requirement: REQ-4/AC-3
+    request: "GET /api/brands/9999"
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19
+
+  - id: API-FILES-01
+    name: the files API returns the brand list
+    requirement: RULE-027/AC-1
+    request: "GET /api/files"
+    expect:
+      status: 200
+      body_contains: [ "Azure", ".NET", "Visual Studio", "SQL Server", "Other" ]
+    accepted_by: Samuel Nyamukaopa
+    accepted_on: 2026-10-19

@@ -175,3 +175,59 @@ test("an exploration session's plan is kept with its evidence", () => {
     const file = endSession(m, sess.id, { summary: "done", not_covered: "sorting" });
     assert.match(fs.readFileSync(path.join(dir, file), "utf8"), /2\. page -1/);
 });
+
+// From the eShop run in the Copilot app: a hung system, a run left behind by a client that gave up, and defect titles.
+
+test("a system that stops answering ends the run early instead of waiting out every case", async () => {
+    let hits = 0;
+    const s = await server(() => { hits++; }); // takes the request, never answers
+    const dir = tmp();
+    write(dir, "cmtk.yaml", `system: s\ntargets:\n  candidate: ${s.url}\ntimeout_s: 1\n`);
+    write(dir, "cmtk/cases/a.yaml", `cases:\n${[1, 2, 3, 4, 5, 6].map((i) => `  - { id: C${i}, request: GET /${i}, expect: { status: 200 } }`).join("\n")}\n`);
+    try {
+        const started = Date.now();
+        const r = await run(loadManifest(path.join(dir, "cmtk.yaml")));
+        assert.ok(Date.now() - started < 6000, "three timeouts, not six");
+        assert.equal(hits, 3);
+        assert.deepEqual(r.cases.map((c) => c.result), ["ERROR", "ERROR", "ERROR", "SKIPPED", "SKIPPED", "SKIPPED"]);
+        assert.match(r.cases[3].why, /3 requests in a row got no answer, so the run stopped early/);
+        assert.equal(r.verdict, "NO EVIDENCE");
+        assert.match(r.next, /a system did not answer \(ETIMEDOUT/);
+    } finally {
+        await s.close();
+    }
+});
+
+test("one run at a time per evidence folder", async () => {
+    const s = await server((req, res) => setTimeout(() => res.end("ok"), 100));
+    const dir = tmp();
+    write(dir, "cmtk.yaml", `system: s\ntargets:\n  candidate: ${s.url}\n`);
+    write(dir, "cmtk/cases/a.yaml", "cases:\n  - { id: A, request: GET /, expect: { status: 200 } }\n");
+    const m = () => loadManifest(path.join(dir, "cmtk.yaml"));
+    const lock = path.join(dir, "cmtk/evidence/.run.lock");
+    try {
+        const first = run(m());
+        await assert.rejects(() => run(m()), /Another `cmtk run` is writing cmtk[\\/]evidence[\\/]run/);
+        assert.equal((await first).verdict, "PASS", "the first run is not disturbed");
+        assert.ok(!fs.existsSync(lock), "the lock goes when the run ends");
+        fs.writeFileSync(lock, JSON.stringify({ pid: 2 ** 22 + 12345, started: new Date().toISOString() }));
+        assert.equal((await run(m())).verdict, "PASS", "a lock left by a process that has gone does not block");
+    } finally {
+        await s.close();
+    }
+});
+
+test("a defect draft is titled with the case's name", async () => {
+    const s = await server((req, res) => { res.writeHead(404); res.end("Physical Path D:\\app"); });
+    const dir = tmp();
+    write(dir, "cmtk.yaml", `system: s\ntargets:\n  candidate: ${s.url}\n`);
+    write(dir, "cmtk/cases/a.yaml", 'cases:\n  - { id: E1, name: "Error pages reveal the server path", request: GET /x, expect: { body_excludes: ["Physical Path"] } }\n  - { id: E2, request: GET /y, expect: { status: 200 } }\n');
+    try {
+        await run(loadManifest(path.join(dir, "cmtk.yaml")));
+        const { drafts } = draftDefects(loadManifest(path.join(dir, "cmtk.yaml")), "run");
+        assert.equal(drafts[0].title, "Error pages reveal the server path");
+        assert.match(drafts[1].title, /^status: expected 200, got 404/, "without a name, the failed check is the title");
+    } finally {
+        await s.close();
+    }
+});

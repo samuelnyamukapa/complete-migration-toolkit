@@ -123,4 +123,6 @@ Drafts never run in CI until a person accepts them; the report says how many wer
 | `Review is for a person at a keyboard` | Run `cmtk review` yourself, in a terminal. Agents can't review |
 | `a draft: a person accepts it with cmtk review` | That case is still a draft: step 3 |
 | `ECONNREFUSED` | The system isn't running at the address in `cmtk.yaml` |
+| `… requests in a row got no answer, so the run stopped early` | The system stopped answering. Check it is up and answers a request, then run again |
+| `Another cmtk run is writing …` | A run is still going, perhaps one an agent started and stopped waiting for. Wait for it to finish |
 | `Exploration only reads` | Exploration never changes data. Write a case for it instead, with test data |

@@ -107,9 +107,14 @@ export function draftDefects(manifest: Manifest, mode: "run" | "compare"): { fil
         }
     }
     const answer = (id: string) => (mode === "run" ? [`answers/${id}.json`] : [`answers/${id}.reference.json`, `answers/${id}.candidate.json`]);
+    // A case's name says what is wrong in words; the check that failed is in Expected and Actual.
+    const named = (ids: string[]) => {
+        const names = ids.map((id) => cases.get(id)?.name?.trim());
+        return names.every((n) => n && n === names[0]) ? names[0] : undefined;
+    };
     const drafts: DefectDraft[] = [...groups.values()].map((g, i) => ({
         id: `D-${String(i + 1).padStart(2, "0")}`,
-        title: clean(g.title).slice(0, 200) + (g.ids.length > 1 ? ` (${g.ids.length} cases)` : ""),
+        title: clean(named(g.ids) ?? g.title).slice(0, 200) + (g.ids.length > 1 ? ` (${g.ids.length} cases)` : ""),
         requirements: [...new Set(g.ids.flatMap((id) => report.cases.find((c) => c.id === id)?.requirement ?? []))],
         cases: g.ids,
         steps: stepsFor(cases.get(g.ids[0]!), target, clean),

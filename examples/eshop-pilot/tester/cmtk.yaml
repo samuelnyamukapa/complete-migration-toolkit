@@ -1,0 +1,16 @@
+# eShop pilot, part 2: the AI tester.
+# /cmtk:plan drafted cmtk/plans/catalog.md and the draft cases in cmtk/cases/catalog.yaml from
+# inputs/BUSINESS_RULES.md. Nothing counts until a person accepts each draft with `cmtk review`
+# (05-review-plan.cmd, in the folder above). The system under test is the same scratch copy of
+# legacy eShop that 02-start.cmd hosts on port 53190, with mock data.
+system: eshop-legacy
+
+targets:
+  candidate: { base_url: http://localhost:53190 }
+
+cases: [cmtk/cases/*.yaml]
+evidence: cmtk/evidence
+
+allow_unsafe_methods: false   # read-only: GET, HEAD and OPTIONS only
+headers_from_env: {}          # eShop has no login
+timeout_s: 120                # the first request compiles the site

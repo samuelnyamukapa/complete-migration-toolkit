@@ -1,0 +1,42 @@
+# Draft cases from exploration session X20261019-213230. Each waits for `cmtk review`.
+cases:
+  - id: EXP-20261019213230-01
+    name: Item details error pages reveal the server's physical path
+    requirement: EXPLORE/X20261019-213230
+    request: GET /Catalog/Details/2147483648
+    expect:
+      body_excludes:
+        - Physical Path
+    note: |-
+      Found while exploring: try to break catalog paging, item details and item pictures with odd values
+      Observed: 400/404 IIS "Detailed Error" pages list "Physical Path D:\githubProjects\cmtk-pilot-eshop\scratch\legacy\src\eShopLegacyMVC\Catalog\Details\..." (same for /Catalog/Details/1.5 and /-1).
+      Why it looks wrong: Error pages should not expose server directory layout to consumers.
+      Evidence: cmtk/evidence/explore/X20261019-213230/answers/005.json, 006.json, 011.json
+    accepted_by: Samuel Nyamukapa
+    accepted_on: 2026-10-19
+  - id: EXP-20261019213230-02
+    name: Picture 404 pages contain a stack trace and framework versions
+    requirement: EXPLORE/X20261019-213230
+    request: GET /items/2147483648/pic
+    expect:
+      body_excludes:
+        - System.Web.Mvc
+        - HttpException
+    note: |-
+      Found while exploring: try to break catalog paging, item details and item pictures with odd values
+      Observed: 404 page has an HTML comment with "[HttpException]... at System.Web.Mvc.DefaultControllerFactory..." stack frames, plus .NET and ASP.NET version numbers. Same for /items/1.5/pic.
+      Why it looks wrong: Stack traces and version details in errors help attackers and break the expectation of clean errors.
+      Evidence: cmtk/evidence/explore/X20261019-213230/answers/008.json, 009.json
+    accepted_by: Samuel Nyamukapa
+    accepted_on: 2026-10-19
+  - id: EXP-20261019213230-03
+    name: Odd paging values silently show the default page with no error
+    requirement: EXPLORE/X20261019-213230
+    request: GET /Catalog/Index?pageSize=abc&pageIndex=0
+    note: |-
+      Found while exploring: try to break catalog paging, item details and item pictures with odd values
+      Observed: pageSize=abc, 2.5 and 2147483648 all return 200 with an identical 14479-character page. pageIndex=2147483647 returns 200 showing the first items.
+      Why it looks wrong: Invalid input is silently ignored; an owner decision is needed on whether that is intended. Related to the plan's open questions.
+      Evidence: cmtk/evidence/explore/X20261019-213230/answers/001.json, 002.json, 003.json, 004.json
+    accepted_by: Samuel Nyamukapa
+    accepted_on: 2026-10-19

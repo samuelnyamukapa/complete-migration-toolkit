@@ -15443,9 +15443,13 @@ function draftDefects(manifest, mode) {
     }
   }
   const answer = (id) => mode === "run" ? [`answers/${id}.json`] : [`answers/${id}.reference.json`, `answers/${id}.candidate.json`];
+  const named = (ids) => {
+    const names = ids.map((id) => cases.get(id)?.name?.trim());
+    return names.every((n) => n && n === names[0]) ? names[0] : void 0;
+  };
   const drafts = [...groups.values()].map((g, i) => ({
     id: `D-${String(i + 1).padStart(2, "0")}`,
-    title: clean(g.title).slice(0, 200) + (g.ids.length > 1 ? ` (${g.ids.length} cases)` : ""),
+    title: clean(named(g.ids) ?? g.title).slice(0, 200) + (g.ids.length > 1 ? ` (${g.ids.length} cases)` : ""),
     requirements: [...new Set(g.ids.flatMap((id) => report.cases.find((c) => c.id === id)?.requirement ?? []))],
     cases: g.ids,
     steps: stepsFor(cases.get(g.ids[0]), target2, clean),
@@ -15835,19 +15839,62 @@ function unsafe(c, manifest, opts) {
 }
 var DRAFT_WHY = "a draft: a person accepts it with `cmtk review` before it counts";
 var UNSAFE_WHY = "changes data: needs allow_unsafe_methods in cmtk.yaml and --allow-unsafe on this run";
+var NO_ANSWER = /^(ETIMEDOUT|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENETUNREACH|ENOTFOUND|EAI_AGAIN)\b/;
+var STOP_AFTER_NO_ANSWER = 3;
+var STOPPED_WHY = `not run: ${STOP_AFTER_NO_ANSWER} requests in a row got no answer, so the run stopped early. Check the system is up, then run again`;
+var noAnswer = (o) => !!o.error && NO_ANSWER.test(o.error);
+var LOCK_STALE_MS = 3 * 60 * 6e4;
+function alive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return err.code === "EPERM";
+  }
+}
 function evidenceDir(manifest, mode) {
   ownedFolder(manifest, manifest.evidence);
   const final = ownedFolder(manifest, path5.join(manifest.evidence, mode));
   const work = ownedFolder(manifest, path5.join(manifest.evidence, `.${mode}.partial`));
-  fs5.rmSync(work, { recursive: true, force: true });
-  fs5.mkdirSync(path5.join(work, "answers"), { recursive: true });
+  const lock = ownedFolder(manifest, path5.join(manifest.evidence, `.${mode}.lock`));
+  fs5.mkdirSync(path5.dirname(lock), { recursive: true });
+  const mine = JSON.stringify({ pid: process.pid, started: (/* @__PURE__ */ new Date()).toISOString() });
+  try {
+    fs5.writeFileSync(lock, mine, { flag: "wx" });
+  } catch {
+    let held = {};
+    try {
+      held = JSON.parse(fs5.readFileSync(lock, "utf8"));
+    } catch {
+    }
+    const age = held.started ? Date.now() - Date.parse(held.started) : Infinity;
+    if (typeof held.pid === "number" && alive(held.pid) && age < LOCK_STALE_MS) {
+      throw new ManifestError(`Another \`cmtk ${mode}\` is writing ${path5.relative(manifest.root, final)} (process ${held.pid}, started ${held.started}). Wait for it to finish, then run again.`);
+    }
+    fs5.writeFileSync(lock, mine);
+  }
+  const release = () => {
+    try {
+      if (fs5.readFileSync(lock, "utf8") === mine)
+        fs5.rmSync(lock, { force: true });
+    } catch {
+    }
+  };
+  try {
+    fs5.rmSync(work, { recursive: true, force: true });
+    fs5.mkdirSync(path5.join(work, "answers"), { recursive: true });
+  } catch (err) {
+    release();
+    throw err;
+  }
   return {
     dir: work,
     commit() {
       fs5.rmSync(final, { recursive: true, force: true });
       fs5.renameSync(work, final);
       return final;
-    }
+    },
+    release
   };
 }
 var failed = (err) => err instanceof Error ? err.message : String(err);
@@ -15878,44 +15925,54 @@ async function run(manifest, opts = {}) {
   const extra = envHeaders(manifest);
   const adapters = adaptersFor(manifest);
   const ev = evidenceDir(manifest, "run");
-  const dir = ev.dir;
-  const out = [];
   try {
-    for (const c of cases) {
-      const b = base(c);
-      if (c.draft) {
-        out.push({ ...b, result: "SKIPPED", why: DRAFT_WHY });
-        continue;
-      }
-      if (!c.expect) {
-        out.push({ ...b, result: "SKIPPED", why: "no `expect:` block, so there is nothing to check on one system" });
-        continue;
-      }
-      if (unsafe(c, manifest, opts)) {
-        out.push({ ...b, result: "SKIPPED", why: UNSAFE_WHY });
-        continue;
-      }
-      try {
-        const obs = await adapters.get(b.surface).run(c, t, extra);
-        writeJson(path5.join(dir, "answers", `${c.id}.json`), obs);
-        if (obs.error) {
-          out.push({ ...b, result: "ERROR", why: obs.error });
+    const dir = ev.dir;
+    const out = [];
+    let silent = 0;
+    try {
+      for (const c of cases) {
+        const b = base(c);
+        if (c.draft) {
+          out.push({ ...b, result: "SKIPPED", why: DRAFT_WHY });
           continue;
         }
-        const failures = checkExpectation(c.expect, obs);
-        out.push({ ...b, result: failures.length ? "FAIL" : "PASS", ...failures.length ? { failures } : {}, ...obs.truncated ? { note: "the answer was over 5 MB; only the first 5 MB were checked" } : {} });
-      } catch (err) {
-        out.push({ ...b, result: "ERROR", why: failed(err) });
+        if (!c.expect) {
+          out.push({ ...b, result: "SKIPPED", why: "no `expect:` block, so there is nothing to check on one system" });
+          continue;
+        }
+        if (unsafe(c, manifest, opts)) {
+          out.push({ ...b, result: "SKIPPED", why: UNSAFE_WHY });
+          continue;
+        }
+        if (silent >= STOP_AFTER_NO_ANSWER) {
+          out.push({ ...b, result: "SKIPPED", why: STOPPED_WHY });
+          continue;
+        }
+        try {
+          const obs = await adapters.get(b.surface).run(c, t, extra);
+          writeJson(path5.join(dir, "answers", `${c.id}.json`), obs);
+          silent = noAnswer(obs) ? silent + 1 : 0;
+          if (obs.error) {
+            out.push({ ...b, result: "ERROR", why: obs.error });
+            continue;
+          }
+          const failures = checkExpectation(c.expect, obs);
+          out.push({ ...b, result: failures.length ? "FAIL" : "PASS", ...failures.length ? { failures } : {}, ...obs.truncated ? { note: "the answer was over 5 MB; only the first 5 MB were checked" } : {} });
+        } catch (err) {
+          out.push({ ...b, result: "ERROR", why: failed(err) });
+        }
       }
+    } finally {
+      await adapters.closeAll();
     }
+    const report = summarise({ mode: "run", manifest, targets: { [t.name]: where(t) }, cases: out, contracts: [], drift: [], usedDrift: /* @__PURE__ */ new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, []), excludedDrafts: cases.excluded });
+    writeJson(path5.join(dir, "REPORT.json"), report);
+    fs5.writeFileSync(path5.join(dir, "REPORT.md"), renderReport(report), "utf8");
+    ev.commit();
+    return report;
   } finally {
-    await adapters.closeAll();
+    ev.release();
   }
-  const report = summarise({ mode: "run", manifest, targets: { [t.name]: where(t) }, cases: out, contracts: [], drift: [], usedDrift: /* @__PURE__ */ new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, []), excludedDrafts: cases.excluded });
-  writeJson(path5.join(dir, "REPORT.json"), report);
-  fs5.writeFileSync(path5.join(dir, "REPORT.md"), renderReport(report), "utf8");
-  ev.commit();
-  return report;
 }
 async function compare(manifest, opts = {}) {
   const ref = target(manifest, manifest.reference, "reference");
@@ -15928,81 +15985,91 @@ async function compare(manifest, opts = {}) {
   const extra = envHeaders(manifest);
   const adapters = adaptersFor(manifest);
   const ev = evidenceDir(manifest, "compare");
-  const dir = ev.dir;
-  const used = /* @__PURE__ */ new Set();
-  const contracts = [];
-  const out = [];
   try {
-    const http2 = adapters.get("http");
-    for (const k of manifest.contracts) {
-      const probe2 = { id: `contract-${k.name}`, request: { method: "GET", path: k.path } };
-      const [a, b] = [await http2.run(probe2, ref, extra), await http2.run(probe2, cand, extra)];
-      const slug = k.name.replace(/[^A-Za-z0-9_.-]/g, "_").slice(0, 64);
-      if (a.body !== void 0)
-        fs5.writeFileSync(path5.join(dir, "answers", `contract-${slug}.reference.txt`), a.body, "utf8");
-      if (b.body !== void 0)
-        fs5.writeFileSync(path5.join(dir, "answers", `contract-${slug}.candidate.txt`), b.body, "utf8");
-      const outcome = checkContract(k, a, b);
-      for (const f of outcome.findings) {
-        const hit = f.where ? coveringDrift(drift, `contract-${k.name}`, f.where) : void 0;
-        if (hit) {
-          f.drift = hit.id;
-          used.add(hit.id);
-        }
-      }
-      contracts.push(outcome);
-    }
-    for (const c of cases) {
-      const b = { ...base(c), match: matchFor(c, manifest) };
-      if (c.draft) {
-        out.push({ ...b, result: "SKIPPED", why: DRAFT_WHY });
-        continue;
-      }
-      if (unsafe(c, manifest, opts)) {
-        out.push({ ...b, result: "SKIPPED", why: UNSAFE_WHY });
-        continue;
-      }
-      try {
-        const adapter = adapters.get(b.surface);
-        if (adapter.reset) {
-          await adapter.reset(ref);
-          await adapter.reset(cand);
-        }
-        const ra = await adapter.run(c, ref, extra);
-        const rb = await adapter.run(c, cand, extra);
-        writeJson(path5.join(dir, "answers", `${c.id}.reference.json`), ra);
-        writeJson(path5.join(dir, "answers", `${c.id}.candidate.json`), rb);
-        if (ra.error || rb.error) {
-          out.push({ ...b, result: "ERROR", why: [ra.error && `reference: ${ra.error}`, rb.error && `candidate: ${rb.error}`].filter(Boolean).join("; ") });
-          continue;
-        }
-        const diffs = compareObservations(ra, rb, manifest, b.match);
-        for (const d of diffs) {
-          const hit = coveringDrift(drift, c.id, d.where);
+    const dir = ev.dir;
+    const used = /* @__PURE__ */ new Set();
+    const contracts = [];
+    const out = [];
+    let silent = 0;
+    try {
+      const http2 = adapters.get("http");
+      for (const k of manifest.contracts) {
+        const probe2 = { id: `contract-${k.name}`, request: { method: "GET", path: k.path } };
+        const [a, b] = [await http2.run(probe2, ref, extra), await http2.run(probe2, cand, extra)];
+        const slug = k.name.replace(/[^A-Za-z0-9_.-]/g, "_").slice(0, 64);
+        if (a.body !== void 0)
+          fs5.writeFileSync(path5.join(dir, "answers", `contract-${slug}.reference.txt`), a.body, "utf8");
+        if (b.body !== void 0)
+          fs5.writeFileSync(path5.join(dir, "answers", `contract-${slug}.candidate.txt`), b.body, "utf8");
+        const outcome = checkContract(k, a, b);
+        for (const f of outcome.findings) {
+          const hit = f.where ? coveringDrift(drift, `contract-${k.name}`, f.where) : void 0;
           if (hit) {
-            d.drift = hit.id;
+            f.drift = hit.id;
             used.add(hit.id);
           }
         }
-        const open = diffs.filter((d) => !d.drift);
-        out.push({
-          ...b,
-          result: open.length ? "DIFFERENT" : diffs.length ? "DRIFT" : "MATCH",
-          ...diffs.length ? { differences: diffs } : {},
-          ...ra.truncated || rb.truncated ? { note: "an answer was over 5 MB; only the first 5 MB were compared" } : {}
-        });
-      } catch (err) {
-        out.push({ ...b, result: "ERROR", why: failed(err) });
+        contracts.push(outcome);
       }
+      for (const c of cases) {
+        const b = { ...base(c), match: matchFor(c, manifest) };
+        if (c.draft) {
+          out.push({ ...b, result: "SKIPPED", why: DRAFT_WHY });
+          continue;
+        }
+        if (unsafe(c, manifest, opts)) {
+          out.push({ ...b, result: "SKIPPED", why: UNSAFE_WHY });
+          continue;
+        }
+        if (silent >= STOP_AFTER_NO_ANSWER) {
+          out.push({ ...b, result: "SKIPPED", why: STOPPED_WHY });
+          continue;
+        }
+        try {
+          const adapter = adapters.get(b.surface);
+          if (adapter.reset) {
+            await adapter.reset(ref);
+            await adapter.reset(cand);
+          }
+          const ra = await adapter.run(c, ref, extra);
+          const rb = await adapter.run(c, cand, extra);
+          writeJson(path5.join(dir, "answers", `${c.id}.reference.json`), ra);
+          writeJson(path5.join(dir, "answers", `${c.id}.candidate.json`), rb);
+          silent = noAnswer(ra) || noAnswer(rb) ? silent + 1 : 0;
+          if (ra.error || rb.error) {
+            out.push({ ...b, result: "ERROR", why: [ra.error && `reference: ${ra.error}`, rb.error && `candidate: ${rb.error}`].filter(Boolean).join("; ") });
+            continue;
+          }
+          const diffs = compareObservations(ra, rb, manifest, b.match);
+          for (const d of diffs) {
+            const hit = coveringDrift(drift, c.id, d.where);
+            if (hit) {
+              d.drift = hit.id;
+              used.add(hit.id);
+            }
+          }
+          const open = diffs.filter((d) => !d.drift);
+          out.push({
+            ...b,
+            result: open.length ? "DIFFERENT" : diffs.length ? "DRIFT" : "MATCH",
+            ...diffs.length ? { differences: diffs } : {},
+            ...ra.truncated || rb.truncated ? { note: "an answer was over 5 MB; only the first 5 MB were compared" } : {}
+          });
+        } catch (err) {
+          out.push({ ...b, result: "ERROR", why: failed(err) });
+        }
+      }
+    } finally {
+      await adapters.closeAll();
     }
+    const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), excludedDrafts: cases.excluded });
+    writeJson(path5.join(dir, "REPORT.json"), report);
+    fs5.writeFileSync(path5.join(dir, "REPORT.md"), renderReport(report), "utf8");
+    ev.commit();
+    return report;
   } finally {
-    await adapters.closeAll();
+    ev.release();
   }
-  const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), excludedDrafts: cases.excluded });
-  writeJson(path5.join(dir, "REPORT.json"), report);
-  fs5.writeFileSync(path5.join(dir, "REPORT.md"), renderReport(report), "utf8");
-  ev.commit();
-  return report;
 }
 
 // packages/core/dist/signoff.js

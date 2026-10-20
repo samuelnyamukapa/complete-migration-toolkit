@@ -28,6 +28,10 @@ The AI tester: skills that do the grind of testing, while people keep the judgem
 - **`body_excludes`** in `expect:`: text that must never appear, such as a stack trace.
 - **Settings in every report:** the settings file and its SHA-256, the match level, the scrub rules and the drift ledger in force. `cmtk status` shows which settings file a report came from.
 - **`explore_requests_per_day`** (default 1000): a limit on exploration requests per day, across sessions.
+- **A run stops early when the system stops answering:** after 3 requests in a row get no answer, the rest are reported as not run, with the reason.
+- **One run at a time** per evidence folder, so a second run can't delete the first one's half-written evidence.
+- **Defect drafts are titled with the case's name** when it has one.
+- **Accepting a draft keeps its note** as `note`.
 
 ### Fixed before release
 
@@ -44,11 +48,12 @@ An independent review checked every route by which an agent could decide, sign, 
 
 ### Verified
 
-- 58 tests on Windows and Linux.
+- 61 tests on Windows and Linux.
 - The skills were tried by agents on the bookshop example and on the eShop pilot's rules, and judged against what was planted:
   - `/cmtk:explore` found the three planted bugs in version 1 (a negative page, a non-numeric id, a page size of 0), within its budget and without changing data;
   - `/cmtk:triage` sorted every planted difference in version 2 correctly: two kinds of noise, the currency drift, the title-sort defect, and the health version as a question for a person;
   - `/cmtk:plan` on the eShop rules: 43 of 44 drafted cases were judged acceptable or better. It missed three areas of scope, so the skill now requires a case for everything the scope names, plus the entry point and an unknown address. A second try covered every area, with a question wherever the rules say nothing.
+- On eShop, from the GitHub Copilot desktop app on Windows (part 2 of [docs/pilots/eshop.md](docs/pilots/eshop.md)): the owner accepted all 39 drafted cases unchanged; they ran with 30 passing and none failing; an exploration session found three problems in 12 requests; and after the owner accepted those, the run failed on two of them and two defects were drafted. Nothing was approved, signed or filed by an agent.
 
 ## 0.1.2 (2026-10-16)
 
