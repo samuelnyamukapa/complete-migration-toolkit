@@ -30,7 +30,7 @@ The AI tester: skills that do the grind of testing, while people keep the judgem
 - **`explore_requests_per_day`** (default 1000): a limit on exploration requests per day, across sessions.
 - **A run stops early when the system stops answering:** after 3 requests in a row get no answer, the rest are reported as not run, with the reason.
 - **One run at a time** per evidence folder, so a second run can't delete the first one's half-written evidence.
-- **Defect drafts are titled with the case's name** when it has one.
+- **Defect drafts are titled with the case's name** when it has one, and say why the failure matters when the case's note does.
 - **Accepting a draft keeps its note** as `note`.
 
 ### Fixed before release

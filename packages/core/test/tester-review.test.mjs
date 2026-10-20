@@ -221,11 +221,14 @@ test("a defect draft is titled with the case's name", async () => {
     const s = await server((req, res) => { res.writeHead(404); res.end("Physical Path D:\\app"); });
     const dir = tmp();
     write(dir, "cmtk.yaml", `system: s\ntargets:\n  candidate: ${s.url}\n`);
-    write(dir, "cmtk/cases/a.yaml", 'cases:\n  - { id: E1, name: "Error pages reveal the server path", request: GET /x, expect: { body_excludes: ["Physical Path"] } }\n  - { id: E2, request: GET /y, expect: { status: 200 } }\n');
+    write(dir, "cmtk/cases/a.yaml", 'cases:\n  - { id: E1, name: "Error pages reveal the server path", note: "Observed: a path.\\nWhy it looks wrong: Error pages should not show where the server keeps its files.", request: GET /x, expect: { body_excludes: ["Physical Path"] } }\n  - { id: E2, request: GET /y, expect: { status: 200 } }\n');
     try {
         await run(loadManifest(path.join(dir, "cmtk.yaml")));
         const { drafts } = draftDefects(loadManifest(path.join(dir, "cmtk.yaml")), "run");
         assert.equal(drafts[0].title, "Error pages reveal the server path");
+        assert.equal(drafts[0].why, "Error pages should not show where the server keeps its files.");
+        assert.match(fs.readFileSync(path.join(dir, "cmtk/evidence/run/DEFECTS.md"), "utf8"), /### Why it matters\n\nError pages should not show/);
+        assert.equal(drafts[1].why, undefined, "no note, no section");
         assert.match(drafts[1].title, /^status: expected 200, got 404/, "without a name, the failed check is the title");
     } finally {
         await s.close();

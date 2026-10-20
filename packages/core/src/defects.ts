@@ -14,6 +14,8 @@ export interface DefectDraft {
     requirements: string[];
     cases: string[];
     steps: string[];
+    /** Why the failure matters, from the case's note, when the case has one. */
+    why?: string;
     expected: string;
     actual: string;
     evidence: string[];
@@ -36,6 +38,14 @@ export function redactor(manifest: Manifest): (s: string) => string {
 }
 
 const norm = (where: string) => where.replace(/\[\d+\]/g, "[*]");
+
+/** From a case's note: its "Why it looks wrong:" line when it has one, otherwise the whole note. */
+function whyOf(c: Case | undefined): string | undefined {
+    const note = (c?.note ?? c?.draft_note)?.trim();
+    if (!note) return undefined;
+    const line = /^Why it looks wrong:\s*(.+)$/im.exec(note)?.[1]?.trim();
+    return (line ?? note).slice(0, 1000);
+}
 
 /** A path with credential-like query values removed. */
 function cleanPath(p: string, clean: (s: string) => string): string {
@@ -118,6 +128,7 @@ export function draftDefects(manifest: Manifest, mode: "run" | "compare"): { fil
         requirements: [...new Set(g.ids.flatMap((id) => report.cases.find((c) => c.id === id)?.requirement ?? []))],
         cases: g.ids,
         steps: stepsFor(cases.get(g.ids[0]!), target, clean),
+        ...(whyOf(cases.get(g.ids[0]!)) ? { why: clean(whyOf(cases.get(g.ids[0]!))!) } : {}),
         expected: clean(g.expected),
         actual: clean(g.actual),
         evidence: g.ids.flatMap(answer),
@@ -141,6 +152,7 @@ export function draftDefects(manifest: Manifest, mode: "run" | "compare"): { fil
             `- Cases: ${d.cases.join(", ")}`,
             `- Found by: ${d.source === "triage" ? "triage of a comparison, accepted by a person" : `\`cmtk ${mode}\``} on ${report.date}`, "",
             "### Steps to reproduce", "", ...d.steps.map((s, i) => `${i + 1}. ${s}`), "",
+            ...(d.why ? ["### Why it matters", "", d.why, ""] : []),
             "### Expected", "", d.expected, "", "### Actual", "", d.actual, "",
             "### Evidence", "", ...d.evidence.map((e) => `- \`${path.join(path.relative(manifest.root, dir), e).split(path.sep).join("/")}\``), "");
     }

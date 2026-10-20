@@ -15371,6 +15371,13 @@ function redactor(manifest) {
   };
 }
 var norm = (where2) => where2.replace(/\[\d+\]/g, "[*]");
+function whyOf(c) {
+  const note = (c?.note ?? c?.draft_note)?.trim();
+  if (!note)
+    return void 0;
+  const line = /^Why it looks wrong:\s*(.+)$/im.exec(note)?.[1]?.trim();
+  return (line ?? note).slice(0, 1e3);
+}
 function cleanPath(p, clean) {
   const q = p.indexOf("?");
   if (q < 0)
@@ -15453,6 +15460,7 @@ function draftDefects(manifest, mode) {
     requirements: [...new Set(g.ids.flatMap((id) => report.cases.find((c) => c.id === id)?.requirement ?? []))],
     cases: g.ids,
     steps: stepsFor(cases.get(g.ids[0]), target2, clean),
+    ...whyOf(cases.get(g.ids[0])) ? { why: clean(whyOf(cases.get(g.ids[0]))) } : {},
     expected: clean(g.expected),
     actual: clean(g.actual),
     evidence: g.ids.flatMap(answer),
@@ -15481,7 +15489,7 @@ function draftDefects(manifest, mode) {
     ""
   ];
   for (const d of drafts) {
-    L.push(`## ${d.id}: ${d.title}`, "", `- Requirements: ${d.requirements.join(", ") || "(none named)"}`, `- Cases: ${d.cases.join(", ")}`, `- Found by: ${d.source === "triage" ? "triage of a comparison, accepted by a person" : `\`cmtk ${mode}\``} on ${report.date}`, "", "### Steps to reproduce", "", ...d.steps.map((s, i) => `${i + 1}. ${s}`), "", "### Expected", "", d.expected, "", "### Actual", "", d.actual, "", "### Evidence", "", ...d.evidence.map((e) => `- \`${path4.join(path4.relative(manifest.root, dir), e).split(path4.sep).join("/")}\``), "");
+    L.push(`## ${d.id}: ${d.title}`, "", `- Requirements: ${d.requirements.join(", ") || "(none named)"}`, `- Cases: ${d.cases.join(", ")}`, `- Found by: ${d.source === "triage" ? "triage of a comparison, accepted by a person" : `\`cmtk ${mode}\``} on ${report.date}`, "", "### Steps to reproduce", "", ...d.steps.map((s, i) => `${i + 1}. ${s}`), "", ...d.why ? ["### Why it matters", "", d.why, ""] : [], "### Expected", "", d.expected, "", "### Actual", "", d.actual, "", "### Evidence", "", ...d.evidence.map((e) => `- \`${path4.join(path4.relative(manifest.root, dir), e).split(path4.sep).join("/")}\``), "");
   }
   if (!drafts.length)
     L.push("No defects: nothing failed.", "");
