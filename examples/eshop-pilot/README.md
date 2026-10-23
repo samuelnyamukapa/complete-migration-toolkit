@@ -64,4 +64,5 @@ To run cmtk by hand from this folder:
 | `cmtk\cases\imported\har.yaml` | the raw HAR import, before review; the reviewed cases are `cmtk\cases\legacy\har-journeys.yaml` |
 | `reports\` | the final reports from the pilot, and the log of the Windows checks |
 | `tester\` | the AI tester's plan (`cmtk\plans\catalog.md`), its draft cases and their source rules; `tester\cmtk.yaml` tests legacy on its own |
+| `tester\cmtk\data\` | test-data recipes (added 23 October 2026): two schemas the AI tester wrote from the business rules, and the recipes `cmtk data plan` compiled from them. The rows are not kept: `cmtk data make <id>` regenerates them, byte for byte. Their `DATA.md` summaries are in `reports\` |
 | `scratch\`, `tools\`, `logs\` | working copies, cmtk itself and step logs; never evidence |

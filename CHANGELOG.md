@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.1 (2026-10-23)
+
+From the first try of `cmtk data` on the eShop pilot ([docs/pilots/eshop.md](docs/pilots/eshop.md), part 4).
+
+- **One CSV per row**, `rows/<name>.csv`, with the data columns alone: the file a CSV import takes for that one condition, as `rows/<name>.json` is for a JSON body.
+- **A readable pattern breaker.** A row that breaks a `pattern` now uses a printable string the pattern refuses (`!!! not a match`) rather than control characters, so it reads in a CSV, a workbook and a report.
+- **Enums in another case.** A string enum gets a row with a listed value in the other case (`mug` for `Mug`), because most lookups are case-sensitive and the rule is worth its own row.
+
 ## 0.4.0 (2026-10-23)
 
 Test data, part 1. When a case needs a body or an input file that doesn't exist, cmtk creates it from the system's own schema, as a recipe a person reviews. The research behind the design is [docs/research/test-data-generation.md](docs/research/test-data-generation.md); its rule, **the LLM proposes, deterministic tools decide**, is built in: boundaries, negatives and combinations come from the engine, never from a model.

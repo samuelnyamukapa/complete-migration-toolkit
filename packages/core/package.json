@@ -1,6 +1,6 @@
 {
   "name": "@cmtk/core",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Complete Migration Toolkit engine: cases, adapters, expectations, comparison, drift ledger and reports.",
   "license": "Apache-2.0",
   "type": "module",

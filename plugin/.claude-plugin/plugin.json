@@ -1,6 +1,6 @@
 {
   "name": "cmtk",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "An AI tester that does the grind while people keep the judgement: turn stories into test cases, run them, sort differences between an old and a new system, explore within a charter, and draft defects. Agents propose; people review and sign.",
   "author": { "name": "Samuel Nyamukapa", "url": "https://github.com/samuelnyamukapa" },
   "homepage": "https://github.com/samuelnyamukapa/complete-migration-toolkit",

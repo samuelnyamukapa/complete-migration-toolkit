@@ -21,6 +21,7 @@ const ITEM = {
         Price: { type: "number", minimum: 0, maximum: 1000000, multipleOf: 0.01 },
         Picture: { type: "string", pattern: "^[A-Za-z0-9_-]+\\.(png|jpg)$" },
         BrandId: { type: "integer", enum: [1, 2, 3] },
+        Kind: { type: "string", enum: ["Mug", "T-Shirt"] },
         Stock: { type: "integer", minimum: 0, exclusiveMaximum: 100 },
         Email: { type: "string", format: "email" },
         OnReorder: { type: "boolean" },
@@ -41,12 +42,13 @@ test("a recipe names every row by the condition it exercises, with its technique
     assert.equal(recipe.id, "item");
     const names = recipe.rows.map((r) => r.name);
     for (const n of ["baseline_valid", "body_not_an_object", "Name_minLength_below_3bva", "Name_minLength_at_3bva", "Name_maxLength_above_3bva", "Price_minimum_below_3bva", "Price_maximum_at_3bva", "Price_not_a_multiple",
-        "Stock_maximum_above_3bva", "Name_missing", "Name_null", "Price_wrong_type", "BrandId_not_in_enum", "Email_bad_email", "Picture_breaks_pattern", "Stock_fraction", "Tags_minItems_below_3bva", "Tags_maxItems_above_3bva",
+        "Stock_maximum_above_3bva", "Name_missing", "Name_null", "Price_wrong_type", "BrandId_not_in_enum", "Kind_not_in_enum", "Kind_enum_other_case", "Email_bad_email", "Picture_breaks_pattern", "Stock_fraction", "Tags_minItems_below_3bva", "Tags_maxItems_above_3bva",
         "Tags_each_element_wrong_type", "Name_hostile_csv_formula", "Name_hostile_long", "pairwise_01"]) assert.ok(names.includes(n), n);
     const stockAbove = recipe.rows.find((r) => r.name === "Stock_maximum_above_3bva");
     assert.deepEqual(stockAbove.set, { "$.Stock": 100 }, "exclusiveMaximum 100: 100 itself is the value above");
     assert.deepEqual(stockAbove.invalid_because, { path: "$.Stock", keyword: "exclusiveMaximum" });
     assert.equal(recipe.rows.find((r) => r.name === "Price_maximum_above_3bva").set["$.Price"], 1000000.01);
+    assert.deepEqual(recipe.rows.find((r) => r.name === "Kind_enum_other_case").set, { "$.Kind": "mug" }, "a listed value in another case, for case-sensitive lookups");
     assert.equal(recipe.rows.find((r) => r.name === "Name_hostile_long").expect_valid, false, "4,096 characters break maxLength 50");
     assert.equal(recipe.rows.find((r) => r.name === "Name_hostile_csv_formula").expect_valid, true);
     assert.equal(recipe.rows.find((r) => r.name === "Name_hostile_csv_formula").oracle, "implicit");
@@ -83,6 +85,14 @@ test("rows are regenerated from the seed, identical every time, and each one is 
     assert.match(base.Email, /@/);
     assert.ok(base.Tags.length >= 1 && base.Tags.length <= 3);
     assert.equal(fs.existsSync(path.join(p.dir, "cmtk/data/item/rows/Price_maximum_at_3bva.json")), true);
+    // One CSV per row too, data columns only: what an import takes for that one condition.
+    const oneCsv = fs.readFileSync(path.join(p.dir, "cmtk/data/item/rows/Price_maximum_at_3bva.csv"), "utf8");
+    assert.match(oneCsv.split("\r\n")[0], /^\uFEFFName,/);
+    assert.doesNotMatch(oneCsv, /expect_valid|^row,/m);
+    assert.equal(oneCsv.trim().split("\r\n").length, 2, "a header and one row");
+    assert.equal(fs.existsSync(path.join(p.dir, "cmtk/data/item/rows/body_not_an_object.csv")), false, "a body that is not an object has no CSV");
+    const breaker = a.rows.find((r) => r.name === "Picture_breaks_pattern").value.Picture;
+    assert.match(breaker, /^[ -~]+$/, "the pattern breaker is printable, so it reads in a CSV or a report");
     // The workbook: pinned metadata, the same bytes on a second make, and the cells as written.
     const x1 = fs.readFileSync(path.join(p.dir, "cmtk/data/item/rows.xlsx"));
     const wb = readXlsx(x1);

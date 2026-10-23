@@ -276,7 +276,7 @@ server.registerTool("cmtk_data_plan", {
     }));
 
 server.registerTool("cmtk_data_make", {
-    description: "Regenerate a recipe's rows from its seed and clock, check every row against the schema (valid rows validate; invalid rows break it where they say), check the quotas, and write rows.json, one file per row, rows.csv and optionally rows.xlsx, with a manifest, under cmtk/data/<id>/.",
+    description: "Regenerate a recipe's rows from its seed and clock, check every row against the schema (valid rows validate; invalid rows break it where they say), check the quotas, and write rows.json, rows.csv, one JSON and one CSV per row, and optionally rows.xlsx, with a manifest, under cmtk/data/<id>/.",
     inputSchema: { manifest: manifestArg, id: z.string(), formats: z.array(z.enum(["json", "csv", "xlsx"])).optional() },
 }, async (a) => guarded(() => makeData(loadManifest(a.manifest), a.id, { formats: a.formats, generators: dataGenerators }),
     ({ folder, manifest }) => `${manifest.rows} rows (${manifest.valid_rows} valid, ${Math.round(manifest.quotas.happy_share * 100)}% happy paths) in ${folder}/; every row checked against the schema.${manifest.quotas.problems.length ? ` QUOTAS NOT MET: ${manifest.quotas.problems.join("; ")}.` : " Quotas met."}`));

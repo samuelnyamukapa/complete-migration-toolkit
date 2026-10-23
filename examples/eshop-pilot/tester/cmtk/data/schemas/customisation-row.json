@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "One row of Setup/CatalogItems.csv, the customisation import (RULE-015). Written by the AI tester from BUSINESS_RULES.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["catalogtypename", "catalogbrandname", "description", "name", "price", "pictureFileName"],
+  "properties": {
+    "catalogtypename": { "type": "string", "enum": ["Mug", "T-Shirt", "Sheet", "USB Memory Stick"], "description": "RULE-015: the type lookup is case-sensitive; RULE-030 names the 4 seed types" },
+    "catalogbrandname": { "type": "string", "enum": ["Azure", ".NET", "Visual Studio", "SQL Server", "Other"], "description": "RULE-015: the brand lookup is case-sensitive; RULE-030 names the 5 seed brands. Suspected defect: a brand-not-found error reports the type name" },
+    "description": { "type": "string", "maxLength": 200, "description": "RULE-015: required header; CSV rows skip the model range rules" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 50, "description": "RULE-015 says CSV rows skip the 50-character limit, but RULE-011 says the database enforces it: question for the owner" },
+    "price": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]{1,2})?$", "description": "RULE-015: parsed with AllowDecimalPoint and InvariantCulture: no thousands separator, no minus sign; '12,5' throws 'price=12,5is not a valid decimal number'" },
+    "pictureFileName": { "type": "string", "pattern": "^[A-Za-z0-9_-]+\\.(png|jpg)$", "description": "RULE-015: required header" },
+    "availablestock": { "type": "string", "pattern": "^[0-9]{1,8}$", "description": "RULE-015: optional; must parse as an integer (suspected defect: the error prints the unassigned variable)" },
+    "restockthreshold": { "type": "string", "pattern": "^[0-9]{1,8}$", "description": "RULE-015: optional" },
+    "maxstockthreshold": { "type": "string", "pattern": "^[0-9]{1,8}$", "description": "RULE-015: optional" },
+    "onreorder": { "type": "string", "enum": ["true", "false"], "description": "RULE-015: optional; parsed as a boolean" }
+  }
+}

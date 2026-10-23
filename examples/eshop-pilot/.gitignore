@@ -9,3 +9,5 @@ adapters/catalog/probe/obj/
 pilot-files.tgz
 *.har
 tester/cmtk/evidence/
+tester/cmtk/data/*/
+!tester/cmtk/data/schemas/

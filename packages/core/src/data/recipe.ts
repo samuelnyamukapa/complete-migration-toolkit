@@ -262,7 +262,17 @@ function planRows(fields: Field[], notes: string[]): Row[] {
         add({ name: `${slug}_wrong_type`, technique: "EP", coverage_item: `${p} of the wrong type`, expect_valid: false, invalid_because: { path: p, keyword: f.const !== undefined ? "const" : f.enum ? "enum" : "type" }, oracle: "specified", set: { [p]: wrongType(f) } });
         if (f.enum) add({ name: `${slug}_not_in_enum`, technique: "EP", coverage_item: `${p} outside ${JSON.stringify(f.enum)}`, expect_valid: false, invalid_because: { path: p, keyword: "enum" }, oracle: "specified", set: { [p]: typeof f.enum[0] === "number" ? 999999 : "not-a-valid-choice" } });
         if (f.type === "string" && f.format && ["email", "uuid", "date", "date-time", "uri", "ipv4"].includes(f.format)) add({ name: `${slug}_bad_${f.format.replace("-", "_")}`, technique: "EP", coverage_item: `${p} is not a ${f.format}`, expect_valid: false, invalid_because: { path: p, keyword: "format" }, oracle: "specified", set: { [p]: "not-a-" + f.format } });
-        if (f.type === "string" && f.pattern && !patternLimits(f.pattern)) add({ name: `${slug}_breaks_pattern`, technique: "EP", coverage_item: `${p} does not match ${f.pattern}`, expect_valid: false, invalid_because: { path: p, keyword: "pattern" }, oracle: "specified", set: { [p]: "\u0000pattern-breaker\u0000" } });
+        if (f.type === "string" && f.pattern) {
+            // A printable string the pattern refuses, if there is one: readable in a CSV or a report.
+            const breaker = ["!!! not a match", "no", "\n", "", "\u0000"].find((s) => { try { return !new RegExp(f.pattern!, "u").test(s); } catch { return false; } });
+            if (breaker !== undefined) add({ name: `${slug}_breaks_pattern`, technique: "EP", coverage_item: `${p} does not match ${f.pattern}`, expect_valid: false, invalid_because: { path: p, keyword: "pattern" }, oracle: "specified", set: { [p]: breaker } });
+        }
+        // Enums of strings are usually matched exactly: the same word in another case is a negative worth its own row.
+        if (f.enum && typeof f.enum[0] === "string") {
+            const v = f.enum[0] as string;
+            const other = v === v.toLowerCase() ? v.toUpperCase() : v.toLowerCase();
+            if (other !== v && !f.enum.includes(other)) add({ name: `${slug}_enum_other_case`, technique: "EP", coverage_item: `${p} as ${JSON.stringify(other)}: a listed value in another case`, expect_valid: false, invalid_because: { path: p, keyword: "enum" }, oracle: "specified", set: { [p]: other } });
+        }
         if (num && f.multipleOf !== undefined) add({ name: `${slug}_not_a_multiple`, technique: "EP", coverage_item: `${p} not a multiple of ${f.multipleOf}`, expect_valid: false, invalid_because: { path: p, keyword: "multipleOf" }, oracle: "specified", set: { [p]: round((f.minimum ?? 0) + f.multipleOf / 3, f.multipleOf / 1000) } });
         if (f.type === "integer") add({ name: `${slug}_fraction`, technique: "EP", coverage_item: `${p} with a fraction though an integer`, expect_valid: false, invalid_because: { path: p, keyword: "type" }, oracle: "specified", set: { [p]: (f.minimum ?? 0) + 0.5 } });
         if (f.type === "array") {

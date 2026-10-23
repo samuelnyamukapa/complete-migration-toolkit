@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "A catalog item as the Create and Edit forms take it. Written by the AI tester from BUSINESS_RULES.md; the person reviews it before the rows mean anything.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["Name", "Price", "PictureFileName", "CatalogBrandId", "CatalogTypeId", "AvailableStock", "RestockThreshold", "MaxStockThreshold"],
+  "properties": {
+    "Name": { "type": "string", "minLength": 1, "maxLength": 50, "description": "RULE-011: required; the 50-character limit exists only in the database, so a longer name gives an error page, not a field message (suspected defect)" },
+    "Description": { "type": ["string", "null"], "maxLength": 200, "description": "RULE-011: optional; the length is not stated for Description, 200 is the tester's guess (question for the owner)" },
+    "Price": { "type": "number", "minimum": 0, "maximum": 1000000, "multipleOf": 0.01, "description": "RULE-013: 0 to 1,000,000 with at most two decimals; 19.999 is rejected, 19.50 and 0 are accepted, 1000000.01 fails the Range rule. The message says 'positive' but 0 is accepted (suspected defect)" },
+    "PictureFileName": { "type": "string", "pattern": "^[A-Za-z0-9_-]+\\.(png|jpg|jpeg|gif)$", "default": "dummy.png", "description": "RULE-033: new items default to dummy.png; RULE-032: the MIME type comes from a fixed, case-sensitive extension map" },
+    "CatalogBrandId": { "type": "integer", "enum": [1, 2, 3, 4, 5], "description": "RULE-012: must reference an existing brand; RULE-030: the seed has 5 brands" },
+    "CatalogTypeId": { "type": "integer", "enum": [1, 2, 3, 4], "description": "RULE-012: must reference an existing type; RULE-030: the seed has 4 types" },
+    "AvailableStock": { "type": "integer", "minimum": 0, "maximum": 10000000, "description": "RULE-014: 0 to 10 million; 'The field Stock must be between 0 and 10 million.'" },
+    "RestockThreshold": { "type": "integer", "minimum": 0, "maximum": 10000000, "description": "RULE-014" },
+    "MaxStockThreshold": { "type": "integer", "minimum": 0, "maximum": 10000000, "description": "RULE-014; RULE-022: no rule relates it to RestockThreshold (question: should MaxStockThreshold >= RestockThreshold?)" },
+    "OnReorder": { "type": "boolean", "description": "RULE-022: never derived; a plain flag" }
+  }
+}

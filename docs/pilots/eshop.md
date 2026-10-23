@@ -194,3 +194,45 @@ The controllers are covered by the built-in HTTP adapter. The database, files an
 | REA read the assembly in about 2 seconds, with no other tools installed | Assemblies are a Discover source; REA is an optional companion |
 | Routes are guessed from controller names, so `PicController` shows `/Pic` where the real route is `/items/{id}/pic`. REA lists `[Route]` attributes but doesn't decode their arguments | **#46** |
 | REA's member comparison found almost nothing in common between the legacy catalog service and CatalogCore, because the namespace moved. It is built for two builds of one assembly | **#44**: compare a library's public surface after a namespace map |
+
+## Part 4: test data (23 October 2026)
+
+The first try of `cmtk data` (0.4.0, with the fixes below released in 0.4.1), on the same legacy eShop rules, without running anything against the system. Legacy eShop has no OpenAPI document and no JSON Schema, so the AI tester wrote two schemas from `BUSINESS_RULES.md`, each constraint quoting its rule, as the data skill says to do when there is none. They are in [examples/eshop-pilot/tester/cmtk/data/schemas](../../examples/eshop-pilot/tester/cmtk/data/schemas); the recipes compiled from them are beside them, and their summaries are the `data-*.DATA.md` files in [reports](../../examples/eshop-pilot/reports). The rows themselves are not kept in git: `cmtk data make <id>` regenerates them, byte for byte, from the seed in the recipe.
+
+| Schema | Rows | Technique | Happy paths |
+|---|---|---|---|
+| `catalog-item`: an item as the Create and Edit forms take it (RULE-011 to RULE-014, RULE-022, RULE-032, RULE-033) | 100, of which 49 the schema calls valid | 38 EP, 33 BVA-3, 20 hostile, 9 pairwise | 10 (10%) |
+| `customisation-row`: one row of `Setup/CatalogItems.csv`, the customisation import (RULE-015, RULE-030) | 76, of which 32 valid | 39 EP, 9 BVA-3, 20 hostile, 8 pairwise | 9 (12%) |
+
+What the rows look like against the rules:
+
+- **RULE-013** says a price of 19.999 is rejected, 19.50 and 0 are accepted and 1,000,000.01 fails. The recipe has exactly those conditions, named: `Price_minimum_at_3bva` (0), `Price_maximum_at_3bva` (1,000,000), `Price_maximum_above_3bva` (1,000,000.01, invalid), `Price_not_a_multiple` (invalid). Nobody typed them: they follow from `minimum`, `maximum` and `multipleOf`.
+- **RULE-014**'s three stock fields each get their six boundary rows, and `AvailableStock_fraction` for a decimal where an integer is expected.
+- **RULE-015** says the brand and type lookups are case-sensitive and a price of `12,5` throws. The recipe has `catalogtypename_enum_other_case` (`mug` for `Mug`), `price_breaks_pattern` and, in `rows/<name>.csv`, one CSV per condition with the import's own column names.
+- **Hostile rows** on every free-text field: a quote, markup, `=1+1`, a right-to-left override, emoji, 4,096 characters. The schema says these are valid where they fit the length, and marks the oracle `implicit`: what the system should do with them is a question, not a check.
+- **`cmtk data cases`** wrote 100 draft cases for `catalog-item` in a few seconds, one per row, each sending its row file to `POST /Catalog/Create`. All 100 are without `expect:`, because there is no OpenAPI document to take a status from. They were not kept, because they could not run (below).
+
+### What the schemas ask the owner
+
+These are the questions the tester's schemas carry in their `description` fields. The rows mean nothing until they are answered, which is why a person reviews the schema and the recipe, never the rows.
+
+| Question | From |
+|---|---|
+| `Description` has no stated length; 200 is a guess | RULE-011 |
+| Must `MaxStockThreshold` be at least `RestockThreshold`? RULE-022 says there is no cross-field rule, so the recipe has no row for it | RULE-022 |
+| RULE-015 says CSV rows skip the 50-character name limit, but RULE-011 says the database enforces it. Which is right for the import? | RULE-011, RULE-015 |
+| Brand ids 1 to 5 and type ids 1 to 4 are the seed's (RULE-030). A row with id 6 tests "unknown brand", but only on a database seeded that way | RULE-012, RULE-030 |
+| The price message says "positive" but 0 is accepted; a brand-not-found error reports the type name. Both are suspected defects in the rules file, not findings from a run | RULE-013, RULE-015 |
+
+### What we learnt
+
+| What happened | What we did |
+|---|---|
+| The rows could not be sent. `/Catalog/Create` takes a form (`application/x-www-form-urlencoded`) with an anti-forgery token from the Create page (RULE-009); the cases send JSON. The customisation import takes a whole file at start-up, not a request | **Follow-up:** form-encoded bodies from a row, and a token taken from a page, are the next step for `cmtk data cases` (#55). A file an adapter puts in place before a run is part of #51 |
+| The row that breaks a `pattern` was `\u0000pattern-breaker\u0000`: right, and unreadable in a CSV, a workbook or a report | **Fixed:** a printable string the pattern refuses, `!!! not a match` |
+| RULE-015's lookups are case-sensitive, and no row tried `mug` for `Mug` | **Fixed:** every string enum gets a row with a listed value in another case |
+| A CSV import takes one file per condition, and the make wrote one JSON per row and one CSV for all of them | **Fixed:** `rows/<name>.csv`, the data columns alone |
+| In a CSV, `null`, an empty string and a missing value all look like an empty cell, so `availablestock_null` and a pairwise row that leaves `availablestock` out are the same file | **Follow-up:** a recipe for a CSV or fixed-width shape should fold those into one row (#50) |
+| Rows for the Create form are what the form posts, with the brand as an id. Rows for the import are what the CSV holds, with the brand as a name. The same item needs two schemas, one per surface | Expected: one recipe per surface, as the skill says |
+
+The try took about ten minutes, most of it writing the two schemas from the rules. Generation and checking took seconds.

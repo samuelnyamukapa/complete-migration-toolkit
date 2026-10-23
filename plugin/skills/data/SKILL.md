@@ -22,7 +22,7 @@ The **project** is the folder that holds the manifest. Pass `manifest` to every 
 | Tool | What it does |
 |---|---|
 | `cmtk_data_plan` | Compiles the recipe: every field with its constraints and source, and the rows every technique calls for |
-| `cmtk_data_make` | Regenerates the rows from the seed, checks each against the schema, writes `rows.json`, one file per row, `rows.csv` and `rows.xlsx` |
+| `cmtk_data_make` | Regenerates the rows from the seed, checks each against the schema, writes `rows.json`, `rows.csv`, one JSON and one CSV per row, and `rows.xlsx` |
 | `cmtk_data_check` | Checks a recipe a person edited: rows still regenerate, quotas still met |
 | `cmtk_data_cases` | One draft case per row, sending the row from its file |
 | `cmtk_check`, `cmtk_commands_for_person` | As in every skill |

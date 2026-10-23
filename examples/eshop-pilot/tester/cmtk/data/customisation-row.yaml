@@ -1,0 +1,821 @@
+# A test-data recipe, written by `cmtk data plan`. Review this file, not the rows: `cmtk data make`
+# regenerates the rows from it, the same ones every time, from the seed and the clock below.
+# Each row is named by the condition it exercises and says which technique chose it.
+recipe:
+  id: customisation-row
+  seed: 20260115
+  clock: 2026-01-15T09:30:00Z
+  locale: en_GB
+  source:
+    file: cmtk/data/schemas/customisation-row.json
+    sha256: 4ef0961dc868c3bc51a32850b15c12b3ecf8c7dd9ac34e0498e7bbb98473f827
+  generators:
+    cmtk: 0.4.1
+    "@faker-js/faker": 10.6.0
+  quotas:
+    max_happy_share: 0.5
+    boundaries_on_every_ordered_field: true
+    negative_for_every_field: true
+  fields:
+    - path: $
+      type: object
+      required: true
+      nullable: false
+      constraints: {}
+      source: customisation-row.json#
+      valid_from: object
+    - path: $.catalogtypename
+      type: string
+      required: true
+      nullable: false
+      constraints:
+        enum:
+          - Mug
+          - T-Shirt
+          - Sheet
+          - USB Memory Stick
+      source: customisation-row.json#/properties/catalogtypename
+      valid_from: enum
+      note: "RULE-015: the type lookup is case-sensitive; RULE-030 names the 4 seed types"
+    - path: $.catalogbrandname
+      type: string
+      required: true
+      nullable: false
+      constraints:
+        enum:
+          - Azure
+          - .NET
+          - Visual Studio
+          - SQL Server
+          - Other
+      source: customisation-row.json#/properties/catalogbrandname
+      valid_from: enum
+      note: "RULE-015: the brand lookup is case-sensitive; RULE-030 names the 5 seed brands. Suspected defect: a brand-not-found error reports the type name"
+    - path: $.description
+      type: string
+      required: true
+      nullable: false
+      constraints:
+        maxLength: 200
+      source: customisation-row.json#/properties/description
+      valid_from: string
+      note: "RULE-015: required header; CSV rows skip the model range rules"
+    - path: $.name
+      type: string
+      required: true
+      nullable: false
+      constraints:
+        minLength: 1
+        maxLength: 50
+      source: customisation-row.json#/properties/name
+      valid_from: string
+      note: "RULE-015 says CSV rows skip the 50-character limit, but RULE-011 says the database enforces it: question for the owner"
+    - path: $.price
+      type: string
+      required: true
+      nullable: false
+      constraints:
+        pattern: ^[0-9]+(\.[0-9]{1,2})?$
+      source: customisation-row.json#/properties/price
+      valid_from: pattern
+      note: "RULE-015: parsed with AllowDecimalPoint and InvariantCulture: no thousands separator, no minus sign; '12,5' throws 'price=12,5is not a valid decimal number'"
+    - path: $.pictureFileName
+      type: string
+      required: true
+      nullable: false
+      constraints:
+        pattern: ^[A-Za-z0-9_-]+\.(png|jpg)$
+      source: customisation-row.json#/properties/pictureFileName
+      valid_from: pattern
+      note: "RULE-015: required header"
+    - path: $.availablestock
+      type: string
+      required: false
+      nullable: false
+      constraints:
+        pattern: ^[0-9]{1,8}$
+      source: customisation-row.json#/properties/availablestock
+      valid_from: pattern
+      note: "RULE-015: optional; must parse as an integer (suspected defect: the error prints the unassigned variable)"
+    - path: $.restockthreshold
+      type: string
+      required: false
+      nullable: false
+      constraints:
+        pattern: ^[0-9]{1,8}$
+      source: customisation-row.json#/properties/restockthreshold
+      valid_from: pattern
+      note: "RULE-015: optional"
+    - path: $.maxstockthreshold
+      type: string
+      required: false
+      nullable: false
+      constraints:
+        pattern: ^[0-9]{1,8}$
+      source: customisation-row.json#/properties/maxstockthreshold
+      valid_from: pattern
+      note: "RULE-015: optional"
+    - path: $.onreorder
+      type: string
+      required: false
+      nullable: false
+      constraints:
+        enum:
+          - "true"
+          - "false"
+      source: customisation-row.json#/properties/onreorder
+      valid_from: enum
+      note: "RULE-015: optional; parsed as a boolean"
+  rows:
+    - name: baseline_valid
+      technique: EP
+      coverage_item: "every field: a valid representative"
+      expect_valid: true
+      oracle: specified
+    - name: body_not_an_object
+      technique: EP
+      coverage_item: $ is a list, not an object
+      expect_valid: false
+      invalid_because:
+        path: $
+        keyword: type
+      oracle: specified
+      replace_body: []
+    - name: catalogtypename_missing
+      technique: EP
+      coverage_item: $.catalogtypename missing though required
+      expect_valid: false
+      invalid_because:
+        path: $.catalogtypename
+        keyword: required
+      oracle: specified
+      unset:
+        - $.catalogtypename
+    - name: catalogtypename_null
+      technique: EP
+      coverage_item: $.catalogtypename null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.catalogtypename
+        keyword: type
+      oracle: specified
+      set:
+        $.catalogtypename: null
+    - name: catalogtypename_wrong_type
+      technique: EP
+      coverage_item: $.catalogtypename of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.catalogtypename
+        keyword: enum
+      oracle: specified
+      set:
+        $.catalogtypename: 12345
+    - name: catalogtypename_not_in_enum
+      technique: EP
+      coverage_item: $.catalogtypename outside ["Mug","T-Shirt","Sheet","USB Memory Stick"]
+      expect_valid: false
+      invalid_because:
+        path: $.catalogtypename
+        keyword: enum
+      oracle: specified
+      set:
+        $.catalogtypename: not-a-valid-choice
+    - name: catalogtypename_enum_other_case
+      technique: EP
+      coverage_item: '$.catalogtypename as "mug": a listed value in another case'
+      expect_valid: false
+      invalid_because:
+        path: $.catalogtypename
+        keyword: enum
+      oracle: specified
+      set:
+        $.catalogtypename: mug
+    - name: catalogbrandname_missing
+      technique: EP
+      coverage_item: $.catalogbrandname missing though required
+      expect_valid: false
+      invalid_because:
+        path: $.catalogbrandname
+        keyword: required
+      oracle: specified
+      unset:
+        - $.catalogbrandname
+    - name: catalogbrandname_null
+      technique: EP
+      coverage_item: $.catalogbrandname null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.catalogbrandname
+        keyword: type
+      oracle: specified
+      set:
+        $.catalogbrandname: null
+    - name: catalogbrandname_wrong_type
+      technique: EP
+      coverage_item: $.catalogbrandname of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.catalogbrandname
+        keyword: enum
+      oracle: specified
+      set:
+        $.catalogbrandname: 12345
+    - name: catalogbrandname_not_in_enum
+      technique: EP
+      coverage_item: $.catalogbrandname outside ["Azure",".NET","Visual Studio","SQL Server","Other"]
+      expect_valid: false
+      invalid_because:
+        path: $.catalogbrandname
+        keyword: enum
+      oracle: specified
+      set:
+        $.catalogbrandname: not-a-valid-choice
+    - name: catalogbrandname_enum_other_case
+      technique: EP
+      coverage_item: '$.catalogbrandname as "azure": a listed value in another case'
+      expect_valid: false
+      invalid_because:
+        path: $.catalogbrandname
+        keyword: enum
+      oracle: specified
+      set:
+        $.catalogbrandname: azure
+    - name: description_maxLength_below_3bva
+      technique: BVA-3
+      coverage_item: $.description one character shorter than 200
+      expect_valid: true
+      oracle: specified
+      set:
+        $.description: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    - name: description_maxLength_at_3bva
+      technique: BVA-3
+      coverage_item: $.description exactly 200 characters
+      expect_valid: true
+      oracle: specified
+      set:
+        $.description: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    - name: description_maxLength_above_3bva
+      technique: BVA-3
+      coverage_item: $.description one character longer than 200
+      expect_valid: false
+      invalid_because:
+        path: $.description
+        keyword: maxLength
+      oracle: specified
+      set:
+        $.description: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    - name: description_missing
+      technique: EP
+      coverage_item: $.description missing though required
+      expect_valid: false
+      invalid_because:
+        path: $.description
+        keyword: required
+      oracle: specified
+      unset:
+        - $.description
+    - name: description_null
+      technique: EP
+      coverage_item: $.description null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.description
+        keyword: type
+      oracle: specified
+      set:
+        $.description: null
+    - name: description_wrong_type
+      technique: EP
+      coverage_item: $.description of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.description
+        keyword: type
+      oracle: specified
+      set:
+        $.description: 12345
+    - name: description_hostile_empty
+      technique: hostile
+      coverage_item: "$.description: an empty string where text is expected"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.description: ""
+    - name: description_hostile_spaces_only
+      technique: hostile
+      coverage_item: "$.description: whitespace that trims to nothing"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.description: "   "
+    - name: description_hostile_padded
+      technique: hostile
+      coverage_item: "$.description: leading and trailing spaces, which some systems keep and some drop"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.description: "  padded  "
+    - name: description_hostile_sql_quote
+      technique: hostile
+      coverage_item: "$.description: a quote that breaks string concatenation into SQL"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.description: O'Brien' OR '1'='1
+    - name: description_hostile_html
+      technique: hostile
+      coverage_item: "$.description: markup that a page may render"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.description: <script>alert(1)</script>
+    - name: description_hostile_csv_formula
+      technique: hostile
+      coverage_item: "$.description: a leading = that a spreadsheet runs as a formula (OWASP CSV injection)"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.description: =1+1
+    - name: description_hostile_rtl_override
+      technique: hostile
+      coverage_item: "$.description: a right-to-left override that hides what the text really says"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.description: abc‮def
+    - name: description_hostile_accents
+      technique: hostile
+      coverage_item: "$.description: letters outside ASCII"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.description: Ñandú café
+    - name: description_hostile_emoji
+      technique: hostile
+      coverage_item: "$.description: characters outside the Basic Multilingual Plane; a length of 2 or 4 depending on the system"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.description: 😀🚀
+    - name: description_hostile_long
+      technique: hostile
+      coverage_item: "$.description: 4,096 characters: past most column widths"
+      expect_valid: false
+      invalid_because:
+        path: $.description
+        keyword: maxLength
+      oracle: specified
+      set:
+        $.description: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    - name: name_minLength_below_3bva
+      technique: BVA-3
+      coverage_item: $.name one character shorter than 1
+      expect_valid: false
+      invalid_because:
+        path: $.name
+        keyword: minLength
+      oracle: specified
+      set:
+        $.name: ""
+    - name: name_minLength_at_3bva
+      technique: BVA-3
+      coverage_item: $.name exactly 1 characters
+      expect_valid: true
+      oracle: specified
+      set:
+        $.name: a
+    - name: name_minLength_above_3bva
+      technique: BVA-3
+      coverage_item: $.name 2 characters
+      expect_valid: true
+      oracle: specified
+      set:
+        $.name: aa
+    - name: name_maxLength_below_3bva
+      technique: BVA-3
+      coverage_item: $.name one character shorter than 50
+      expect_valid: true
+      oracle: specified
+      set:
+        $.name: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    - name: name_maxLength_at_3bva
+      technique: BVA-3
+      coverage_item: $.name exactly 50 characters
+      expect_valid: true
+      oracle: specified
+      set:
+        $.name: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    - name: name_maxLength_above_3bva
+      technique: BVA-3
+      coverage_item: $.name one character longer than 50
+      expect_valid: false
+      invalid_because:
+        path: $.name
+        keyword: maxLength
+      oracle: specified
+      set:
+        $.name: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    - name: name_missing
+      technique: EP
+      coverage_item: $.name missing though required
+      expect_valid: false
+      invalid_because:
+        path: $.name
+        keyword: required
+      oracle: specified
+      unset:
+        - $.name
+    - name: name_null
+      technique: EP
+      coverage_item: $.name null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.name
+        keyword: type
+      oracle: specified
+      set:
+        $.name: null
+    - name: name_wrong_type
+      technique: EP
+      coverage_item: $.name of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.name
+        keyword: type
+      oracle: specified
+      set:
+        $.name: 12345
+    - name: name_hostile_empty
+      technique: hostile
+      coverage_item: "$.name: an empty string where text is expected"
+      expect_valid: false
+      invalid_because:
+        path: $.name
+        keyword: minLength
+      oracle: specified
+      set:
+        $.name: ""
+    - name: name_hostile_spaces_only
+      technique: hostile
+      coverage_item: "$.name: whitespace that trims to nothing"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.name: "   "
+    - name: name_hostile_padded
+      technique: hostile
+      coverage_item: "$.name: leading and trailing spaces, which some systems keep and some drop"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.name: "  padded  "
+    - name: name_hostile_sql_quote
+      technique: hostile
+      coverage_item: "$.name: a quote that breaks string concatenation into SQL"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.name: O'Brien' OR '1'='1
+    - name: name_hostile_html
+      technique: hostile
+      coverage_item: "$.name: markup that a page may render"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.name: <script>alert(1)</script>
+    - name: name_hostile_csv_formula
+      technique: hostile
+      coverage_item: "$.name: a leading = that a spreadsheet runs as a formula (OWASP CSV injection)"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.name: =1+1
+    - name: name_hostile_rtl_override
+      technique: hostile
+      coverage_item: "$.name: a right-to-left override that hides what the text really says"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.name: abc‮def
+    - name: name_hostile_accents
+      technique: hostile
+      coverage_item: "$.name: letters outside ASCII"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.name: Ñandú café
+    - name: name_hostile_emoji
+      technique: hostile
+      coverage_item: "$.name: characters outside the Basic Multilingual Plane; a length of 2 or 4 depending on the system"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.name: 😀🚀
+    - name: name_hostile_long
+      technique: hostile
+      coverage_item: "$.name: 4,096 characters: past most column widths"
+      expect_valid: false
+      invalid_because:
+        path: $.name
+        keyword: maxLength
+      oracle: specified
+      set:
+        $.name: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    - name: price_missing
+      technique: EP
+      coverage_item: $.price missing though required
+      expect_valid: false
+      invalid_because:
+        path: $.price
+        keyword: required
+      oracle: specified
+      unset:
+        - $.price
+    - name: price_null
+      technique: EP
+      coverage_item: $.price null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.price
+        keyword: type
+      oracle: specified
+      set:
+        $.price: null
+    - name: price_wrong_type
+      technique: EP
+      coverage_item: $.price of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.price
+        keyword: type
+      oracle: specified
+      set:
+        $.price: 12345
+    - name: price_breaks_pattern
+      technique: EP
+      coverage_item: $.price does not match ^[0-9]+(\.[0-9]{1,2})?$
+      expect_valid: false
+      invalid_because:
+        path: $.price
+        keyword: pattern
+      oracle: specified
+      set:
+        $.price: "!!! not a match"
+    - name: pictureFileName_missing
+      technique: EP
+      coverage_item: $.pictureFileName missing though required
+      expect_valid: false
+      invalid_because:
+        path: $.pictureFileName
+        keyword: required
+      oracle: specified
+      unset:
+        - $.pictureFileName
+    - name: pictureFileName_null
+      technique: EP
+      coverage_item: $.pictureFileName null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.pictureFileName
+        keyword: type
+      oracle: specified
+      set:
+        $.pictureFileName: null
+    - name: pictureFileName_wrong_type
+      technique: EP
+      coverage_item: $.pictureFileName of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.pictureFileName
+        keyword: type
+      oracle: specified
+      set:
+        $.pictureFileName: 12345
+    - name: pictureFileName_breaks_pattern
+      technique: EP
+      coverage_item: $.pictureFileName does not match ^[A-Za-z0-9_-]+\.(png|jpg)$
+      expect_valid: false
+      invalid_because:
+        path: $.pictureFileName
+        keyword: pattern
+      oracle: specified
+      set:
+        $.pictureFileName: "!!! not a match"
+    - name: availablestock_null
+      technique: EP
+      coverage_item: $.availablestock null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.availablestock
+        keyword: type
+      oracle: specified
+      set:
+        $.availablestock: null
+    - name: availablestock_wrong_type
+      technique: EP
+      coverage_item: $.availablestock of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.availablestock
+        keyword: type
+      oracle: specified
+      set:
+        $.availablestock: 12345
+    - name: availablestock_breaks_pattern
+      technique: EP
+      coverage_item: $.availablestock does not match ^[0-9]{1,8}$
+      expect_valid: false
+      invalid_because:
+        path: $.availablestock
+        keyword: pattern
+      oracle: specified
+      set:
+        $.availablestock: "!!! not a match"
+    - name: restockthreshold_null
+      technique: EP
+      coverage_item: $.restockthreshold null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.restockthreshold
+        keyword: type
+      oracle: specified
+      set:
+        $.restockthreshold: null
+    - name: restockthreshold_wrong_type
+      technique: EP
+      coverage_item: $.restockthreshold of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.restockthreshold
+        keyword: type
+      oracle: specified
+      set:
+        $.restockthreshold: 12345
+    - name: restockthreshold_breaks_pattern
+      technique: EP
+      coverage_item: $.restockthreshold does not match ^[0-9]{1,8}$
+      expect_valid: false
+      invalid_because:
+        path: $.restockthreshold
+        keyword: pattern
+      oracle: specified
+      set:
+        $.restockthreshold: "!!! not a match"
+    - name: maxstockthreshold_null
+      technique: EP
+      coverage_item: $.maxstockthreshold null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.maxstockthreshold
+        keyword: type
+      oracle: specified
+      set:
+        $.maxstockthreshold: null
+    - name: maxstockthreshold_wrong_type
+      technique: EP
+      coverage_item: $.maxstockthreshold of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.maxstockthreshold
+        keyword: type
+      oracle: specified
+      set:
+        $.maxstockthreshold: 12345
+    - name: maxstockthreshold_breaks_pattern
+      technique: EP
+      coverage_item: $.maxstockthreshold does not match ^[0-9]{1,8}$
+      expect_valid: false
+      invalid_because:
+        path: $.maxstockthreshold
+        keyword: pattern
+      oracle: specified
+      set:
+        $.maxstockthreshold: "!!! not a match"
+    - name: onreorder_null
+      technique: EP
+      coverage_item: $.onreorder null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.onreorder
+        keyword: type
+      oracle: specified
+      set:
+        $.onreorder: null
+    - name: onreorder_wrong_type
+      technique: EP
+      coverage_item: $.onreorder of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.onreorder
+        keyword: enum
+      oracle: specified
+      set:
+        $.onreorder: 12345
+    - name: onreorder_not_in_enum
+      technique: EP
+      coverage_item: $.onreorder outside ["true","false"]
+      expect_valid: false
+      invalid_because:
+        path: $.onreorder
+        keyword: enum
+      oracle: specified
+      set:
+        $.onreorder: not-a-valid-choice
+    - name: onreorder_enum_other_case
+      technique: EP
+      coverage_item: '$.onreorder as "TRUE": a listed value in another case'
+      expect_valid: false
+      invalid_because:
+        path: $.onreorder
+        keyword: enum
+      oracle: specified
+      set:
+        $.onreorder: "TRUE"
+    - name: pairwise_01
+      technique: pairwise
+      coverage_item: $.catalogtypename="Mug" & $.catalogbrandname="Azure"; $.catalogtypename="Mug" & $.availablestock present; $.catalogtypename="Mug" & $.restockthreshold present; and 12 more pairs
+      expect_valid: true
+      oracle: specified
+      set:
+        $.catalogtypename: Mug
+        $.catalogbrandname: Azure
+        $.onreorder: "true"
+    - name: pairwise_02
+      technique: pairwise
+      coverage_item: $.catalogtypename="Mug" & $.catalogbrandname=".NET"; $.catalogtypename="Mug" & $.availablestock absent; $.catalogtypename="Mug" & $.restockthreshold absent; and 12 more pairs
+      expect_valid: true
+      oracle: specified
+      set:
+        $.catalogtypename: Mug
+        $.catalogbrandname: .NET
+        $.onreorder: "false"
+      unset:
+        - $.availablestock
+        - $.restockthreshold
+        - $.maxstockthreshold
+    - name: pairwise_03
+      technique: pairwise
+      coverage_item: $.catalogtypename="Mug" & $.catalogbrandname="Visual Studio"; $.catalogtypename="Mug" & $.onreorder absent; $.catalogbrandname="Visual Studio" & $.availablestock present; and 8 more pairs
+      expect_valid: true
+      oracle: specified
+      set:
+        $.catalogtypename: Mug
+        $.catalogbrandname: Visual Studio
+      unset:
+        - $.restockthreshold
+        - $.onreorder
+    - name: pairwise_04
+      technique: pairwise
+      coverage_item: $.catalogtypename="Mug" & $.catalogbrandname="SQL Server"; $.catalogbrandname="SQL Server" & $.availablestock present; $.catalogbrandname="SQL Server" & $.restockthreshold present; and 6 more pairs
+      expect_valid: true
+      oracle: specified
+      set:
+        $.catalogtypename: Mug
+        $.catalogbrandname: SQL Server
+        $.onreorder: "false"
+      unset:
+        - $.maxstockthreshold
+    - name: pairwise_05
+      technique: pairwise
+      coverage_item: $.catalogtypename="Mug" & $.catalogbrandname="Other"; $.catalogbrandname="Other" & $.availablestock present; $.catalogbrandname="Other" & $.restockthreshold present; and 3 more pairs
+      expect_valid: true
+      oracle: specified
+      set:
+        $.catalogtypename: Mug
+        $.catalogbrandname: Other
+        $.onreorder: "false"
+    - name: pairwise_06
+      technique: pairwise
+      coverage_item: $.catalogbrandname="Azure" & $.availablestock absent; $.catalogbrandname="Azure" & $.onreorder absent; $.availablestock absent & $.restockthreshold present; and 3 more pairs
+      expect_valid: true
+      oracle: specified
+      set:
+        $.catalogtypename: Mug
+        $.catalogbrandname: Azure
+      unset:
+        - $.availablestock
+        - $.onreorder
+    - name: pairwise_07
+      technique: pairwise
+      coverage_item: $.catalogbrandname="Azure" & $.restockthreshold absent; $.catalogbrandname="Azure" & $.maxstockthreshold absent; $.restockthreshold absent & $.onreorder="true"; and 1 more pairs
+      expect_valid: true
+      oracle: specified
+      set:
+        $.catalogtypename: Mug
+        $.catalogbrandname: Azure
+        $.onreorder: "true"
+      unset:
+        - $.restockthreshold
+        - $.maxstockthreshold
+    - name: pairwise_08
+      technique: pairwise
+      coverage_item: $.catalogbrandname="Azure" & $.onreorder="false"
+      expect_valid: true
+      oracle: specified
+      set:
+        $.catalogtypename: Mug
+        $.catalogbrandname: Azure
+        $.onreorder: "false"
+  notes:
+    - Pairwise rows cover every pair of values of $.catalogtypename, $.catalogbrandname, $.availablestock, $.restockthreshold, $.maxstockthreshold, $.onreorder (8 rows).

@@ -1,0 +1,1004 @@
+# A test-data recipe, written by `cmtk data plan`. Review this file, not the rows: `cmtk data make`
+# regenerates the rows from it, the same ones every time, from the seed and the clock below.
+# Each row is named by the condition it exercises and says which technique chose it.
+recipe:
+  id: catalog-item
+  seed: 20260115
+  clock: 2026-01-15T09:30:00Z
+  locale: en_GB
+  source:
+    file: cmtk/data/schemas/catalog-item.json
+    sha256: 4000b6a3242e7debd097a5ca4606cb5bf1491fd4d516fbcca150e994d6312457
+  generators:
+    cmtk: 0.4.1
+    "@faker-js/faker": 10.6.0
+  quotas:
+    max_happy_share: 0.5
+    boundaries_on_every_ordered_field: true
+    negative_for_every_field: true
+  fields:
+    - path: $
+      type: object
+      required: true
+      nullable: false
+      constraints: {}
+      source: catalog-item.json#
+      valid_from: object
+    - path: $.Name
+      type: string
+      required: true
+      nullable: false
+      constraints:
+        minLength: 1
+        maxLength: 50
+      source: catalog-item.json#/properties/Name
+      valid_from: string
+      note: "RULE-011: required; the 50-character limit exists only in the database, so a longer name gives an error page, not a field message (suspected defect)"
+    - path: $.Description
+      type: string
+      required: false
+      nullable: true
+      constraints:
+        maxLength: 200
+      source: catalog-item.json#/properties/Description
+      valid_from: string
+      note: "RULE-011: optional; the length is not stated for Description, 200 is the tester's guess (question for the owner)"
+    - path: $.Price
+      type: number
+      required: true
+      nullable: false
+      constraints:
+        minimum: 0
+        maximum: 1000000
+        multipleOf: 0.01
+      source: catalog-item.json#/properties/Price
+      valid_from: number
+      note: "RULE-013: 0 to 1,000,000 with at most two decimals; 19.999 is rejected, 19.50 and 0 are accepted, 1000000.01 fails the Range rule. The message says 'positive' but 0 is accepted (suspected defect)"
+    - path: $.PictureFileName
+      type: string
+      required: true
+      nullable: false
+      constraints:
+        pattern: ^[A-Za-z0-9_-]+\.(png|jpg|jpeg|gif)$
+      source: catalog-item.json#/properties/PictureFileName
+      valid_from: pattern
+      note: "RULE-033: new items default to dummy.png; RULE-032: the MIME type comes from a fixed, case-sensitive extension map"
+    - path: $.CatalogBrandId
+      type: integer
+      required: true
+      nullable: false
+      constraints:
+        enum:
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+      source: catalog-item.json#/properties/CatalogBrandId
+      valid_from: enum
+      note: "RULE-012: must reference an existing brand; RULE-030: the seed has 5 brands"
+    - path: $.CatalogTypeId
+      type: integer
+      required: true
+      nullable: false
+      constraints:
+        enum:
+          - 1
+          - 2
+          - 3
+          - 4
+      source: catalog-item.json#/properties/CatalogTypeId
+      valid_from: enum
+      note: "RULE-012: must reference an existing type; RULE-030: the seed has 4 types"
+    - path: $.AvailableStock
+      type: integer
+      required: true
+      nullable: false
+      constraints:
+        minimum: 0
+        maximum: 10000000
+      source: catalog-item.json#/properties/AvailableStock
+      valid_from: integer
+      note: "RULE-014: 0 to 10 million; 'The field Stock must be between 0 and 10 million.'"
+    - path: $.RestockThreshold
+      type: integer
+      required: true
+      nullable: false
+      constraints:
+        minimum: 0
+        maximum: 10000000
+      source: catalog-item.json#/properties/RestockThreshold
+      valid_from: integer
+      note: RULE-014
+    - path: $.MaxStockThreshold
+      type: integer
+      required: true
+      nullable: false
+      constraints:
+        minimum: 0
+        maximum: 10000000
+      source: catalog-item.json#/properties/MaxStockThreshold
+      valid_from: integer
+      note: "RULE-014; RULE-022: no rule relates it to RestockThreshold (question: should MaxStockThreshold >= RestockThreshold?)"
+    - path: $.OnReorder
+      type: boolean
+      required: false
+      nullable: false
+      constraints: {}
+      source: catalog-item.json#/properties/OnReorder
+      valid_from: boolean
+      note: "RULE-022: never derived; a plain flag"
+  rows:
+    - name: baseline_valid
+      technique: EP
+      coverage_item: "every field: a valid representative"
+      expect_valid: true
+      oracle: specified
+    - name: body_not_an_object
+      technique: EP
+      coverage_item: $ is a list, not an object
+      expect_valid: false
+      invalid_because:
+        path: $
+        keyword: type
+      oracle: specified
+      replace_body: []
+    - name: Name_minLength_below_3bva
+      technique: BVA-3
+      coverage_item: $.Name one character shorter than 1
+      expect_valid: false
+      invalid_because:
+        path: $.Name
+        keyword: minLength
+      oracle: specified
+      set:
+        $.Name: ""
+    - name: Name_minLength_at_3bva
+      technique: BVA-3
+      coverage_item: $.Name exactly 1 characters
+      expect_valid: true
+      oracle: specified
+      set:
+        $.Name: a
+    - name: Name_minLength_above_3bva
+      technique: BVA-3
+      coverage_item: $.Name 2 characters
+      expect_valid: true
+      oracle: specified
+      set:
+        $.Name: aa
+    - name: Name_maxLength_below_3bva
+      technique: BVA-3
+      coverage_item: $.Name one character shorter than 50
+      expect_valid: true
+      oracle: specified
+      set:
+        $.Name: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    - name: Name_maxLength_at_3bva
+      technique: BVA-3
+      coverage_item: $.Name exactly 50 characters
+      expect_valid: true
+      oracle: specified
+      set:
+        $.Name: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    - name: Name_maxLength_above_3bva
+      technique: BVA-3
+      coverage_item: $.Name one character longer than 50
+      expect_valid: false
+      invalid_because:
+        path: $.Name
+        keyword: maxLength
+      oracle: specified
+      set:
+        $.Name: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    - name: Name_missing
+      technique: EP
+      coverage_item: $.Name missing though required
+      expect_valid: false
+      invalid_because:
+        path: $.Name
+        keyword: required
+      oracle: specified
+      unset:
+        - $.Name
+    - name: Name_null
+      technique: EP
+      coverage_item: $.Name null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.Name
+        keyword: type
+      oracle: specified
+      set:
+        $.Name: null
+    - name: Name_wrong_type
+      technique: EP
+      coverage_item: $.Name of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.Name
+        keyword: type
+      oracle: specified
+      set:
+        $.Name: 12345
+    - name: Name_hostile_empty
+      technique: hostile
+      coverage_item: "$.Name: an empty string where text is expected"
+      expect_valid: false
+      invalid_because:
+        path: $.Name
+        keyword: minLength
+      oracle: specified
+      set:
+        $.Name: ""
+    - name: Name_hostile_spaces_only
+      technique: hostile
+      coverage_item: "$.Name: whitespace that trims to nothing"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Name: "   "
+    - name: Name_hostile_padded
+      technique: hostile
+      coverage_item: "$.Name: leading and trailing spaces, which some systems keep and some drop"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Name: "  padded  "
+    - name: Name_hostile_sql_quote
+      technique: hostile
+      coverage_item: "$.Name: a quote that breaks string concatenation into SQL"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Name: O'Brien' OR '1'='1
+    - name: Name_hostile_html
+      technique: hostile
+      coverage_item: "$.Name: markup that a page may render"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Name: <script>alert(1)</script>
+    - name: Name_hostile_csv_formula
+      technique: hostile
+      coverage_item: "$.Name: a leading = that a spreadsheet runs as a formula (OWASP CSV injection)"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Name: =1+1
+    - name: Name_hostile_rtl_override
+      technique: hostile
+      coverage_item: "$.Name: a right-to-left override that hides what the text really says"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Name: abc‮def
+    - name: Name_hostile_accents
+      technique: hostile
+      coverage_item: "$.Name: letters outside ASCII"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Name: Ñandú café
+    - name: Name_hostile_emoji
+      technique: hostile
+      coverage_item: "$.Name: characters outside the Basic Multilingual Plane; a length of 2 or 4 depending on the system"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Name: 😀🚀
+    - name: Name_hostile_long
+      technique: hostile
+      coverage_item: "$.Name: 4,096 characters: past most column widths"
+      expect_valid: false
+      invalid_because:
+        path: $.Name
+        keyword: maxLength
+      oracle: specified
+      set:
+        $.Name: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    - name: Description_maxLength_below_3bva
+      technique: BVA-3
+      coverage_item: $.Description one character shorter than 200
+      expect_valid: true
+      oracle: specified
+      set:
+        $.Description: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    - name: Description_maxLength_at_3bva
+      technique: BVA-3
+      coverage_item: $.Description exactly 200 characters
+      expect_valid: true
+      oracle: specified
+      set:
+        $.Description: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    - name: Description_maxLength_above_3bva
+      technique: BVA-3
+      coverage_item: $.Description one character longer than 200
+      expect_valid: false
+      invalid_because:
+        path: $.Description
+        keyword: maxLength
+      oracle: specified
+      set:
+        $.Description: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    - name: Description_wrong_type
+      technique: EP
+      coverage_item: $.Description of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.Description
+        keyword: type
+      oracle: specified
+      set:
+        $.Description: 12345
+    - name: Description_hostile_empty
+      technique: hostile
+      coverage_item: "$.Description: an empty string where text is expected"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Description: ""
+    - name: Description_hostile_spaces_only
+      technique: hostile
+      coverage_item: "$.Description: whitespace that trims to nothing"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Description: "   "
+    - name: Description_hostile_padded
+      technique: hostile
+      coverage_item: "$.Description: leading and trailing spaces, which some systems keep and some drop"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Description: "  padded  "
+    - name: Description_hostile_sql_quote
+      technique: hostile
+      coverage_item: "$.Description: a quote that breaks string concatenation into SQL"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Description: O'Brien' OR '1'='1
+    - name: Description_hostile_html
+      technique: hostile
+      coverage_item: "$.Description: markup that a page may render"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Description: <script>alert(1)</script>
+    - name: Description_hostile_csv_formula
+      technique: hostile
+      coverage_item: "$.Description: a leading = that a spreadsheet runs as a formula (OWASP CSV injection)"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Description: =1+1
+    - name: Description_hostile_rtl_override
+      technique: hostile
+      coverage_item: "$.Description: a right-to-left override that hides what the text really says"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Description: abc‮def
+    - name: Description_hostile_accents
+      technique: hostile
+      coverage_item: "$.Description: letters outside ASCII"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Description: Ñandú café
+    - name: Description_hostile_emoji
+      technique: hostile
+      coverage_item: "$.Description: characters outside the Basic Multilingual Plane; a length of 2 or 4 depending on the system"
+      expect_valid: true
+      oracle: implicit
+      set:
+        $.Description: 😀🚀
+    - name: Description_hostile_long
+      technique: hostile
+      coverage_item: "$.Description: 4,096 characters: past most column widths"
+      expect_valid: false
+      invalid_because:
+        path: $.Description
+        keyword: maxLength
+      oracle: specified
+      set:
+        $.Description: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    - name: Price_minimum_below_3bva
+      technique: BVA-3
+      coverage_item: $.Price below its minimum (0)
+      expect_valid: false
+      invalid_because:
+        path: $.Price
+        keyword: minimum
+      oracle: specified
+      set:
+        $.Price: -0.01
+    - name: Price_minimum_at_3bva
+      technique: BVA-3
+      coverage_item: $.Price at its lowest valid value (0)
+      expect_valid: true
+      oracle: specified
+      set:
+        $.Price: 0
+    - name: Price_minimum_above_3bva
+      technique: BVA-3
+      coverage_item: $.Price one step above its lowest valid value
+      expect_valid: true
+      oracle: specified
+      set:
+        $.Price: 0.01
+    - name: Price_maximum_below_3bva
+      technique: BVA-3
+      coverage_item: $.Price one step below its highest valid value
+      expect_valid: true
+      oracle: specified
+      set:
+        $.Price: 999999.99
+    - name: Price_maximum_at_3bva
+      technique: BVA-3
+      coverage_item: $.Price at its highest valid value (1000000)
+      expect_valid: true
+      oracle: specified
+      set:
+        $.Price: 1000000
+    - name: Price_maximum_above_3bva
+      technique: BVA-3
+      coverage_item: $.Price above its maximum (1000000)
+      expect_valid: false
+      invalid_because:
+        path: $.Price
+        keyword: maximum
+      oracle: specified
+      set:
+        $.Price: 1000000.01
+    - name: Price_missing
+      technique: EP
+      coverage_item: $.Price missing though required
+      expect_valid: false
+      invalid_because:
+        path: $.Price
+        keyword: required
+      oracle: specified
+      unset:
+        - $.Price
+    - name: Price_null
+      technique: EP
+      coverage_item: $.Price null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.Price
+        keyword: type
+      oracle: specified
+      set:
+        $.Price: null
+    - name: Price_wrong_type
+      technique: EP
+      coverage_item: $.Price of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.Price
+        keyword: type
+      oracle: specified
+      set:
+        $.Price: twelve
+    - name: Price_not_a_multiple
+      technique: EP
+      coverage_item: $.Price not a multiple of 0.01
+      expect_valid: false
+      invalid_because:
+        path: $.Price
+        keyword: multipleOf
+      oracle: specified
+      set:
+        $.Price: 0.00333
+    - name: PictureFileName_missing
+      technique: EP
+      coverage_item: $.PictureFileName missing though required
+      expect_valid: false
+      invalid_because:
+        path: $.PictureFileName
+        keyword: required
+      oracle: specified
+      unset:
+        - $.PictureFileName
+    - name: PictureFileName_null
+      technique: EP
+      coverage_item: $.PictureFileName null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.PictureFileName
+        keyword: type
+      oracle: specified
+      set:
+        $.PictureFileName: null
+    - name: PictureFileName_wrong_type
+      technique: EP
+      coverage_item: $.PictureFileName of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.PictureFileName
+        keyword: type
+      oracle: specified
+      set:
+        $.PictureFileName: 12345
+    - name: PictureFileName_breaks_pattern
+      technique: EP
+      coverage_item: $.PictureFileName does not match ^[A-Za-z0-9_-]+\.(png|jpg|jpeg|gif)$
+      expect_valid: false
+      invalid_because:
+        path: $.PictureFileName
+        keyword: pattern
+      oracle: specified
+      set:
+        $.PictureFileName: "!!! not a match"
+    - name: CatalogBrandId_missing
+      technique: EP
+      coverage_item: $.CatalogBrandId missing though required
+      expect_valid: false
+      invalid_because:
+        path: $.CatalogBrandId
+        keyword: required
+      oracle: specified
+      unset:
+        - $.CatalogBrandId
+    - name: CatalogBrandId_null
+      technique: EP
+      coverage_item: $.CatalogBrandId null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.CatalogBrandId
+        keyword: type
+      oracle: specified
+      set:
+        $.CatalogBrandId: null
+    - name: CatalogBrandId_wrong_type
+      technique: EP
+      coverage_item: $.CatalogBrandId of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.CatalogBrandId
+        keyword: enum
+      oracle: specified
+      set:
+        $.CatalogBrandId: twelve
+    - name: CatalogBrandId_not_in_enum
+      technique: EP
+      coverage_item: $.CatalogBrandId outside [1,2,3,4,5]
+      expect_valid: false
+      invalid_because:
+        path: $.CatalogBrandId
+        keyword: enum
+      oracle: specified
+      set:
+        $.CatalogBrandId: 999999
+    - name: CatalogBrandId_fraction
+      technique: EP
+      coverage_item: $.CatalogBrandId with a fraction though an integer
+      expect_valid: false
+      invalid_because:
+        path: $.CatalogBrandId
+        keyword: type
+      oracle: specified
+      set:
+        $.CatalogBrandId: 0.5
+    - name: CatalogTypeId_missing
+      technique: EP
+      coverage_item: $.CatalogTypeId missing though required
+      expect_valid: false
+      invalid_because:
+        path: $.CatalogTypeId
+        keyword: required
+      oracle: specified
+      unset:
+        - $.CatalogTypeId
+    - name: CatalogTypeId_null
+      technique: EP
+      coverage_item: $.CatalogTypeId null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.CatalogTypeId
+        keyword: type
+      oracle: specified
+      set:
+        $.CatalogTypeId: null
+    - name: CatalogTypeId_wrong_type
+      technique: EP
+      coverage_item: $.CatalogTypeId of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.CatalogTypeId
+        keyword: enum
+      oracle: specified
+      set:
+        $.CatalogTypeId: twelve
+    - name: CatalogTypeId_not_in_enum
+      technique: EP
+      coverage_item: $.CatalogTypeId outside [1,2,3,4]
+      expect_valid: false
+      invalid_because:
+        path: $.CatalogTypeId
+        keyword: enum
+      oracle: specified
+      set:
+        $.CatalogTypeId: 999999
+    - name: CatalogTypeId_fraction
+      technique: EP
+      coverage_item: $.CatalogTypeId with a fraction though an integer
+      expect_valid: false
+      invalid_because:
+        path: $.CatalogTypeId
+        keyword: type
+      oracle: specified
+      set:
+        $.CatalogTypeId: 0.5
+    - name: AvailableStock_minimum_below_3bva
+      technique: BVA-3
+      coverage_item: $.AvailableStock below its minimum (0)
+      expect_valid: false
+      invalid_because:
+        path: $.AvailableStock
+        keyword: minimum
+      oracle: specified
+      set:
+        $.AvailableStock: -1
+    - name: AvailableStock_minimum_at_3bva
+      technique: BVA-3
+      coverage_item: $.AvailableStock at its lowest valid value (0)
+      expect_valid: true
+      oracle: specified
+      set:
+        $.AvailableStock: 0
+    - name: AvailableStock_minimum_above_3bva
+      technique: BVA-3
+      coverage_item: $.AvailableStock one step above its lowest valid value
+      expect_valid: true
+      oracle: specified
+      set:
+        $.AvailableStock: 1
+    - name: AvailableStock_maximum_below_3bva
+      technique: BVA-3
+      coverage_item: $.AvailableStock one step below its highest valid value
+      expect_valid: true
+      oracle: specified
+      set:
+        $.AvailableStock: 9999999
+    - name: AvailableStock_maximum_at_3bva
+      technique: BVA-3
+      coverage_item: $.AvailableStock at its highest valid value (10000000)
+      expect_valid: true
+      oracle: specified
+      set:
+        $.AvailableStock: 10000000
+    - name: AvailableStock_maximum_above_3bva
+      technique: BVA-3
+      coverage_item: $.AvailableStock above its maximum (10000000)
+      expect_valid: false
+      invalid_because:
+        path: $.AvailableStock
+        keyword: maximum
+      oracle: specified
+      set:
+        $.AvailableStock: 10000001
+    - name: AvailableStock_missing
+      technique: EP
+      coverage_item: $.AvailableStock missing though required
+      expect_valid: false
+      invalid_because:
+        path: $.AvailableStock
+        keyword: required
+      oracle: specified
+      unset:
+        - $.AvailableStock
+    - name: AvailableStock_null
+      technique: EP
+      coverage_item: $.AvailableStock null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.AvailableStock
+        keyword: type
+      oracle: specified
+      set:
+        $.AvailableStock: null
+    - name: AvailableStock_wrong_type
+      technique: EP
+      coverage_item: $.AvailableStock of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.AvailableStock
+        keyword: type
+      oracle: specified
+      set:
+        $.AvailableStock: twelve
+    - name: AvailableStock_fraction
+      technique: EP
+      coverage_item: $.AvailableStock with a fraction though an integer
+      expect_valid: false
+      invalid_because:
+        path: $.AvailableStock
+        keyword: type
+      oracle: specified
+      set:
+        $.AvailableStock: 0.5
+    - name: RestockThreshold_minimum_below_3bva
+      technique: BVA-3
+      coverage_item: $.RestockThreshold below its minimum (0)
+      expect_valid: false
+      invalid_because:
+        path: $.RestockThreshold
+        keyword: minimum
+      oracle: specified
+      set:
+        $.RestockThreshold: -1
+    - name: RestockThreshold_minimum_at_3bva
+      technique: BVA-3
+      coverage_item: $.RestockThreshold at its lowest valid value (0)
+      expect_valid: true
+      oracle: specified
+      set:
+        $.RestockThreshold: 0
+    - name: RestockThreshold_minimum_above_3bva
+      technique: BVA-3
+      coverage_item: $.RestockThreshold one step above its lowest valid value
+      expect_valid: true
+      oracle: specified
+      set:
+        $.RestockThreshold: 1
+    - name: RestockThreshold_maximum_below_3bva
+      technique: BVA-3
+      coverage_item: $.RestockThreshold one step below its highest valid value
+      expect_valid: true
+      oracle: specified
+      set:
+        $.RestockThreshold: 9999999
+    - name: RestockThreshold_maximum_at_3bva
+      technique: BVA-3
+      coverage_item: $.RestockThreshold at its highest valid value (10000000)
+      expect_valid: true
+      oracle: specified
+      set:
+        $.RestockThreshold: 10000000
+    - name: RestockThreshold_maximum_above_3bva
+      technique: BVA-3
+      coverage_item: $.RestockThreshold above its maximum (10000000)
+      expect_valid: false
+      invalid_because:
+        path: $.RestockThreshold
+        keyword: maximum
+      oracle: specified
+      set:
+        $.RestockThreshold: 10000001
+    - name: RestockThreshold_missing
+      technique: EP
+      coverage_item: $.RestockThreshold missing though required
+      expect_valid: false
+      invalid_because:
+        path: $.RestockThreshold
+        keyword: required
+      oracle: specified
+      unset:
+        - $.RestockThreshold
+    - name: RestockThreshold_null
+      technique: EP
+      coverage_item: $.RestockThreshold null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.RestockThreshold
+        keyword: type
+      oracle: specified
+      set:
+        $.RestockThreshold: null
+    - name: RestockThreshold_wrong_type
+      technique: EP
+      coverage_item: $.RestockThreshold of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.RestockThreshold
+        keyword: type
+      oracle: specified
+      set:
+        $.RestockThreshold: twelve
+    - name: RestockThreshold_fraction
+      technique: EP
+      coverage_item: $.RestockThreshold with a fraction though an integer
+      expect_valid: false
+      invalid_because:
+        path: $.RestockThreshold
+        keyword: type
+      oracle: specified
+      set:
+        $.RestockThreshold: 0.5
+    - name: MaxStockThreshold_minimum_below_3bva
+      technique: BVA-3
+      coverage_item: $.MaxStockThreshold below its minimum (0)
+      expect_valid: false
+      invalid_because:
+        path: $.MaxStockThreshold
+        keyword: minimum
+      oracle: specified
+      set:
+        $.MaxStockThreshold: -1
+    - name: MaxStockThreshold_minimum_at_3bva
+      technique: BVA-3
+      coverage_item: $.MaxStockThreshold at its lowest valid value (0)
+      expect_valid: true
+      oracle: specified
+      set:
+        $.MaxStockThreshold: 0
+    - name: MaxStockThreshold_minimum_above_3bva
+      technique: BVA-3
+      coverage_item: $.MaxStockThreshold one step above its lowest valid value
+      expect_valid: true
+      oracle: specified
+      set:
+        $.MaxStockThreshold: 1
+    - name: MaxStockThreshold_maximum_below_3bva
+      technique: BVA-3
+      coverage_item: $.MaxStockThreshold one step below its highest valid value
+      expect_valid: true
+      oracle: specified
+      set:
+        $.MaxStockThreshold: 9999999
+    - name: MaxStockThreshold_maximum_at_3bva
+      technique: BVA-3
+      coverage_item: $.MaxStockThreshold at its highest valid value (10000000)
+      expect_valid: true
+      oracle: specified
+      set:
+        $.MaxStockThreshold: 10000000
+    - name: MaxStockThreshold_maximum_above_3bva
+      technique: BVA-3
+      coverage_item: $.MaxStockThreshold above its maximum (10000000)
+      expect_valid: false
+      invalid_because:
+        path: $.MaxStockThreshold
+        keyword: maximum
+      oracle: specified
+      set:
+        $.MaxStockThreshold: 10000001
+    - name: MaxStockThreshold_missing
+      technique: EP
+      coverage_item: $.MaxStockThreshold missing though required
+      expect_valid: false
+      invalid_because:
+        path: $.MaxStockThreshold
+        keyword: required
+      oracle: specified
+      unset:
+        - $.MaxStockThreshold
+    - name: MaxStockThreshold_null
+      technique: EP
+      coverage_item: $.MaxStockThreshold null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.MaxStockThreshold
+        keyword: type
+      oracle: specified
+      set:
+        $.MaxStockThreshold: null
+    - name: MaxStockThreshold_wrong_type
+      technique: EP
+      coverage_item: $.MaxStockThreshold of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.MaxStockThreshold
+        keyword: type
+      oracle: specified
+      set:
+        $.MaxStockThreshold: twelve
+    - name: MaxStockThreshold_fraction
+      technique: EP
+      coverage_item: $.MaxStockThreshold with a fraction though an integer
+      expect_valid: false
+      invalid_because:
+        path: $.MaxStockThreshold
+        keyword: type
+      oracle: specified
+      set:
+        $.MaxStockThreshold: 0.5
+    - name: OnReorder_null
+      technique: EP
+      coverage_item: $.OnReorder null though not nullable
+      expect_valid: false
+      invalid_because:
+        path: $.OnReorder
+        keyword: type
+      oracle: specified
+      set:
+        $.OnReorder: null
+    - name: OnReorder_wrong_type
+      technique: EP
+      coverage_item: $.OnReorder of the wrong type
+      expect_valid: false
+      invalid_because:
+        path: $.OnReorder
+        keyword: type
+      oracle: specified
+      set:
+        $.OnReorder: yes
+    - name: pairwise_01
+      technique: pairwise
+      coverage_item: $.Description present & $.CatalogBrandId=1; $.Description present & $.CatalogTypeId=1; $.Description present & $.OnReorder=true; and 3 more pairs
+      expect_valid: true
+      oracle: specified
+      set:
+        $.CatalogBrandId: 1
+        $.CatalogTypeId: 1
+        $.OnReorder: true
+    - name: pairwise_02
+      technique: pairwise
+      coverage_item: $.Description present & $.CatalogBrandId=2; $.Description present & $.CatalogTypeId=2; $.Description present & $.OnReorder=false; and 3 more pairs
+      expect_valid: true
+      oracle: specified
+      set:
+        $.CatalogBrandId: 2
+        $.CatalogTypeId: 2
+        $.OnReorder: false
+    - name: pairwise_03
+      technique: pairwise
+      coverage_item: $.Description present & $.CatalogBrandId=3; $.Description present & $.CatalogTypeId=3; $.Description present & $.OnReorder absent; and 3 more pairs
+      expect_valid: true
+      oracle: specified
+      set:
+        $.CatalogBrandId: 3
+        $.CatalogTypeId: 3
+      unset:
+        - $.OnReorder
+    - name: pairwise_04
+      technique: pairwise
+      coverage_item: $.Description present & $.CatalogBrandId=4; $.Description present & $.CatalogTypeId=4; $.CatalogBrandId=4 & $.CatalogTypeId=4; and 2 more pairs
+      expect_valid: true
+      oracle: specified
+      set:
+        $.CatalogBrandId: 4
+        $.CatalogTypeId: 4
+        $.OnReorder: true
+    - name: pairwise_05
+      technique: pairwise
+      coverage_item: $.Description present & $.CatalogBrandId=5; $.CatalogBrandId=5 & $.CatalogTypeId=1; $.CatalogBrandId=5 & $.OnReorder=false; and 1 more pairs
+      expect_valid: true
+      oracle: specified
+      set:
+        $.CatalogBrandId: 5
+        $.CatalogTypeId: 1
+        $.OnReorder: false
+    - name: pairwise_06
+      technique: pairwise
+      coverage_item: $.CatalogBrandId=1 & $.CatalogTypeId=2; $.CatalogBrandId=1 & $.OnReorder absent; $.CatalogTypeId=2 & $.OnReorder absent
+      expect_valid: true
+      oracle: specified
+      set:
+        $.CatalogBrandId: 1
+        $.CatalogTypeId: 2
+      unset:
+        - $.OnReorder
+    - name: pairwise_07
+      technique: pairwise
+      coverage_item: $.CatalogBrandId=1 & $.CatalogTypeId=3; $.CatalogBrandId=1 & $.OnReorder=false; $.CatalogTypeId=3 & $.OnReorder=false
+      expect_valid: true
+      oracle: specified
+      set:
+        $.CatalogBrandId: 1
+        $.CatalogTypeId: 3
+        $.OnReorder: false
+    - name: pairwise_08
+      technique: pairwise
+      coverage_item: $.CatalogBrandId=1 & $.CatalogTypeId=4; $.CatalogTypeId=4 & $.OnReorder=false
+      expect_valid: true
+      oracle: specified
+      set:
+        $.CatalogBrandId: 1
+        $.CatalogTypeId: 4
+        $.OnReorder: false
+    - name: pairwise_09
+      technique: pairwise
+      coverage_item: $.CatalogTypeId=1 & $.OnReorder absent
+      expect_valid: true
+      oracle: specified
+      set:
+        $.CatalogBrandId: 1
+        $.CatalogTypeId: 1
+      unset:
+        - $.OnReorder
+  notes:
+    - Pairwise rows cover every pair of values of $.Description, $.CatalogBrandId, $.CatalogTypeId, $.OnReorder (9 rows).

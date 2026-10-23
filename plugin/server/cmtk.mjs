@@ -17398,8 +17398,23 @@ function planRows(fields, notes) {
       add({ name: `${slug2}_not_in_enum`, technique: "EP", coverage_item: `${p4} outside ${JSON.stringify(f4.enum)}`, expect_valid: false, invalid_because: { path: p4, keyword: "enum" }, oracle: "specified", set: { [p4]: typeof f4.enum[0] === "number" ? 999999 : "not-a-valid-choice" } });
     if (f4.type === "string" && f4.format && ["email", "uuid", "date", "date-time", "uri", "ipv4"].includes(f4.format))
       add({ name: `${slug2}_bad_${f4.format.replace("-", "_")}`, technique: "EP", coverage_item: `${p4} is not a ${f4.format}`, expect_valid: false, invalid_because: { path: p4, keyword: "format" }, oracle: "specified", set: { [p4]: "not-a-" + f4.format } });
-    if (f4.type === "string" && f4.pattern && !patternLimits(f4.pattern))
-      add({ name: `${slug2}_breaks_pattern`, technique: "EP", coverage_item: `${p4} does not match ${f4.pattern}`, expect_valid: false, invalid_because: { path: p4, keyword: "pattern" }, oracle: "specified", set: { [p4]: "\0pattern-breaker\0" } });
+    if (f4.type === "string" && f4.pattern) {
+      const breaker = ["!!! not a match", "no", "\n", "", "\0"].find((s4) => {
+        try {
+          return !new RegExp(f4.pattern, "u").test(s4);
+        } catch {
+          return false;
+        }
+      });
+      if (breaker !== void 0)
+        add({ name: `${slug2}_breaks_pattern`, technique: "EP", coverage_item: `${p4} does not match ${f4.pattern}`, expect_valid: false, invalid_because: { path: p4, keyword: "pattern" }, oracle: "specified", set: { [p4]: breaker } });
+    }
+    if (f4.enum && typeof f4.enum[0] === "string") {
+      const v2 = f4.enum[0];
+      const other = v2 === v2.toLowerCase() ? v2.toUpperCase() : v2.toLowerCase();
+      if (other !== v2 && !f4.enum.includes(other))
+        add({ name: `${slug2}_enum_other_case`, technique: "EP", coverage_item: `${p4} as ${JSON.stringify(other)}: a listed value in another case`, expect_valid: false, invalid_because: { path: p4, keyword: "enum" }, oracle: "specified", set: { [p4]: other } });
+    }
     if (num && f4.multipleOf !== void 0)
       add({ name: `${slug2}_not_a_multiple`, technique: "EP", coverage_item: `${p4} not a multiple of ${f4.multipleOf}`, expect_valid: false, invalid_because: { path: p4, keyword: "multipleOf" }, oracle: "specified", set: { [p4]: round((f4.minimum ?? 0) + f4.multipleOf / 3, f4.multipleOf / 1e3) } });
     if (f4.type === "integer")
@@ -20543,8 +20558,17 @@ async function makeData(m4, id, o4 = {}) {
         put(path12.join("rows", `${r6.name}.json`), JSON.stringify(r6.value, null, 2) + "\n");
   }
   const table = tabulate(rows);
-  if (formats.includes("csv"))
-    put("rows.csv", stringify(table.records, { header: true, columns: table.columns, bom: true, record_delimiter: "\r\n", cast: { boolean: (b2) => b2 ? "true" : "false" } }));
+  if (formats.includes("csv")) {
+    const csvOpts = { bom: true, record_delimiter: "\r\n", cast: { boolean: (b2) => b2 ? "true" : "false" } };
+    put("rows.csv", stringify(table.records, { header: true, columns: table.columns, ...csvOpts }));
+    for (const r6 of rows) {
+      if (!r6.value || typeof r6.value !== "object" || Array.isArray(r6.value))
+        continue;
+      const one = tabulate([r6]);
+      const cols = one.columns.filter((c4) => c4 !== "row" && c4 !== "expect_valid" && !c4.startsWith("?"));
+      put(path12.join("rows", `${r6.name}.csv`), stringify(one.records, { header: true, columns: cols, ...csvOpts }));
+    }
+  }
   if (formats.includes("xlsx"))
     put("rows.xlsx", workbook(table, recipe));
   const valid = rows.filter((r6) => r6.expect_valid).length;
@@ -20685,7 +20709,7 @@ process.on("warning", (w2) => {
     console.error(`${w2.name}: ${w2.message}`);
 });
 var HERE = path14.dirname(fileURLToPath(import.meta.url));
-var VERSION = true ? "0.4.0" : JSON.parse(fs15.readFileSync(path14.join(HERE, "..", "package.json"), "utf8")).version;
+var VERSION = true ? "0.4.1" : JSON.parse(fs15.readFileSync(path14.join(HERE, "..", "package.json"), "utf8")).version;
 var HELP = `cmtk ${VERSION}: test any system from its requirements, and prove a migrated system behaves like the old one.
 
 Usage:

@@ -272,7 +272,17 @@ export async function makeData(m: Manifest, id: string, o: MakeOptions = {}): Pr
         for (const r of rows) if (r.value !== undefined) put(path.join("rows", `${r.name}.json`), JSON.stringify(r.value, null, 2) + "\n");
     }
     const table = tabulate(rows);
-    if (formats.includes("csv")) put("rows.csv", stringify(table.records, { header: true, columns: table.columns, bom: true, record_delimiter: "\r\n", cast: { boolean: (b) => (b ? "true" : "false") } }));
+    if (formats.includes("csv")) {
+        const csvOpts = { bom: true, record_delimiter: "\r\n", cast: { boolean: (b: boolean) => (b ? "true" : "false") } } as const;
+        put("rows.csv", stringify(table.records, { header: true, columns: table.columns, ...csvOpts }));
+        // One CSV per row, data columns only: the file an import would take, for that one condition.
+        for (const r of rows) {
+            if (!r.value || typeof r.value !== "object" || Array.isArray(r.value)) continue;
+            const one = tabulate([r]);
+            const cols = one.columns.filter((c) => c !== "row" && c !== "expect_valid" && !c.startsWith("?"));
+            put(path.join("rows", `${r.name}.csv`), stringify(one.records, { header: true, columns: cols, ...csvOpts }));
+        }
+    }
     if (formats.includes("xlsx")) put("rows.xlsx", workbook(table, recipe));
     const valid = rows.filter((r) => r.expect_valid).length;
     const manifest: DataManifest = {
