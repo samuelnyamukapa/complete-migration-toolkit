@@ -1,15 +1,21 @@
 {
   "name": "@cmtk/core",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Complete Migration Toolkit engine: cases, adapters, expectations, comparison, drift ledger and reports.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": { ".": "./dist/index.js" },
-  "files": ["dist"],
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
   "dependencies": {
+    "@faker-js/faker": "10.6.0",
     "@xmldom/xmldom": "^0.9.8",
+    "csv-stringify": "^6.9.0",
     "yaml": "^2.8.1"
   }
 }

@@ -14,6 +14,7 @@ import {
     acceptDraft, adaptersFor, casesToYaml, check, compare, ConfigError, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
     initProject, rejectDraft, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report,
+    planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, FAKER_VERSION, type DataFormat,
 } from "@cmtk/core";
 
 // Node 22 before 22.17 flags fs.globSync and path.matchesGlob as experimental and prints a warning
@@ -44,6 +45,12 @@ Usage:
   cmtk review                                                       a person accepts or rejects draft cases and proposals
   cmtk defects run|compare                                          draft defects from the latest report
   cmtk probe <target> "GET /path" [--surface <name>]                send one read-only request and show the answer
+  cmtk data plan --schema <file> [--operation "POST /path"] [--id <name>] [--seed <n>] [--clock <iso>] [--locale <loc>]
+                                                                    compile a test-data recipe from a JSON Schema or an OpenAPI operation
+  cmtk data make <id> [--format json,csv,xlsx]                      regenerate the rows from the recipe, check them, write the files
+  cmtk data check <id>                                              check a recipe's rows and quotas without writing files
+  cmtk data cases <id> [--path /api/x] [--requirement <id>] [--out <file>]
+                                                                    one draft case per row, each sending its row from a file
   cmtk signoff run|compare                                          a person signs a report, at a terminal (never an agent)
   cmtk adapter new <name>                                           write a new adapter from the template
   cmtk adapter check <name>                                         the conformance kit for an adapter
@@ -104,6 +111,16 @@ async function main(argv: string[]): Promise<number> {
             har: { type: "string", multiple: true },
             topology: { type: "string", multiple: true },
             fresh: { type: "boolean", default: false },
+            schema: { type: "string" },
+            operation: { type: "string" },
+            id: { type: "string" },
+            seed: { type: "string" },
+            clock: { type: "string" },
+            locale: { type: "string" },
+            format: { type: "string" },
+            path: { type: "string" },
+            method: { type: "string" },
+            requirement: { type: "string" },
             help: { type: "boolean", short: "h", default: false },
             version: { type: "boolean", short: "v", default: false },
         },
@@ -187,6 +204,7 @@ async function main(argv: string[]): Promise<number> {
         }
         case "probe": return probe(manifestFile, rest, values.surface);
         case "adapter": return adapterCommand(rest, manifestFile);
+        case "data": return dataCommand(rest, manifestFile, values);
         default:
             throw new UsageError(`Unknown command ${cmd}. Run \`cmtk help\`.`);
     }
@@ -376,3 +394,56 @@ main(process.argv.slice(2)).then(
         process.exit(3);
     },
 );
+
+async function dataCommand(args: string[], manifestFile: string, v: Record<string, any>): Promise<number> {
+    const [sub, id] = args;
+    const m = loadManifest(manifestFile);
+    const generators = { cmtk: VERSION, "@faker-js/faker": FAKER_VERSION };
+    switch (sub) {
+        case "plan": {
+            if (!v.schema) throw new UsageError("`cmtk data plan` needs --schema <file>: a JSON Schema or an OpenAPI document inside the project.");
+            const seed = v.seed === undefined ? undefined : Number(v.seed);
+            const { file, recipe } = planRecipe(m, { schema: v.schema, operation: v.operation, id: v.id, seed, clock: v.clock, locale: v.locale, generators });
+            const happy = recipe.rows.filter(isHappy).length;
+            const byTechnique = Object.entries(recipe.rows.reduce<Record<string, number>>((acc, r) => ({ ...acc, [r.technique]: (acc[r.technique] ?? 0) + 1 }), {})).map(([k, n]) => `${n} ${k}`).join(", ");
+            console.log(`Recipe ${recipe.id}: ${recipe.fields.length - 1} fields, ${recipe.rows.length} rows (${byTechnique}); ${happy} happy paths (${Math.round((happy / recipe.rows.length) * 100)}%).`);
+            for (const n of recipe.notes ?? []) console.log(`  ${n}`);
+            for (const f of recipe.fields.filter((x) => x.note && /can't be generated|not honoured/.test(x.note))) console.log(`  ${f.path}: ${f.note}`);
+            console.log(`Written: ${file}`);
+            console.log(`Next: read it, then \`cmtk data make ${recipe.id}\` to see the rows.`);
+            return 0;
+        }
+        case "make": {
+            if (!id) throw new UsageError("`cmtk data make` needs the recipe id.");
+            const formats = (v.format ? String(v.format).split(",") : ["json", "csv"]).map((f: string) => f.trim().toLowerCase());
+            for (const f of formats) if (!["json", "csv", "xlsx"].includes(f)) throw new UsageError(`Unknown format ${f}: use json, csv or xlsx.`);
+            const { folder, manifest } = await makeData(m, id, { formats: formats as DataFormat[], generators });
+            console.log(`Made ${manifest.rows} rows (${manifest.valid_rows} valid, ${Math.round(manifest.quotas.happy_share * 100)}% happy paths) in ${folder}/: ${Object.keys(manifest.files).filter((f) => !f.startsWith("rows/")).join(", ")}.`);
+            console.log(`Every valid row validates against the schema, and every invalid row breaks it where it says.`);
+            if (manifest.quotas.problems.length) { console.log(`Quotas not met: ${manifest.quotas.problems.join("; ")}.`); return 2; }
+            console.log(`Next: \`cmtk data cases ${id} --path /api/...\` to draft one case per row.`);
+            return 0;
+        }
+        case "check": {
+            if (!id) throw new UsageError("`cmtk data check` needs the recipe id.");
+            const { recipe } = loadRecipe(m, id);
+            const rows = makeRows(m, recipe);
+            const problems = checkQuotas(recipe);
+            console.log(`Recipe ${id}: ${rows.length} rows regenerate and check out against the schema.`);
+            if (problems.length) { console.log(`Quotas not met: ${problems.join("; ")}.`); return 2; }
+            console.log("Quotas met.");
+            return 0;
+        }
+        case "cases": {
+            if (!id) throw new UsageError("`cmtk data cases` needs the recipe id.");
+            const { file, cases, withoutExpect } = writeCases(m, id, { path: v.path, method: v.method, requirement: v.requirement, out: v.out });
+            console.log(`Wrote ${cases.length} draft cases to ${file}${withoutExpect ? `; ${withoutExpect} have no expect: block yet, because no documented status says what the answer should be` : ""}.`);
+            console.log("Next: a person reviews them with `cmtk review`. They are skipped until then.");
+            return 0;
+        }
+        default:
+            throw new UsageError("`cmtk data` needs plan, make, check or cases.");
+    }
+}
+
+

@@ -102,13 +102,14 @@ Set one level for the system, then loosen it per path (`overrides`) or per case.
 
 ## The AI tester
 
-The **cmtk plugin** for GitHub Copilot and Claude Code adds six skills that do the grind of testing:
+The **cmtk plugin** for GitHub Copilot and Claude Code adds seven skills that do the grind of testing:
 
 | Skill | Does |
 |---|---|
 | `/cmtk:test` | Start here. Takes any project from requirements to a signed report |
 | `/cmtk:plan` | Turns stories, runbooks or an OpenAPI file into a test plan and draft cases, with questions where the requirements are unclear |
 | `/cmtk:discover` | Lists every boundary of a legacy system, with REA where there is no source, and flags the ones no adapter covers |
+| `/cmtk:data` | Creates the test data a case needs from the system's own schema: a seeded recipe with boundaries, negatives, hostile values and pairwise combinations, rows checked against the schema, and one draft case per row |
 | `/cmtk:triage` | Sorts the differences in a comparison into noise, intended drift and defects |
 | `/cmtk:explore` | Explores against a charter, read-only and within a budget |
 | `/cmtk:defects` | Drafts defects with their evidence; files them only after you say yes |

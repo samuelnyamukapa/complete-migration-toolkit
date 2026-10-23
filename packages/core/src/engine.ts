@@ -59,7 +59,7 @@ export function adaptersFor(manifest: Manifest) {
         get(surface: string): Adapter {
             const s = surface || "http";
             if (!cache.has(s)) {
-                if (s === "http") cache.set(s, httpAdapter({ timeoutS: manifest.timeout_s, insecureTls: manifest.insecure_tls }));
+                if (s === "http") cache.set(s, httpAdapter({ timeoutS: manifest.timeout_s, insecureTls: manifest.insecure_tls, root: manifest.root }));
                 else if (manifest.adapters[s]) cache.set(s, processAdapter(s, manifest.adapters[s]!, manifest.root));
                 else throw new ManifestError(`No adapter for surface "${s}". Add it under \`adapters:\` in cmtk.yaml, or run \`cmtk adapter new ${s}\`.`);
             }
@@ -216,9 +216,10 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
                     const obs = await adapters.get(b.surface).run(c, t, extra);
                     writeJson(path.join(dir, "answers", `${c.id}.json`), obs);
                     silent = noAnswer(obs) ? silent + 1 : 0;
-                    if (obs.error) { out.push({ ...b, result: "ERROR", why: obs.error }); continue; }
+                    const sent = obs.inputs?.length ? { inputs: obs.inputs } : {};
+                    if (obs.error) { out.push({ ...b, ...sent, result: "ERROR", why: obs.error }); continue; }
                     const failures = checkExpectation(c.expect, obs);
-                    out.push({ ...b, result: failures.length ? "FAIL" : "PASS", ...(failures.length ? { failures } : {}), ...(obs.truncated ? { note: "the answer was over 5 MB; only the first 5 MB were checked" } : {}) });
+                    out.push({ ...b, ...sent, result: failures.length ? "FAIL" : "PASS", ...(failures.length ? { failures } : {}), ...(obs.truncated ? { note: "the answer was over 5 MB; only the first 5 MB were checked" } : {}) });
                 } catch (err) {
                     out.push({ ...b, result: "ERROR", why: failed(err) });
                 }
@@ -269,7 +270,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
                 contracts.push(outcome);
             }
             for (const c of cases) {
-                const b = { ...base(c), match: matchFor(c, manifest) };
+                const b: Omit<CaseOutcome, "result"> & { match: MatchLevel } = { ...base(c), match: matchFor(c, manifest) };
                 if (c.draft) { out.push({ ...b, result: "SKIPPED", why: DRAFT_WHY }); continue; }
                 if (unsafe(c, manifest, opts)) { out.push({ ...b, result: "SKIPPED", why: UNSAFE_WHY }); continue; }
                 if (silent >= STOP_AFTER_NO_ANSWER) { out.push({ ...b, result: "SKIPPED", why: STOPPED_WHY }); continue; }
@@ -281,6 +282,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
                     writeJson(path.join(dir, "answers", `${c.id}.reference.json`), ra);
                     writeJson(path.join(dir, "answers", `${c.id}.candidate.json`), rb);
                     silent = noAnswer(ra) || noAnswer(rb) ? silent + 1 : 0;
+                    if (ra.inputs?.length) b.inputs = ra.inputs;
                     if (ra.error || rb.error) {
                         out.push({ ...b, result: "ERROR", why: [ra.error && `reference: ${ra.error}`, rb.error && `candidate: ${rb.error}`].filter(Boolean).join("; ") });
                         continue;

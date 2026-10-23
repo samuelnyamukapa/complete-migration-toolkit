@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.4.0 (2026-10-23)
+
+Test data, part 1. When a case needs a body or an input file that doesn't exist, cmtk creates it from the system's own schema, as a recipe a person reviews. The research behind the design is [docs/research/test-data-generation.md](docs/research/test-data-generation.md); its rule, **the LLM proposes, deterministic tools decide**, is built in: boundaries, negatives and combinations come from the engine, never from a model.
+
+### Added
+
+- **Cases send files.** `body_file` sends a file inside the project as the body, byte for byte. `files` sends a `multipart/form-data` upload, with a fixed boundary so both systems get the same bytes. The evidence records each file's path, size and SHA-256, never its contents, and `REPORT.md` lists them under "Input files".
+- **`cmtk data plan`**: a recipe from a JSON Schema or one OpenAPI operation. For every field: its constraints and the part of the schema that justifies them. Rows, each named by the condition it exercises:
+  - a valid baseline (equivalence partitioning);
+  - three-value boundaries on every ordered field: just below, at, and just above each limit, with `exclusiveMinimum` and `exclusiveMaximum` and `multipleOf` honoured;
+  - a negative for every field: missing when required, null when not nullable, the wrong type, outside the enum, a bad format, a broken pattern, not a multiple, a fraction for an integer, too few or too many items;
+  - hostile strings on free text: empty, spaces, SQL quotes, markup, a spreadsheet formula, a right-to-left override, accents, emoji, 4,096 characters;
+  - pairwise combinations of every enum, boolean, nullable and optional field.
+- **Strings from patterns.** A `pattern` is read and a matching string generated, so a field like `^[A-Za-z0-9_-]+\.(png|jpg)$` gets real values. What can't be generated (lookaround, backreferences, Unicode classes) is reported, never guessed.
+- **`cmtk data make`**: the rows, regenerated from the seed and the clock, identical on Windows and Linux. Every valid row is checked against the schema, and every invalid row must break it where it says, or the make is refused. Written as `rows.json`, one file per row (for `body_file`), `rows.csv` (UTF-8 with a BOM, CRLF) and `rows.xlsx` (its metadata and zip entries pinned to the recipe's clock, so it never names a person and the bytes never change), with `DATA.md` and a `MANIFEST.json` that records the seed, clock, versions, quota results and every file's SHA-256.
+- **Quotas.** At most half the rows may be happy paths; every ordered field gets its boundaries; every field gets a row that breaks it. A recipe a person edited is checked against them by `cmtk data check`.
+- **`cmtk data cases`**: one draft case per row, sending the row from its file. An `expect:` is written only where the OpenAPI document gives a status; otherwise a person adds it. The cases wait for `cmtk review`.
+- **The `/cmtk:data` skill**, and the `cmtk_data_plan`, `cmtk_data_make`, `cmtk_data_check` and `cmtk_data_cases` tools. The skill's own part is judgement, not rows: findings where the schema and the requirements disagree, questions for the rules the schema can't express, and never a value from production.
+- **Dependencies:** `@faker-js/faker` (pinned exactly, because seeds drift between versions; the locales en, en_GB, en_US, de, fr and es are bundled) and `csv-stringify`, both MIT. The workbook writer is cmtk's own, so the bytes of an `.xlsx` are the same on every make; the npm `xlsx` package, with its unpatched advisory, is not used, and nor is `exceljs`, which stamps the zip with the current time.
+
+### Verified
+
+- 74 tests on Windows and Linux.
+- On eShop's catalog item, from a schema written from its business rules: 100 rows (37 partitions, 33 boundaries, 20 hostile, 10 pairwise), 11% happy paths, every row checked, the same files from the same seed.
+
 ## 0.3.0 (2026-10-20)
 
 Discover: the parity suite's first step, with REA. Before a migration is compared, every boundary of the legacy system is listed, so none is left out by accident.

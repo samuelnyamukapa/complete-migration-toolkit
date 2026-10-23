@@ -168,6 +168,11 @@ export function renderReport(r: Report): string {
         const mid = r.mode === "compare" ? c.match ?? "" : c.requirement.join(", ") || "—";
         L.push(`| ${c.id} | ${cell(c.name)} | ${cell(mid)} | ${c.result}${c.why ? ` — ${cell(c.why)}` : ""} |`);
     }
+    const sent = r.cases.filter((c) => c.inputs?.length);
+    if (sent.length) {
+        L.push("", "## Input files", "", "The files cases sent, fingerprinted. A different file gives a different SHA-256.", "", "| Case | File | SHA-256 | Bytes | Sent as |", "| --- | --- | --- | --- | --- |");
+        for (const c of sent) for (const f of c.inputs!) L.push(`| ${c.id} | ${cell(f.path)} | ${f.sha256.slice(0, 16)}… | ${f.bytes} | ${f.field ? `field ${cell(f.field)}, ${cell(f.filename ?? "")} (${cell(f.content_type ?? "")})` : "the body"} |`);
+    }
 
     const fails = r.cases.flatMap((c) => (c.failures ?? []).map((f) => [c.id, f] as const));
     if (fails.length) {

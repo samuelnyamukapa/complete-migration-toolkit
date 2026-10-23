@@ -7,13 +7,15 @@
 // See docs/ADAPTERS.md. `cmtk adapter new` writes a working template.
 import { spawn, type ChildProcessByStdio } from "node:child_process";
 import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 import http from "node:http";
 import https from "node:https";
 import readline from "node:readline";
 import type { Readable, Writable } from "node:stream";
 import zlib from "node:zlib";
 
-import type { Case, Observation, Target } from "./types.js";
+import type { Case, InputFile, Observation, Target } from "./types.js";
 
 export const MAX_BODY = 5 * 1024 * 1024;
 
@@ -31,11 +33,67 @@ export interface AdapterSpec {
     timeout_s?: number;
 }
 
-export function httpAdapter(opts: { timeoutS: number; insecureTls: boolean }): Adapter {
+export function httpAdapter(opts: { timeoutS: number; insecureTls: boolean; root?: string }): Adapter {
     return {
         run: (c, target, extra) => (target.base_url ? send(target.base_url, c, extra, opts)
             : Promise.resolve({ error: `target ${target.name} has no base_url, so HTTP cases cannot run on it` })),
     };
+}
+
+/** The same boundary on every run, so two systems get byte-identical multipart bodies and the evidence is reproducible. */
+export const MULTIPART_BOUNDARY = "----cmtk-boundary-7d2a1c9e4f";
+
+const CONTENT_TYPES: Record<string, string> = {
+    ".json": "application/json", ".xml": "application/xml", ".csv": "text/csv", ".txt": "text/plain", ".pdf": "application/pdf",
+    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xls": "application/vnd.ms-excel",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".zip": "application/zip",
+    ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif",
+};
+const typeOf = (file: string) => CONTENT_TYPES[path.extname(file).toLowerCase()] ?? "application/octet-stream";
+
+const fingerprint = (rel: string, bytes: Buffer): InputFile => ({ path: rel.split(path.sep).join("/"), sha256: crypto.createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length });
+
+/**
+ * The body a case sends, from `body`, `body_file` or `files`, with the files it sent fingerprinted.
+ * Files are read from `root` (the project folder); a missing file is an error, never an empty body.
+ */
+export function requestBody(c: Case, root: string | undefined, headers: Record<string, string>): { body?: Buffer; inputs: InputFile[] } | { error: string } {
+    const req = c.request;
+    const hasType = () => Object.keys(headers).some((h) => h.toLowerCase() === "content-type");
+    const readFile = (rel: string) => {
+        const full = path.resolve(root ?? process.cwd(), rel);
+        if (!fs.existsSync(full) || !fs.statSync(full).isFile()) throw new Error(`input file ${rel} does not exist`);
+        return fs.readFileSync(full);
+    };
+    try {
+        if (req.files?.length) {
+            const inputs: InputFile[] = [];
+            const parts: Buffer[] = [];
+            for (const f of req.files) {
+                const bytes = readFile(f.path);
+                const filename = f.filename ?? path.basename(f.path);
+                const type = f.content_type ?? typeOf(filename);
+                parts.push(Buffer.from(`--${MULTIPART_BOUNDARY}\r\nContent-Disposition: form-data; name="${f.field}"; filename="${filename}"\r\nContent-Type: ${type}\r\n\r\n`, "utf8"), bytes, Buffer.from("\r\n", "utf8"));
+                inputs.push({ ...fingerprint(f.path, bytes), field: f.field, filename, content_type: type });
+            }
+            parts.push(Buffer.from(`--${MULTIPART_BOUNDARY}--\r\n`, "utf8"));
+            headers["content-type"] = `multipart/form-data; boundary=${MULTIPART_BOUNDARY}`;
+            return { body: Buffer.concat(parts), inputs };
+        }
+        if (req.body_file) {
+            const bytes = readFile(req.body_file);
+            if (!hasType()) headers["content-type"] = typeOf(req.body_file);
+            return { body: bytes, inputs: [fingerprint(req.body_file, bytes)] };
+        }
+    } catch (err) {
+        return { error: (err as Error).message };
+    }
+    if (typeof req.body === "string") return { body: Buffer.from(req.body, "utf8"), inputs: [] };
+    if (req.body !== null && req.body !== undefined) {
+        if (!hasType()) headers["content-type"] = "application/json";
+        return { body: Buffer.from(JSON.stringify(req.body), "utf8"), inputs: [] };
+    }
+    return { inputs: [] };
 }
 
 // Agents of our own: the global agent may be set to use a proxy (NODE_USE_ENV_PROXY), and a
@@ -64,19 +122,17 @@ export function decodeBody(raw: Buffer, truncated: boolean): { body: string; enc
  * One request to one target. Redirects are answers, never followed; proxies are never used.
  * The whole answer must arrive within the timeout, and reading stops at 5 MB (after decompression).
  */
-export function send(baseUrl: string, c: Case, extra: Record<string, string>, opts: { timeoutS: number; insecureTls: boolean }): Promise<Observation> {
+export function send(baseUrl: string, c: Case, extra: Record<string, string>, opts: { timeoutS: number; insecureTls: boolean; root?: string }): Promise<Observation> {
     const req = c.request;
     if (!req.path.startsWith("/") || req.path.startsWith("//")) return Promise.resolve({ error: "the path must start with a single '/'" });
     const url = new URL(baseUrl + req.path);
     const secure = url.protocol === "https:";
     const headers: Record<string, string> = { ...(req.headers ?? {}), ...extra, "accept-encoding": "identity" };
-    let body: Buffer | undefined;
-    if (typeof req.body === "string") body = Buffer.from(req.body, "utf8");
-    else if (req.body !== null && req.body !== undefined) {
-        body = Buffer.from(JSON.stringify(req.body), "utf8");
-        if (!Object.keys(headers).some((h) => h.toLowerCase() === "content-type")) headers["content-type"] = "application/json";
-    }
+    const made = requestBody(c, opts.root, headers);
+    if ("error" in made) return Promise.resolve({ error: made.error });
+    const { body, inputs } = made;
     if (body) headers["content-length"] = String(body.length);
+    const withInputs = (o: Observation): Observation => (inputs.length ? { ...o, inputs } : o);
 
     return new Promise((resolve) => {
         let done = false;
@@ -86,7 +142,7 @@ export function send(baseUrl: string, c: Case, extra: Record<string, string>, op
             done = true;
             clearTimeout(deadline);
             r?.destroy();
-            resolve(o);
+            resolve(withInputs(o));
         };
         const deadline = setTimeout(() => finish({ error: `ETIMEDOUT: no complete answer within ${opts.timeoutS}s` }), opts.timeoutS * 1000);
         try {

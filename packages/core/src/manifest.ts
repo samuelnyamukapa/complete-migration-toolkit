@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
 
-import { BOUNDARY_KINDS, MATCH_LEVELS, type Case, type Drift, type Manifest, type MatchLevel, type Target } from "./types.js";
+import { BOUNDARY_KINDS, MATCH_LEVELS, type Case, type Drift, type Manifest, type MatchLevel, type Request, type Target } from "./types.js";
 
 export class ManifestError extends Error {}
 
@@ -198,7 +198,24 @@ export function loadCases(manifest: Manifest): Case[] {
                 body = JSON.stringify(req.body); // a YAML mapping or list is sent as JSON
                 if (!Object.keys(headers).some((h) => h.toLowerCase() === "content-type")) headers["Content-Type"] = "application/json";
             }
-            all.push({ ...c, request: { method, path: req.path, headers, body }, file: rel });
+            const request: Request = { method, path: req.path, headers, body };
+            if (req.body_file !== undefined) {
+                if (body !== null) throw new ManifestError(`${where}: give \`body\` or \`body_file\`, not both.`);
+                if (typeof req.body_file !== "string" || !req.body_file.trim()) throw new ManifestError(`${where}: \`body_file\` must be a file inside the project folder.`);
+                inside(manifest, req.body_file); // refuses a path outside the project; existence is checked when the case runs
+                request.body_file = req.body_file;
+            }
+            if (req.files !== undefined) {
+                if (body !== null || request.body_file) throw new ManifestError(`${where}: \`files\` is a multipart body, so give no \`body\` or \`body_file\` with it.`);
+                if (!Array.isArray(req.files) || !req.files.length) throw new ManifestError(`${where}: \`files\` must be a list of { field, path, filename?, content_type? }.`);
+                request.files = req.files.map((f: any, j: number) => {
+                    if (!f || typeof f.field !== "string" || !f.field.trim() || typeof f.path !== "string" || !f.path.trim()) throw new ManifestError(`${where}: files[${j}] needs \`field\` and \`path\`.`);
+                    if (/[\r\n"]/.test(f.field) || /[\r\n"]/.test(String(f.filename ?? ""))) throw new ManifestError(`${where}: files[${j}]: a field or file name cannot hold quotes or line breaks.`);
+                    inside(manifest, f.path);
+                    return { field: f.field, path: f.path, ...(f.filename ? { filename: String(f.filename) } : {}), ...(f.content_type ? { content_type: String(f.content_type) } : {}) };
+                });
+            }
+            all.push({ ...c, request, file: rel });
         }
     }
     return all;

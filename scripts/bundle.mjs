@@ -9,6 +9,7 @@ import { build } from "esbuild";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const out = path.join(root, "plugin", "server");
 const version = JSON.parse(fs.readFileSync(path.join(root, "packages", "cli", "package.json"), "utf8")).version;
+const fakerVersion = JSON.parse(fs.readFileSync(path.join(root, "node_modules", "@faker-js", "faker", "package.json"), "utf8")).version;
 fs.mkdirSync(out, { recursive: true });
 
 const common = {
@@ -16,7 +17,7 @@ const common = {
     platform: "node",
     format: "esm",
     target: "node22",
-    define: { __CMTK_VERSION__: JSON.stringify(version) },
+    define: { __CMTK_VERSION__: JSON.stringify(version), __CMTK_FAKER_VERSION__: JSON.stringify(fakerVersion) },
     // Some bundled packages use require(); give the ES module one.
     banner: { js: "import { createRequire as __cmtkCreateRequire } from 'node:module'; const require = __cmtkCreateRequire(import.meta.url);" },
     legalComments: "none",

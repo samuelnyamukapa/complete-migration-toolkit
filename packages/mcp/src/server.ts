@@ -14,6 +14,7 @@ import {
     addFinding, addProposal, casesToYaml, check, compare, describeCheck, describeProposal, describeSignoff, draftDefects, endSession, exploreRequest,
     importHar, initProject, inside, loadCases, loadManifest, loadProposals, PROPOSAL_KINDS, run, signoffState, startSession, type Report,
     BOUNDARY_KINDS, describeDiscovery, discover,
+    planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, FAKER_VERSION,
 } from "@cmtk/core";
 
 // Node 22 before 22.17 flags fs.globSync and path.matchesGlob as experimental and prints a warning
@@ -252,6 +253,45 @@ server.registerTool("cmtk_discover", {
 }, async (a) => guarded(() => discover(loadManifest(a.manifest), { assemblies: a.assemblies, reaJson: a.rea_json, configs: a.configs, har: a.har, topology: a.topology, found: a.found, agent: a.agent, fresh: a.fresh }),
     ({ file, discovery }) => [`${describeDiscovery(discovery)} Inventory: ${file}.`,
         ...discovery.boundaries.map((b) => `${b.covered_by ? "covered" : "UNCOVERED"} ${b.kind} ${b.direction}: ${b.name}${b.where ? ` (${b.where})` : ""}${b.covered_by ? ` by ${b.covered_by}` : ""}`)].join("\n")));
+
+const dataGenerators = { cmtk: VERSION, "@faker-js/faker": FAKER_VERSION };
+
+server.registerTool("cmtk_data_plan", {
+    description: "Compile a test-data recipe from a JSON Schema or one OpenAPI operation: every field's constraints with its source, and the rows every technique calls for (a valid baseline, three-value boundaries on every ordered field, a negative for every field, hostile strings, pairwise combinations), each named by the condition it exercises. The recipe is what a person reviews; rows are regenerated from it. Expectations are never written here.",
+    inputSchema: {
+        manifest: manifestArg,
+        schema: z.string().describe("A JSON Schema or OpenAPI file inside the project."),
+        operation: z.string().optional().describe("For OpenAPI: the operation, such as \"POST /api/items\"."),
+        id: z.string().optional().describe("The recipe's name. Default: from the file or the operation."),
+        seed: z.number().int().optional(),
+        clock: z.string().optional().describe("The fixed date and time every generated date is relative to. Default 2026-01-15T09:30:00Z."),
+        locale: z.string().optional().describe("Faker locale for realistic values. Default en_GB."),
+    },
+}, async (a) => guarded(() => planRecipe(loadManifest(a.manifest), { schema: a.schema, operation: a.operation, id: a.id, seed: a.seed, clock: a.clock, locale: a.locale, draft: true, generators: dataGenerators }),
+    ({ file, recipe }) => {
+        const by = recipe.rows.reduce<Record<string, number>>((acc, r) => ({ ...acc, [r.technique]: (acc[r.technique] ?? 0) + 1 }), {});
+        return [`recipe ${recipe.id} written to ${file}: ${recipe.fields.length - 1} fields, ${recipe.rows.length} rows (${Object.entries(by).map(([k, n]) => `${n} ${k}`).join(", ")}), ${recipe.rows.filter(isHappy).length} happy paths.`,
+            ...(recipe.notes ?? []), ...recipe.fields.filter((f) => f.note && /can't be generated|not honoured/.test(f.note)).map((f) => `${f.path}: ${f.note}`),
+            "A person reviews the recipe file; then cmtk_data_make regenerates the rows."].join("\n");
+    }));
+
+server.registerTool("cmtk_data_make", {
+    description: "Regenerate a recipe's rows from its seed and clock, check every row against the schema (valid rows validate; invalid rows break it where they say), check the quotas, and write rows.json, one file per row, rows.csv and optionally rows.xlsx, with a manifest, under cmtk/data/<id>/.",
+    inputSchema: { manifest: manifestArg, id: z.string(), formats: z.array(z.enum(["json", "csv", "xlsx"])).optional() },
+}, async (a) => guarded(() => makeData(loadManifest(a.manifest), a.id, { formats: a.formats, generators: dataGenerators }),
+    ({ folder, manifest }) => `${manifest.rows} rows (${manifest.valid_rows} valid, ${Math.round(manifest.quotas.happy_share * 100)}% happy paths) in ${folder}/; every row checked against the schema.${manifest.quotas.problems.length ? ` QUOTAS NOT MET: ${manifest.quotas.problems.join("; ")}.` : " Quotas met."}`));
+
+server.registerTool("cmtk_data_check", {
+    description: "Check a recipe without writing files: its rows regenerate and check out against the schema, and the quotas are met. Run it after a person edits a recipe.",
+    inputSchema: { manifest: manifestArg, id: z.string() },
+}, async (a) => guarded(() => { const m = loadManifest(a.manifest); const { recipe } = loadRecipe(m, a.id); return { rows: makeRows(m, recipe).length, problems: checkQuotas(recipe) }; },
+    ({ rows, problems }) => `${rows} rows check out.${problems.length ? ` Quotas not met: ${problems.join("; ")}.` : " Quotas met."}`));
+
+server.registerTool("cmtk_data_cases", {
+    description: "One draft case per row of a recipe, each sending its row from cmtk/data/<id>/rows/ as the request body. An expect: block is written only where the OpenAPI document gives a status for the answer; otherwise a person adds it. The cases are drafts until a person accepts them with cmtk review.",
+    inputSchema: { manifest: manifestArg, id: z.string(), path: z.string().optional().describe("The request path, such as /api/items. Default: the operation's path."), method: z.string().optional(), requirement: z.string().optional(), out: z.string().optional() },
+}, async (a) => guarded(() => writeCases(loadManifest(a.manifest), a.id, { path: a.path, method: a.method, requirement: a.requirement, out: a.out }),
+    ({ file, cases, withoutExpect }) => `${cases.length} draft cases in ${file}${withoutExpect ? `; ${withoutExpect} have no expect: block, because no documented status says what the answer should be: a person adds one` : ""}. They wait for cmtk review.`));
 
 server.registerTool("cmtk_status", {
     description: "The latest run and compare verdicts, and whether a person has signed each report.",

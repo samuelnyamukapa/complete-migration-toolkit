@@ -30,6 +30,9 @@ export function check(manifest: Manifest): CheckResult {
         if (s !== "http" && !manifest.adapters[s]) warnings.push(`${c.id}: surface "${s}" has no adapter in cmtk.yaml.`);
         if (c.requirement === undefined) warnings.push(`${c.id}: names no requirement, so its result is not traced to a story.`);
         if (!c.expect && Object.keys(manifest.targets).length === 1) warnings.push(`${c.id}: has no \`expect:\` block, so \`cmtk run\` skips it.`);
+        for (const f of [c.request.body_file, ...(c.request.files ?? []).map((x) => x.path)].filter((x): x is string => !!x)) {
+            if (!fs.existsSync(inside(manifest, f))) warnings.push(`${c.id}: the input file ${f} does not exist, so the case will error.`);
+        }
     }
     if (!cases.length) warnings.push(`No case files match ${manifest.cases.join(", ")}.`);
     if (!fs.existsSync(inside(manifest, manifest.evidence))) warnings.push(`${manifest.evidence} does not exist yet: the first run creates it.`);

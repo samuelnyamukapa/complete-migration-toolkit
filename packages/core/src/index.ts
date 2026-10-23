@@ -9,7 +9,7 @@ export { checkContract, diffOpenApi, diffWsdl } from "./contracts.js";
 export { coveringDrift, covers } from "./drift.js";
 export { importHar, casesToYaml, looksSecret, redactBody, REDACTED, DROPPED_HEADERS } from "./har.js";
 export { renderReport, summarise } from "./report.js";
-export { send, httpAdapter, processAdapter, decodeBody, MAX_BODY, type Adapter } from "./adapters.js";
+export { send, httpAdapter, processAdapter, decodeBody, requestBody, MAX_BODY, MULTIPART_BOUNDARY, type Adapter } from "./adapters.js";
 export { parsePath, matches, render, select, PathError } from "./jsonpath.js";
 export { check, describeCheck, type CheckResult } from "./check.js";
 export { addProposal, decideProposal, describeProposal, loadProposals, acceptDraft, rejectDraft, editYaml, PROPOSAL_KINDS, type Proposal, type ProposalInput, type ProposalKind, type ScrubRule } from "./proposals.js";
@@ -17,3 +17,9 @@ export { startSession, exploreRequest, addFinding, endSession, type Session, typ
 export { draftDefects, redactor, type DefectDraft } from "./defects.js";
 export { initProject } from "./init.js";
 export { discover, loadDiscovery, describeDiscovery, renderDiscovery, describeConnection, runRea, discoveryFolder, type Boundary, type Discovery, type DiscoverInput, type FoundInput } from "./discover.js";
+export { loadModel, modelFromSchema, modelFromOpenApi, listOperations, validate, type Field, type TargetModel, type Violation } from "./data/schema.js";
+export { stringFromPattern, patternLimits } from "./data/regex.js";
+export { planRecipe, loadRecipe, checkQuotas, isHappy, renderRecipe, recipeFolder, recipeFile, dataFolder, DEFAULT_QUOTAS, HOSTILE, type Recipe, type Row, type RecipeField, type Quotas, type PlanOptions } from "./data/recipe.js";
+export { writeXlsx, readXlsx, type Sheet, type Cell } from "./data/xlsx.js";
+export { makeRows, makeData, tabulate, rng, FAKER_VERSION, LOCALES, type MadeRow, type DataManifest, type MakeOptions, type DataFormat } from "./data/make.js";
+export { writeCases, type CasesOptions } from "./data/cases.js";

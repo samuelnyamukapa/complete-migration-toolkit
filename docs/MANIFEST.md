@@ -38,7 +38,7 @@ A case file holds `cases:`, a list. Each case:
 | `id` | yes | Unique across all case files, ignoring case: letters, digits, `.`, `-`, `_`. Not a name Windows reserves, such as `CON` or `NUL` |
 | `name` | no | What the case checks, in words |
 | `requirement` | no | One id or a list, such as `STORY-12/AC-1`. Reports group results by it |
-| `request` | yes | `GET /path`, or `{ method, path, headers, body }`. A path, never a host. A `body` written as a YAML mapping or list is sent as JSON |
+| `request` | yes | `GET /path`, or `{ method, path, headers, body }`. A path, never a host. A `body` written as a YAML mapping or list is sent as JSON. Instead of `body`: `body_file`, a file inside the project sent byte for byte (the content type from the headers or the file's extension), or `files`, a list of `{ field, path, filename?, content_type? }` sent as `multipart/form-data`. The evidence records each file's SHA-256, never its bytes |
 | `expect` | for `cmtk run` | What the answer must hold (below) |
 | `surface` | no | The adapter that runs it. Default `http` |
 | `match` | no | This case's level, overriding everything else |
@@ -97,3 +97,20 @@ The report lists any entry that no longer matches anything, so stale approvals d
 | `effects:$.emails[0].subject` | A side effect an adapter reported |
 | `body encoding` | One system sent UTF-8 and the other did not (checked at `exact`) |
 | `contract:<name>: <finding>` | A change to a contract, such as `contract:catalog-api: operation added: GET /api/v2/items`. Every change needs approval, additions included, because contracts are locked by default |
+
+## Test-data recipes (cmtk/data/*.yaml)
+
+`cmtk data plan` writes a recipe from a JSON Schema or an OpenAPI operation; `cmtk data make` regenerates its rows. A person reviews the recipe, never the rows.
+
+| Key | Meaning |
+|---|---|
+| `id` | The recipe's name; its rows go in `cmtk/data/<id>/` |
+| `draft` | `true` for a recipe an agent wrote |
+| `seed`, `clock`, `locale` | What every random, date and realistic value is derived from. The same seed gives the same rows on Windows and Linux |
+| `source` | The schema file, its SHA-256 and, for OpenAPI, the operation. A changed file is refused until the recipe is planned again |
+| `generators` | The versions that made the rows: a different version may make different values from the same seed |
+| `quotas` | `max_happy_share` (default 0.5): at most this share of rows may be happy paths; `boundaries_on_every_ordered_field`; `negative_for_every_field`. A recipe that breaks them is reported |
+| `fields` | One per field: `path`, `type`, `required`, `nullable`, `constraints`, `source` (which part of the schema), `valid_from` (how a valid value is made), `note` |
+| `rows` | One per condition. `name` says what it exercises; `technique` is `EP`, `BVA-3`, `pairwise` or `hostile`; `coverage_item` says it in words; `expect_valid` is what the schema says; `invalid_because: { path, keyword }` is confirmed by the validator; `oracle` is `specified`, `derived`, `implicit` or `human`; `set` and `unset` change the generated baseline by JSON path; `replace_body` replaces it |
+
+`cmtk data make` writes `rows.json`, `rows/<name>.json` (one file per row, for `body_file`), `rows.csv` (UTF-8 with a BOM, CRLF), `rows.xlsx` on request (its metadata pinned to the recipe's clock, so it never names a person), `DATA.md` and `MANIFEST.json` (seed, clock, versions, every file's SHA-256, the quota results). `cmtk data cases` writes one draft case per row.

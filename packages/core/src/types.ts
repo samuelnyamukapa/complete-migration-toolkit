@@ -83,6 +83,29 @@ export interface Request {
     path: string;
     headers?: Record<string, string>;
     body?: string | null;
+    /** A file inside the project whose bytes are the body. Set by the loader from `body_file`. */
+    body_file?: string;
+    /** Files sent as multipart/form-data. Set by the loader from `files`. */
+    files?: UploadPart[];
+}
+
+/** One part of a multipart/form-data body: a file inside the project, under a form field. */
+export interface UploadPart {
+    field: string;
+    path: string;
+    filename?: string;
+    content_type?: string;
+}
+
+/** An input file a case sent, as the evidence records it: never the bytes, always the fingerprint. */
+export interface InputFile {
+    path: string;
+    sha256: string;
+    bytes: number;
+    /** For an upload: the form field and the name the server saw. */
+    field?: string;
+    filename?: string;
+    content_type?: string;
 }
 
 /** A check on one answer, for `cmtk run`. Every field is optional. */
@@ -134,6 +157,8 @@ export interface Observation {
     status?: number;
     headers?: Record<string, string>;
     body?: string;
+    /** The files the request sent, fingerprinted. */
+    inputs?: InputFile[];
     /** "utf-8" (the default) or "latin1" when the bytes were not valid UTF-8; latin1 keeps every byte. */
     body_encoding?: string;
     sha256?: string;
@@ -180,6 +205,8 @@ export interface CaseOutcome {
     name: string;
     /** "GET /path": what was sent, so a reader of REPORT.json needs no case file. */
     request?: string;
+    /** The input files the case sent, fingerprinted. */
+    inputs?: InputFile[];
     requirement: string[];
     surface: string;
     match?: MatchLevel;

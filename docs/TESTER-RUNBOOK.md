@@ -39,6 +39,18 @@ One case or more for each acceptance criterion. Each case names its `requirement
   Answer the questions; that is where most bugs in requirements are found.
 - **By hand:** write the case files in `cmtk/cases/`.
 
+- **When a case needs a body or an input file** (an order to post, a CSV to import), don't write the values by hand. Point `cmtk data plan` at the system's schema:
+
+  ```sh
+  cmtk data plan --schema openapi.json --operation "POST /api/orders"
+  cmtk data make api-orders
+  cmtk data cases api-orders --requirement STORY-7/AC-2
+  ```
+
+  The first command writes a **recipe** (`cmtk/data/api-orders.yaml`): every field's constraints, and one row per condition worth testing, named by that condition: a valid baseline, the value just below and just above every limit, a missing required field, a wrong type, hostile strings, every pair of choices. The second regenerates the rows from the recipe's seed, checks each against the schema, and writes them as JSON, CSV and (with `--format json,csv,xlsx`) Excel. The third writes one draft case per row. Review the recipe, not the rows: if a value is wrong, change the recipe and run `cmtk data check`.
+
+  - **With an agent:** `/cmtk:data openapi.json --operation "POST /api/orders"`. It also reads the rows against the requirements and raises what the schema can't say (a price the schema allows but the story forbids, a rule between two fields) as questions for you.
+
 Then check them. This sends no requests:
 
 ```sh
@@ -126,3 +138,6 @@ Drafts never run in CI until a person accepts them; the report says how many wer
 | `… requests in a row got no answer, so the run stopped early` | The system stopped answering. Check it is up and answers a request, then run again |
 | `Another cmtk run is writing …` | A run is still going, perhaps one an agent started and stopped waiting for. Wait for it to finish |
 | `Exploration only reads` | Exploration never changes data. Write a case for it instead, with test data |
+| `should break … but the schema accepts it` | A recipe row was edited into a value the schema allows. Correct the row's value or its `invalid_because` |
+| `has changed since the recipe was planned` | The schema file changed. Plan the recipe again, or restore the file |
+| `Quotas not met` | The recipe has too many happy paths, or a field lost its boundary or negative rows. Put them back, or lower the quota in the recipe and say why |

@@ -6,6 +6,7 @@ Skills for GitHub Copilot (CLI and app) and Claude Code that do the grind of tes
 |---|---|
 | `/cmtk:test` | Start here. Sets up cmtk in a project and walks from requirements to a signed report. Works for any project, not only migrations. |
 | `/cmtk:plan` | Turns stories, a runbook, a requirements document or an OpenAPI file into a test plan and draft cases. Unclear points become questions. |
+| `/cmtk:data` | Creates missing test data from the system's own schema: a seeded recipe a person reviews, rows regenerated from it and checked against the schema, written as JSON, CSV or Excel, and one draft case per row. |
 | `/cmtk:discover` | The first step of a migration: lists every boundary of the legacy system, with the evidence for each, and flags the ones no adapter covers. Uses REA (Reverse Engineer Anything) for assemblies when it is installed. |
 | `/cmtk:triage` | Goes through a comparison of an old and a new system, and proposes for each group of differences: noise, intended drift or a defect. |
 | `/cmtk:explore` | Exploratory testing against a charter, read-only and within a budget. Findings become draft cases, with every request logged. |
@@ -62,7 +63,7 @@ To try it without a system of your own, use the bookshop example in the toolkit 
 
 | Path | What |
 |---|---|
-| `skills/` | The six skills |
+| `skills/` | The seven skills |
 | `server/cmtk-mcp.mjs` | The cmtk MCP server, bundled: the tools the skills use |
 | `server/cmtk.mjs` | The `cmtk` command, bundled: what a person runs for review and sign-off |
 | `server/THIRD-PARTY-NOTICES.txt` | Licences of the bundled packages |
