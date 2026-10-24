@@ -244,7 +244,7 @@ test("cmtk data cases --encoding form writes form posts with the page to read fi
     assert.ok(!out.leftOut.some((x) => x.name === "Name_null"), "null posts as empty, which a required field refuses, so that row keeps its meaning");
     assert.ok(!out.leftOut.some((x) => x.name === "Price_wrong_type"), "text where a number is expected is still the wrong type");
     assert.equal(out.withoutExpect, 0);
-    const cases = loadCases(m()).filter((c) => c.file === out.file);
+    const cases = loadCases(m()).filter((c) => c.file.split(path.sep).join("/") === out.file);
     assert.equal(cases.length, out.cases.length);
     const base = cases.find((c) => c.request.body_form === "cmtk/data/item/rows/baseline_valid.json");
     assert.ok(base, "the row goes as a form");
