@@ -87,6 +87,36 @@ export interface Request {
     body_file?: string;
     /** Files sent as multipart/form-data. Set by the loader from `files`. */
     files?: UploadPart[];
+    /**
+     * Form fields, sent as application/x-www-form-urlencoded (or as the text parts of a multipart body when
+     * `files` is also given). A string names a JSON file inside the project whose top-level fields are the form;
+     * a mapping gives the fields inline. Set by the loader from `body_form`.
+     */
+    body_form?: string | Record<string, FormValue>;
+    /** A page read before the request, for a value it carries (an anti-forgery token) and the cookies it sets. */
+    before?: Before;
+}
+
+/** What a form field may hold: a scalar, or a list of scalars sent as repeated fields. */
+export type FormValue = string | number | boolean | null | (string | number | boolean | null)[];
+
+/**
+ * One GET to the same target before the request. Every cookie it sets goes on the request, and each `take`
+ * entry puts one value from the page into a form field: a selector `input[name=x]` (its `value`), `meta[name=x]`
+ * (its `content`), `tag[attr=x]@attr`, `regex:<pattern with one group>` or `cookie:<name>`.
+ * The values taken are never written to evidence; their names are.
+ */
+export interface Before {
+    get: string;
+    take?: Record<string, string>;
+}
+
+/** What a `before` page gave, as the evidence records it: names, never values. */
+export interface BeforeOutcome {
+    request: string;
+    status?: number;
+    took: string[];
+    cookies: string[];
 }
 
 /** One part of a multipart/form-data body: a file inside the project, under a form field. */
@@ -106,6 +136,8 @@ export interface InputFile {
     field?: string;
     filename?: string;
     content_type?: string;
+    /** "form" when the file's fields were sent as a form rather than its bytes as the body. */
+    as?: "form";
 }
 
 /** A check on one answer, for `cmtk run`. Every field is optional. */
@@ -159,6 +191,8 @@ export interface Observation {
     body?: string;
     /** The files the request sent, fingerprinted. */
     inputs?: InputFile[];
+    /** The page read before the request, and what was taken from it, by name. */
+    before?: BeforeOutcome;
     /** "utf-8" (the default) or "latin1" when the bytes were not valid UTF-8; latin1 keeps every byte. */
     body_encoding?: string;
     sha256?: string;
@@ -207,6 +241,8 @@ export interface CaseOutcome {
     request?: string;
     /** The input files the case sent, fingerprinted. */
     inputs?: InputFile[];
+    /** The page read before the request, and what was taken from it, by name. */
+    before?: BeforeOutcome;
     requirement: string[];
     surface: string;
     match?: MatchLevel;

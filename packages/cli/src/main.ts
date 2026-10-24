@@ -14,7 +14,7 @@ import {
     acceptDraft, adaptersFor, casesToYaml, check, compare, ConfigError, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
     initProject, rejectDraft, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report,
-    planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, FAKER_VERSION, type DataFormat,
+    planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat,
 } from "@cmtk/core";
 
 // Node 22 before 22.17 flags fs.globSync and path.matchesGlob as experimental and prints a warning
@@ -50,6 +50,8 @@ Usage:
   cmtk data make <id> [--format json,csv,xlsx]                      regenerate the rows from the recipe, check them, write the files
   cmtk data check <id>                                              check a recipe's rows and quotas without writing files
   cmtk data cases <id> [--path /api/x] [--requirement <id>] [--out <file>]
+                       [--encoding form] [--before-get /page] [--take field=selector]...
+                       [--expect-valid 302] [--expect-invalid 200] [--rows valid|invalid]
                                                                     one draft case per row, each sending its row from a file
   cmtk signoff run|compare                                          a person signs a report, at a terminal (never an agent)
   cmtk adapter new <name>                                           write a new adapter from the template
@@ -121,6 +123,12 @@ async function main(argv: string[]): Promise<number> {
             path: { type: "string" },
             method: { type: "string" },
             requirement: { type: "string" },
+            encoding: { type: "string" },
+            "before-get": { type: "string" },
+            take: { type: "string", multiple: true },
+            "expect-valid": { type: "string" },
+            "expect-invalid": { type: "string" },
+            rows: { type: "string" },
             help: { type: "boolean", short: "h", default: false },
             version: { type: "boolean", short: "v", default: false },
         },
@@ -436,8 +444,28 @@ async function dataCommand(args: string[], manifestFile: string, v: Record<strin
         }
         case "cases": {
             if (!id) throw new UsageError("`cmtk data cases` needs the recipe id.");
-            const { file, cases, withoutExpect } = writeCases(m, id, { path: v.path, method: v.method, requirement: v.requirement, out: v.out });
+            if (v.encoding !== undefined && v.encoding !== "json" && v.encoding !== "form") throw new UsageError("--encoding is json (the row file as the body) or form (its fields as a browser posts a form).");
+            if (v.rows !== undefined && !["all", "valid", "invalid"].includes(v.rows)) throw new UsageError("--rows is all, valid or invalid.");
+            const take: Record<string, string> = {};
+            for (const t of (v.take ?? []) as string[]) {
+                const eq = t.indexOf("=");
+                if (eq <= 0) throw new UsageError(`--take needs field=selector, such as --take "__RequestVerificationToken=input[name=__RequestVerificationToken]"; got ${JSON.stringify(t)}.`);
+                take[t.slice(0, eq).trim()] = t.slice(eq + 1).trim();
+            }
+            if (Object.keys(take).length && !v["before-get"]) throw new UsageError("--take needs --before-get /page: the page the value is taken from.");
+            const status = (flag: string) => {
+                if (v[flag] === undefined) return undefined;
+                const n = Number(v[flag]);
+                if (!Number.isInteger(n) || n < 100 || n > 599) throw new UsageError(`--${flag} must be an HTTP status, such as 302.`);
+                return n;
+            };
+            const { file, cases, withoutExpect, leftOut } = writeCases(m, id, {
+                path: v.path, method: v.method, requirement: v.requirement, out: v.out, encoding: v.encoding, rows: v.rows,
+                before: v["before-get"] ? { get: v["before-get"], ...(Object.keys(take).length ? { take } : {}) } : undefined,
+                expectValid: status("expect-valid"), expectInvalid: status("expect-invalid"),
+            });
             console.log(`Wrote ${cases.length} draft cases to ${file}${withoutExpect ? `; ${withoutExpect} have no expect: block yet, because no documented status says what the answer should be` : ""}.`);
+            for (const line of describeLeftOut(leftOut)) console.log(`Left out, ${line}.`);
             console.log("Next: a person reviews them with `cmtk review`. They are skipped until then.");
             return 0;
         }

@@ -1,0 +1,982 @@
+# Draft cases from the test-data recipe catalog-item: one per valid row (the rows the schema calls valid), each sending its row from cmtk/data/catalog-item/rows/ as a form. A person accepts them with `cmtk review`.
+cases:
+  - id: CATALOG-ITEM-001
+    name: "every field: a valid representative"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/baseline_valid.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row baseline_valid (EP): every field: a valid representative. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-004
+    name: $.Name exactly 1 characters
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_minLength_at_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_minLength_at_3bva (BVA-3): $.Name exactly 1 characters. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-005
+    name: $.Name 2 characters
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_minLength_above_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_minLength_above_3bva (BVA-3): $.Name 2 characters. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-006
+    name: $.Name one character shorter than 50
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_maxLength_below_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_maxLength_below_3bva (BVA-3): $.Name one character shorter than 50. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-007
+    name: $.Name exactly 50 characters
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_maxLength_at_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_maxLength_at_3bva (BVA-3): $.Name exactly 50 characters. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-013
+    name: "$.Name: whitespace that trims to nothing"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_hostile_spaces_only.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_hostile_spaces_only (hostile): $.Name: whitespace that trims to nothing. The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-014
+    name: "$.Name: leading and trailing spaces, which some systems keep and some drop"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_hostile_padded.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_hostile_padded (hostile): $.Name: leading and trailing spaces, which some systems keep and some drop. The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-015
+    name: "$.Name: a quote that breaks string concatenation into SQL"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_hostile_sql_quote.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_hostile_sql_quote (hostile): $.Name: a quote that breaks string concatenation into SQL. The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-016
+    name: "$.Name: markup that a page may render"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_hostile_html.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_hostile_html (hostile): $.Name: markup that a page may render. The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-017
+    name: "$.Name: a leading = that a spreadsheet runs as a formula (OWASP CSV injection)"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_hostile_csv_formula.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_hostile_csv_formula (hostile): $.Name: a leading = that a spreadsheet runs as a formula (OWASP CSV injection). The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-018
+    name: "$.Name: a right-to-left override that hides what the text really says"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_hostile_rtl_override.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_hostile_rtl_override (hostile): $.Name: a right-to-left override that hides what the text really says. The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-019
+    name: "$.Name: letters outside ASCII"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_hostile_accents.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_hostile_accents (hostile): $.Name: letters outside ASCII. The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-020
+    name: "$.Name: characters outside the Basic Multilingual Plane; a length of 2 or 4 depending on the system"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_hostile_emoji.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_hostile_emoji (hostile): $.Name: characters outside the Basic Multilingual Plane; a length of 2 or 4 depending on the system. The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-022
+    name: $.Description one character shorter than 200
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Description_maxLength_below_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Description_maxLength_below_3bva (BVA-3): $.Description one character shorter than 200. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-023
+    name: $.Description exactly 200 characters
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Description_maxLength_at_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Description_maxLength_at_3bva (BVA-3): $.Description exactly 200 characters. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-026
+    name: "$.Description: an empty string where text is expected"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Description_hostile_empty.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Description_hostile_empty (hostile): $.Description: an empty string where text is expected. The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-027
+    name: "$.Description: whitespace that trims to nothing"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Description_hostile_spaces_only.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Description_hostile_spaces_only (hostile): $.Description: whitespace that trims to nothing. The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-028
+    name: "$.Description: leading and trailing spaces, which some systems keep and some drop"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Description_hostile_padded.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Description_hostile_padded (hostile): $.Description: leading and trailing spaces, which some systems keep and some drop. The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-029
+    name: "$.Description: a quote that breaks string concatenation into SQL"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Description_hostile_sql_quote.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Description_hostile_sql_quote (hostile): $.Description: a quote that breaks string concatenation into SQL. The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-030
+    name: "$.Description: markup that a page may render"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Description_hostile_html.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Description_hostile_html (hostile): $.Description: markup that a page may render. The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-031
+    name: "$.Description: a leading = that a spreadsheet runs as a formula (OWASP CSV injection)"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Description_hostile_csv_formula.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Description_hostile_csv_formula (hostile): $.Description: a leading = that a spreadsheet runs as a formula (OWASP CSV injection). The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-032
+    name: "$.Description: a right-to-left override that hides what the text really says"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Description_hostile_rtl_override.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Description_hostile_rtl_override (hostile): $.Description: a right-to-left override that hides what the text really says. The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-033
+    name: "$.Description: letters outside ASCII"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Description_hostile_accents.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Description_hostile_accents (hostile): $.Description: letters outside ASCII. The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-034
+    name: "$.Description: characters outside the Basic Multilingual Plane; a length of 2 or 4 depending on the system"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Description_hostile_emoji.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Description_hostile_emoji (hostile): $.Description: characters outside the Basic Multilingual Plane; a length of 2 or 4 depending on the system. The schema says the body is valid; the oracle is implicit. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-037
+    name: $.Price at its lowest valid value (0)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Price_minimum_at_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Price_minimum_at_3bva (BVA-3): $.Price at its lowest valid value (0). The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-038
+    name: $.Price one step above its lowest valid value
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Price_minimum_above_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Price_minimum_above_3bva (BVA-3): $.Price one step above its lowest valid value. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-039
+    name: $.Price one step below its highest valid value
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Price_maximum_below_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Price_maximum_below_3bva (BVA-3): $.Price one step below its highest valid value. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-040
+    name: $.Price at its highest valid value (1000000)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Price_maximum_at_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row Price_maximum_at_3bva (BVA-3): $.Price at its highest valid value (1000000). The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-061
+    name: $.AvailableStock at its lowest valid value (0)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/AvailableStock_minimum_at_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row AvailableStock_minimum_at_3bva (BVA-3): $.AvailableStock at its lowest valid value (0). The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-062
+    name: $.AvailableStock one step above its lowest valid value
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/AvailableStock_minimum_above_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row AvailableStock_minimum_above_3bva (BVA-3): $.AvailableStock one step above its lowest valid value. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-063
+    name: $.AvailableStock one step below its highest valid value
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/AvailableStock_maximum_below_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row AvailableStock_maximum_below_3bva (BVA-3): $.AvailableStock one step below its highest valid value. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-064
+    name: $.AvailableStock at its highest valid value (10000000)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/AvailableStock_maximum_at_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row AvailableStock_maximum_at_3bva (BVA-3): $.AvailableStock at its highest valid value (10000000). The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-071
+    name: $.RestockThreshold at its lowest valid value (0)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/RestockThreshold_minimum_at_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row RestockThreshold_minimum_at_3bva (BVA-3): $.RestockThreshold at its lowest valid value (0). The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-072
+    name: $.RestockThreshold one step above its lowest valid value
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/RestockThreshold_minimum_above_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row RestockThreshold_minimum_above_3bva (BVA-3): $.RestockThreshold one step above its lowest valid value. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-073
+    name: $.RestockThreshold one step below its highest valid value
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/RestockThreshold_maximum_below_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row RestockThreshold_maximum_below_3bva (BVA-3): $.RestockThreshold one step below its highest valid value. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-074
+    name: $.RestockThreshold at its highest valid value (10000000)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/RestockThreshold_maximum_at_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row RestockThreshold_maximum_at_3bva (BVA-3): $.RestockThreshold at its highest valid value (10000000). The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-081
+    name: $.MaxStockThreshold at its lowest valid value (0)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/MaxStockThreshold_minimum_at_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row MaxStockThreshold_minimum_at_3bva (BVA-3): $.MaxStockThreshold at its lowest valid value (0). The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-082
+    name: $.MaxStockThreshold one step above its lowest valid value
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/MaxStockThreshold_minimum_above_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row MaxStockThreshold_minimum_above_3bva (BVA-3): $.MaxStockThreshold one step above its lowest valid value. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-083
+    name: $.MaxStockThreshold one step below its highest valid value
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/MaxStockThreshold_maximum_below_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row MaxStockThreshold_maximum_below_3bva (BVA-3): $.MaxStockThreshold one step below its highest valid value. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-084
+    name: $.MaxStockThreshold at its highest valid value (10000000)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/MaxStockThreshold_maximum_at_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row MaxStockThreshold_maximum_at_3bva (BVA-3): $.MaxStockThreshold at its highest valid value (10000000). The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-092
+    name: $.Description present & $.CatalogBrandId=1; $.Description present & $.CatalogTypeId=1; $.Description present & $.OnReorder=true; and 3 more pairs
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/pairwise_01.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row pairwise_01 (pairwise): $.Description present & $.CatalogBrandId=1; $.Description present & $.CatalogTypeId=1; $.Description present & $.OnReorder=true; and 3 more pairs. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-093
+    name: $.Description present & $.CatalogBrandId=2; $.Description present & $.CatalogTypeId=2; $.Description present & $.OnReorder=false; and 3 more pairs
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/pairwise_02.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row pairwise_02 (pairwise): $.Description present & $.CatalogBrandId=2; $.Description present & $.CatalogTypeId=2; $.Description present & $.OnReorder=false; and 3 more pairs. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-094
+    name: $.Description present & $.CatalogBrandId=3; $.Description present & $.CatalogTypeId=3; $.Description present & $.OnReorder absent; and 3 more pairs
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/pairwise_03.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row pairwise_03 (pairwise): $.Description present & $.CatalogBrandId=3; $.Description present & $.CatalogTypeId=3; $.Description present & $.OnReorder absent; and 3 more pairs. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-095
+    name: $.Description present & $.CatalogBrandId=4; $.Description present & $.CatalogTypeId=4; $.CatalogBrandId=4 & $.CatalogTypeId=4; and 2 more pairs
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/pairwise_04.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row pairwise_04 (pairwise): $.Description present & $.CatalogBrandId=4; $.Description present & $.CatalogTypeId=4; $.CatalogBrandId=4 & $.CatalogTypeId=4; and 2 more pairs. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-096
+    name: $.Description present & $.CatalogBrandId=5; $.CatalogBrandId=5 & $.CatalogTypeId=1; $.CatalogBrandId=5 & $.OnReorder=false; and 1 more pairs
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/pairwise_05.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row pairwise_05 (pairwise): $.Description present & $.CatalogBrandId=5; $.CatalogBrandId=5 & $.CatalogTypeId=1; $.CatalogBrandId=5 & $.OnReorder=false; and 1 more pairs. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-097
+    name: $.CatalogBrandId=1 & $.CatalogTypeId=2; $.CatalogBrandId=1 & $.OnReorder absent; $.CatalogTypeId=2 & $.OnReorder absent
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/pairwise_06.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row pairwise_06 (pairwise): $.CatalogBrandId=1 & $.CatalogTypeId=2; $.CatalogBrandId=1 & $.OnReorder absent; $.CatalogTypeId=2 & $.OnReorder absent. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-098
+    name: $.CatalogBrandId=1 & $.CatalogTypeId=3; $.CatalogBrandId=1 & $.OnReorder=false; $.CatalogTypeId=3 & $.OnReorder=false
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/pairwise_07.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row pairwise_07 (pairwise): $.CatalogBrandId=1 & $.CatalogTypeId=3; $.CatalogBrandId=1 & $.OnReorder=false; $.CatalogTypeId=3 & $.OnReorder=false. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-099
+    name: $.CatalogBrandId=1 & $.CatalogTypeId=4; $.CatalogTypeId=4 & $.OnReorder=false
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/pairwise_08.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row pairwise_08 (pairwise): $.CatalogBrandId=1 & $.CatalogTypeId=4; $.CatalogTypeId=4 & $.OnReorder=false. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-100
+    name: $.CatalogTypeId=1 & $.OnReorder absent
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+      - RULE-020
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/pairwise_09.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 302
+    draft: true
+    draft_note: "From recipe catalog-item, row pairwise_09 (pairwise): $.CatalogTypeId=1 & $.OnReorder absent. The schema says the body is valid; the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 302 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."

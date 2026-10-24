@@ -1,0 +1,895 @@
+# Draft cases from the test-data recipe catalog-item: one per invalid row (the rows the schema calls invalid), each sending its row from cmtk/data/catalog-item/rows/ as a form. A person accepts them with `cmtk review`.
+cases:
+  - id: CATALOG-ITEM-003
+    name: $.Name one character shorter than 1
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_minLength_below_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_minLength_below_3bva (BVA-3): $.Name one character shorter than 1. The schema says the body is invalid ($.Name minLength); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-008
+    name: $.Name one character longer than 50
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_maxLength_above_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_maxLength_above_3bva (BVA-3): $.Name one character longer than 50. The schema says the body is invalid ($.Name maxLength); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-009
+    name: $.Name missing though required
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_missing.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_missing (EP): $.Name missing though required. The schema says the body is invalid ($.Name required); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-010
+    name: $.Name null though not nullable
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_null.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_null (EP): $.Name null though not nullable. The schema says the body is invalid ($.Name type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-012
+    name: "$.Name: an empty string where text is expected"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_hostile_empty.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_hostile_empty (hostile): $.Name: an empty string where text is expected. The schema says the body is invalid ($.Name minLength); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-021
+    name: "$.Name: 4,096 characters: past most column widths"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_hostile_long.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_hostile_long (hostile): $.Name: 4,096 characters: past most column widths. The schema says the body is invalid ($.Name maxLength); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-024
+    name: $.Description one character longer than 200
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Description_maxLength_above_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row Description_maxLength_above_3bva (BVA-3): $.Description one character longer than 200. The schema says the body is invalid ($.Description maxLength); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-035
+    name: "$.Description: 4,096 characters: past most column widths"
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Description_hostile_long.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row Description_hostile_long (hostile): $.Description: 4,096 characters: past most column widths. The schema says the body is invalid ($.Description maxLength); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-036
+    name: $.Price below its minimum (0)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Price_minimum_below_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row Price_minimum_below_3bva (BVA-3): $.Price below its minimum (0). The schema says the body is invalid ($.Price minimum); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-041
+    name: $.Price above its maximum (1000000)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Price_maximum_above_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row Price_maximum_above_3bva (BVA-3): $.Price above its maximum (1000000). The schema says the body is invalid ($.Price maximum); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-042
+    name: $.Price missing though required
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Price_missing.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row Price_missing (EP): $.Price missing though required. The schema says the body is invalid ($.Price required); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-043
+    name: $.Price null though not nullable
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Price_null.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row Price_null (EP): $.Price null though not nullable. The schema says the body is invalid ($.Price type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-044
+    name: $.Price of the wrong type
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Price_wrong_type.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row Price_wrong_type (EP): $.Price of the wrong type. The schema says the body is invalid ($.Price type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-045
+    name: $.Price not a multiple of 0.01
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Price_not_a_multiple.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row Price_not_a_multiple (EP): $.Price not a multiple of 0.01. The schema says the body is invalid ($.Price multipleOf); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-046
+    name: $.PictureFileName missing though required
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/PictureFileName_missing.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row PictureFileName_missing (EP): $.PictureFileName missing though required. The schema says the body is invalid ($.PictureFileName required); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-047
+    name: $.PictureFileName null though not nullable
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/PictureFileName_null.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row PictureFileName_null (EP): $.PictureFileName null though not nullable. The schema says the body is invalid ($.PictureFileName type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-049
+    name: $.PictureFileName does not match ^[A-Za-z0-9_-]+\.(png|jpg|jpeg|gif)$
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/PictureFileName_breaks_pattern.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row PictureFileName_breaks_pattern (EP): $.PictureFileName does not match ^[A-Za-z0-9_-]+\\.(png|jpg|jpeg|gif)$. The schema says the body is invalid ($.PictureFileName pattern); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-050
+    name: $.CatalogBrandId missing though required
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/CatalogBrandId_missing.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row CatalogBrandId_missing (EP): $.CatalogBrandId missing though required. The schema says the body is invalid ($.CatalogBrandId required); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-051
+    name: $.CatalogBrandId null though not nullable
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/CatalogBrandId_null.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row CatalogBrandId_null (EP): $.CatalogBrandId null though not nullable. The schema says the body is invalid ($.CatalogBrandId type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-052
+    name: $.CatalogBrandId of the wrong type
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/CatalogBrandId_wrong_type.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row CatalogBrandId_wrong_type (EP): $.CatalogBrandId of the wrong type. The schema says the body is invalid ($.CatalogBrandId enum); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-053
+    name: $.CatalogBrandId outside [1,2,3,4,5]
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/CatalogBrandId_not_in_enum.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row CatalogBrandId_not_in_enum (EP): $.CatalogBrandId outside [1,2,3,4,5]. The schema says the body is invalid ($.CatalogBrandId enum); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-054
+    name: $.CatalogBrandId with a fraction though an integer
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/CatalogBrandId_fraction.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row CatalogBrandId_fraction (EP): $.CatalogBrandId with a fraction though an integer. The schema says the body is invalid ($.CatalogBrandId type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-055
+    name: $.CatalogTypeId missing though required
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/CatalogTypeId_missing.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row CatalogTypeId_missing (EP): $.CatalogTypeId missing though required. The schema says the body is invalid ($.CatalogTypeId required); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-056
+    name: $.CatalogTypeId null though not nullable
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/CatalogTypeId_null.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row CatalogTypeId_null (EP): $.CatalogTypeId null though not nullable. The schema says the body is invalid ($.CatalogTypeId type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-057
+    name: $.CatalogTypeId of the wrong type
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/CatalogTypeId_wrong_type.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row CatalogTypeId_wrong_type (EP): $.CatalogTypeId of the wrong type. The schema says the body is invalid ($.CatalogTypeId enum); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-058
+    name: $.CatalogTypeId outside [1,2,3,4]
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/CatalogTypeId_not_in_enum.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row CatalogTypeId_not_in_enum (EP): $.CatalogTypeId outside [1,2,3,4]. The schema says the body is invalid ($.CatalogTypeId enum); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-059
+    name: $.CatalogTypeId with a fraction though an integer
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/CatalogTypeId_fraction.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row CatalogTypeId_fraction (EP): $.CatalogTypeId with a fraction though an integer. The schema says the body is invalid ($.CatalogTypeId type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-060
+    name: $.AvailableStock below its minimum (0)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/AvailableStock_minimum_below_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row AvailableStock_minimum_below_3bva (BVA-3): $.AvailableStock below its minimum (0). The schema says the body is invalid ($.AvailableStock minimum); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-065
+    name: $.AvailableStock above its maximum (10000000)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/AvailableStock_maximum_above_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row AvailableStock_maximum_above_3bva (BVA-3): $.AvailableStock above its maximum (10000000). The schema says the body is invalid ($.AvailableStock maximum); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-066
+    name: $.AvailableStock missing though required
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/AvailableStock_missing.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row AvailableStock_missing (EP): $.AvailableStock missing though required. The schema says the body is invalid ($.AvailableStock required); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-067
+    name: $.AvailableStock null though not nullable
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/AvailableStock_null.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row AvailableStock_null (EP): $.AvailableStock null though not nullable. The schema says the body is invalid ($.AvailableStock type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-068
+    name: $.AvailableStock of the wrong type
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/AvailableStock_wrong_type.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row AvailableStock_wrong_type (EP): $.AvailableStock of the wrong type. The schema says the body is invalid ($.AvailableStock type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-069
+    name: $.AvailableStock with a fraction though an integer
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/AvailableStock_fraction.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row AvailableStock_fraction (EP): $.AvailableStock with a fraction though an integer. The schema says the body is invalid ($.AvailableStock type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-070
+    name: $.RestockThreshold below its minimum (0)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/RestockThreshold_minimum_below_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row RestockThreshold_minimum_below_3bva (BVA-3): $.RestockThreshold below its minimum (0). The schema says the body is invalid ($.RestockThreshold minimum); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-075
+    name: $.RestockThreshold above its maximum (10000000)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/RestockThreshold_maximum_above_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row RestockThreshold_maximum_above_3bva (BVA-3): $.RestockThreshold above its maximum (10000000). The schema says the body is invalid ($.RestockThreshold maximum); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-076
+    name: $.RestockThreshold missing though required
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/RestockThreshold_missing.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row RestockThreshold_missing (EP): $.RestockThreshold missing though required. The schema says the body is invalid ($.RestockThreshold required); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-077
+    name: $.RestockThreshold null though not nullable
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/RestockThreshold_null.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row RestockThreshold_null (EP): $.RestockThreshold null though not nullable. The schema says the body is invalid ($.RestockThreshold type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-078
+    name: $.RestockThreshold of the wrong type
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/RestockThreshold_wrong_type.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row RestockThreshold_wrong_type (EP): $.RestockThreshold of the wrong type. The schema says the body is invalid ($.RestockThreshold type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-079
+    name: $.RestockThreshold with a fraction though an integer
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/RestockThreshold_fraction.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row RestockThreshold_fraction (EP): $.RestockThreshold with a fraction though an integer. The schema says the body is invalid ($.RestockThreshold type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-080
+    name: $.MaxStockThreshold below its minimum (0)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/MaxStockThreshold_minimum_below_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row MaxStockThreshold_minimum_below_3bva (BVA-3): $.MaxStockThreshold below its minimum (0). The schema says the body is invalid ($.MaxStockThreshold minimum); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-085
+    name: $.MaxStockThreshold above its maximum (10000000)
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/MaxStockThreshold_maximum_above_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row MaxStockThreshold_maximum_above_3bva (BVA-3): $.MaxStockThreshold above its maximum (10000000). The schema says the body is invalid ($.MaxStockThreshold maximum); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-086
+    name: $.MaxStockThreshold missing though required
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/MaxStockThreshold_missing.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row MaxStockThreshold_missing (EP): $.MaxStockThreshold missing though required. The schema says the body is invalid ($.MaxStockThreshold required); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-087
+    name: $.MaxStockThreshold null though not nullable
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/MaxStockThreshold_null.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row MaxStockThreshold_null (EP): $.MaxStockThreshold null though not nullable. The schema says the body is invalid ($.MaxStockThreshold type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-088
+    name: $.MaxStockThreshold of the wrong type
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/MaxStockThreshold_wrong_type.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row MaxStockThreshold_wrong_type (EP): $.MaxStockThreshold of the wrong type. The schema says the body is invalid ($.MaxStockThreshold type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-089
+    name: $.MaxStockThreshold with a fraction though an integer
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/MaxStockThreshold_fraction.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row MaxStockThreshold_fraction (EP): $.MaxStockThreshold with a fraction though an integer. The schema says the body is invalid ($.MaxStockThreshold type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-090
+    name: $.OnReorder null though not nullable
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/OnReorder_null.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row OnReorder_null (EP): $.OnReorder null though not nullable. The schema says the body is invalid ($.OnReorder type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-091
+    name: $.OnReorder of the wrong type
+    requirement:
+      - RULE-009
+      - RULE-011
+      - RULE-013
+      - RULE-014
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/OnReorder_wrong_type.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    expect:
+      status: 200
+    draft: true
+    draft_note: "From recipe catalog-item, row OnReorder_wrong_type (EP): $.OnReorder of the wrong type. The schema says the body is invalid ($.OnReorder type); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. The expected status 200 was given on the command line, not read from a document: the reviewer confirms it against the requirement. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."

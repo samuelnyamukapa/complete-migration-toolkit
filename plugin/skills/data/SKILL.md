@@ -24,7 +24,7 @@ The **project** is the folder that holds the manifest. Pass `manifest` to every 
 | `cmtk_data_plan` | Compiles the recipe: every field with its constraints and source, and the rows every technique calls for |
 | `cmtk_data_make` | Regenerates the rows from the seed, checks each against the schema, writes `rows.json`, `rows.csv`, one JSON and one CSV per row, and `rows.xlsx` |
 | `cmtk_data_check` | Checks a recipe a person edited: rows still regenerate, quotas still met |
-| `cmtk_data_cases` | One draft case per row, sending the row from its file |
+| `cmtk_data_cases` | One draft case per row, sending the row from its file: as a JSON body, or with `encoding: form` as a browser posts a form, with `before` reading the page first for its anti-forgery token and cookies |
 | `cmtk_check`, `cmtk_commands_for_person` | As in every skill |
 
 If the `cmtk` server isn't available, stop and say so.
@@ -60,6 +60,8 @@ The techniques are the ones testers already know, after ISO/IEC/IEEE 29119-4 and
    - **Fields the schema says nothing about** (free text with no length, an id with no range): say what the real system probably expects, and that the recipe's values are a guess until a person confirms.
    - **What no row covers:** state sequences, data that must already exist (an id that must reference a real brand), time-dependent behaviour.
 5. **Cases.** Call `cmtk_data_cases` with the path and the requirement. Rows get an `expect:` only where the OpenAPI document says what the answer should be; tell the person which rows have none and need one.
+   - **A web form, not an API.** If the operation is a page that takes `application/x-www-form-urlencoded` (an MVC, Rails or Django form; the page has `<form method="post">` and a hidden token such as `__RequestVerificationToken`, `authenticity_token` or `csrfmiddlewaretoken`), pass `encoding: "form"` and `before: { get: <the form's page>, take: { <token field>: "input[name=<token field>]" } }`. The engine reads the page before each post, takes the token and the cookies, and never writes the token to evidence. Rows that mean nothing as a form are left out, and the tool says which and why: a body that is not an object, and, because every form value is text, a text field "of the wrong type" or a null that posts as an empty value nothing would refuse.
+   - **Statuses for a form.** No OpenAPI document describes a form's answers. If the requirement says what a valid post and an invalid one answer (a redirect; the form again with a message), pass `expect_valid` and `expect_invalid` and name the rule in your message. If it doesn't, leave them out and ask: the draft note records that a status came from the command line, and the reviewer checks it. Never take the statuses from what the system answers today.
 6. **Tell the person:**
    - how many rows, by technique, and the happy-path share;
    - the findings and questions from step 4;

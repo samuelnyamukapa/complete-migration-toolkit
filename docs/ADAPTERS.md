@@ -19,7 +19,7 @@ An observation:
 ```
 
 - **Comparing:** `effects` is compared between systems exactly like a JSON body. It also appears in reports as `effects:$.emails[0].subject`.
-- **Errors:** an adapter that cannot run a case answers `{"error":"…"}`.
+- **Errors:** an adapter that cannot run a case answers `{"error":"…"}`. A case arrives as written in its file, with `body_file`, `body_form`, `files` or `before` when it has them; the built-in HTTP adapter handles all four, and an adapter that does not support one should answer an error naming it rather than send the request without it.
 - **Headers:** the `headers` passed in hold credentials from `headers_from_env`. Use them, but never report them.
 - **Target settings:** `target` holds everything set for that target in `cmtk.yaml`, so a target that has no web address can say what the adapter needs instead, such as `{ queue: orders-in }` or `{ probe: probes/legacy.exe }`.
 

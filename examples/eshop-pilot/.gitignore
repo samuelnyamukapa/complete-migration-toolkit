@@ -11,3 +11,4 @@ pilot-files.tgz
 tester/cmtk/evidence/
 tester/cmtk/data/*/
 !tester/cmtk/data/schemas/
+tester/cmtk/evidence-forms/

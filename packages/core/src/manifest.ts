@@ -215,10 +215,46 @@ export function loadCases(manifest: Manifest): Case[] {
                     return { field: f.field, path: f.path, ...(f.filename ? { filename: String(f.filename) } : {}), ...(f.content_type ? { content_type: String(f.content_type) } : {}) };
                 });
             }
+            if (req.body_form !== undefined) {
+                if (body !== null || request.body_file) throw new ManifestError(`${where}: \`body_form\` is the body, so give no \`body\` or \`body_file\` with it.`);
+                if (typeof req.body_form === "string") {
+                    if (!req.body_form.trim()) throw new ManifestError(`${where}: \`body_form\` must be a JSON file inside the project folder, or a mapping of fields.`);
+                    inside(manifest, req.body_form);
+                    request.body_form = req.body_form;
+                } else if (req.body_form && typeof req.body_form === "object" && !Array.isArray(req.body_form)) {
+                    for (const [k, v] of Object.entries(req.body_form)) {
+                        const bad = formValueProblem(v);
+                        if (bad) throw new ManifestError(`${where}: body_form.${k} ${bad}.`);
+                    }
+                    request.body_form = req.body_form;
+                } else throw new ManifestError(`${where}: \`body_form\` must be a JSON file inside the project folder, or a mapping of fields.`);
+            }
+            if (req.before !== undefined) {
+                const b = req.before;
+                if (!b || typeof b !== "object" || Array.isArray(b) || typeof b.get !== "string" || !b.get.startsWith("/") || b.get.startsWith("//")) {
+                    throw new ManifestError(`${where}: \`before\` must be { get: /a/path, take?: { field: selector } }: a path on the same target, never a host.`);
+                }
+                if (b.take !== undefined) {
+                    if (!b.take || typeof b.take !== "object" || Array.isArray(b.take)) throw new ManifestError(`${where}: \`before.take\` must map a form field to a selector.`);
+                    for (const [k, v] of Object.entries(b.take)) {
+                        if (typeof v !== "string" || !v.trim()) throw new ManifestError(`${where}: before.take.${k} must be a selector such as input[name=${k}].`);
+                        if (!request.body_form && !request.files) throw new ManifestError(`${where}: \`before.take\` puts ${k} into a form, so the case needs \`body_form\` or \`files\`.`);
+                    }
+                }
+                request.before = { get: b.get, ...(b.take ? { take: b.take } : {}) };
+            }
             all.push({ ...c, request, file: rel });
         }
     }
     return all;
+}
+
+/** Why a value cannot be a form field, or undefined when it can. */
+export function formValueProblem(v: unknown): string | undefined {
+    const scalar = (x: unknown) => x === null || ["string", "number", "boolean"].includes(typeof x);
+    if (scalar(v)) return undefined;
+    if (Array.isArray(v)) return v.every(scalar) ? undefined : "is a list with a nested value; a form field holds text, a number, a boolean, null, or a list of those";
+    return "is an object; a form field holds text, a number, a boolean, null, or a list of those (sent as repeated fields)";
 }
 
 /** "POST /api/orders" as a request. */

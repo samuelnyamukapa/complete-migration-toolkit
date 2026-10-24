@@ -1,0 +1,17 @@
+# eShop pilot, part 5: the generated rows posted to the Create form (10-data-forms.cmd, in the
+# folder above). Its own settings file, because these requests are POSTs: RULE-009 says an invalid
+# item is shown again with no write, and a valid one is saved. The evidence goes to its own folder,
+# so the signed reports in cmtk/evidence are never replaced. Legacy is the scratch copy on port 53190.
+system: eshop-legacy
+
+targets:
+  candidate: { base_url: http://localhost:53190 }
+
+cases: [cmtk/cases-forms/*.yaml]   # apart from cmtk/cases, which cmtk.yaml runs read-only
+evidence: cmtk/evidence-forms
+proposals: cmtk/proposals-forms.yaml
+drift: cmtk/drift-forms.yaml
+
+allow_unsafe_methods: true    # POST to the Create form, against the scratch copy only; --allow-unsafe is still needed on the run
+headers_from_env: {}          # eShop has no login
+timeout_s: 120                # the first request compiles the site

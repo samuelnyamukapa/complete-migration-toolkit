@@ -14094,10 +14094,53 @@ function loadCases(manifest) {
           return { field: f4.field, path: f4.path, ...f4.filename ? { filename: String(f4.filename) } : {}, ...f4.content_type ? { content_type: String(f4.content_type) } : {} };
         });
       }
+      if (req.body_form !== void 0) {
+        if (body !== null || request.body_file)
+          throw new ManifestError(`${where2}: \`body_form\` is the body, so give no \`body\` or \`body_file\` with it.`);
+        if (typeof req.body_form === "string") {
+          if (!req.body_form.trim())
+            throw new ManifestError(`${where2}: \`body_form\` must be a JSON file inside the project folder, or a mapping of fields.`);
+          inside(manifest, req.body_form);
+          request.body_form = req.body_form;
+        } else if (req.body_form && typeof req.body_form === "object" && !Array.isArray(req.body_form)) {
+          for (const [k2, v2] of Object.entries(req.body_form)) {
+            const bad = formValueProblem(v2);
+            if (bad)
+              throw new ManifestError(`${where2}: body_form.${k2} ${bad}.`);
+          }
+          request.body_form = req.body_form;
+        } else
+          throw new ManifestError(`${where2}: \`body_form\` must be a JSON file inside the project folder, or a mapping of fields.`);
+      }
+      if (req.before !== void 0) {
+        const b2 = req.before;
+        if (!b2 || typeof b2 !== "object" || Array.isArray(b2) || typeof b2.get !== "string" || !b2.get.startsWith("/") || b2.get.startsWith("//")) {
+          throw new ManifestError(`${where2}: \`before\` must be { get: /a/path, take?: { field: selector } }: a path on the same target, never a host.`);
+        }
+        if (b2.take !== void 0) {
+          if (!b2.take || typeof b2.take !== "object" || Array.isArray(b2.take))
+            throw new ManifestError(`${where2}: \`before.take\` must map a form field to a selector.`);
+          for (const [k2, v2] of Object.entries(b2.take)) {
+            if (typeof v2 !== "string" || !v2.trim())
+              throw new ManifestError(`${where2}: before.take.${k2} must be a selector such as input[name=${k2}].`);
+            if (!request.body_form && !request.files)
+              throw new ManifestError(`${where2}: \`before.take\` puts ${k2} into a form, so the case needs \`body_form\` or \`files\`.`);
+          }
+        }
+        request.before = { get: b2.get, ...b2.take ? { take: b2.take } : {} };
+      }
       all.push({ ...c4, request, file: rel2 });
     }
   }
   return all;
+}
+function formValueProblem(v2) {
+  const scalar = (x2) => x2 === null || ["string", "number", "boolean"].includes(typeof x2);
+  if (scalar(v2))
+    return void 0;
+  if (Array.isArray(v2))
+    return v2.every(scalar) ? void 0 : "is a list with a nested value; a form field holds text, a number, a boolean, null, or a list of those";
+  return "is an object; a form field holds text, a number, a boolean, null, or a list of those (sent as repeated fields)";
 }
 function parseRequestLine(line, where2) {
   const m4 = /^([A-Za-z]+)\s+(\S+)$/.exec(line.trim());
@@ -14205,7 +14248,44 @@ var CONTENT_TYPES = {
 };
 var typeOf = (file) => CONTENT_TYPES[path2.extname(file).toLowerCase()] ?? "application/octet-stream";
 var fingerprint = (rel2, bytes) => ({ path: rel2.split(path2.sep).join("/"), sha256: crypto.createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length });
-function requestBody(c4, root, headers) {
+var formText = (v2) => v2 === null ? "" : typeof v2 === "boolean" ? v2 ? "true" : "false" : String(v2);
+function formFields(c4, readFile, taken) {
+  const req = c4.request;
+  let fields = {};
+  const inputs = [];
+  if (typeof req.body_form === "string") {
+    const bytes = readFile(req.body_form);
+    inputs.push({ ...fingerprint(req.body_form, bytes), as: "form" });
+    let parsed;
+    try {
+      parsed = JSON.parse(bytes.toString("utf8"));
+    } catch {
+      throw new Error(`body_form: ${req.body_form} is not JSON`);
+    }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+      throw new Error(`body_form: ${req.body_form} holds ${Array.isArray(parsed) ? "a list" : "a value"}, not an object; a form is named fields`);
+    for (const [k2, v2] of Object.entries(parsed)) {
+      const bad = formValueProblem(v2);
+      if (bad)
+        throw new Error(`body_form: ${req.body_form}: ${k2} ${bad}`);
+    }
+    fields = parsed;
+  } else if (req.body_form)
+    fields = req.body_form;
+  const pairs = [];
+  for (const [k2, v2] of Object.entries(fields)) {
+    if (k2 in taken)
+      continue;
+    if (/[\r\n"]/.test(k2))
+      throw new Error(`body_form: the field name ${JSON.stringify(k2)} holds a quote or a line break`);
+    for (const one of Array.isArray(v2) ? v2 : [v2])
+      pairs.push([k2, formText(one)]);
+  }
+  for (const [k2, v2] of Object.entries(taken))
+    pairs.push([k2, v2]);
+  return { pairs, inputs };
+}
+function requestBody(c4, root, headers, taken = {}) {
   const req = c4.request;
   const hasType = () => Object.keys(headers).some((h4) => h4.toLowerCase() === "content-type");
   const readFile = (rel2) => {
@@ -14216,8 +14296,15 @@ function requestBody(c4, root, headers) {
   };
   try {
     if (req.files?.length) {
-      const inputs = [];
+      const form = formFields(c4, readFile, taken);
+      const inputs = [...form.inputs];
       const parts = [];
+      for (const [name, value] of form.pairs)
+        parts.push(Buffer.from(`--${MULTIPART_BOUNDARY}\r
+Content-Disposition: form-data; name="${name}"\r
+\r
+${value}\r
+`, "utf8"));
       for (const f4 of req.files) {
         const bytes = readFile(f4.path);
         const filename = f4.filename ?? path2.basename(f4.path);
@@ -14233,6 +14320,12 @@ Content-Type: ${type}\r
 `, "utf8"));
       headers["content-type"] = `multipart/form-data; boundary=${MULTIPART_BOUNDARY}`;
       return { body: Buffer.concat(parts), inputs };
+    }
+    if (req.body_form !== void 0) {
+      const form = formFields(c4, readFile, taken);
+      const encoded = new URLSearchParams(form.pairs).toString();
+      headers["content-type"] = "application/x-www-form-urlencoded";
+      return { body: Buffer.from(encoded, "utf8"), inputs: form.inputs };
     }
     if (req.body_file) {
       const bytes = readFile(req.body_file);
@@ -14267,16 +14360,91 @@ function decodeBody(raw, truncated) {
   }
   return { body: raw.toString("latin1"), encoding: "latin1" };
 }
-function send(baseUrl, c4, extra, opts) {
+var ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: "\xA0" };
+var unescapeHtml = (s4) => s4.replace(/&(#x[0-9a-fA-F]+|#[0-9]+|[a-zA-Z]+);/g, (m4, e6) => e6[0] === "#" ? String.fromCodePoint(parseInt(e6[1] === "x" || e6[1] === "X" ? e6.slice(2) : e6.slice(1), e6[1] === "x" || e6[1] === "X" ? 16 : 10)) : ENTITIES[e6] ?? m4);
+function takeFromPage(html, selector) {
+  if (selector.startsWith("regex:")) {
+    const m4 = new RegExp(selector.slice(6)).exec(html);
+    return m4 ? m4[1] ?? m4[0] : void 0;
+  }
+  const s4 = /^([a-zA-Z][\w-]*)\[([\w:-]+)=(?:"([^"]*)"|'([^']*)'|([^\]]*))\](?:@([\w:-]+))?$/.exec(selector.trim());
+  if (!s4)
+    throw new Error(`the selector ${JSON.stringify(selector)} is not tag[attr=value], tag[attr=value]@attr, regex:<pattern> or cookie:<name>`);
+  const [, tag, attr, q1, q2, bare, at2] = s4;
+  const want = (q1 ?? q2 ?? bare ?? "").trim();
+  const take = (at2 ?? (tag.toLowerCase() === "meta" ? "content" : "value")).toLowerCase();
+  const tags = new RegExp(`<${tag}\\b([^>]*)>`, "gi");
+  for (let t3 = tags.exec(html); t3; t3 = tags.exec(html)) {
+    const attrs = {};
+    const a4 = /([\w:-]+)\s*(?:=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+)))?/g;
+    for (let m4 = a4.exec(t3[1]); m4; m4 = a4.exec(t3[1]))
+      attrs[m4[1].toLowerCase()] = unescapeHtml(m4[2] ?? m4[3] ?? m4[4] ?? "");
+    if (attrs[attr.toLowerCase()] === want && take in attrs)
+      return attrs[take];
+  }
+  return void 0;
+}
+function cookiesOf(setCookie) {
+  const jar = {};
+  for (const line of setCookie) {
+    const first = line.split(";")[0];
+    const eq = first.indexOf("=");
+    if (eq > 0)
+      jar[first.slice(0, eq).trim()] = first.slice(eq + 1).trim();
+  }
+  return jar;
+}
+async function prepare(baseUrl, c4, before, extra, opts) {
+  const label = `before: GET ${before.get}`;
+  const headers = Object.fromEntries(Object.entries(c4.request.headers ?? {}).filter(([k2]) => !["content-type", "content-length"].includes(k2.toLowerCase())));
+  const page = await transfer(baseUrl, { id: c4.id, request: { method: "GET", path: before.get, headers } }, extra, opts);
+  if (page.obs.error)
+    return { error: `${label}: ${page.obs.error}` };
+  if (!page.obs.status || page.obs.status < 200 || page.obs.status >= 300)
+    return { error: `${label} answered ${page.obs.status}; the page a value is taken from must answer 2xx` };
+  const cookies = cookiesOf(page.setCookie);
+  const taken = {};
+  for (const [field, selector] of Object.entries(before.take ?? {})) {
+    let value;
+    try {
+      value = selector.startsWith("cookie:") ? cookies[selector.slice(7).trim()] : takeFromPage(page.obs.body ?? "", selector);
+    } catch (err) {
+      return { error: `${label}: ${err.message}` };
+    }
+    if (value === void 0)
+      return { error: `${label}: nothing on the page matches ${selector} for ${field}` };
+    taken[field] = value;
+  }
+  return { taken, cookies, outcome: { request: `GET ${before.get}`, status: page.obs.status, took: Object.keys(taken), cookies: Object.keys(cookies) } };
+}
+async function send(baseUrl, c4, extra, opts) {
   const req = c4.request;
   if (!req.path.startsWith("/") || req.path.startsWith("//"))
-    return Promise.resolve({ error: "the path must start with a single '/'" });
+    return { error: "the path must start with a single '/'" };
+  if (!req.before)
+    return (await transfer(baseUrl, c4, extra, opts)).obs;
+  const prep = await prepare(baseUrl, c4, req.before, extra, opts);
+  if ("error" in prep)
+    return { error: prep.error };
+  const jar = Object.entries(prep.cookies).map(([k2, v2]) => `${k2}=${v2}`).join("; ");
+  const own = Object.entries(req.headers ?? {}).find(([k2]) => k2.toLowerCase() === "cookie");
+  const headers = { ...req.headers ?? {} };
+  if (jar) {
+    if (own)
+      delete headers[own[0]];
+    headers["cookie"] = own && own[1] ? `${own[1]}; ${jar}` : jar;
+  }
+  const { obs } = await transfer(baseUrl, { ...c4, request: { ...req, headers } }, extra, opts, prep.taken);
+  return { ...obs, before: prep.outcome };
+}
+function transfer(baseUrl, c4, extra, opts, taken = {}) {
+  const req = c4.request;
   const url = new URL(baseUrl + req.path);
   const secure = url.protocol === "https:";
   const headers = { ...req.headers ?? {}, ...extra, "accept-encoding": "identity" };
-  const made = requestBody(c4, opts.root, headers);
+  const made = requestBody(c4, opts.root, headers, taken);
   if ("error" in made)
-    return Promise.resolve({ error: made.error });
+    return Promise.resolve({ obs: { error: made.error }, setCookie: [] });
   const { body, inputs } = made;
   if (body)
     headers["content-length"] = String(body.length);
@@ -14284,13 +14452,14 @@ function send(baseUrl, c4, extra, opts) {
   return new Promise((resolve2) => {
     let done = false;
     let r6;
+    let setCookie = [];
     const finish = (o4) => {
       if (done)
         return;
       done = true;
       clearTimeout(deadline);
       r6?.destroy();
-      resolve2(withInputs(o4));
+      resolve2({ obs: withInputs(o4), setCookie });
     };
     const deadline = setTimeout(() => finish({ error: `ETIMEDOUT: no complete answer within ${opts.timeoutS}s` }), opts.timeoutS * 1e3);
     try {
@@ -14303,6 +14472,7 @@ function send(baseUrl, c4, extra, opts) {
         for (const [k2, v2] of Object.entries(res.headers))
           if (v2 !== void 0)
             h4[k2.toLowerCase()] = Array.isArray(v2) ? v2.join(", ") : String(v2);
+        setCookie = res.headers["set-cookie"] ?? [];
         const enc = String(res.headers["content-encoding"] ?? "").trim().toLowerCase();
         const flush = { finishFlush: zlib.constants.Z_SYNC_FLUSH };
         const stream = enc === "gzip" || enc === "x-gzip" ? res.pipe(zlib.createGunzip(flush)) : enc === "deflate" ? res.pipe(zlib.createInflate(flush)) : enc === "br" ? res.pipe(zlib.createBrotliDecompress({ finishFlush: zlib.constants.BROTLI_OPERATION_FLUSH })) : res;
@@ -15842,7 +16012,13 @@ function renderReport(r6) {
     L2.push("", "## Input files", "", "The files cases sent, fingerprinted. A different file gives a different SHA-256.", "", "| Case | File | SHA-256 | Bytes | Sent as |", "| --- | --- | --- | --- | --- |");
     for (const c4 of sent)
       for (const f4 of c4.inputs)
-        L2.push(`| ${c4.id} | ${cell(f4.path)} | ${f4.sha256.slice(0, 16)}\u2026 | ${f4.bytes} | ${f4.field ? `field ${cell(f4.field)}, ${cell(f4.filename ?? "")} (${cell(f4.content_type ?? "")})` : "the body"} |`);
+        L2.push(`| ${c4.id} | ${cell(f4.path)} | ${f4.sha256.slice(0, 16)}\u2026 | ${f4.bytes} | ${f4.field ? `field ${cell(f4.field)}, ${cell(f4.filename ?? "")} (${cell(f4.content_type ?? "")})` : f4.as === "form" ? "the form fields" : "the body"} |`);
+  }
+  const prepared = r6.cases.filter((c4) => c4.before);
+  if (prepared.length) {
+    L2.push("", "## Pages read first", "", "A page read before the request, for the values it carries and the cookies it sets. The evidence holds their names, never their values.", "", "| Case | Page | Status | Values taken | Cookies |", "| --- | --- | --- | --- | --- |");
+    for (const c4 of prepared)
+      L2.push(`| ${c4.id} | ${cell(c4.before.request)} | ${c4.before.status ?? ""} | ${cell(c4.before.took.join(", ")) || "\u2014"} | ${cell(c4.before.cookies.join(", ")) || "\u2014"} |`);
   }
   const fails = r6.cases.flatMap((c4) => (c4.failures ?? []).map((f4) => [c4.id, f4]));
   if (fails.length) {
@@ -16058,7 +16234,7 @@ async function run(manifest, opts = {}) {
           const obs = await adapters.get(b2.surface).run(c4, t3, extra);
           writeJson(path6.join(dir, "answers", `${c4.id}.json`), obs);
           silent = noAnswer(obs) ? silent + 1 : 0;
-          const sent = obs.inputs?.length ? { inputs: obs.inputs } : {};
+          const sent = { ...obs.inputs?.length ? { inputs: obs.inputs } : {}, ...obs.before ? { before: obs.before } : {} };
           if (obs.error) {
             out.push({ ...b2, ...sent, result: "ERROR", why: obs.error });
             continue;
@@ -16145,6 +16321,8 @@ async function compare(manifest, opts = {}) {
           silent = noAnswer(ra) || noAnswer(rb) ? silent + 1 : 0;
           if (ra.inputs?.length)
             b2.inputs = ra.inputs;
+          if (ra.before)
+            b2.before = ra.before;
           if (ra.error || rb.error) {
             out.push({ ...b2, result: "ERROR", why: [ra.error && `reference: ${ra.error}`, rb.error && `candidate: ${rb.error}`].filter(Boolean).join("; ") });
             continue;
@@ -16667,7 +16845,7 @@ function check(manifest) {
       warnings.push(`${c4.id}: names no requirement, so its result is not traced to a story.`);
     if (!c4.expect && Object.keys(manifest.targets).length === 1)
       warnings.push(`${c4.id}: has no \`expect:\` block, so \`cmtk run\` skips it.`);
-    for (const f4 of [c4.request.body_file, ...(c4.request.files ?? []).map((x2) => x2.path)].filter((x2) => !!x2)) {
+    for (const f4 of [c4.request.body_file, typeof c4.request.body_form === "string" ? c4.request.body_form : void 0, ...(c4.request.files ?? []).map((x2) => x2.path)].filter((x2) => !!x2)) {
       if (!fs9.existsSync(inside(manifest, f4)))
         warnings.push(`${c4.id}: the input file ${f4} does not exist, so the case will error.`);
     }
@@ -20658,6 +20836,30 @@ function statuses(responses) {
   const codes = Object.keys(responses ?? {}).map(Number).filter((c4) => !Number.isNaN(c4)).sort((a4, b2) => a4 - b2);
   return { ok: codes.find((c4) => c4 >= 200 && c4 < 300), bad: codes.find((c4) => c4 === 400 || c4 === 422) };
 }
+var SAFE = /* @__PURE__ */ new Set(["GET", "HEAD", "OPTIONS"]);
+function notAForm(row, fields, value) {
+  if (value !== void 0 && (!value || typeof value !== "object" || Array.isArray(value)))
+    return "a form is named fields and this row is not an object";
+  const why = row.invalid_because;
+  if (!why || why.keyword !== "type")
+    return void 0;
+  const f4 = fields.find((x2) => x2.path === why.path);
+  if (!f4 || f4.type !== "string")
+    return void 0;
+  const set = row.set?.[why.path];
+  if (set === null) {
+    const c4 = f4.constraints;
+    const refusesEmpty = f4.required || typeof c4.minLength === "number" && c4.minLength >= 1 || c4.pattern !== void 0 || c4.enum !== void 0 || c4.const !== void 0 || c4.format !== void 0;
+    return refusesEmpty ? void 0 : "null posts as an empty value, which nothing in the schema refuses for this text field";
+  }
+  return "every form value is text, so a text field cannot have the wrong type";
+}
+function describeLeftOut(leftOut) {
+  const by = /* @__PURE__ */ new Map();
+  for (const x2 of leftOut)
+    by.set(x2.why, [...by.get(x2.why) ?? [], x2.name]);
+  return [...by].map(([why, names]) => `because ${why}: ${names.join(", ")}`);
+}
 function writeCases(m4, id, o4 = {}) {
   const { recipe } = loadRecipe(m4, id);
   const rowsDir = path13.join(dataFolder(m4, id), "rows");
@@ -20670,36 +20872,76 @@ function writeCases(m4, id, o4 = {}) {
   if (!reqPath || !reqPath.startsWith("/") || reqPath.startsWith("//"))
     throw new ManifestError("Give the request path with --path /api/..., a path and never a host.");
   const method = (o4.method ?? op?.[1] ?? "POST").toUpperCase();
-  const { ok, bad } = statuses(recipe.responses);
+  const encoding = o4.encoding ?? "json";
+  const which = o4.rows ?? "all";
+  const requirement = o4.requirement?.split(",").map((s4) => s4.trim()).filter(Boolean);
+  if (o4.before && encoding !== "form")
+    throw new ManifestError("`before` reads a page for a form, so it needs --encoding form.");
+  if (o4.before && (!o4.before.get.startsWith("/") || o4.before.get.startsWith("//")))
+    throw new ManifestError("`before.get` must be a path on the same target, such as /Catalog/Create.");
+  for (const [field, selector] of Object.entries(o4.before?.take ?? {}))
+    if (!selector.trim())
+      throw new ManifestError(`before.take.${field} needs a selector, such as input[name=${field}].`);
+  const documented = statuses(recipe.responses);
+  const ok = documented.ok ?? o4.expectValid;
+  const bad = documented.bad ?? o4.expectInvalid;
+  const given = (s4, from) => s4 !== void 0 && from === void 0;
   const prefix = id.toUpperCase().replace(/[^A-Z0-9]+/g, "-");
   const cases = [];
+  const leftOut = [];
   let withoutExpect = 0;
   for (const [i8, row] of recipe.rows.entries()) {
+    if (which !== "all" && row.expect_valid !== (which === "valid"))
+      continue;
     const rowFile = path13.join(rowsDir, `${row.name}.json`);
-    const hasBody = made.get(row.name)?.value !== void 0;
+    const value = made.get(row.name)?.value;
+    const hasBody = value !== void 0;
     if (hasBody && !fs14.existsSync(rowFile))
       throw new ManifestError(`Row ${row.name} has no file: run \`cmtk data make ${id}\` again.`);
+    if (encoding === "form") {
+      const why = notAForm(row, recipe.fields, value);
+      if (why) {
+        leftOut.push({ name: row.name, why });
+        continue;
+      }
+    }
     const query = made.get(row.name)?.query;
     const qs = query && Object.keys(query).length ? `?${new URLSearchParams(query).toString()}` : "";
     const status = row.expect_valid ? ok : bad;
     if (status === void 0)
       withoutExpect++;
+    const rel2 = path13.relative(m4.root, rowFile).split(path13.sep).join("/");
+    const notes = [
+      `From recipe ${id}, row ${row.name} (${row.technique}): ${row.coverage_item}. The schema says the body is ${row.expect_valid ? "valid" : `invalid (${row.invalid_because?.path} ${row.invalid_because?.keyword})`}; the oracle is ${row.oracle}.`,
+      encoding === "form" ? "Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields." : "",
+      o4.before ? `Before it, ${o4.before.get} is read for ${Object.keys(o4.before.take ?? {}).join(", ") || "its cookies"}; the values taken are never written to evidence.` : "",
+      status === void 0 ? "No documented status for this answer, so no expect: a person adds one." : given(status, row.expect_valid ? documented.ok : documented.bad) ? `The expected status ${status} was given on the command line, not read from a document: the reviewer confirms it against the requirement.` : "",
+      !SAFE.has(method) ? "This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data." : ""
+    ].filter(Boolean);
     cases.push({
       id: `${prefix}-${String(i8 + 1).padStart(3, "0")}`,
       name: `${row.coverage_item}`,
-      ...o4.requirement ? { requirement: o4.requirement } : {},
-      request: { method, path: reqPath + qs, ...o4.headers ? { headers: o4.headers } : {}, ...hasBody ? { body_file: path13.relative(m4.root, rowFile).split(path13.sep).join("/") } : {} },
+      ...requirement?.length ? { requirement: requirement.length === 1 ? requirement[0] : [...requirement] } : {},
+      request: {
+        method,
+        path: reqPath + qs,
+        ...o4.headers ? { headers: o4.headers } : {},
+        ...hasBody ? encoding === "form" ? { body_form: rel2 } : { body_file: rel2 } : {},
+        ...o4.before ? { before: structuredClone(o4.before) } : {}
+      },
       ...status !== void 0 ? { expect: { status } } : {},
       draft: true,
-      draft_note: `From recipe ${id}, row ${row.name} (${row.technique}): ${row.coverage_item}. The schema says the body is ${row.expect_valid ? "valid" : `invalid (${row.invalid_because?.path} ${row.invalid_because?.keyword})`}; the oracle is ${row.oracle}.${status === void 0 ? " No documented status for this answer, so no expect: a person adds one." : ""}`
+      draft_note: notes.join(" ")
     });
   }
   const out = inside(m4, o4.out ?? path13.join("cmtk", "cases", `data-${id}.yaml`));
   if (fs14.existsSync(out))
     throw new ManifestError(`${path13.relative(m4.root, out)} already exists; choose another --out, or delete it.`);
   fs14.mkdirSync(path13.dirname(out), { recursive: true });
-  fs14.writeFileSync(out, casesToYaml(cases, `Draft cases from the test-data recipe ${id}: one per row, each sending its row from cmtk/data/${id}/rows/. A person accepts them with \`cmtk review\`.`), "utf8");
-  return { file: path13.relative(m4.root, out).split(path13.sep).join("/"), cases, withoutExpect };
+  const how = encoding === "form" ? "as a form" : "as the body";
+  const subset = which === "all" ? "one per row" : `one per ${which} row (the rows the schema calls ${which})`;
+  fs14.writeFileSync(out, casesToYaml(cases, `Draft cases from the test-data recipe ${id}: ${subset}, each sending its row from cmtk/data/${id}/rows/ ${how}. A person accepts them with \`cmtk review\`.`), "utf8");
+  return { file: path13.relative(m4.root, out).split(path13.sep).join("/"), cases, withoutExpect, leftOut };
 }
 
 // packages/cli/dist/main.js
@@ -20709,7 +20951,7 @@ process.on("warning", (w2) => {
     console.error(`${w2.name}: ${w2.message}`);
 });
 var HERE = path14.dirname(fileURLToPath(import.meta.url));
-var VERSION = true ? "0.4.1" : JSON.parse(fs15.readFileSync(path14.join(HERE, "..", "package.json"), "utf8")).version;
+var VERSION = true ? "0.5.0" : JSON.parse(fs15.readFileSync(path14.join(HERE, "..", "package.json"), "utf8")).version;
 var HELP = `cmtk ${VERSION}: test any system from its requirements, and prove a migrated system behaves like the old one.
 
 Usage:
@@ -20733,6 +20975,8 @@ Usage:
   cmtk data make <id> [--format json,csv,xlsx]                      regenerate the rows from the recipe, check them, write the files
   cmtk data check <id>                                              check a recipe's rows and quotas without writing files
   cmtk data cases <id> [--path /api/x] [--requirement <id>] [--out <file>]
+                       [--encoding form] [--before-get /page] [--take field=selector]...
+                       [--expect-valid 302] [--expect-invalid 200] [--rows valid|invalid]
                                                                     one draft case per row, each sending its row from a file
   cmtk signoff run|compare                                          a person signs a report, at a terminal (never an agent)
   cmtk adapter new <name>                                           write a new adapter from the template
@@ -20803,6 +21047,12 @@ async function main(argv) {
       path: { type: "string" },
       method: { type: "string" },
       requirement: { type: "string" },
+      encoding: { type: "string" },
+      "before-get": { type: "string" },
+      take: { type: "string", multiple: true },
+      "expect-valid": { type: "string" },
+      "expect-invalid": { type: "string" },
+      rows: { type: "string" },
       help: { type: "boolean", short: "h", default: false },
       version: { type: "boolean", short: "v", default: false }
     }
@@ -21191,8 +21441,41 @@ async function dataCommand(args, manifestFile, v2) {
     case "cases": {
       if (!id)
         throw new UsageError("`cmtk data cases` needs the recipe id.");
-      const { file, cases, withoutExpect } = writeCases(m4, id, { path: v2.path, method: v2.method, requirement: v2.requirement, out: v2.out });
+      if (v2.encoding !== void 0 && v2.encoding !== "json" && v2.encoding !== "form")
+        throw new UsageError("--encoding is json (the row file as the body) or form (its fields as a browser posts a form).");
+      if (v2.rows !== void 0 && !["all", "valid", "invalid"].includes(v2.rows))
+        throw new UsageError("--rows is all, valid or invalid.");
+      const take = {};
+      for (const t3 of v2.take ?? []) {
+        const eq = t3.indexOf("=");
+        if (eq <= 0)
+          throw new UsageError(`--take needs field=selector, such as --take "__RequestVerificationToken=input[name=__RequestVerificationToken]"; got ${JSON.stringify(t3)}.`);
+        take[t3.slice(0, eq).trim()] = t3.slice(eq + 1).trim();
+      }
+      if (Object.keys(take).length && !v2["before-get"])
+        throw new UsageError("--take needs --before-get /page: the page the value is taken from.");
+      const status = (flag) => {
+        if (v2[flag] === void 0)
+          return void 0;
+        const n3 = Number(v2[flag]);
+        if (!Number.isInteger(n3) || n3 < 100 || n3 > 599)
+          throw new UsageError(`--${flag} must be an HTTP status, such as 302.`);
+        return n3;
+      };
+      const { file, cases, withoutExpect, leftOut } = writeCases(m4, id, {
+        path: v2.path,
+        method: v2.method,
+        requirement: v2.requirement,
+        out: v2.out,
+        encoding: v2.encoding,
+        rows: v2.rows,
+        before: v2["before-get"] ? { get: v2["before-get"], ...Object.keys(take).length ? { take } : {} } : void 0,
+        expectValid: status("expect-valid"),
+        expectInvalid: status("expect-invalid")
+      });
       console.log(`Wrote ${cases.length} draft cases to ${file}${withoutExpect ? `; ${withoutExpect} have no expect: block yet, because no documented status says what the answer should be` : ""}.`);
+      for (const line of describeLeftOut(leftOut))
+        console.log(`Left out, ${line}.`);
       console.log("Next: a person reviews them with `cmtk review`. They are skipped until then.");
       return 0;
     }

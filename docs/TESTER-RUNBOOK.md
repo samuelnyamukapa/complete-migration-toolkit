@@ -50,6 +50,15 @@ One case or more for each acceptance criterion. Each case names its `requirement
   The first command writes a **recipe** (`cmtk/data/api-orders.yaml`): every field's constraints, and one row per condition worth testing, named by that condition: a valid baseline, the value just below and just above every limit, a missing required field, a wrong type, hostile strings, every pair of choices. The second regenerates the rows from the recipe's seed, checks each against the schema, and writes them as JSON, CSV and (with `--format json,csv,xlsx`) Excel. The third writes one draft case per row. Review the recipe, not the rows: if a value is wrong, change the recipe and run `cmtk data check`.
 
   - **With an agent:** `/cmtk:data openapi.json --operation "POST /api/orders"`. It also reads the rows against the requirements and raises what the schema can't say (a price the schema allows but the story forbids, a rule between two fields) as questions for you.
+  - **A web form, not an API** (an MVC, Rails or Django page with an anti-forgery token): the rows post as a browser would.
+
+    ```sh
+    cmtk data cases catalog-item --path /Catalog/Create --requirement RULE-013 --encoding form \
+      --before-get /Catalog/Create --take "__RequestVerificationToken=input[name=__RequestVerificationToken]" \
+      --expect-valid 302 --expect-invalid 200
+    ```
+
+    Each case reads the Create page first, takes the token and the cookies, and posts the row as a form. The token is never written to evidence. The two statuses are what the requirement says a valid and an invalid post answer (a redirect; the form again with a message): give them only when you know, and the draft note shows the reviewer where they came from. These requests change data, so they run only against disposable test data with `allow_unsafe_methods: true` and `--allow-unsafe`.
 
 Then check them. This sends no requests:
 

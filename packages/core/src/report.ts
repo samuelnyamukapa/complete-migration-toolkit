@@ -171,7 +171,12 @@ export function renderReport(r: Report): string {
     const sent = r.cases.filter((c) => c.inputs?.length);
     if (sent.length) {
         L.push("", "## Input files", "", "The files cases sent, fingerprinted. A different file gives a different SHA-256.", "", "| Case | File | SHA-256 | Bytes | Sent as |", "| --- | --- | --- | --- | --- |");
-        for (const c of sent) for (const f of c.inputs!) L.push(`| ${c.id} | ${cell(f.path)} | ${f.sha256.slice(0, 16)}… | ${f.bytes} | ${f.field ? `field ${cell(f.field)}, ${cell(f.filename ?? "")} (${cell(f.content_type ?? "")})` : "the body"} |`);
+        for (const c of sent) for (const f of c.inputs!) L.push(`| ${c.id} | ${cell(f.path)} | ${f.sha256.slice(0, 16)}… | ${f.bytes} | ${f.field ? `field ${cell(f.field)}, ${cell(f.filename ?? "")} (${cell(f.content_type ?? "")})` : f.as === "form" ? "the form fields" : "the body"} |`);
+    }
+    const prepared = r.cases.filter((c) => c.before);
+    if (prepared.length) {
+        L.push("", "## Pages read first", "", "A page read before the request, for the values it carries and the cookies it sets. The evidence holds their names, never their values.", "", "| Case | Page | Status | Values taken | Cookies |", "| --- | --- | --- | --- | --- |");
+        for (const c of prepared) L.push(`| ${c.id} | ${cell(c.before!.request)} | ${c.before!.status ?? ""} | ${cell(c.before!.took.join(", ")) || "—"} | ${cell(c.before!.cookies.join(", ")) || "—"} |`);
     }
 
     const fails = r.cases.flatMap((c) => (c.failures ?? []).map((f) => [c.id, f] as const));

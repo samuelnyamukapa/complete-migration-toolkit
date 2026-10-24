@@ -216,7 +216,7 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
                     const obs = await adapters.get(b.surface).run(c, t, extra);
                     writeJson(path.join(dir, "answers", `${c.id}.json`), obs);
                     silent = noAnswer(obs) ? silent + 1 : 0;
-                    const sent = obs.inputs?.length ? { inputs: obs.inputs } : {};
+                    const sent = { ...(obs.inputs?.length ? { inputs: obs.inputs } : {}), ...(obs.before ? { before: obs.before } : {}) };
                     if (obs.error) { out.push({ ...b, ...sent, result: "ERROR", why: obs.error }); continue; }
                     const failures = checkExpectation(c.expect, obs);
                     out.push({ ...b, ...sent, result: failures.length ? "FAIL" : "PASS", ...(failures.length ? { failures } : {}), ...(obs.truncated ? { note: "the answer was over 5 MB; only the first 5 MB were checked" } : {}) });
@@ -283,6 +283,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
                     writeJson(path.join(dir, "answers", `${c.id}.candidate.json`), rb);
                     silent = noAnswer(ra) || noAnswer(rb) ? silent + 1 : 0;
                     if (ra.inputs?.length) b.inputs = ra.inputs;
+                    if (ra.before) b.before = ra.before;
                     if (ra.error || rb.error) {
                         out.push({ ...b, result: "ERROR", why: [ra.error && `reference: ${ra.error}`, rb.error && `candidate: ${rb.error}`].filter(Boolean).join("; ") });
                         continue;

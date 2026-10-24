@@ -14,7 +14,7 @@ import {
     addFinding, addProposal, casesToYaml, check, compare, describeCheck, describeProposal, describeSignoff, draftDefects, endSession, exploreRequest,
     importHar, initProject, inside, loadCases, loadManifest, loadProposals, PROPOSAL_KINDS, run, signoffState, startSession, type Report,
     BOUNDARY_KINDS, describeDiscovery, discover,
-    planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, FAKER_VERSION,
+    planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION,
 } from "@cmtk/core";
 
 // Node 22 before 22.17 flags fs.globSync and path.matchesGlob as experimental and prints a warning
@@ -288,10 +288,17 @@ server.registerTool("cmtk_data_check", {
     ({ rows, problems }) => `${rows} rows check out.${problems.length ? ` Quotas not met: ${problems.join("; ")}.` : " Quotas met."}`));
 
 server.registerTool("cmtk_data_cases", {
-    description: "One draft case per row of a recipe, each sending its row from cmtk/data/<id>/rows/ as the request body. An expect: block is written only where the OpenAPI document gives a status for the answer; otherwise a person adds it. The cases are drafts until a person accepts them with cmtk review.",
-    inputSchema: { manifest: manifestArg, id: z.string(), path: z.string().optional().describe("The request path, such as /api/items. Default: the operation's path."), method: z.string().optional(), requirement: z.string().optional(), out: z.string().optional() },
-}, async (a) => guarded(() => writeCases(loadManifest(a.manifest), a.id, { path: a.path, method: a.method, requirement: a.requirement, out: a.out }),
-    ({ file, cases, withoutExpect }) => `${cases.length} draft cases in ${file}${withoutExpect ? `; ${withoutExpect} have no expect: block, because no documented status says what the answer should be: a person adds one` : ""}. They wait for cmtk review.`));
+    description: "One draft case per row of a recipe, each sending its row from cmtk/data/<id>/rows/: as the request body (encoding json, the default), or as a browser posts a form (encoding form: application/x-www-form-urlencoded from the row's fields, with `before` reading a page first for an anti-forgery token and its cookies). An expect: block is written only where the OpenAPI document gives a status for the answer, or where the person gave expect_valid and expect_invalid; otherwise a person adds it. The cases are drafts until a person accepts them with cmtk review.",
+    inputSchema: {
+        manifest: manifestArg, id: z.string(), path: z.string().optional().describe("The request path, such as /api/items. Default: the operation's path."), method: z.string().optional(), requirement: z.string().optional(), out: z.string().optional(),
+        encoding: z.enum(["json", "form"]).optional(),
+        rows: z.enum(["all", "valid", "invalid"]).optional().describe("Only the rows the schema calls valid, or only the invalid ones (which a form answers without writing)."),
+        before: z.object({ get: z.string().describe("A path on the same target, read before each request."), take: z.record(z.string(), z.string()).optional().describe("Form field to selector: input[name=x], meta[name=x], tag[attr=x]@attr, regex:<pattern>, cookie:<name>.") }).optional(),
+        expect_valid: z.number().int().optional().describe("The status a valid row must get, from the requirement or the person, never from the system."),
+        expect_invalid: z.number().int().optional().describe("The status an invalid row must get, from the requirement or the person, never from the system."),
+    },
+}, async (a) => guarded(() => writeCases(loadManifest(a.manifest), a.id, { path: a.path, method: a.method, requirement: a.requirement, out: a.out, encoding: a.encoding, rows: a.rows, before: a.before, expectValid: a.expect_valid, expectInvalid: a.expect_invalid }),
+    ({ file, cases, withoutExpect, leftOut }) => `${cases.length} draft cases in ${file}${withoutExpect ? `; ${withoutExpect} have no expect: block, because no documented status says what the answer should be: a person adds one` : ""}${describeLeftOut(leftOut).map((line) => `; left out ${line}`).join("")}. They wait for cmtk review.`));
 
 server.registerTool("cmtk_status", {
     description: "The latest run and compare verdicts, and whether a person has signed each report.",

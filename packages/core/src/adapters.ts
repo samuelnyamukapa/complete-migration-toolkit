@@ -15,7 +15,8 @@ import readline from "node:readline";
 import type { Readable, Writable } from "node:stream";
 import zlib from "node:zlib";
 
-import type { Case, InputFile, Observation, Target } from "./types.js";
+import { formValueProblem } from "./manifest.js";
+import type { Before, BeforeOutcome, Case, FormValue, InputFile, Observation, Target } from "./types.js";
 
 export const MAX_BODY = 5 * 1024 * 1024;
 
@@ -53,11 +54,45 @@ const typeOf = (file: string) => CONTENT_TYPES[path.extname(file).toLowerCase()]
 
 const fingerprint = (rel: string, bytes: Buffer): InputFile => ({ path: rel.split(path.sep).join("/"), sha256: crypto.createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length });
 
+/** A form value as the text a browser would send: booleans as true/false, null as an empty value. */
+const formText = (v: string | number | boolean | null) => (v === null ? "" : typeof v === "boolean" ? (v ? "true" : "false") : String(v));
+
 /**
- * The body a case sends, from `body`, `body_file` or `files`, with the files it sent fingerprinted.
- * Files are read from `root` (the project folder); a missing file is an error, never an empty body.
+ * The form fields of a case, in order, as name and text pairs: from `body_form` (a file or a mapping),
+ * then the values a `before` page gave, which replace a field of the same name.
  */
-export function requestBody(c: Case, root: string | undefined, headers: Record<string, string>): { body?: Buffer; inputs: InputFile[] } | { error: string } {
+function formFields(c: Case, readFile: (rel: string) => Buffer, taken: Record<string, string>): { pairs: [string, string][]; inputs: InputFile[] } {
+    const req = c.request;
+    let fields: Record<string, FormValue> = {};
+    const inputs: InputFile[] = [];
+    if (typeof req.body_form === "string") {
+        const bytes = readFile(req.body_form);
+        inputs.push({ ...fingerprint(req.body_form, bytes), as: "form" });
+        let parsed: unknown;
+        try { parsed = JSON.parse(bytes.toString("utf8")); } catch { throw new Error(`body_form: ${req.body_form} is not JSON`); }
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error(`body_form: ${req.body_form} holds ${Array.isArray(parsed) ? "a list" : "a value"}, not an object; a form is named fields`);
+        for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
+            const bad = formValueProblem(v);
+            if (bad) throw new Error(`body_form: ${req.body_form}: ${k} ${bad}`);
+        }
+        fields = parsed as Record<string, FormValue>;
+    } else if (req.body_form) fields = req.body_form;
+    const pairs: [string, string][] = [];
+    for (const [k, v] of Object.entries(fields)) {
+        if (k in taken) continue;
+        if (/[\r\n"]/.test(k)) throw new Error(`body_form: the field name ${JSON.stringify(k)} holds a quote or a line break`);
+        for (const one of Array.isArray(v) ? v : [v]) pairs.push([k, formText(one)]);
+    }
+    for (const [k, v] of Object.entries(taken)) pairs.push([k, v]);
+    return { pairs, inputs };
+}
+
+/**
+ * The body a case sends, from `body`, `body_file`, `body_form` or `files`, with the files it sent fingerprinted.
+ * Files are read from `root` (the project folder); a missing file is an error, never an empty body.
+ * `taken` holds the values a `before` page gave, which go into the form.
+ */
+export function requestBody(c: Case, root: string | undefined, headers: Record<string, string>, taken: Record<string, string> = {}): { body?: Buffer; inputs: InputFile[] } | { error: string } {
     const req = c.request;
     const hasType = () => Object.keys(headers).some((h) => h.toLowerCase() === "content-type");
     const readFile = (rel: string) => {
@@ -67,8 +102,10 @@ export function requestBody(c: Case, root: string | undefined, headers: Record<s
     };
     try {
         if (req.files?.length) {
-            const inputs: InputFile[] = [];
+            const form = formFields(c, readFile, taken);
+            const inputs: InputFile[] = [...form.inputs];
             const parts: Buffer[] = [];
+            for (const [name, value] of form.pairs) parts.push(Buffer.from(`--${MULTIPART_BOUNDARY}\r\nContent-Disposition: form-data; name="${name}"\r\n\r\n${value}\r\n`, "utf8"));
             for (const f of req.files) {
                 const bytes = readFile(f.path);
                 const filename = f.filename ?? path.basename(f.path);
@@ -79,6 +116,12 @@ export function requestBody(c: Case, root: string | undefined, headers: Record<s
             parts.push(Buffer.from(`--${MULTIPART_BOUNDARY}--\r\n`, "utf8"));
             headers["content-type"] = `multipart/form-data; boundary=${MULTIPART_BOUNDARY}`;
             return { body: Buffer.concat(parts), inputs };
+        }
+        if (req.body_form !== undefined) {
+            const form = formFields(c, readFile, taken);
+            const encoded = new URLSearchParams(form.pairs).toString();
+            headers["content-type"] = "application/x-www-form-urlencoded";
+            return { body: Buffer.from(encoded, "utf8"), inputs: form.inputs };
         }
         if (req.body_file) {
             const bytes = readFile(req.body_file);
@@ -118,18 +161,100 @@ export function decodeBody(raw: Buffer, truncated: boolean): { body: string; enc
     return { body: raw.toString("latin1"), encoding: "latin1" };
 }
 
+const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: "\u00a0" };
+const unescapeHtml = (s: string) => s.replace(/&(#x[0-9a-fA-F]+|#[0-9]+|[a-zA-Z]+);/g, (m, e: string) =>
+    e[0] === "#" ? String.fromCodePoint(parseInt(e[1] === "x" || e[1] === "X" ? e.slice(2) : e.slice(1), e[1] === "x" || e[1] === "X" ? 16 : 10)) : (ENTITIES[e] ?? m));
+
+/**
+ * One value from a page: `input[name=x]` gives that input's `value`, `meta[name=x]` its `content`,
+ * `tag[attr=x]@attr` any attribute, `regex:<pattern>` the pattern's first group. Undefined when nothing matches.
+ */
+export function takeFromPage(html: string, selector: string): string | undefined {
+    if (selector.startsWith("regex:")) {
+        const m = new RegExp(selector.slice(6)).exec(html);
+        return m ? (m[1] ?? m[0]) : undefined;
+    }
+    const s = /^([a-zA-Z][\w-]*)\[([\w:-]+)=(?:"([^"]*)"|'([^']*)'|([^\]]*))\](?:@([\w:-]+))?$/.exec(selector.trim());
+    if (!s) throw new Error(`the selector ${JSON.stringify(selector)} is not tag[attr=value], tag[attr=value]@attr, regex:<pattern> or cookie:<name>`);
+    const [, tag, attr, q1, q2, bare, at] = s;
+    const want = (q1 ?? q2 ?? bare ?? "").trim();
+    const take = (at ?? (tag!.toLowerCase() === "meta" ? "content" : "value")).toLowerCase();
+    const tags = new RegExp(`<${tag}\\b([^>]*)>`, "gi");
+    for (let t = tags.exec(html); t; t = tags.exec(html)) {
+        const attrs: Record<string, string> = {};
+        const a = /([\w:-]+)\s*(?:=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+)))?/g;
+        for (let m = a.exec(t[1]!); m; m = a.exec(t[1]!)) attrs[m[1]!.toLowerCase()] = unescapeHtml(m[2] ?? m[3] ?? m[4] ?? "");
+        if (attrs[attr!.toLowerCase()] === want && take in attrs) return attrs[take];
+    }
+    return undefined;
+}
+
+/** Cookies from Set-Cookie headers, name to value, attributes dropped: they go back to the same target. */
+export function cookiesOf(setCookie: string[]): Record<string, string> {
+    const jar: Record<string, string> = {};
+    for (const line of setCookie) {
+        const first = line.split(";")[0]!;
+        const eq = first.indexOf("=");
+        if (eq > 0) jar[first.slice(0, eq).trim()] = first.slice(eq + 1).trim();
+    }
+    return jar;
+}
+
+/**
+ * The `before` step: one GET to the same target, for the values its page carries and the cookies it sets.
+ * The values are returned for the request and never written anywhere; the evidence gets their names.
+ */
+async function prepare(baseUrl: string, c: Case, before: Before, extra: Record<string, string>, opts: { timeoutS: number; insecureTls: boolean; root?: string }): Promise<{ taken: Record<string, string>; cookies: Record<string, string>; outcome: BeforeOutcome } | { error: string }> {
+    const label = `before: GET ${before.get}`;
+    const headers = Object.fromEntries(Object.entries(c.request.headers ?? {}).filter(([k]) => !["content-type", "content-length"].includes(k.toLowerCase())));
+    const page = await transfer(baseUrl, { id: c.id, request: { method: "GET", path: before.get, headers } }, extra, opts);
+    if (page.obs.error) return { error: `${label}: ${page.obs.error}` };
+    if (!page.obs.status || page.obs.status < 200 || page.obs.status >= 300) return { error: `${label} answered ${page.obs.status}; the page a value is taken from must answer 2xx` };
+    const cookies = cookiesOf(page.setCookie);
+    const taken: Record<string, string> = {};
+    for (const [field, selector] of Object.entries(before.take ?? {})) {
+        let value: string | undefined;
+        try {
+            value = selector.startsWith("cookie:") ? cookies[selector.slice(7).trim()] : takeFromPage(page.obs.body ?? "", selector);
+        } catch (err) {
+            return { error: `${label}: ${(err as Error).message}` };
+        }
+        if (value === undefined) return { error: `${label}: nothing on the page matches ${selector} for ${field}` };
+        taken[field] = value;
+    }
+    return { taken, cookies, outcome: { request: `GET ${before.get}`, status: page.obs.status, took: Object.keys(taken), cookies: Object.keys(cookies) } };
+}
+
 /**
  * One request to one target. Redirects are answers, never followed; proxies are never used.
  * The whole answer must arrive within the timeout, and reading stops at 5 MB (after decompression).
+ * With `before`, a page is read first and its cookies and the values taken from it go on the request.
  */
-export function send(baseUrl: string, c: Case, extra: Record<string, string>, opts: { timeoutS: number; insecureTls: boolean; root?: string }): Promise<Observation> {
+export async function send(baseUrl: string, c: Case, extra: Record<string, string>, opts: { timeoutS: number; insecureTls: boolean; root?: string }): Promise<Observation> {
     const req = c.request;
-    if (!req.path.startsWith("/") || req.path.startsWith("//")) return Promise.resolve({ error: "the path must start with a single '/'" });
+    if (!req.path.startsWith("/") || req.path.startsWith("//")) return { error: "the path must start with a single '/'" };
+    if (!req.before) return (await transfer(baseUrl, c, extra, opts)).obs;
+    const prep = await prepare(baseUrl, c, req.before, extra, opts);
+    if ("error" in prep) return { error: prep.error };
+    const jar = Object.entries(prep.cookies).map(([k, v]) => `${k}=${v}`).join("; ");
+    const own = Object.entries(req.headers ?? {}).find(([k]) => k.toLowerCase() === "cookie");
+    const headers = { ...(req.headers ?? {}) };
+    if (jar) {
+        if (own) delete headers[own[0]];
+        headers["cookie"] = own && own[1] ? `${own[1]}; ${jar}` : jar;
+    }
+    const { obs } = await transfer(baseUrl, { ...c, request: { ...req, headers } }, extra, opts, prep.taken);
+    return { ...obs, before: prep.outcome };
+}
+
+/** The request itself. `setCookie` is the answer's Set-Cookie lines, kept apart because joining them loses their boundaries. */
+function transfer(baseUrl: string, c: Case, extra: Record<string, string>, opts: { timeoutS: number; insecureTls: boolean; root?: string }, taken: Record<string, string> = {}): Promise<{ obs: Observation; setCookie: string[] }> {
+    const req = c.request;
     const url = new URL(baseUrl + req.path);
     const secure = url.protocol === "https:";
     const headers: Record<string, string> = { ...(req.headers ?? {}), ...extra, "accept-encoding": "identity" };
-    const made = requestBody(c, opts.root, headers);
-    if ("error" in made) return Promise.resolve({ error: made.error });
+    const made = requestBody(c, opts.root, headers, taken);
+    if ("error" in made) return Promise.resolve({ obs: { error: made.error }, setCookie: [] });
     const { body, inputs } = made;
     if (body) headers["content-length"] = String(body.length);
     const withInputs = (o: Observation): Observation => (inputs.length ? { ...o, inputs } : o);
@@ -137,12 +262,13 @@ export function send(baseUrl: string, c: Case, extra: Record<string, string>, op
     return new Promise((resolve) => {
         let done = false;
         let r: http.ClientRequest | undefined;
+        let setCookie: string[] = [];
         const finish = (o: Observation) => {
             if (done) return;
             done = true;
             clearTimeout(deadline);
             r?.destroy();
-            resolve(withInputs(o));
+            resolve({ obs: withInputs(o), setCookie });
         };
         const deadline = setTimeout(() => finish({ error: `ETIMEDOUT: no complete answer within ${opts.timeoutS}s` }), opts.timeoutS * 1000);
         try {
@@ -153,6 +279,7 @@ export function send(baseUrl: string, c: Case, extra: Record<string, string>, op
             }, (res) => {
                 const h: Record<string, string> = {};
                 for (const [k, v] of Object.entries(res.headers)) if (v !== undefined) h[k.toLowerCase()] = Array.isArray(v) ? v.join(", ") : String(v);
+                setCookie = res.headers["set-cookie"] ?? [];
                 const enc = String(res.headers["content-encoding"] ?? "").trim().toLowerCase();
                 const flush = { finishFlush: zlib.constants.Z_SYNC_FLUSH };
                 const stream: Readable = enc === "gzip" || enc === "x-gzip" ? res.pipe(zlib.createGunzip(flush))

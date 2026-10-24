@@ -228,7 +228,7 @@ These are the questions the tester's schemas carry in their `description` fields
 
 | What happened | What we did |
 |---|---|
-| The rows could not be sent. `/Catalog/Create` takes a form (`application/x-www-form-urlencoded`) with an anti-forgery token from the Create page (RULE-009); the cases send JSON. The customisation import takes a whole file at start-up, not a request | **Follow-up:** form-encoded bodies from a row, and a token taken from a page, are the next step for `cmtk data cases` (#55). A file an adapter puts in place before a run is part of #51 |
+| The rows could not be sent. `/Catalog/Create` takes a form (`application/x-www-form-urlencoded`) with an anti-forgery token from the Create page (RULE-009); the cases send JSON. The customisation import takes a whole file at start-up, not a request | **Fixed in 0.5.0 (#55):** `body_form` posts a row as a browser would, and `before` reads the page first for the token and the cookies; part 5 below. A file an adapter puts in place before a run is part of #51 |
 | The row that breaks a `pattern` was `\u0000pattern-breaker\u0000`: right, and unreadable in a CSV, a workbook or a report | **Fixed:** a printable string the pattern refuses, `!!! not a match` |
 | RULE-015's lookups are case-sensitive, and no row tried `mug` for `Mug` | **Fixed:** every string enum gets a row with a listed value in another case |
 | A CSV import takes one file per condition, and the make wrote one JSON per row and one CSV for all of them | **Fixed:** `rows/<name>.csv`, the data columns alone |
@@ -236,3 +236,16 @@ These are the questions the tester's schemas carry in their `description` fields
 | Rows for the Create form are what the form posts, with the brand as an id. Rows for the import are what the CSV holds, with the brand as a name. The same item needs two schemas, one per surface | Expected: one recipe per surface, as the skill says |
 
 The try took about ten minutes, most of it writing the two schemas from the rules. Generation and checking took seconds.
+
+## Part 5: the rows posted to the Create form (prepared 25 October 2026)
+
+cmtk 0.5.0 added what part 4 lacked: `body_form`, which posts a row's fields the way a browser posts a form, and `before`, which reads a page first for its anti-forgery token and cookies. The eShop files are ready and **have not been run yet**; this part is written up when they have.
+
+What is in the folder:
+
+- `tester\cmtk-forms.yaml`: its own settings, with `allow_unsafe_methods: true` because the Create form is a POST, and its own evidence folder, so the signed reports are never replaced.
+- `tester\cmtk\cases-forms\data-catalog-item-invalid.yaml` (47 drafts) and `data-catalog-item-valid.yaml` (49 drafts), from `cmtk data cases catalog-item --encoding form --before-get /Catalog/Create --take "__RequestVerificationToken=input[name=__RequestVerificationToken]" --expect-valid 302 --expect-invalid 200 --rows invalid|valid`. The two statuses are RULE-009's: an invalid item is shown again with no write; a valid one is saved and redirects to Index. Every draft note says where they came from and that the request changes data.
+- Three rows the recipe has were left out, and the tool said why: `body_not_an_object` (a form is named fields), and `Name_wrong_type`, `Description_wrong_type` and `PictureFileName_wrong_type`, because every form value is text, so a text field cannot have the wrong type. That is a difference between a JSON API and a form that the recipe cannot know and the case writer must.
+- `10-data-forms.cmd`: regenerates the rows, runs `cmtk review` for the drafts, then runs the invalid rows only, which write nothing. `-Valid` adds the rows RULE-009 says are saved, into the scratch catalog.
+
+Against a stand-in for the form (a small server that sets the cookie, renders the hidden token, and refuses a post without both), all 47 invalid cases read the page, posted with the right cookie and token, and were answered; the evidence named the page, the token field and the cookies, and held no value of either.

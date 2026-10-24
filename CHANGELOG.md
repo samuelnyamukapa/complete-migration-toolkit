@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 (2026-10-25)
+
+Form posts, so the rows `cmtk data` makes can reach a web form, which is what most legacy systems have in place of an API (#55, from the eShop try).
+
+- **`body_form`** on a case: the fields of a form, sent as `application/x-www-form-urlencoded` the way a browser posts one, from a JSON file inside the project (one of `cmtk data make`'s row files) or a mapping written inline. Booleans go as `true`/`false`, null as an empty value, a list as repeated fields; an object is refused, because a form is named fields. With `files`, the fields go as the text parts of the multipart body, before the files.
+- **`before`** on a case: a page on the same target read before the request, for the cookies it sets and the values it carries: `{ get: /Catalog/Create, take: { __RequestVerificationToken: "input[name=__RequestVerificationToken]" } }`. Selectors are `input[name=x]`, `meta[name=x]`, `tag[attr=x]@attr`, `regex:<pattern>` and `cookie:<name>`. The values taken are never written to evidence; the report's new "Pages read first" table gives the page, its status, and the names of what was taken. A page that doesn't answer 2xx, or a selector that matches nothing, makes the case an error and the request is not sent. In a comparison each system's page is read separately, so each gets its own token.
+- **`cmtk data cases --encoding form`**, with `--before-get /page --take field=selector` and `--expect-valid` / `--expect-invalid` for the statuses no document gives. Rows that mean nothing as a form are left out and named: a body that is not an object, and, because every form value is text, a text field "of the wrong type" or a null that posts as an empty value nothing in the schema refuses. Every draft note for a data-changing request now says it runs only with both switches, against disposable test data; a status given on the command line is marked as such for the reviewer. The `cmtk_data_cases` tool takes the same (`encoding`, `before`, `expect_valid`, `expect_invalid`).
+- `cmtk check` warns when a `body_form` file is missing, as it does for `body_file`.
+
 ## 0.4.1 (2026-10-23)
 
 From the first try of `cmtk data` on the eShop pilot ([docs/pilots/eshop.md](docs/pilots/eshop.md), part 4).

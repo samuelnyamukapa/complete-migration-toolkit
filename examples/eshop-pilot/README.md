@@ -42,6 +42,11 @@ Double-click these in order. Each writes `logs\<step>.log`.
 9. `08-review-canary.cmd`: starts `cmtk review` for the AI tester's triage of the canary comparison
    (`/cmtk:triage --manifest compare-canary.yaml`), where a person accepts or rejects each proposal.
 10. `09-stop.cmd`: stops legacy, if it is still running.
+11. `10-data-forms.cmd` (added 25 October 2026): posts the rows `cmtk data` generated for the catalog
+    item to legacy's Create form, each after reading the page for its anti-forgery token
+    (`tester\cmtk-forms.yaml`, evidence in `tester\cmtk\evidence-forms`). `cmtk review` comes first, for
+    the drafts. The invalid rows run by default, which RULE-009 says write nothing; `-Valid` adds the
+    rows that are saved. Needs cmtk 0.5.0 in `tools\cmtk\cmtk.mjs`.
 
 To run cmtk by hand from this folder:
 
@@ -64,5 +69,6 @@ To run cmtk by hand from this folder:
 | `cmtk\cases\imported\har.yaml` | the raw HAR import, before review; the reviewed cases are `cmtk\cases\legacy\har-journeys.yaml` |
 | `reports\` | the final reports from the pilot, and the log of the Windows checks |
 | `tester\` | the AI tester's plan (`cmtk\plans\catalog.md`), its draft cases and their source rules; `tester\cmtk.yaml` tests legacy on its own |
+| `tester\cmtk-forms.yaml`, `tester\cmtk\cases-forms\` | the form posts (part 5): settings that allow POST against the scratch copy only, and 96 draft cases from the catalog-item recipe, the 47 invalid rows and the 49 valid rows in separate files |
 | `tester\cmtk\data\` | test-data recipes (added 23 October 2026): two schemas the AI tester wrote from the business rules, and the recipes `cmtk data plan` compiled from them. The rows are not kept: `cmtk data make <id>` regenerates them, byte for byte. Their `DATA.md` summaries are in `reports\` |
 | `scratch\`, `tools\`, `logs\` | working copies, cmtk itself and step logs; never evidence |
