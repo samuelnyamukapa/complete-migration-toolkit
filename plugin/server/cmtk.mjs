@@ -20951,7 +20951,7 @@ process.on("warning", (w2) => {
     console.error(`${w2.name}: ${w2.message}`);
 });
 var HERE = path14.dirname(fileURLToPath(import.meta.url));
-var VERSION = true ? "0.5.0" : JSON.parse(fs15.readFileSync(path14.join(HERE, "..", "package.json"), "utf8")).version;
+var VERSION = true ? "0.5.1" : JSON.parse(fs15.readFileSync(path14.join(HERE, "..", "package.json"), "utf8")).version;
 var HELP = `cmtk ${VERSION}: test any system from its requirements, and prove a migrated system behaves like the old one.
 
 Usage:
@@ -21206,7 +21206,8 @@ async function review(manifestFile) {
     return 0;
   }
   console.log(`${drafts.length} draft case${drafts.length === 1 ? "" : "s"} and ${pending.length} proposal${pending.length === 1 ? "" : "s"} to review.`);
-  console.log("For each: a = accept, r = reject (you give a reason), s = skip for now, q = stop.\n");
+  console.log("For each: a = accept, r = reject (you give a reason), s = skip for now, q = stop.");
+  console.log("A = accept this draft and every remaining draft in the same file (you confirm first): for the cases a recipe generated, once you have read the recipe.\n");
   const rl = readline2.createInterface({ input: process.stdin, output: process.stdout });
   const date = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
   const tally = { accepted: 0, rejected: 0, skipped: 0, failed: 0 };
@@ -21218,22 +21219,51 @@ async function review(manifestFile) {
     const name = (await rl.question("Your full name: ")).trim();
     if (!name || name.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(name))
       throw new UsageError("A name of up to 100 characters is needed: it goes on everything you accept or reject. Nothing was changed.");
-    const ask = async () => {
+    const ask = async (all = false) => {
       for (; ; ) {
-        const v2 = (await rl.question("Accept, reject, skip or quit? [a/r/s/q] ")).trim().toLowerCase();
+        const raw = (await rl.question(`Accept, reject, skip or quit? [a/${all ? "A/" : ""}r/s/q] `)).trim();
+        if (all && raw === "A")
+          return "A";
+        const v2 = raw.toLowerCase();
         if (["a", "r", "s", "q"].includes(v2))
           return v2;
       }
     };
+    const done = /* @__PURE__ */ new Set();
     const items = [
       ...drafts.map((c4) => async () => {
+        if (done.has(c4.id))
+          return true;
         const { file: _file, draft: _d, ...shown } = c4;
         console.log(`
 Draft case ${c4.id} in ${c4.file}:
 ${import_yaml5.default.stringify(shown, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
-        const v2 = await ask();
+        const rest = drafts.filter((d4) => d4.file === c4.file && !done.has(d4.id));
+        let v2 = await ask(rest.length > 1);
+        while (v2 === "A") {
+          const yes = (await rl.question(`Accept all ${rest.length} remaining drafts in ${c4.file}, ${c4.id} included? Type yes to confirm: `)).trim().toLowerCase();
+          if (yes === "yes")
+            break;
+          console.log("  nothing changed; asking again for this one");
+          v2 = await ask(true);
+        }
         if (v2 === "q")
           return false;
+        if (v2 === "A") {
+          for (const d4 of rest) {
+            try {
+              acceptDraft(m4, d4.id, name, date, d4);
+              tally.accepted++;
+              console.log(`  accepted ${d4.id}`);
+            } catch (err) {
+              console.log(`  ${d4.id} not changed: ${err.message}`);
+              tally.failed++;
+            }
+            done.add(d4.id);
+          }
+          return true;
+        }
+        done.add(c4.id);
         if (v2 === "a") {
           acceptDraft(m4, c4.id, name, date, c4);
           tally.accepted++;

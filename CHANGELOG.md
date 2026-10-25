@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1 (2026-10-25)
+
+- **`cmtk review`: `A`** accepts the draft shown and every remaining draft in the same file, after the person types `yes`. For the cases a recipe generates (47 in one file on the eShop pilot), where the recipe is what was reviewed. Still a person at a keyboard, still one decision per file.
+- eShop pilot: `10-preflight-forms.cmd`, everything up to the review with nothing posted.
+
 ## 0.5.0 (2026-10-25)
 
 Form posts, so the rows `cmtk data` makes can reach a web form, which is what most legacy systems have in place of an API (#55, from the eShop try).

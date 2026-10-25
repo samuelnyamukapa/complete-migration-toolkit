@@ -258,7 +258,8 @@ async function review(manifestFile: string): Promise<number> {
     const pending = loadProposals(m).filter((p) => p.status === "pending");
     if (!drafts.length && !pending.length) { console.log("Nothing to review: no draft cases and no proposals."); return 0; }
     console.log(`${drafts.length} draft case${drafts.length === 1 ? "" : "s"} and ${pending.length} proposal${pending.length === 1 ? "" : "s"} to review.`);
-    console.log("For each: a = accept, r = reject (you give a reason), s = skip for now, q = stop.\n");
+    console.log("For each: a = accept, r = reject (you give a reason), s = skip for now, q = stop.");
+    console.log("A = accept this draft and every remaining draft in the same file (you confirm first): for the cases a recipe generated, once you have read the recipe.\n");
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const date = new Date().toISOString().slice(0, 10);
     const tally = { accepted: 0, rejected: 0, skipped: 0, failed: 0 };
@@ -267,18 +268,38 @@ async function review(manifestFile: string): Promise<number> {
     try {
         const name = (await rl.question("Your full name: ")).trim();
         if (!name || name.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(name)) throw new UsageError("A name of up to 100 characters is needed: it goes on everything you accept or reject. Nothing was changed.");
-        const ask = async (): Promise<"a" | "r" | "s" | "q"> => {
+        const ask = async (all = false): Promise<"a" | "A" | "r" | "s" | "q"> => {
             for (;;) {
-                const v = (await rl.question("Accept, reject, skip or quit? [a/r/s/q] ")).trim().toLowerCase();
+                const raw = (await rl.question(`Accept, reject, skip or quit? [a/${all ? "A/" : ""}r/s/q] `)).trim();
+                if (all && raw === "A") return "A";
+                const v = raw.toLowerCase();
                 if (["a", "r", "s", "q"].includes(v)) return v as "a" | "r" | "s" | "q";
             }
         };
+        const done = new Set<string>();
         const items: (() => Promise<boolean>)[] = [
             ...drafts.map((c) => async () => {
+                if (done.has(c.id)) return true;
                 const { file: _file, draft: _d, ...shown } = c;
                 console.log(`\nDraft case ${c.id} in ${c.file}:\n${YAML.stringify(shown, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
-                const v = await ask();
+                const rest = drafts.filter((d) => d.file === c.file && !done.has(d.id));
+                let v = await ask(rest.length > 1);
+                while (v === "A") {
+                    const yes = (await rl.question(`Accept all ${rest.length} remaining drafts in ${c.file}, ${c.id} included? Type yes to confirm: `)).trim().toLowerCase();
+                    if (yes === "yes") break;
+                    console.log("  nothing changed; asking again for this one");
+                    v = await ask(true);
+                }
                 if (v === "q") return false;
+                if (v === "A") {
+                    for (const d of rest) {
+                        try { acceptDraft(m, d.id, name, date, d); tally.accepted++; console.log(`  accepted ${d.id}`); }
+                        catch (err) { console.log(`  ${d.id} not changed: ${(err as Error).message}`); tally.failed++; }
+                        done.add(d.id);
+                    }
+                    return true;
+                }
+                done.add(c.id);
                 if (v === "a") { acceptDraft(m, c.id, name, date, c); tally.accepted++; }
                 if (v === "r") { rejectDraft(m, c.id, name, date, (await rl.question("Why reject it? ")).trim() || "no reason given"); tally.rejected++; }
                 if (v === "s") tally.skipped++;

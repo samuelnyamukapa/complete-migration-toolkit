@@ -45,8 +45,10 @@ Double-click these in order. Each writes `logs\<step>.log`.
 11. `10-data-forms.cmd` (added 25 October 2026): posts the rows `cmtk data` generated for the catalog
     item to legacy's Create form, each after reading the page for its anti-forgery token
     (`tester\cmtk-forms.yaml`, evidence in `tester\cmtk\evidence-forms`). `cmtk review` comes first, for
-    the drafts. The invalid rows run by default, which RULE-009 says write nothing; `-Valid` adds the
-    rows that are saved. Needs cmtk 0.5.0 in `tools\cmtk\cmtk.mjs`.
+    the drafts (`A` accepts every remaining draft in a file at once, after you confirm). The invalid rows run by default, which RULE-009 says write nothing; `-Valid` adds the
+    rows that are saved. Needs cmtk 0.5.1 in `tools\cmtk\cmtk.mjs`. `10-preflight-forms.cmd` does
+    everything up to the review and posts nothing: it says whether legacy answers and the Create page
+    carries the token field.
 
 To run cmtk by hand from this folder:
 

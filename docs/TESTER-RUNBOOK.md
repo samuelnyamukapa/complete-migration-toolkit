@@ -74,7 +74,7 @@ cmtk check
 cmtk review
 ```
 
-It asks for your name. Then, for each draft case and each proposal, it shows what it is and asks: accept, reject, skip or quit.
+It asks for your name. Then, for each draft case and each proposal, it shows what it is and asks: accept, reject, skip or quit. `A` accepts the draft and every remaining draft in the same file, after you type `yes`: for the cases a recipe generated, once you have read the recipe.
 
 - **Accept** a case only if its expectation is what the requirement says. An accepted case becomes the definition of correct.
 - **Reject** with a reason. Rejected drafts are kept in `cmtk/rejected.yaml`, so the same draft isn't proposed again.
