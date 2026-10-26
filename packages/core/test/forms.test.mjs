@@ -7,7 +7,7 @@ import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 
-import { cookiesOf, loadCases, loadManifest, makeData, planRecipe, run, compare, takeFromPage, writeCases } from "../dist/index.js";
+import { cookiesOf, draftDefects, loadCases, loadManifest, makeData, planRecipe, run, compare, takeFromPage, writeCases } from "../dist/index.js";
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "cmtk-form-"));
 const write = (dir, rel, text) => {
@@ -122,6 +122,33 @@ test("a form case reads the page first, posts the row as a browser would with th
       body_form: { Name: Mug }
       before: { get: /Catalog/Create, take: { token: "input[name=nothing]" } }
     expect: { status: 302 }
+  - id: WRONG1
+    name: $.Name one character longer than 50
+    requirement: RULE-011
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/item/rows/baseline_valid.json
+      before: { get: /Catalog/Create, take: { __RequestVerificationToken: "input[name=__RequestVerificationToken]" } }
+    expect: { status: 200 }
+  - id: WRONG2
+    name: $.Name 4,096 characters
+    requirement: RULE-011
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/item/rows/baseline_valid.json
+      before: { get: /Catalog/Create, take: { __RequestVerificationToken: "input[name=__RequestVerificationToken]" } }
+    expect: { status: 200 }
+  - id: WRONG3
+    name: $.Price above its maximum
+    requirement: RULE-013
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/item/rows/baseline_valid.json
+      before: { get: /Catalog/Create, take: { __RequestVerificationToken: "input[name=__RequestVerificationToken]" } }
+    expect: { status: 200 }
 `);
     try {
         const r = await run(loadManifest(path.join(dir, "cmtk.yaml")), { allowUnsafe: true });
@@ -159,6 +186,16 @@ test("a form case reads the page first, posts the row as a browser would with th
             + fs.readFileSync(path.join(dir, "cmtk/evidence/run/REPORT.json"), "utf8") + fs.readFileSync(path.join(dir, "cmtk/evidence/run/REPORT.md"), "utf8");
         assert.doesNotMatch(evidence, /tok-\d/, "the token taken from the page is never written");
         assert.doesNotMatch(evidence, /cookie-\d/, "nor the cookie");
+        // Defect drafts: data cases on one field are one draft, with the form and the page in the steps.
+        assert.equal(by.WRONG1.result, "FAIL");
+        const { drafts } = draftDefects(loadManifest(path.join(dir, "cmtk.yaml")), "run");
+        const name = drafts.find((d) => d.cases.includes("WRONG1"));
+        assert.deepEqual(name.cases, ["WRONG1", "WRONG2"], "the two $.Name cases fail the same way and are one draft");
+        assert.match(name.title, /^\$\.Name: one character longer than 50; 4,096 characters/);
+        assert.ok(drafts.some((d) => d.cases.length === 1 && d.cases[0] === "WRONG3"), "$.Price is its own draft");
+        assert.ok(name.steps.some((s) => /As a form .*baseline_valid\.json/.test(s)), name.steps.join("\n"));
+        assert.ok(name.steps.some((s) => /Before it, read `GET \/Catalog\/Create`.*__RequestVerificationToken taken from/.test(s)), name.steps.join("\n"));
+        assert.doesNotMatch(JSON.stringify(drafts), /tok-\d/, "no token value in a draft");
         const md = fs.readFileSync(path.join(dir, "cmtk/evidence/run/REPORT.md"), "utf8");
         assert.match(md, /## Pages read first/);
         assert.match(md, /\| OK \| GET \/Catalog\/Create \| 200 \| __RequestVerificationToken \| __RequestVerificationToken, ASP\.NET_SessionId \|/);
@@ -263,4 +300,10 @@ test("cmtk data cases --encoding form writes form posts with the page to read fi
     assert.ok(invalid.cases.every((c) => !c.name.includes("valid representative")));
     assert.deepEqual(invalid.cases[0].requirement, ["RULE-009", "RULE-013"], "several requirements, as a list");
     assert.match(fs.readFileSync(path.join(dir, "cmtk/cases/invalid.yaml"), "utf8"), /one per invalid row/);
+    const rest = writeCases(m(), "item", { path: "/x", encoding: "form", rows: "invalid", exceptRows: ["Name_missing"], out: "cmtk/cases/rest.yaml" });
+    assert.equal(rest.cases.length, invalid.cases.length - 1);
+    assert.ok(!rest.cases.some((c) => c.name === "$.Name missing though required"));
+    const one = writeCases(m(), "item", { path: "/x", encoding: "form", onlyRows: ["Name_missing"], out: "cmtk/cases/one.yaml" });
+    assert.equal(one.cases.length, 1);
+    assert.throws(() => writeCases(m(), "item", { path: "/x", onlyRows: ["nope"], out: "cmtk/cases/none.yaml" }), /no row called nope/);
 });

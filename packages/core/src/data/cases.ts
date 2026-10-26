@@ -19,6 +19,9 @@ export interface CasesOptions {
     requirement?: string;
     /** Which rows: all (the default), only the ones the schema calls valid, or only the invalid ones, which a form answers without writing (RULE-009-style). */
     rows?: "all" | "valid" | "invalid";
+    /** Only these rows, by name, or all but these: for rows a rule the test environment cannot enforce (a database limit against a mock) belongs to another file. */
+    onlyRows?: string[];
+    exceptRows?: string[];
     /** The case file, relative to the project. Default: cmtk/cases/data-<id>.yaml. */
     out?: string;
     headers?: Record<string, string>;
@@ -78,6 +81,10 @@ export function writeCases(m: Manifest, id: string, o: CasesOptions = {}): { fil
     const method = (o.method ?? op?.[1] ?? "POST").toUpperCase();
     const encoding = o.encoding ?? "json";
     const which = o.rows ?? "all";
+    const names = new Set(recipe.rows.map((r) => r.name));
+    for (const n of [...(o.onlyRows ?? []), ...(o.exceptRows ?? [])]) if (!names.has(n)) throw new ManifestError(`There is no row called ${n} in recipe ${id}.`);
+    const only = o.onlyRows?.length ? new Set(o.onlyRows) : undefined;
+    const except = new Set(o.exceptRows ?? []);
     const requirement = o.requirement?.split(",").map((s) => s.trim()).filter(Boolean);
     if (o.before && encoding !== "form") throw new ManifestError("`before` reads a page for a form, so it needs --encoding form.");
     if (o.before && (!o.before.get.startsWith("/") || o.before.get.startsWith("//"))) throw new ManifestError("`before.get` must be a path on the same target, such as /Catalog/Create.");
@@ -93,6 +100,7 @@ export function writeCases(m: Manifest, id: string, o: CasesOptions = {}): { fil
     // Ids follow the row's place in the recipe, so a row keeps its id whichever subset is written.
     for (const [i, row] of recipe.rows.entries()) {
         if (which !== "all" && row.expect_valid !== (which === "valid")) continue;
+        if ((only && !only.has(row.name)) || except.has(row.name)) continue;
         const rowFile = path.join(rowsDir, `${row.name}.json`);
         const value = made.get(row.name)?.value;
         const hasBody = value !== undefined;

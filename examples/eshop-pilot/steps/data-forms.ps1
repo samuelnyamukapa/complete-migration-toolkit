@@ -16,7 +16,7 @@ $code = 0
 try {
     $version = (& node $cmtk --version 2>&1 | Select-Object -Last 1)
     Write-Log "cmtk $version at $cmtk"
-    if ([version]($version -replace '[^0-9.].*$', '') -lt [version]'0.5.1') { throw "cmtk $version is too old: `cmtk data cases --encoding form` needs 0.5.1. Copy the new cmtk.mjs to tools\cmtk\." }
+    if ([version]($version -replace '[^0-9.].*$', '') -lt [version]'0.5.2') { throw "cmtk $version is too old: `cmtk data cases --encoding form` needs 0.5.2. Copy the new cmtk.mjs to tools\cmtk\." }
     try { $r = Invoke-WebRequest -Uri 'http://localhost:53190/Catalog/Create' -UseBasicParsing -TimeoutSec 120; Write-Log "GET /Catalog/Create -> $($r.StatusCode), $($r.RawContentLength) bytes" }
     catch { throw "Legacy eShop is not answering on port 53190: run 06-start-legacy.cmd first. ($($_.Exception.Message))" }
     # What the cases rely on: the hidden token input and the anti-forgery cookie. Names only; never the values.

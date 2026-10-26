@@ -293,11 +293,13 @@ server.registerTool("cmtk_data_cases", {
         manifest: manifestArg, id: z.string(), path: z.string().optional().describe("The request path, such as /api/items. Default: the operation's path."), method: z.string().optional(), requirement: z.string().optional(), out: z.string().optional(),
         encoding: z.enum(["json", "form"]).optional(),
         rows: z.enum(["all", "valid", "invalid"]).optional().describe("Only the rows the schema calls valid, or only the invalid ones (which a form answers without writing)."),
+        only_rows: z.array(z.string()).optional().describe("Only these rows, by name."),
+        except_rows: z.array(z.string()).optional().describe("All but these rows, by name: for rows whose rule the test environment cannot enforce, which belong in another file."),
         before: z.object({ get: z.string().describe("A path on the same target, read before each request."), take: z.record(z.string(), z.string()).optional().describe("Form field to selector: input[name=x], meta[name=x], tag[attr=x]@attr, regex:<pattern>, cookie:<name>.") }).optional(),
         expect_valid: z.number().int().optional().describe("The status a valid row must get, from the requirement or the person, never from the system."),
         expect_invalid: z.number().int().optional().describe("The status an invalid row must get, from the requirement or the person, never from the system."),
     },
-}, async (a) => guarded(() => writeCases(loadManifest(a.manifest), a.id, { path: a.path, method: a.method, requirement: a.requirement, out: a.out, encoding: a.encoding, rows: a.rows, before: a.before, expectValid: a.expect_valid, expectInvalid: a.expect_invalid }),
+}, async (a) => guarded(() => writeCases(loadManifest(a.manifest), a.id, { path: a.path, method: a.method, requirement: a.requirement, out: a.out, encoding: a.encoding, rows: a.rows, onlyRows: a.only_rows, exceptRows: a.except_rows, before: a.before, expectValid: a.expect_valid, expectInvalid: a.expect_invalid }),
     ({ file, cases, withoutExpect, leftOut }) => `${cases.length} draft cases in ${file}${withoutExpect ? `; ${withoutExpect} have no expect: block, because no documented status says what the answer should be: a person adds one` : ""}${describeLeftOut(leftOut).map((line) => `; left out ${line}`).join("")}. They wait for cmtk review.`));
 
 server.registerTool("cmtk_status", {

@@ -258,6 +258,10 @@ Three things worth keeping from this:
 - **The generated boundary found the defect the rules missed.** Nobody typed 1,000,000.01; it came from `maximum: 1000000` and `multipleOf: 0.01`. The rules file, extracted from the code by an agent, said it would be rejected.
 - **The 16 saved items are in memory only** (mock mode); they were gone when IIS Express stopped. The 49 valid rows (`10-data-forms.cmd -Valid`) were not posted.
 
+### Fixed from the run, and the second run
+
+The owner asked for what needed fixing to be fixed. On the toolkit's side (0.5.2): defect drafts had put all 16 failures in one draft because they failed the same way; they now group by the field a data case exercises (nine drafts, [reports/data-forms.DEFECTS.md](../../examples/eshop-pilot/reports/data-forms.DEFECTS.md), D-03 is the Price defect), and the steps say how the form was posted and which page was read first. On the pilot's side, the schema was corrected **from the rules, not from the run**: the Create form has no picture field (RULE-033), so `PictureFileName` is gone; no rule makes `Price` or the three stock figures required, so they are optional (and the question of a missing stock figure stays open for the owner); `Description` has no limit anywhere. The six rows only a database can refuse (RULE-011's name limit, RULE-012's brand and type) moved to `tester\cmtk-forms-db.yaml` and `cases-forms-db\`, as drafts without an expectation, for a copy with `UseMockData=false`. What is left for the mock-mode run is 32 invalid rows, and the only one that should fail is `Price_maximum_above_3bva`: a real defect in the application, which the toolkit cannot and should not make green.
+
 ### What we learnt
 
 | What happened | What we did |

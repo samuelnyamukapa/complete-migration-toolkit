@@ -77,8 +77,16 @@ function stepsFor(c: Case | undefined, target: string, clean: (s: string) => str
         `Send \`${c.request.method} ${cleanPath(c.request.path, clean)}\` to ${target}${c.surface && c.surface !== "http" ? ` through the ${c.surface} adapter` : ""}.`,
         ...(headers.length ? [`With headers: ${headers.join("; ")}.`] : []),
         ...(c.request.body ? [`With the body: ${clean(redactBody(String(c.request.body), contentType)[0]).slice(0, 500)}`] : []),
+        ...(c.request.body_file ? [`With the body from the file \`${c.request.body_file}\`.`] : []),
+        ...(typeof c.request.body_form === "string" ? [`As a form (application/x-www-form-urlencoded), the fields from \`${c.request.body_form}\`.`]
+            : c.request.body_form ? [`As a form (application/x-www-form-urlencoded) with the fields: ${clean(Object.entries(c.request.body_form).map(([k, v]) => `${k}=${looksSecret(k) ? REMOVED : JSON.stringify(v)}`).join(", ")).slice(0, 500)}`] : []),
+        ...(c.request.files?.length ? [`With the files: ${c.request.files.map((f) => `${f.field} = \`${f.path}\``).join(", ")}.`] : []),
+        ...(c.request.before ? [`Before it, read \`GET ${cleanPath(c.request.before.get, clean)}\` on the same target and carry its cookies${c.request.before.take ? `, with ${Object.entries(c.request.before.take).map(([k, s]) => `${k} taken from \`${s}\``).join(", ")} into the form` : ""}.`] : []),
     ];
 }
+
+/** The field a data case exercises, when its name starts with a JSON path such as "$.Price one step above…": cases on different fields are different defects even when they fail the same way. */
+const fieldOf = (c: Case | undefined) => /^(\$(?:\.[A-Za-z_][\w]*|\[\d+\]|\[\*\])*)\b/.exec(c?.name ?? "")?.[1];
 
 export function draftDefects(manifest: Manifest, mode: "run" | "compare"): { file: string; drafts: DefectDraft[] } {
     const dir = inside(manifest, path.join(manifest.evidence, mode));
@@ -94,7 +102,7 @@ export function draftDefects(manifest: Manifest, mode: "run" | "compare"): { fil
     for (const c of report.cases) {
         if (mode === "run" && c.result === "FAIL") {
             const f = c.failures ?? [];
-            const key = f.map((x) => `${norm(x.check)}|${x.expected}|${x.actual}`).join("\n");
+            const key = f.map((x) => `${norm(x.check)}|${x.expected}|${x.actual}`).join("\n") + (fieldOf(cases.get(c.id)) ? `\nfield:${fieldOf(cases.get(c.id))}` : "");
             const g = groups.get(key) ?? {
                 title: f.length === 1 ? `${f[0]!.check}: expected ${f[0]!.expected}, got ${f[0]!.actual}` : `${f.length} checks fail, first ${f[0]?.check}: expected ${f[0]?.expected}, got ${f[0]?.actual}`,
                 ids: [], expected: f.map((x) => `- \`${x.check}\`: ${x.expected}`).join("\n"), actual: f.map((x) => `- \`${x.check}\`: ${x.actual}`).join("\n"),
@@ -118,9 +126,13 @@ export function draftDefects(manifest: Manifest, mode: "run" | "compare"): { fil
     }
     const answer = (id: string) => (mode === "run" ? [`answers/${id}.json`] : [`answers/${id}.reference.json`, `answers/${id}.candidate.json`]);
     // A case's name says what is wrong in words; the check that failed is in Expected and Actual.
+    // Data cases on one field share the field as their title, each case's own name listed under it.
     const named = (ids: string[]) => {
         const names = ids.map((id) => cases.get(id)?.name?.trim());
-        return names.every((n) => n && n === names[0]) ? names[0] : undefined;
+        if (names.every((n) => n && n === names[0])) return names[0];
+        const field = fieldOf(cases.get(ids[0]!));
+        if (field && ids.every((id) => fieldOf(cases.get(id)) === field)) return `${field}: ${names.filter(Boolean).map((n) => n!.replace(/^\$[^ ]* ?/, "")).join("; ")}`;
+        return undefined;
     };
     const drafts: DefectDraft[] = [...groups.values()].map((g, i) => ({
         id: `D-${String(i + 1).padStart(2, "0")}`,

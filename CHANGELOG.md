@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.2 (2026-10-26)
+
+From reading the first form-post run on eShop (part 5 of the pilot).
+
+- **Defect drafts group data cases by field.** Sixteen generated rows failed the same way (expected 200, got 302) and were one draft; they were one defect, four questions, three schema mistakes and eight rows the environment could not refuse. A case whose name starts with a JSON path (`$.Price above its maximum`) is now grouped with the other cases on that field, titled by the field with each case's own words, so a person judges each field once.
+- **Steps to reproduce say how the form was posted:** the row file, `application/x-www-form-urlencoded`, the files, and the page read first with what was taken from it. Never a value from that page.
+- **`cmtk data cases --only-rows` and `--except-rows`** (`only_rows`, `except_rows` on the tool): rows whose rule the test environment cannot enforce, such as a database limit against a mock, go in a file of their own.
+
 ## 0.5.1 (2026-10-25)
 
 - **`cmtk review`: `A`** accepts the draft shown and every remaining draft in the same file, after the person types `yes`. For the cases a recipe generates (47 in one file on the eShop pilot), where the recipe is what was reviewed. Still a person at a keyboard, still one decision per file.

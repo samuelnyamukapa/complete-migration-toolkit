@@ -1,0 +1,18 @@
+# eShop pilot, part 5, the rows only the database can refuse. RULE-011 (the 50-character name) and
+# RULE-012 (brand and type must exist) are enforced by the database, and the scratch copy runs with
+# UseMockData=true, which has none. These six cases are drafts without an expect: RULE-011 says a
+# long name gives an error page (a suspected defect), and nothing says what an unknown brand gives.
+# Run them against a copy with UseMockData=false, once the owner has written the expectations.
+system: eshop-legacy
+
+targets:
+  candidate: { base_url: http://localhost:53190 }
+
+cases: [cmtk/cases-forms-db/*.yaml]
+evidence: cmtk/evidence-forms-db
+proposals: cmtk/proposals-forms-db.yaml
+drift: cmtk/drift-forms-db.yaml
+
+allow_unsafe_methods: true    # POST to the Create form, against a disposable copy only; --allow-unsafe is still needed on the run
+headers_from_env: {}
+timeout_s: 120

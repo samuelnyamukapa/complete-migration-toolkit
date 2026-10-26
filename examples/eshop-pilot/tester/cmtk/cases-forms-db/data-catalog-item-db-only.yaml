@@ -1,0 +1,92 @@
+# Draft cases from the test-data recipe catalog-item: one per row, each sending its row from cmtk/data/catalog-item/rows/ as a form. A person accepts them with `cmtk review`.
+cases:
+  - id: CATALOG-ITEM-008
+    name: $.Name one character longer than 50
+    requirement:
+      - RULE-011
+      - RULE-012
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_maxLength_above_3bva.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_maxLength_above_3bva (BVA-3): $.Name one character longer than 50. The schema says the body is invalid ($.Name maxLength); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. No documented status for this answer, so no expect: a person adds one. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-021
+    name: "$.Name: 4,096 characters: past most column widths"
+    requirement:
+      - RULE-011
+      - RULE-012
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/Name_hostile_long.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    draft: true
+    draft_note: "From recipe catalog-item, row Name_hostile_long (hostile): $.Name: 4,096 characters: past most column widths. The schema says the body is invalid ($.Name maxLength); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. No documented status for this answer, so no expect: a person adds one. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-042
+    name: $.CatalogBrandId missing though required
+    requirement:
+      - RULE-011
+      - RULE-012
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/CatalogBrandId_missing.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    draft: true
+    draft_note: "From recipe catalog-item, row CatalogBrandId_missing (EP): $.CatalogBrandId missing though required. The schema says the body is invalid ($.CatalogBrandId required); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. No documented status for this answer, so no expect: a person adds one. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-045
+    name: $.CatalogBrandId outside [1,2,3,4,5]
+    requirement:
+      - RULE-011
+      - RULE-012
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/CatalogBrandId_not_in_enum.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    draft: true
+    draft_note: "From recipe catalog-item, row CatalogBrandId_not_in_enum (EP): $.CatalogBrandId outside [1,2,3,4,5]. The schema says the body is invalid ($.CatalogBrandId enum); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. No documented status for this answer, so no expect: a person adds one. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-047
+    name: $.CatalogTypeId missing though required
+    requirement:
+      - RULE-011
+      - RULE-012
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/CatalogTypeId_missing.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    draft: true
+    draft_note: "From recipe catalog-item, row CatalogTypeId_missing (EP): $.CatalogTypeId missing though required. The schema says the body is invalid ($.CatalogTypeId required); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. No documented status for this answer, so no expect: a person adds one. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."
+  - id: CATALOG-ITEM-050
+    name: $.CatalogTypeId outside [1,2,3,4]
+    requirement:
+      - RULE-011
+      - RULE-012
+    request:
+      method: POST
+      path: /Catalog/Create
+      body_form: cmtk/data/catalog-item/rows/CatalogTypeId_not_in_enum.json
+      before:
+        get: /Catalog/Create
+        take:
+          __RequestVerificationToken: input[name=__RequestVerificationToken]
+    draft: true
+    draft_note: "From recipe catalog-item, row CatalogTypeId_not_in_enum (EP): $.CatalogTypeId outside [1,2,3,4]. The schema says the body is invalid ($.CatalogTypeId enum); the oracle is specified. Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields. Before it, /Catalog/Create is read for __RequestVerificationToken; the values taken are never written to evidence. No documented status for this answer, so no expect: a person adds one. This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data."

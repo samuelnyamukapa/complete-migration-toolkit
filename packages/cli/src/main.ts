@@ -52,6 +52,7 @@ Usage:
   cmtk data cases <id> [--path /api/x] [--requirement <id>] [--out <file>]
                        [--encoding form] [--before-get /page] [--take field=selector]...
                        [--expect-valid 302] [--expect-invalid 200] [--rows valid|invalid]
+                       [--only-rows name,name] [--except-rows name,name]
                                                                     one draft case per row, each sending its row from a file
   cmtk signoff run|compare                                          a person signs a report, at a terminal (never an agent)
   cmtk adapter new <name>                                           write a new adapter from the template
@@ -129,6 +130,8 @@ async function main(argv: string[]): Promise<number> {
             "expect-valid": { type: "string" },
             "expect-invalid": { type: "string" },
             rows: { type: "string" },
+            "only-rows": { type: "string" },
+            "except-rows": { type: "string" },
             help: { type: "boolean", short: "h", default: false },
             version: { type: "boolean", short: "v", default: false },
         },
@@ -482,6 +485,7 @@ async function dataCommand(args: string[], manifestFile: string, v: Record<strin
             };
             const { file, cases, withoutExpect, leftOut } = writeCases(m, id, {
                 path: v.path, method: v.method, requirement: v.requirement, out: v.out, encoding: v.encoding, rows: v.rows,
+                onlyRows: v["only-rows"]?.split(",").map((s: string) => s.trim()).filter(Boolean), exceptRows: v["except-rows"]?.split(",").map((s: string) => s.trim()).filter(Boolean),
                 before: v["before-get"] ? { get: v["before-get"], ...(Object.keys(take).length ? { take } : {}) } : undefined,
                 expectValid: status("expect-valid"), expectInvalid: status("expect-invalid"),
             });

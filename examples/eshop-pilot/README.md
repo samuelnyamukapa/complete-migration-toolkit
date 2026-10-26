@@ -50,7 +50,7 @@ Double-click these in order. Each writes `logs\<step>.log`.
     item to legacy's Create form, each after reading the page for its anti-forgery token
     (`tester\cmtk-forms.yaml`, evidence in `tester\cmtk\evidence-forms`). `cmtk review` comes first, for
     the drafts (`A` accepts every remaining draft in a file at once, after you confirm). The invalid rows run by default, which RULE-009 says write nothing; `-Valid` adds the
-    rows that are saved. Needs cmtk 0.5.1 in `tools\cmtk\cmtk.mjs`. `10-preflight-forms.cmd` does
+    rows that are saved. Needs cmtk 0.5.2 in `tools\cmtk\cmtk.mjs`. `10-preflight-forms.cmd` does
     everything up to the review and posts nothing: it says whether legacy answers and the Create page
     carries the token field.
 
@@ -75,6 +75,7 @@ To run cmtk by hand from this folder:
 | `cmtk\cases\imported\har.yaml` | the raw HAR import, before review; the reviewed cases are `cmtk\cases\legacy\har-journeys.yaml` |
 | `reports\` | the final reports from the pilot, and the log of the Windows checks; `data-forms.REPORT.md` is part 5, the generated rows posted to the Create form |
 | `tester\` | the AI tester's plan (`cmtk\plans\catalog.md`), its draft cases and their source rules; `tester\cmtk.yaml` tests legacy on its own |
-| `tester\cmtk-forms.yaml`, `tester\cmtk\cases-forms\` | the form posts (part 5): settings that allow POST against the scratch copy only, and 96 draft cases from the catalog-item recipe, the 47 invalid rows and the 49 valid rows in separate files |
+| `tester\cmtk-forms.yaml`, `tester\cmtk\cases-forms\` | the form posts (part 5): settings that allow POST against the scratch copy only, and the draft cases from the catalog-item recipe, the 32 invalid rows and the 50 valid rows in separate files |
+| `tester\cmtk-forms-db.yaml`, `tester\cmtk\cases-forms-db\` | the six rows only the database can refuse (RULE-011, RULE-012), for a copy with `UseMockData=false`; drafts without an expectation until the owner writes one |
 | `tester\cmtk\data\` | test-data recipes (added 23 October 2026): two schemas the AI tester wrote from the business rules, and the recipes `cmtk data plan` compiled from them. The rows are not kept: `cmtk data make <id>` regenerates them, byte for byte. Their `DATA.md` summaries are in `reports\` |
 | `scratch\`, `tools\`, `logs\` | working copies, cmtk itself and step logs; never evidence |

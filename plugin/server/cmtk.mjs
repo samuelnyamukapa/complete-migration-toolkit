@@ -15669,9 +15669,14 @@ function stepsFor(c4, target2, clean2) {
   return [
     `Send \`${c4.request.method} ${cleanPath(c4.request.path, clean2)}\` to ${target2}${c4.surface && c4.surface !== "http" ? ` through the ${c4.surface} adapter` : ""}.`,
     ...headers.length ? [`With headers: ${headers.join("; ")}.`] : [],
-    ...c4.request.body ? [`With the body: ${clean2(redactBody(String(c4.request.body), contentType)[0]).slice(0, 500)}`] : []
+    ...c4.request.body ? [`With the body: ${clean2(redactBody(String(c4.request.body), contentType)[0]).slice(0, 500)}`] : [],
+    ...c4.request.body_file ? [`With the body from the file \`${c4.request.body_file}\`.`] : [],
+    ...typeof c4.request.body_form === "string" ? [`As a form (application/x-www-form-urlencoded), the fields from \`${c4.request.body_form}\`.`] : c4.request.body_form ? [`As a form (application/x-www-form-urlencoded) with the fields: ${clean2(Object.entries(c4.request.body_form).map(([k2, v2]) => `${k2}=${looksSecret(k2) ? REMOVED : JSON.stringify(v2)}`).join(", ")).slice(0, 500)}`] : [],
+    ...c4.request.files?.length ? [`With the files: ${c4.request.files.map((f4) => `${f4.field} = \`${f4.path}\``).join(", ")}.`] : [],
+    ...c4.request.before ? [`Before it, read \`GET ${cleanPath(c4.request.before.get, clean2)}\` on the same target and carry its cookies${c4.request.before.take ? `, with ${Object.entries(c4.request.before.take).map(([k2, s4]) => `${k2} taken from \`${s4}\``).join(", ")} into the form` : ""}.`] : []
   ];
 }
+var fieldOf = (c4) => /^(\$(?:\.[A-Za-z_][\w]*|\[\d+\]|\[\*\])*)\b/.exec(c4?.name ?? "")?.[1];
 function draftDefects(manifest, mode) {
   const dir = inside(manifest, path5.join(manifest.evidence, mode));
   const reportFile = path5.join(dir, "REPORT.json");
@@ -15686,7 +15691,8 @@ function draftDefects(manifest, mode) {
   for (const c4 of report.cases) {
     if (mode === "run" && c4.result === "FAIL") {
       const f4 = c4.failures ?? [];
-      const key2 = f4.map((x2) => `${norm(x2.check)}|${x2.expected}|${x2.actual}`).join("\n");
+      const key2 = f4.map((x2) => `${norm(x2.check)}|${x2.expected}|${x2.actual}`).join("\n") + (fieldOf(cases.get(c4.id)) ? `
+field:${fieldOf(cases.get(c4.id))}` : "");
       const g3 = groups.get(key2) ?? {
         title: f4.length === 1 ? `${f4[0].check}: expected ${f4[0].expected}, got ${f4[0].actual}` : `${f4.length} checks fail, first ${f4[0]?.check}: expected ${f4[0]?.expected}, got ${f4[0]?.actual}`,
         ids: [],
@@ -15713,7 +15719,12 @@ function draftDefects(manifest, mode) {
   const answer = (id) => mode === "run" ? [`answers/${id}.json`] : [`answers/${id}.reference.json`, `answers/${id}.candidate.json`];
   const named = (ids) => {
     const names = ids.map((id) => cases.get(id)?.name?.trim());
-    return names.every((n3) => n3 && n3 === names[0]) ? names[0] : void 0;
+    if (names.every((n3) => n3 && n3 === names[0]))
+      return names[0];
+    const field = fieldOf(cases.get(ids[0]));
+    if (field && ids.every((id) => fieldOf(cases.get(id)) === field))
+      return `${field}: ${names.filter(Boolean).map((n3) => n3.replace(/^\$[^ ]* ?/, "")).join("; ")}`;
+    return void 0;
   };
   const drafts = [...groups.values()].map((g3, i8) => ({
     id: `D-${String(i8 + 1).padStart(2, "0")}`,
@@ -20874,6 +20885,12 @@ function writeCases(m4, id, o4 = {}) {
   const method = (o4.method ?? op?.[1] ?? "POST").toUpperCase();
   const encoding = o4.encoding ?? "json";
   const which = o4.rows ?? "all";
+  const names = new Set(recipe.rows.map((r6) => r6.name));
+  for (const n3 of [...o4.onlyRows ?? [], ...o4.exceptRows ?? []])
+    if (!names.has(n3))
+      throw new ManifestError(`There is no row called ${n3} in recipe ${id}.`);
+  const only = o4.onlyRows?.length ? new Set(o4.onlyRows) : void 0;
+  const except = new Set(o4.exceptRows ?? []);
   const requirement = o4.requirement?.split(",").map((s4) => s4.trim()).filter(Boolean);
   if (o4.before && encoding !== "form")
     throw new ManifestError("`before` reads a page for a form, so it needs --encoding form.");
@@ -20892,6 +20909,8 @@ function writeCases(m4, id, o4 = {}) {
   let withoutExpect = 0;
   for (const [i8, row] of recipe.rows.entries()) {
     if (which !== "all" && row.expect_valid !== (which === "valid"))
+      continue;
+    if (only && !only.has(row.name) || except.has(row.name))
       continue;
     const rowFile = path13.join(rowsDir, `${row.name}.json`);
     const value = made.get(row.name)?.value;
@@ -20951,7 +20970,7 @@ process.on("warning", (w2) => {
     console.error(`${w2.name}: ${w2.message}`);
 });
 var HERE = path14.dirname(fileURLToPath(import.meta.url));
-var VERSION = true ? "0.5.1" : JSON.parse(fs15.readFileSync(path14.join(HERE, "..", "package.json"), "utf8")).version;
+var VERSION = true ? "0.5.2" : JSON.parse(fs15.readFileSync(path14.join(HERE, "..", "package.json"), "utf8")).version;
 var HELP = `cmtk ${VERSION}: test any system from its requirements, and prove a migrated system behaves like the old one.
 
 Usage:
@@ -20977,6 +20996,7 @@ Usage:
   cmtk data cases <id> [--path /api/x] [--requirement <id>] [--out <file>]
                        [--encoding form] [--before-get /page] [--take field=selector]...
                        [--expect-valid 302] [--expect-invalid 200] [--rows valid|invalid]
+                       [--only-rows name,name] [--except-rows name,name]
                                                                     one draft case per row, each sending its row from a file
   cmtk signoff run|compare                                          a person signs a report, at a terminal (never an agent)
   cmtk adapter new <name>                                           write a new adapter from the template
@@ -21053,6 +21073,8 @@ async function main(argv) {
       "expect-valid": { type: "string" },
       "expect-invalid": { type: "string" },
       rows: { type: "string" },
+      "only-rows": { type: "string" },
+      "except-rows": { type: "string" },
       help: { type: "boolean", short: "h", default: false },
       version: { type: "boolean", short: "v", default: false }
     }
@@ -21499,6 +21521,8 @@ async function dataCommand(args, manifestFile, v2) {
         out: v2.out,
         encoding: v2.encoding,
         rows: v2.rows,
+        onlyRows: v2["only-rows"]?.split(",").map((s4) => s4.trim()).filter(Boolean),
+        exceptRows: v2["except-rows"]?.split(",").map((s4) => s4.trim()).filter(Boolean),
         before: v2["before-get"] ? { get: v2["before-get"], ...Object.keys(take).length ? { take } : {} } : void 0,
         expectValid: status("expect-valid"),
         expectInvalid: status("expect-invalid")
