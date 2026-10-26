@@ -237,15 +237,32 @@ These are the questions the tester's schemas carry in their `description` fields
 
 The try took about ten minutes, most of it writing the two schemas from the rules. Generation and checking took seconds.
 
-## Part 5: the rows posted to the Create form (prepared 25 October 2026)
+## Part 5: the rows posted to the Create form (26 October 2026)
 
-cmtk 0.5.0 added what part 4 lacked: `body_form`, which posts a row's fields the way a browser posts a form, and `before`, which reads a page first for its anti-forgery token and cookies. The eShop files are ready and **have not been run yet**; this part is written up when they have.
+cmtk 0.5.1, on the same scratch copy of legacy eShop (`UseMockData=true`, so the catalog is an in-memory list), from `10-data-forms.cmd`. The owner accepted the 47 invalid-row drafts with one `A` in `cmtk review`, and the run posted each row to `/Catalog/Create` the way a browser does: `GET /Catalog/Create` first, the anti-forgery token taken from the page and the two cookies carried, then the row as a form. The report is [reports/data-forms.REPORT.md](../../examples/eshop-pilot/reports/data-forms.REPORT.md); the files are `tester\cmtk-forms.yaml` and `tester\cmtk\cases-forms\`.
 
-What is in the folder:
+**47 posted, 31 passed, 16 failed, 0 errors.** Every one of the 47 read the page first and posted with the token: no anti-forgery refusal. The evidence names the page, the token field and the cookies for each case and holds no token value. The passing cases are the form's own messages, verbatim in the answers: "The Name field is required.", "The field Price must be a positive number with maximum two decimals.", "The field Stock must be between 0 and 10 million.", "The value 'twelve' is not valid for Brand.", "The value '0.5' is not valid for Stock.".
 
-- `tester\cmtk-forms.yaml`: its own settings, with `allow_unsafe_methods: true` because the Create form is a POST, and its own evidence folder, so the signed reports are never replaced.
-- `tester\cmtk\cases-forms\data-catalog-item-invalid.yaml` (47 drafts) and `data-catalog-item-valid.yaml` (49 drafts), from `cmtk data cases catalog-item --encoding form --before-get /Catalog/Create --take "__RequestVerificationToken=input[name=__RequestVerificationToken]" --expect-valid 302 --expect-invalid 200 --rows invalid|valid`. The two statuses are RULE-009's: an invalid item is shown again with no write; a valid one is saved and redirects to Index. Every draft note says where they came from and that the request changes data.
-- Three rows the recipe has were left out, and the tool said why: `body_not_an_object` (a form is named fields), and `Name_wrong_type`, `Description_wrong_type` and `PictureFileName_wrong_type`, because every form value is text, so a text field cannot have the wrong type. That is a difference between a JSON API and a form that the recipe cannot know and the case writer must.
-- `10-data-forms.cmd`: regenerates the rows, runs `cmtk review` for the drafts, then runs the invalid rows only, which write nothing. `-Valid` adds the rows RULE-009 says are saved, into the scratch catalog.
+The 16 failures are all the same shape: the schema said the row was invalid, RULE-009 says an invalid item is shown again, and legacy saved it instead (302 to Index). They sort into four findings:
 
-Against a stand-in for the form (a small server that sets the cookie, renders the hidden token, and refuses a post without both), all 47 invalid cases read the page, posted with the right cookie and token, and were answered; the evidence named the page, the token field and the cookies, and held no value of either.
+| Rows | What legacy did | What it means |
+|---|---|---|
+| `Price_maximum_above_3bva` (1,000,000.01) | Saved | **A defect.** `[Range(0, 1000000)]` is the integer overload, so the value is converted to an integer before the check and 1,000,000.01 rounds to 1,000,000. RULE-013 says this value "fails the Range rule": the rule was read from the attribute, not from its behaviour. The generated boundary row found what the rules file got wrong |
+| `Price_missing`, `AvailableStock_missing`, `RestockThreshold_missing`, `MaxStockThreshold_missing` | Saved, as 0 | These are value types with no `[Required]`, so an absent field binds to 0. An empty field (`Price_null`) is refused with "The Price field is required." A browser always sends the field, so only a hand-crafted post reaches this. **Question for the owner:** is an item with no stock figures a valid item? The schema's `required` on these four was the tester's assumption |
+| `PictureFileName_missing`, `_null`, `_breaks_pattern` | Saved | The Create form has no picture field and new items default to `dummy.png` (RULE-033), so "missing" is the normal case and the schema was wrong to require it. `_breaks_pattern` saved `!!! not a match` as the picture file name: **RULE-007 confirmed**, a hand-crafted `PictureFileName` is bound, which is what feeds the path traversal in RULE-008 |
+| `Name_maxLength_above_3bva`, `Name_hostile_long`, `Description_*_long`, `CatalogBrandId_missing`, `CatalogBrandId_not_in_enum`, `CatalogTypeId_missing`, `CatalogTypeId_not_in_enum` | Saved | **Mock mode.** RULE-011 (the 50-character name) and RULE-012 (brand and type must exist) live in the database, and `UseMockData=true` has none: no column widths, no foreign keys. These eight rows only mean something against the database-backed site. Description has no limit anywhere; the 200 was a guess, now answered |
+
+Three things worth keeping from this:
+
+- **A row that fails is not a wrong row.** Of the 16, one is a defect, four are a question, three are the schema being wrong, eight are the test environment. The recipe made the rows; reading them against the system is the tester's work, and it took longer than everything else in this part.
+- **The generated boundary found the defect the rules missed.** Nobody typed 1,000,000.01; it came from `maximum: 1000000` and `multipleOf: 0.01`. The rules file, extracted from the code by an agent, said it would be rejected.
+- **The 16 saved items are in memory only** (mock mode); they were gone when IIS Express stopped. The 49 valid rows (`10-data-forms.cmd -Valid`) were not posted.
+
+### What we learnt
+
+| What happened | What we did |
+|---|---|
+| Norton quarantined `06-start-legacy.cmd` each time it was launched (IDP.Generic, a heuristic), and once the `.ps1` behind it: on the 20th, the 25th and the 26th. That is what "the start script vanished" in part 2 was | The owner restored the files from Norton's quarantine and excluded them. Nothing in the script deletes anything |
+| Restored, the script still failed: IIS Express started and ended at once, with nothing to read because it ran minimised from PowerShell. A shortcut straight to `iisexpress.exe` did the same | **Pilot:** `06b-start-legacy-console.cmd` runs IIS Express in the foreground, in a window that stays open and shows every request. It started first time |
+| 96 drafts to accept, one keypress each | **Fixed in 0.5.1:** `A` in `cmtk review` accepts the draft and every remaining draft in the same file, after the person types `yes` |
+| The schema the tester wrote from the rules was right about the model's attributes and wrong about the form (a picture field that isn't there; numbers that default to 0) | Expected: the schema is a draft for the owner, and the run is how its guesses get answered. The corrections are the owner's to make |

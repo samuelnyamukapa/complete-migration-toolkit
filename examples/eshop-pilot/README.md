@@ -42,7 +42,11 @@ Double-click these in order. Each writes `logs\<step>.log`.
 9. `08-review-canary.cmd`: starts `cmtk review` for the AI tester's triage of the canary comparison
    (`/cmtk:triage --manifest compare-canary.yaml`), where a person accepts or rejects each proposal.
 10. `09-stop.cmd`: stops legacy, if it is still running.
-11. `10-data-forms.cmd` (added 25 October 2026): posts the rows `cmtk data` generated for the catalog
+11. `06b-start-legacy-console.cmd` (added 26 October 2026): starts legacy with IIS Express in the
+    foreground, in a window that stays open and shows every request; close it or run `09-stop.cmd`
+    to stop. Use it instead of `06-start-legacy.cmd` when the latter is quarantined by Norton
+    (IDP.Generic) or IIS Express ends at once with nothing to read.
+12. `10-data-forms.cmd` (added 25 October 2026): posts the rows `cmtk data` generated for the catalog
     item to legacy's Create form, each after reading the page for its anti-forgery token
     (`tester\cmtk-forms.yaml`, evidence in `tester\cmtk\evidence-forms`). `cmtk review` comes first, for
     the drafts (`A` accepts every remaining draft in a file at once, after you confirm). The invalid rows run by default, which RULE-009 says write nothing; `-Valid` adds the
@@ -69,7 +73,7 @@ To run cmtk by hand from this folder:
 | `cmtk\evidence*\` | answers and reports from each run |
 | `compare-canary.yaml` | the same comparison with a planted defect, to prove it is caught |
 | `cmtk\cases\imported\har.yaml` | the raw HAR import, before review; the reviewed cases are `cmtk\cases\legacy\har-journeys.yaml` |
-| `reports\` | the final reports from the pilot, and the log of the Windows checks |
+| `reports\` | the final reports from the pilot, and the log of the Windows checks; `data-forms.REPORT.md` is part 5, the generated rows posted to the Create form |
 | `tester\` | the AI tester's plan (`cmtk\plans\catalog.md`), its draft cases and their source rules; `tester\cmtk.yaml` tests legacy on its own |
 | `tester\cmtk-forms.yaml`, `tester\cmtk\cases-forms\` | the form posts (part 5): settings that allow POST against the scratch copy only, and 96 draft cases from the catalog-item recipe, the 47 invalid rows and the 49 valid rows in separate files |
 | `tester\cmtk\data\` | test-data recipes (added 23 October 2026): two schemas the AI tester wrote from the business rules, and the recipes `cmtk data plan` compiled from them. The rows are not kept: `cmtk data make <id>` regenerates them, byte for byte. Their `DATA.md` summaries are in `reports\` |
