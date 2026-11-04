@@ -71,7 +71,7 @@ REA (Reverse Engineer Anything, [morluto/rea](https://github.com/morluto/rea)) r
 4. **Where there is no source,** use REA's tools on what is there (see "REA"), and record each finding the same way, with REA's evidence as the `evidence`.
 5. **Call `cmtk_check`.** Then tell the person, briefly:
    - how many boundaries there are, by kind;
-   - which are uncovered, and for each uncovered kind the two options: an adapter (`cmtk adapter new <name>`, then `covers: [<kind>]` in `cmtk.yaml`), or a person's decision that it is out of scope;
+   - which are uncovered, and for each uncovered kind the two options: an adapter (`cmtk adapter new <name>`, or a person installs one with `cmtk adapter add <name>`, then `covers: [<kind>]` in `cmtk.yaml`), or a person's decision that it is out of scope;
    - what you could not check, such as a library with no source when REA isn't installed.
 
    Point them to `cmtk/discovery/BOUNDARIES.md`.

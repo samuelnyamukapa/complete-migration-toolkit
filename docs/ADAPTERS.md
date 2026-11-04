@@ -97,13 +97,29 @@ Each has its own README in `adapters/<name>/`, with its settings and safety rule
 
 | Adapter | Covers | What it does | What it has run against |
 |---|---|---|---|
-| [queue](../adapters/queue/README.md) | `queue` | Publishes a case's message to a test queue and reports what reaches the output queues, in RabbitMQ or Azure Service Bus | An in-memory stand-in. Real brokers need its real-server tests |
+| [queue](../adapters/queue/README.md) | `queue` | Publishes a case's message to a test queue and reports what reaches the output queues, in RabbitMQ or Azure Service Bus | An in-memory stand-in, and a real RabbitMQ in CI. Azure Service Bus has not run against a real namespace |
 | [batch](../adapters/batch/README.md) | `files` | Runs a job on copies of its input files and reports each output as name, size, hash and records, reading fixed-width and EBCDIC files | Its own small sample jobs, on any system with Node. CardDemo's files are not in this repository |
-| [database](../adapters/database/README.md) | `database` | Snapshots chosen tables before and after a case and reports the rows that changed, in SQL Server or PostgreSQL. Refuses a login that can write, and sends only SELECT | PostgreSQL through PGlite, and an in-memory stand-in for SQL Server. Real servers need its real-server tests |
+| [database](../adapters/database/README.md) | `database` | Snapshots chosen tables before and after a case and reports the rows that changed, in SQL Server or PostgreSQL. Refuses a login that can write, and sends only SELECT | PostgreSQL through PGlite, and real PostgreSQL and SQL Server in CI |
+
+## Installing one someone else wrote
+
+Adapters can be shared without a toolkit release, through a registry: a git repository or a folder with a `registry.yaml`.
+
+```
+cmtk adapter add mailbox --registry https://github.com/acme/cmtk-adapters.git
+cmtk adapter check mailbox
+cmtk adapter list
+```
+
+Installing one runs someone else's code later, so only a person does it, at a terminal. It shows the source and the licence, pins the commit, and asks for a yes. No script, flag or MCP tool can do it. [ADAPTER-CONTRIBUTING.md](ADAPTER-CONTRIBUTING.md) covers registries, private registries, and how to publish your own.
+
+A case whose surface has no adapter does not stop the run. Nothing is sent for it, it counts as an error so the report can't pass, and the report lists it under "Cases with no adapter".
 
 ## Levels
 
 Adapters move through three levels:
 - **experimental:** passes the conformance kit;
 - **verified:** used on one real project;
-- **core:** shipped with the toolkit.
+- **core:** ships with the toolkit, with real use behind it.
+
+`cmtk adapter list` shows each one's level. [adapters/registry.yaml](../adapters/registry.yaml) states the level of each adapter in this repository.

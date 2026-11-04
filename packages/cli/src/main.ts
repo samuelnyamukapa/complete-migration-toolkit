@@ -436,11 +436,7 @@ async function adapterCommand(args: string[], manifestFile: string, values: { la
         console.log(`Register it in cmtk.yaml:\n  adapters:\n    ${name}: { command: node, args: [adapters/${name}/index.mjs] }`);
         return 0;
     }
-<<<<<<< HEAD
     if (sub === "check") return adapterCheck(name, dir, manifestFile, values.target);
-    throw new UsageError("`cmtk adapter` takes `new <name>` or `check <name>`.");
-=======
-    if (sub === "check") return adapterCheck(name, dir, manifestFile);
     if (sub === "add") return adapterAdd(name, root, manifestFile, values.registry, values.pin);
     throw new UsageError("`cmtk adapter` takes `new <name>`, `check <name>`, `add <name>` or `list`.");
 }
@@ -493,7 +489,6 @@ async function adapterAdd(name: string, root: string, manifestFile: string, regi
         rl.close();
         prepared.cleanup();
     }
->>>>>>> 138c467 (cmtk adapter add and list: install from a registry, pinned, only by a person (#24))
 }
 
 /** How to start a C# adapter nobody has registered: its build, which must not be older than its code. */

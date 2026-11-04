@@ -98,7 +98,7 @@ Set one level for the system, then loosen it per path (`overrides`) or per case.
 - **Contracts served by both systems:**
   - OpenAPI (JSON): removed operations or parameters, new required parameters, removed responses, removed or retyped properties;
   - WSDL and XSD: removed operations or elements, type changes, a changed target namespace.
-- **Anything else, through adapters:** queues, workers, files, email, SMS and payment sandboxes report their side effects as JSON, and the engine compares and checks them like a body. `cmtk adapter new` writes a working adapter, and `cmtk adapter check` runs the conformance kit. See [docs/ADAPTERS.md](docs/ADAPTERS.md).
+- **Anything else, through adapters:** queues, workers, files, email, SMS and payment sandboxes report their side effects as JSON, and the engine compares and checks them like a body. `cmtk adapter new` writes a working adapter, `cmtk adapter check` runs the conformance kit, and a person installs a shared one with `cmtk adapter add`. See [docs/ADAPTERS.md](docs/ADAPTERS.md) and [docs/ADAPTER-CONTRIBUTING.md](docs/ADAPTER-CONTRIBUTING.md).
 
 ## The AI tester
 

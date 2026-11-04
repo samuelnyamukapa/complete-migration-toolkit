@@ -10,3 +10,45 @@ adapters:
     source: worker
     licence: Apache-2.0
     owner: Complete Migration Toolkit maintainers
+  - name: batch
+    kinds: [files]
+    language: node
+    level: experimental # passes the kit in CI; no real project has used it yet
+    source: batch
+    licence: Apache-2.0
+    owner: Complete Migration Toolkit maintainers
+  - name: database
+    kinds: [database]
+    language: node
+    level: experimental # passes the kit in CI; no real project has used it yet
+    source: database
+    licence: Apache-2.0
+    owner: Complete Migration Toolkit maintainers
+  - name: mailbox
+    kinds: [email]
+    language: node
+    level: experimental # passes the kit in CI; no real project has used it yet
+    source: mailbox
+    licence: Apache-2.0
+    owner: Complete Migration Toolkit maintainers
+  - name: payments
+    kinds: [payments]
+    language: node
+    level: experimental # passes the kit in CI; no real project has used it yet
+    source: payments
+    licence: Apache-2.0
+    owner: Complete Migration Toolkit maintainers
+  - name: queue
+    kinds: [queue]
+    language: node
+    level: experimental # passes the kit in CI; no real project has used it yet
+    source: queue
+    licence: Apache-2.0
+    owner: Complete Migration Toolkit maintainers
+  - name: sms
+    kinds: [sms]
+    language: node
+    level: experimental # passes the kit in CI; no real project has used it yet
+    source: sms
+    licence: Apache-2.0
+    owner: Complete Migration Toolkit maintainers

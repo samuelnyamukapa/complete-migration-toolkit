@@ -8,6 +8,7 @@
 |---|---|---|
 | `system` | (required) | A name for the system under test |
 | `targets` | (required) | Name to `{ base_url }`. A string is accepted as the URL. A target reached only through an adapter, such as a class library or a queue, can leave out `base_url` and give its adapter settings instead: `{ probe: probes/legacy.exe }`. Every setting is passed to the adapter as part of `target`. A target may list what it offers with `surfaces: [http, catalog]` (see [One manifest or two](#one-manifest-or-two)) |
+| `adapter_registries` | none | Name to a git address or a folder, for `cmtk adapter add`. A folder may be outside the project. An address holding a credential is refused. See [private registries](ADAPTER-CONTRIBUTING.md#private-registries) |
 | `default_target` | `candidate`, or the first | The target `cmtk run` uses |
 | `reference` | `legacy`, if present | `cmtk compare`'s reference: today's system |
 | `candidate` | `candidate`, if present | `cmtk compare`'s system under test |
