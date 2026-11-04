@@ -115,7 +115,8 @@ export function writeCases(m: Manifest, id: string, o: CasesOptions = {}): { fil
         }
         const query = made.get(row.name)?.query;
         const qs = query && Object.keys(query).length ? `?${new URLSearchParams(query).toString()}` : "";
-        const status = row.expect_valid ? ok : bad;
+        // A row whose only oracle is a person is never asserted automatically, whatever status was given.
+        const status = row.oracle === "human" ? undefined : row.expect_valid ? ok : bad;
         if (status === undefined) withoutExpect++;
         const rel = path.relative(m.root, rowFile).split(path.sep).join("/");
         const notes = [
@@ -123,8 +124,9 @@ export function writeCases(m: Manifest, id: string, o: CasesOptions = {}): { fil
             encoding === "form" ? "Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields." : "",
             soapRows ? `Sent in a SOAP ${recipe.soap!.version} envelope.` : "",
             o.before ? `Before it, ${o.before.get} is read for ${Object.keys(o.before.take ?? {}).join(", ") || "its cookies"}; the values taken are never written to evidence.` : "",
-            status === undefined ? "No documented status for this answer, so no expect: a person adds one."
-                : given(status, row.expect_valid ? documented.ok : documented.bad) ? `The expected status ${status} was given on the command line, not read from a document: the reviewer confirms it against the requirement.` : "",
+            row.oracle === "human" ? "Only a person can say what this row should get, so it has no expect, and none is added automatically." : "",
+            status === undefined && row.oracle !== "human" ? "No documented status for this answer, so no expect: a person adds one."
+                : status !== undefined && given(status, row.expect_valid ? documented.ok : documented.bad) ? `The expected status ${status} was given on the command line, not read from a document: the reviewer confirms it against the requirement.` : "",
             !SAFE.has(method) ? "This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data." : "",
         ].filter(Boolean);
         cases.push({

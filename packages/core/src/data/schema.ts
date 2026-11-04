@@ -47,6 +47,8 @@ export interface Field {
     /** XSD: digit limits, on top of the bounds they imply. */
     totalDigits?: number;
     fractionDigits?: number;
+    /** Realistic values a person accepted where the schema is silent. */
+    vocabulary?: string[];
     /** XSD: the element is one branch of a choice. */
     choice?: { group: string; index: number; parent: string };
 }

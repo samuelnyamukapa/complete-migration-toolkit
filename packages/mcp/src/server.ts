@@ -15,6 +15,7 @@ import {
     importHar, initProject, inside, loadCases, loadManifest, loadProposals, PROPOSAL_KINDS, run, signoffState, startSession, type Report,
     BOUNDARY_KINDS, describeDiscovery, discover,
     planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, DATA_FORMATS, compareTables, readTables, describeComparison,
+    SAID_BY, INVARIANT_OPS, MUTATION_OPERATORS, addDataFinding, trafficAgainstSchema, loadDataFindings,
 } from "@cmtk/core";
 
 // Node 22 before 22.17 flags fs.globSync and path.matchesGlob as experimental and prints a warning
@@ -284,6 +285,7 @@ server.registerTool("cmtk_data_plan", {
         const by = recipe.rows.reduce<Record<string, number>>((acc, r) => ({ ...acc, [r.technique]: (acc[r.technique] ?? 0) + 1 }), {});
         return [`recipe ${recipe.id} written to ${file}: ${recipe.fields.length - 1} fields, ${recipe.rows.length} rows (${Object.entries(by).map(([k, n]) => `${n} ${k}`).join(", ")}), ${recipe.rows.filter(isHappy).length} happy paths.`,
             ...(recipe.notes ?? []), ...recipe.fields.filter((f) => f.note && /can't be generated|not honoured/.test(f.note)).map((f) => `${f.path}: ${f.note}`),
+            ...recipe.fields.filter((f) => f.low_confidence).map((f) => `Low confidence, ${f.path}: ${f.low_confidence}`),
             "A person reviews the recipe file; then cmtk_data_make regenerates the rows."].join("\n");
     }));
 
@@ -306,11 +308,58 @@ server.registerTool("cmtk_data_diff", {
     return describeComparison(compareTables(readTables(inside(m, a.a), read), readTables(inside(m, a.b), read), { key: a.key, epsilon: a.epsilon, scrub: a.scrub, ignore: a.ignore }));
 }, (lines) => lines.join("\n")));
 
+const dataRuleBase = {
+    manifest: manifestArg,
+    recipe: z.string().describe("The recipe it is for."),
+    said_by: z.enum(SAID_BY).describe("Who says so: structure (a schema or constraint), spec (requirements, business rules) or production (traffic, a masked profile). They are never mixed."),
+    evidence: z.string().describe("Where it was seen: the rule's number and words, or a file and line."),
+    agent: z.string().optional().describe("Your name as an agent."),
+    reason: z.string().describe("Why a person should accept it."),
+};
+
+server.registerTool("cmtk_data_propose", {
+    description: "Propose what a schema can't say, for a person to accept: a business invariant, a realistic vocabulary for a field the schema is silent on, a notional variable, a state machine, or a mutation to try when coverage plateaus. " +
+        "It holds no rows and no expected answers: the engine makes every row, and a mutation is one of the engine's operators on a field, which the gate keeps only if it adds coverage. It waits in cmtk/proposals.yaml for `cmtk review`. Nothing is applied by this tool.",
+    inputSchema: {
+        ...dataRuleBase,
+        what: z.enum(["invariant", "vocabulary", "notional", "state_machine", "mutation"]),
+        invariant: z.object({ left: z.string(), op: z.enum(INVARIANT_OPS), right: z.string() }).optional().describe("invariant: such as { left: $.endDate, op: \">=\", right: $.startDate }, or { left: $.total, op: sum, right: $.lines[*].amount }."),
+        path: z.string().optional().describe("vocabulary or mutation: the field."),
+        values: z.array(z.string()).optional().describe("vocabulary: realistic values, only for text the schema says nothing about. The validator checks each."),
+        prompted_with: z.object({ name: z.string(), description: z.string().optional(), rejection: z.string().optional() }).optional().describe("vocabulary: what you proposed the values from: the field's name, its description, the server's rejection message."),
+        name: z.string().optional().describe("notional or state_machine: its name."),
+        description: z.string().optional().describe("notional: what it is."),
+        over: z.array(z.string()).optional().describe("notional: the fields it is over."),
+        states: z.array(z.string()).optional().describe("state_machine: the states."),
+        transitions: z.array(z.object({ from: z.string(), to: z.string(), on: z.string() })).optional().describe("state_machine: the transitions."),
+        operator: z.enum(MUTATION_OPERATORS).optional().describe("mutation: the engine's operator."),
+        other: z.string().optional().describe("mutation, same_as_field: the other field."),
+    },
+}, async (a) => guarded(() => {
+    const { manifest, agent, reason, ...rule } = a;
+    return addProposal(loadManifest(manifest), { kind: "data_rule", reason, proposed_by: agent ? `agent: ${agent}` : "agent", data_rule: rule } as never, new Date().toISOString().slice(0, 10));
+}, (p) => `${describeProposal(p)}\nIt now waits for a person, who decides with \`cmtk review\`.`));
+
+server.registerTool("cmtk_data_finding", {
+    description: "Record a disagreement between what the schema, the spec and production say about a field, as a question for a person. It settles nothing and changes nothing else: it writes cmtk/data/<recipe>.findings.yaml. It needs at least two sides.",
+    inputSchema: {
+        manifest: manifestArg, recipe: z.string(), field: z.string(), structure_says: z.string().optional(), spec_says: z.string().optional(), production_says: z.string().optional(),
+        question: z.string().describe("The question a person must answer."), agent: z.string().optional(),
+    },
+}, async (a) => guarded(() => addDataFinding(loadManifest(a.manifest), { recipe: a.recipe, field: a.field, structure_says: a.structure_says, spec_says: a.spec_says, production_says: a.production_says, question: a.question, found_by: a.agent ? `agent: ${a.agent}` : "agent" }),
+    (f) => `Finding ${f.id} recorded for ${f.field}, open for a person: ${f.question}`));
+
+server.registerTool("cmtk_data_traffic", {
+    description: "Compare recorded traffic (a HAR file) with a recipe's schema: requests the schema would refuse, and fields it does not name. Only paths, counts and reasons come out, never a value, because a recording can hold real data. Report what you find with cmtk_data_finding; settle nothing.",
+    inputSchema: { manifest: manifestArg, id: z.string(), har: z.string(), path: z.string().optional(), method: z.string().optional() },
+}, async (a) => guarded(() => trafficAgainstSchema(loadManifest(a.manifest), a.id, a.har, { path: a.path, method: a.method }),
+    ({ requests, disagreements }) => [`${requests} recorded requests read.`, ...disagreements.map((d) => `${d.field}: ${d.says} ${d.requests} request${d.requests === 1 ? "" : "s"}.`), disagreements.length ? "" : "The recording and the schema agree, for what the recording holds. That is not coverage."].filter(Boolean).join("\n")));
+
 server.registerTool("cmtk_data_check", {
     description: "Check a recipe without writing files: its rows regenerate and check out against the schema, and the quotas are met. Run it after a person edits a recipe.",
     inputSchema: { manifest: manifestArg, id: z.string() },
-}, async (a) => guarded(() => { const m = loadManifest(a.manifest); const { recipe } = loadRecipe(m, a.id); return { rows: makeRows(m, recipe).length, problems: checkQuotas(recipe) }; },
-    ({ rows, problems }) => `${rows} rows check out.${problems.length ? ` Quotas not met: ${problems.join("; ")}.` : " Quotas met."}`));
+}, async (a) => guarded(() => { const m = loadManifest(a.manifest); const { recipe } = loadRecipe(m, a.id); return { rows: makeRows(m, recipe).length, problems: checkQuotas(recipe), open: loadDataFindings(m, a.id).length }; },
+    ({ rows, problems, open }) => `${rows} rows check out.${problems.length ? ` Quotas not met: ${problems.join("; ")}.` : " Quotas met."}${open ? ` ${open} findings are open for a person.` : ""}`));
 
 server.registerTool("cmtk_data_cases", {
     description: "One draft case per row of a recipe, each sending its row from cmtk/data/<id>/rows/: as the request body (encoding json, the default), or as a browser posts a form (encoding form: application/x-www-form-urlencoded from the row's fields, with `before` reading a page first for an anti-forgery token and its cookies). An expect: block is written only where the OpenAPI document gives a status for the answer, or where the person gave expect_valid and expect_invalid; otherwise a person adds it. The cases are drafts until a person accepts them with cmtk review.",

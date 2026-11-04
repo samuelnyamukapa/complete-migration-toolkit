@@ -29,9 +29,10 @@ export { loadModel, modelFromSchema, modelFromOpenApi, listOperations, validate,
 export { stringFromPattern, patternLimits } from "./data/regex.js";
 export { planRecipe, loadRecipe, checkQuotas, isHappy, renderRecipe, recipeFolder, recipeFile, dataFolder, DEFAULT_QUOTAS, HOSTILE, type Recipe, type Row, type RecipeField, type Quotas, type PlanOptions } from "./data/recipe.js";
 export { writeXlsx, readXlsx, type Sheet, type Cell, type FormulaCell, type ReadSheet, type WriteOptions } from "./data/xlsx.js";
-export { makeRows, makeData, tabulate, rng, FAKER_VERSION, LOCALES, DATA_FORMATS, type MadeRow, type DataManifest, type MakeOptions, type DataFormat } from "./data/make.js";
+export { makeRows, probeRow, makeData, tabulate, rng, FAKER_VERSION, LOCALES, DATA_FORMATS, type MadeRow, type DataManifest, type MakeOptions, type DataFormat } from "./data/make.js";
 export { parseCopybook, encodeRecord, decodeRecord, decodeFile, encodePacked, encodeText, decodeText, fixedEdges, schemaOfLayout, EncodeError, type Layout, type RecordEncoding } from "./data/copybook.js";
 export { csvBytes, csvEdges, xlsxEdges, FORMULA_LEADS, type CsvOptions, type XlsxOptions, type EdgeInfo } from "./data/files.js";
 export { compareTables, csvTable, xlsxTables, recordsTable, readTables, parseCsv, scrubber, describeComparison, type Table, type TableComparison, type CompareOptions, type ReadOptions, type Scrubbing } from "./data/compare.js";
 export { readXsd, toXml, validateXml, soapEnvelope, soapHeaders, xsdPattern, checkSimple, xsdFields, isXsd, XML_DECLARATION, type XsdModel, type SoapInfo, type XmlOp, type SimpleType } from "./data/xsd.js";
+export { checkDataRule, applyDataRule, mutationRow, addDataFinding, loadDataFindings, findingsFile, trafficAgainstSchema, SAID_BY, INVARIANT_OPS, MUTATION_OPERATORS, type DataRule, type DataFinding, type RecipeModel, type SaidBy, type TrafficDisagreement } from "./data/model.js";
 export { writeCases, describeLeftOut, type CasesOptions } from "./data/cases.js";

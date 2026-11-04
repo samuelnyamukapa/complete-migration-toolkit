@@ -18,6 +18,7 @@ import type { CsvOptions, XlsxOptions } from "./files.js";
 import type { RecordEncoding } from "./copybook.js";
 import { patternLimits } from "./regex.js";
 import { checkSimple, type SoapInfo, type XmlOp, type XsdModel } from "./xsd.js";
+import type { RecipeModel } from "./model.js";
 import { loadModel, type Field, type TargetModel } from "./schema.js";
 
 export type Technique = "EP" | "BVA-3" | "pairwise" | "hostile";
@@ -45,6 +46,8 @@ export interface Row {
     xml_op?: XmlOp;
     /** XML: keep every branch of a choice this row sets, to break the choice. */
     keep_choices?: boolean;
+    /** Which accepted invariant this row sits on: exactly at its edge, or broken by one step. */
+    invariant?: { index: number; kind: "edge" | "broken" };
 }
 
 export interface RecipeField {
@@ -60,6 +63,10 @@ export interface RecipeField {
     note?: string;
     /** Why no row can break this field, so the quota doesn't ask for one: optional text with no limit, in XML. */
     cannot_break?: string;
+    /** Realistic values where the schema is silent: proposed by an agent, accepted by a person, checked by the validator. */
+    vocabulary?: string[];
+    /** Why a person should not lean on this field's values. */
+    low_confidence?: string;
 }
 
 export interface Quotas {
@@ -97,6 +104,8 @@ export interface Recipe {
     fixed?: { encoding: RecordEncoding };
     /** For an XSD or a WSDL: write each row in a SOAP envelope too. */
     soap?: SoapInfo;
+    /** What a person accepted beyond the schema: invariants, notional variables, state machines. */
+    model?: RecipeModel;
 }
 
 /** A happy path: a valid row that a partition or a pairwise combination chose, as opposed to a boundary or a hostile value. */
@@ -176,7 +185,8 @@ export function planRecipe(m: Manifest, o: PlanOptions): { file: string; recipe:
         }
         if (f.unsupported?.length) note = `${note ? `${note} ` : ""}Keywords not understood and not honoured: ${f.unsupported.join(", ")}.`;
         if (f.description) note = `${f.description}${note ? ` ${note}` : ""}`;
-        return { path: f.path, type: f.type, required: f.required, nullable: f.nullable, constraints, source: f.source, valid_from, ...(note ? { note } : {}) };
+        const silent = f.path !== "$" && f.type === "string" && !Object.keys(constraints).length && !f.examples?.length;
+        return { path: f.path, type: f.type, required: f.required, nullable: f.nullable, constraints, source: f.source, valid_from, ...(note ? { note } : {}), ...(silent ? { low_confidence: "The schema says nothing about this text, so its values are a guess from the field's name. A person confirms it, or an agent proposes a vocabulary." } : {}) };
     });
     const rows = model.xsd ? xmlRows(model.xsd, model.fields, planRows(model.fields, notes), notes) : planRows(model.fields, notes);
     if (model.xsd) {

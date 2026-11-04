@@ -95,6 +95,7 @@ const round = (n: number, step: number) => { const d = Math.max(0, Math.min(10, 
 function validValue(f: Field, rand: Rng, faker: Faker, clock: string): unknown {
     if (f.const !== undefined) return f.const;
     if (f.enum?.length) return f.enum[Math.floor(rand() * f.enum.length)];
+    if (f.vocabulary?.length) return f.vocabulary[Math.floor(rand() * f.vocabulary.length)];
     if (f.examples?.length) return f.examples[0];
     switch (f.type) {
         case "boolean": return rand() < 0.5;
@@ -201,45 +202,67 @@ function fieldsOf(m: Manifest, r: Recipe): { fields: Field[]; schema: Record<str
 
 const onWire = (v: unknown) => (v === null ? "" : typeof v === "object" ? JSON.stringify(v) : String(v));
 
+interface RowContext { fields: Field[]; schema: Record<string, unknown>; parameters: { name: string; in: string; required: boolean; schema: Record<string, unknown> }[]; hasBody: boolean; xsd?: XsdModel; bodyFields: Field[]; rand: Rng; faker: Faker }
+
+function rowContext(m: Manifest, r: Recipe): RowContext {
+    const { fields, schema, parameters, hasBody, xsd } = fieldsOf(m, r);
+    // What a person accepted for a field the schema is silent on.
+    for (const f of fields) { const v = r.fields.find((x) => x.path === f.path)?.vocabulary; if (v?.length) f.vocabulary = v; }
+    return { fields, schema, parameters, hasBody, ...(xsd ? { xsd } : {}), bodyFields: fields.filter((f) => !f.path.startsWith("?")), rand: rng(r.seed), faker: fakerFor(r.locale, r.seed, r.clock) };
+}
+
+function buildRow(c: RowContext, r: Recipe, row: Row): { value: unknown; query: Record<string, unknown>; violations: { path: string; keyword: string; message: string }[]; xml?: string } {
+    const { fields, schema, parameters, hasBody, xsd, bodyFields, rand, faker } = c;
+    const rowRand = rng(hash(r.seed, row.name));
+    const rowFaker = fakerFor(r.locale, hash(r.seed, row.name), r.clock);
+    let value: unknown = row.replace_body !== undefined ? structuredClone(row.replace_body) : baseline(bodyFields, "$", rowRand, rowFaker, r.clock);
+    // Parameters: the required ones get a valid value; a row may set or remove any of them.
+    const query: Record<string, unknown> = {};
+    for (const q of parameters) if (q.required) query[q.name] = validValue(fields.find((f) => f.path === `?${q.name}`)!, rowRand, rowFaker, r.clock);
+    const violations: { path: string; keyword: string; message: string }[] = [];
+    for (const [p, v] of Object.entries(row.set ?? {})) if (p.startsWith("?")) query[p.slice(1)] = structuredClone(v);
+    for (const p of row.unset ?? []) if (p.startsWith("?")) delete query[p.slice(1)];
+    for (const q of parameters) {
+        if (!(q.name in query)) { if (q.required) violations.push({ path: `?${q.name}`, keyword: "required", message: "missing" }); continue; }
+        violations.push(...validate(q.schema, query[q.name], `?${q.name}`));
+    }
+    if (row.replace_body === undefined) {
+        for (const [p, v] of Object.entries(row.set ?? {})) {
+            if (p.startsWith("?")) continue;
+            const f = fields.find((x) => x.path === p.replace(/\[\d+\]/g, "[*]"));
+            if (v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === 1 && "$items" in (v as object) && f?.type === "array") {
+                value = setAt(value, p, Array.from({ length: Number((v as any).$items) }, () => baseline(fields, `${f.path}[*]`, rand, faker, r.clock)));
+            } else if (v && typeof v === "object" && !Array.isArray(v) && (v as { $valid?: unknown }).$valid === true && f) {
+                value = setAt(value, p, baseline(fields, f.path, rowRand, rowFaker, r.clock)); // any valid value: the row is about being here at all
+            } else if (v && typeof v === "object" && !Array.isArray(v) && typeof (v as { $copy?: unknown }).$copy === "string") {
+                value = setAt(value, p, structuredClone(getAt(value, (v as { $copy: string }).$copy))); // the same value as another field in this row
+            } else value = setAt(value, p, structuredClone(v));
+        }
+        for (const p of row.unset ?? []) if (!p.startsWith("?")) unsetAt(value, p);
+        violations.push(...applyInvariants(r, row, value, fields));
+    }
+    let xml: string | undefined;
+    if (xsd) {
+        if (!row.keep_choices) leaveOneBranch(fields, value, Object.keys(row.set ?? {}));
+        xml = toXml(xsd, value, row.xml_op);
+        violations.push(...validateXml(xsd, xml)); // read back from the text: nothing rests on how it was written
+    } else if (hasBody) violations.push(...validate(schema, value));
+    return { value, query, violations, ...(xml !== undefined ? { xml } : {}) };
+}
+
+/** One row, built without being judged: for the gate that decides whether a proposed row adds anything. */
+export function probeRow(m: Manifest, r: Recipe, row: Row): { value: unknown; violations: { path: string; keyword: string; message: string }[]; schema: Record<string, unknown> } {
+    const c = rowContext(m, r);
+    const b = buildRow(c, r, row);
+    return { value: b.value, violations: b.violations, schema: c.schema };
+}
+
 /** The rows a recipe makes, each checked against the schema: valid rows validate, invalid rows fail for the reason they claim. */
 export function makeRows(m: Manifest, r: Recipe): MadeRow[] {
-    const { fields, schema, parameters, hasBody, xsd } = fieldsOf(m, r);
-    const rand = rng(r.seed);
-    const faker = fakerFor(r.locale, r.seed, r.clock);
+    const c = rowContext(m, r);
     const out: MadeRow[] = [];
-    const bodyFields = fields.filter((f) => !f.path.startsWith("?"));
     for (const row of r.rows) {
-        const rowRand = rng(hash(r.seed, row.name));
-        const rowFaker = fakerFor(r.locale, hash(r.seed, row.name), r.clock);
-        let value: unknown = row.replace_body !== undefined ? structuredClone(row.replace_body) : baseline(bodyFields, "$", rowRand, rowFaker, r.clock);
-        // Parameters: the required ones get a valid value; a row may set or remove any of them.
-        const query: Record<string, unknown> = {};
-        for (const q of parameters) if (q.required) query[q.name] = validValue(fields.find((f) => f.path === `?${q.name}`)!, rowRand, rowFaker, r.clock);
-        const violations: { path: string; keyword: string; message: string }[] = [];
-        for (const [p, v] of Object.entries(row.set ?? {})) if (p.startsWith("?")) query[p.slice(1)] = structuredClone(v);
-        for (const p of row.unset ?? []) if (p.startsWith("?")) delete query[p.slice(1)];
-        for (const q of parameters) {
-            if (!(q.name in query)) { if (q.required) violations.push({ path: `?${q.name}`, keyword: "required", message: "missing" }); continue; }
-            violations.push(...validate(q.schema, query[q.name], `?${q.name}`));
-        }
-        if (row.replace_body === undefined) {
-            for (const [p, v] of Object.entries(row.set ?? {})) {
-                if (p.startsWith("?")) continue;
-                const f = fields.find((x) => x.path === p.replace(/\[\d+\]/g, "[*]"));
-                if (v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === 1 && "$items" in (v as object) && f?.type === "array") {
-                    value = setAt(value, p, Array.from({ length: Number((v as any).$items) }, () => baseline(fields, `${f.path}[*]`, rand, faker, r.clock)));
-                } else if (v && typeof v === "object" && !Array.isArray(v) && (v as { $valid?: unknown }).$valid === true && f) {
-                    value = setAt(value, p, baseline(fields, f.path, rowRand, rowFaker, r.clock)); // any valid value: the row is about being here at all
-                } else value = setAt(value, p, structuredClone(v));
-            }
-            for (const p of row.unset ?? []) if (!p.startsWith("?")) unsetAt(value, p);
-        }
-        let xml: string | undefined;
-        if (xsd) {
-            if (!row.keep_choices) leaveOneBranch(fields, value, Object.keys(row.set ?? {}));
-            xml = toXml(xsd, value, row.xml_op);
-            violations.push(...validateXml(xsd, xml)); // read back from the text: nothing rests on how it was written
-        } else if (hasBody) violations.push(...validate(schema, value));
+        const { value, query, violations, xml } = buildRow(c, r, row);
         if (row.expect_valid && violations.length) throw new ManifestError(`Row ${row.name} should be valid but is not: ${violations.map((v) => `${v.path} ${v.message}`).join("; ")}. The schema may use a keyword the planner does not understand, or the row was edited.`);
         if (!row.expect_valid) {
             const why = row.invalid_because!;
@@ -248,8 +271,68 @@ export function makeRows(m: Manifest, r: Recipe): MadeRow[] {
         }
         const wire: Record<string, string> = {};
         for (const [k, v] of Object.entries(query)) wire[k] = onWire(v);
-        out.push({ name: row.name, technique: row.technique, coverage_item: row.coverage_item, expect_valid: row.expect_valid, ...(row.invalid_because ? { invalid_because: row.invalid_because } : {}), oracle: row.oracle, value, ...(parameters.length ? { query: wire } : {}), ...(xml !== undefined ? { xml } : {}) });
+        out.push({ name: row.name, technique: row.technique, coverage_item: row.coverage_item, expect_valid: row.expect_valid, ...(row.invalid_because ? { invalid_because: row.invalid_because } : {}), oracle: row.oracle, value, ...(c.parameters.length ? { query: wire } : {}), ...(xml !== undefined ? { xml } : {}) });
     }
+    return out;
+}
+
+function getAt(root: unknown, p: string): unknown {
+    let cur: any = root;
+    for (const part of parsePath(p)) cur = cur?.[part];
+    return cur;
+}
+
+/** Numbers and dates, compared and stepped alike. */
+const asOrdinal = (v: unknown): number | undefined => (typeof v === "number" ? v : typeof v === "string" && !Number.isNaN(Date.parse(v)) ? Date.parse(v) : undefined);
+
+function fromOrdinal(n: number, like: unknown): unknown {
+    if (typeof like === "number") return n;
+    const iso = new Date(n).toISOString();
+    return String(like).length === 10 ? iso.slice(0, 10) : iso;
+}
+
+/**
+ * Keep every row on the right side of each invariant a person accepted, so a cross-field break appears only as a
+ * labelled negative. A row on an invariant's edge or past it is placed exactly by the engine.
+ */
+function applyInvariants(r: Recipe, row: Row, value: unknown, fields: Field[]): { path: string; keyword: string; message: string }[] {
+    const out: { path: string; keyword: string; message: string }[] = [];
+    const list = r.model?.invariants ?? [];
+    list.forEach((inv, index) => {
+        const leftPath = inv.left.replace(/\[\*\]/g, "[0]");
+        const isDate = typeof getAt(value, leftPath) === "string";
+        const leftField = fields.find((f) => f.path === inv.left);
+        const step = isDate ? 86400000 : (leftField?.multipleOf ?? (leftField?.type === "integer" ? 1 : 0.01));
+        const round2 = (n: number) => (isDate ? n : round(n, step));
+        const rightNow = (): number | undefined => {
+            if (inv.op !== "sum") return asOrdinal(getAt(value, inv.right.replace(/\[\*\]/g, "[0]")));
+            const [head, tail] = inv.right.split("[*]");
+            const list2 = getAt(value, head!);
+            if (!Array.isArray(list2)) return undefined;
+            const each = list2.map((x) => asOrdinal(tail ? getAt(x, `$${tail}`) : x));
+            return each.every((x) => x !== undefined) ? round2((each as number[]).reduce((a, b) => a + b, 0)) : undefined;
+        };
+        const right = rightNow();
+        const left = asOrdinal(getAt(value, leftPath));
+        if (right === undefined || left === undefined) return; // one side is missing or not comparable: this row is about that
+        const holds = (l: number) => { switch (inv.op) { case ">=": return l >= right; case ">": return l > right; case "<=": return l <= right; case "<": return l < right; default: return Math.abs(l - right) < 1e-9; } };
+        const like = getAt(value, leftPath);
+        const place = (n: number) => { setAt(value, leftPath, fromOrdinal(round2(n), like)); };
+        if (row.invariant?.index === index) {
+            if (row.invariant.kind === "edge") place(inv.op === ">" ? right + step : inv.op === "<" ? right - step : right);
+            else place(inv.op === ">=" || inv.op === ">" ? (inv.op === ">" ? right : right - step) : inv.op === "<=" || inv.op === "<" ? (inv.op === "<" ? right : right + step) : right + step);
+        } else if (!holds(left)) {
+            // The row didn't choose this: move whichever side it left alone.
+            const setByRow = (p: string) => Object.keys(row.set ?? {}).some((k) => k === p);
+            if (!setByRow(leftPath)) place(inv.op === ">" ? right + step : inv.op === "<" ? right - step : right);
+            else if (inv.op !== "sum" && !setByRow(inv.right.replace(/\[\*\]/g, "[0]"))) setAt(value, inv.right.replace(/\[\*\]/g, "[0]"), fromOrdinal(round2(inv.op === ">" ? left - step : inv.op === "<" ? left + step : left), getAt(value, inv.right.replace(/\[\*\]/g, "[0]"))));
+        }
+        const finalLeft = asOrdinal(getAt(value, leftPath)), finalRight = rightNow();
+        if (finalLeft !== undefined && finalRight !== undefined) {
+            const ok = inv.op === ">=" ? finalLeft >= finalRight : inv.op === ">" ? finalLeft > finalRight : inv.op === "<=" ? finalLeft <= finalRight : inv.op === "<" ? finalLeft < finalRight : Math.abs(finalLeft - finalRight) < 1e-9;
+            if (!ok) out.push({ path: leftPath, keyword: "invariant", message: `breaks ${inv.left} ${inv.op} ${inv.right}` });
+        }
+    });
     return out;
 }
 

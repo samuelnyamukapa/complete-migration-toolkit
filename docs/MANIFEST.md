@@ -248,6 +248,19 @@ Findings are approved like drift: `contract:<name>: <finding>` in the drift ledg
 
 `cmtk data make` writes `rows.json`, `rows/<name>.json` (one file per row, for `body_file`), `rows.csv` (UTF-8 with a BOM, CRLF) and `rows/<name>.csv` (one row's data columns alone: the file an import takes for that one condition), `rows.xlsx` on request (its metadata pinned to the recipe's clock, so it never names a person), `DATA.md` and `MANIFEST.json` (seed, clock, versions, every file's SHA-256, the quota results). `cmtk data cases` writes one draft case per row: `--encoding form` sends the row as a form (`body_form`) rather than a JSON body, `--before-get /page --take field=selector` adds the page to read first, `--rows invalid` keeps only the rows the schema calls invalid (the ones a form answers without writing), `--only-rows` and `--except-rows` pick rows by name (for a rule the test environment cannot enforce, such as a database limit against a mock, whose rows belong in another file), and `--expect-valid` / `--expect-invalid` give the statuses when no document does; the draft note says they came from the command line, so the reviewer checks them against the requirement.
 
+### What an agent may add
+
+`/cmtk:data` proposes what a schema can't say, with `cmtk_data_propose`. A proposal says who says so (`structure`, `spec` or `production`), gives its evidence, and waits for `cmtk review`. It holds no rows and no answers.
+
+| `what` | When a person accepts it |
+|---|---|
+| `invariant` | Every valid row stays on the right side of `$.end >= $.start`, or `$.total` as the `sum` of `$.lines[*].amount`. The engine adds one row exactly at the edge and one broken by a step. A row it can't keep on the right side becomes a labelled negative, and the reply says how many |
+| `vocabulary` | Realistic values for text the schema says nothing about, each checked by the validator. The field stays marked `low_confidence` |
+| `notional`, `state_machine` | Recorded in the recipe with who said so. No row or sequence is made from them yet |
+| `mutation` | One of the engine's operators on a field. The engine makes the row, and the validator says if it is valid. The gate refuses a row that adds no coverage, at the proposal and again at acceptance. Its oracle is `human`, so it never gets an `expect:` automatically |
+
+Where the sources disagree, `cmtk_data_finding` records what each says and the question, in `cmtk/data/<id>.findings.yaml`. It settles nothing. `cmtk data traffic <id> --har <file>` shows what a recording says against the schema, as paths, counts and reasons, never a value.
+
 ### Files from a recipe
 
 `cmtk data make <id> --format <list>` writes what a system's import or batch job needs. Every file comes from the recipe, so the same recipe gives the same bytes (CSV, fixed-width) or the same content (Excel). A workbook never holds a real name or today's date: its `creator` and `lastModifiedBy` are `cmtk`, and its dates are the recipe's clock.

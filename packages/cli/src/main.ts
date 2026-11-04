@@ -14,7 +14,7 @@ import YAML from "yaml";
 import {
     acceptDraft, adaptersFor, BOUNDARY_KINDS, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
-    initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target, shadow, SHADOW_FORMATS, type ShadowFormat, cleanHistory, HISTORY_MODES, trend, type HistoryMode, planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat, DATA_FORMATS, compareTables, readTables, describeComparison, type Scrubbing,
+    initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target, shadow, SHADOW_FORMATS, type ShadowFormat, cleanHistory, HISTORY_MODES, trend, type HistoryMode, planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat, DATA_FORMATS, compareTables, readTables, describeComparison, type Scrubbing, trafficAgainstSchema, loadDataFindings,
 } from "@cmtk/core";
 
 import { commitInstall, describeInstall, describeList, listAdapters, prepareInstall, RegistryError } from "./registry.js";
@@ -67,6 +67,7 @@ Usage:
   cmtk data diff <a> <b> --key <col,col> [--as csv|xlsx|fixed] [--epsilon 0.01] [--scrub dates,guids] [--copybook <file>] [--csv-delimiter ;] [--formulas value|formula] [--ignore col,col] [--no-fold-empty]
                                                                     compare two files by what they mean, never by their bytes
   cmtk data check <id>                                              check a recipe's rows and quotas without writing files
+  cmtk data traffic <id> --har <file> [--path /x] [--method POST]   what recorded traffic says against the schema: paths and counts, never values
   cmtk data cases <id> [--path /api/x] [--requirement <id>] [--out <file>]
                        [--encoding form] [--before-get /page] [--take field=selector]...
                        [--expect-valid 302] [--expect-invalid 200] [--rows valid|invalid]
@@ -698,6 +699,8 @@ async function dataCommand(args: string[], manifestFile: string, v: Record<strin
             const byTechnique = Object.entries(recipe.rows.reduce<Record<string, number>>((acc, r) => ({ ...acc, [r.technique]: (acc[r.technique] ?? 0) + 1 }), {})).map(([k, n]) => `${n} ${k}`).join(", ");
             console.log(`Recipe ${recipe.id}: ${recipe.fields.length - 1} fields, ${recipe.rows.length} rows (${byTechnique}); ${happy} happy paths (${Math.round((happy / recipe.rows.length) * 100)}%).`);
             for (const n of recipe.notes ?? []) console.log(`  ${n}`);
+            const low = recipe.fields.filter((f) => f.low_confidence);
+            if (low.length) console.log(`  Low confidence, because the schema says nothing about them: ${low.map((f) => f.path).join(", ")}.`);
             for (const f of recipe.fields.filter((x) => x.note && /can't be generated|not honoured/.test(x.note))) console.log(`  ${f.path}: ${f.note}`);
             console.log(`Written: ${file}`);
             console.log(`Next: read it, then \`cmtk data make ${recipe.id}\` to see the rows.`);
@@ -725,6 +728,8 @@ async function dataCommand(args: string[], manifestFile: string, v: Record<strin
             console.log(`Recipe ${id}: ${rows.length} rows regenerate and check out against the schema.`);
             if (problems.length) { console.log(`Quotas not met: ${problems.join("; ")}.`); return 2; }
             console.log("Quotas met.");
+            const open = loadDataFindings(m, id);
+            if (open.length) console.log(`${open.length} findings are open for a person, in cmtk/data/${id}.findings.yaml.`);
             return 0;
         }
         case "cases": {
@@ -753,6 +758,15 @@ async function dataCommand(args: string[], manifestFile: string, v: Record<strin
             console.log(`Wrote ${cases.length} draft cases to ${file}${withoutExpect ? `; ${withoutExpect} have no expect: block yet, because no documented status says what the answer should be` : ""}.`);
             for (const line of describeLeftOut(leftOut)) console.log(`Left out, ${line}.`);
             console.log("Next: a person reviews them with `cmtk review`. They are skipped until then.");
+            return 0;
+        }
+        case "traffic": {
+            if (!id) throw new UsageError("`cmtk data traffic` needs the recipe id.");
+            if (!v.har?.length) throw new UsageError("`cmtk data traffic` needs --har <file>.");
+            const { requests, disagreements } = trafficAgainstSchema(m, id, v.har[0], { path: v.path, method: v.method });
+            console.log(`${requests} recorded request${requests === 1 ? "" : "s"} read.`);
+            for (const d of disagreements) console.log(`  ${d.field}: ${d.says} ${d.requests} request${d.requests === 1 ? "" : "s"}.`);
+            if (!disagreements.length) console.log("The recording and the schema agree, for what the recording holds. That is not coverage.");
             return 0;
         }
         case "diff": {

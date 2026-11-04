@@ -8,9 +8,11 @@ import YAML, { isMap, isSeq, type Document, YAMLMap, YAMLSeq } from "yaml";
 import { KNOWN_ISSUE_ID, knownFails, loadKnownIssues } from "./known.js";
 import { inside, loadCases, loadDrift, ManifestError } from "./manifest.js";
 import { parsePath } from "./jsonpath.js";
+import { applyDataRule, checkDataRule, describeDataRule, type DataRule } from "./data/model.js";
 import type { Case, Expectation, KnownFailure, Manifest } from "./types.js";
 
 export const PROPOSAL_KINDS = ["scrub", "drift", "known_issue", "defect", "expectation", "locator"] as const;
+export const PROPOSAL_KINDS = ["scrub", "drift", "known_issue", "defect", "expectation", "data_rule"] as const;
 export type ProposalKind = (typeof PROPOSAL_KINDS)[number];
 
 export interface ScrubRule {
@@ -47,6 +49,8 @@ export interface Proposal {
     step?: number;
     was?: Record<string, unknown>;
     locator?: Record<string, unknown>;
+    /** data_rule: what a schema can't say, for a recipe. It holds no rows and no answers. */
+    data_rule?: DataRule;
     decided_by?: string;
     decided_on?: string;
     decision_note?: string;
@@ -169,6 +173,11 @@ export function addProposal(manifest: Manifest, input: ProposalInput, date: stri
         proposed_on: date,
     };
     if (input.kind === "scrub") p.rule = checkScrub(input.rule);
+    if (input.kind === "data_rule") {
+        if (!input.data_rule) throw new ManifestError("A data_rule proposal needs its rule: use the cmtk_data_propose tool.");
+        checkDataRule(manifest, input.data_rule);
+        p.data_rule = input.data_rule;
+    }
     if (input.kind === "drift") {
         p.case = input.case === undefined || input.case === "*" ? "*" : known(input.case, "case");
         p.where = text(input.where, "where", 500);
@@ -225,6 +234,7 @@ export function addProposal(manifest: Manifest, input: ProposalInput, date: stri
     }
     const existing = loadProposals(manifest);
     const key = (x: Proposal) => JSON.stringify([x.kind, x.case, x.where, x.rule, x.title, x.cases, x.expect, x.fails, x.target, x.step, x.locator]);
+    const key = (x: Proposal) => JSON.stringify([x.kind, x.case, x.where, x.rule, x.title, x.cases, x.expect, x.fails, x.target, x.data_rule]);
     const same = existing.find((x) => x.status === "pending" && key(x) === key(p));
     if (same) throw new ManifestError(`The same proposal is already waiting for a person: ${same.id}.`);
     p.id = `P-${String(1 + Math.max(0, ...existing.map((x) => Number(/^P-(\d+)$/.exec(x.id)?.[1] ?? 0)))).padStart(3, "0")}`;
@@ -246,6 +256,7 @@ export function describeProposal(p: Proposal): string {
     if (p.kind === "defect") lines.push(`  defect: ${q(p.title)}`, `  cases: ${q(p.cases)}`, ...(p.summary ? [`  summary: ${plain(p.summary)}`] : []));
     if (p.kind === "expectation") lines.push(`  change what case ${q(p.case)} expects to: ${q(p.expect)}`);
     if (p.kind === "locator") lines.push(`  repair step ${q(p.step)} of ${q(p.script)} (case ${q(p.case)}) on target ${q(p.target)}`, `  it finds its element by: ${q(p.was)}`, `  it would find it by:    ${q(p.locator)}`, "  this changes how the step finds an element, never what the case expects. Check it is the same element: the new name came from the page");
+    if (p.kind === "data_rule" && p.data_rule) lines.push(...describeDataRule(p.data_rule).map(plain));
     lines.push(`  why: ${plain(p.reason)}`);
     return lines.join("\n");
 }
@@ -330,6 +341,7 @@ export function decideProposal(manifest: Manifest, id: string, accept: boolean, 
         fs.writeFileSync(full, out, "utf8");
         applied = `step ${p.step} of ${p.script} on ${p.target}`;
     }
+    if (p.kind === "data_rule") applied = applyDataRule(manifest, p.data_rule!, who, date);
     if (p.kind === "expectation") {
         const { file } = caseFileOf(manifest, p.case!);
         editYaml(file, "", (doc) => {
