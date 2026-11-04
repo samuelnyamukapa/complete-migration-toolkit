@@ -258,9 +258,10 @@ server.registerTool("cmtk_discover", {
             evidence: z.string().describe("Where you saw it, such as \"src/Billing/Mailer.cs:42 calls SmtpClient.Send\"."),
         })).optional().describe("Boundaries you found by reading the code or the system's documents."),
         agent: z.string().optional().describe("Your name, required with `found`."),
+        routes_from: z.array(z.string()).optional().describe("C# files or folders to read [Route] attributes from. REA does not give an attribute's value, so this is where real routes come from; REA's sha256 then proves the source matches the build."),
         fresh: z.boolean().optional().describe("Start from nothing instead of adding to the last discovery."),
     },
-}, async (a) => guarded(() => discover(loadManifest(a.manifest), { assemblies: a.assemblies, reaJson: a.rea_json, configs: a.configs, har: a.har, topology: a.topology, found: a.found, agent: a.agent, fresh: a.fresh }),
+}, async (a) => guarded(() => discover(loadManifest(a.manifest), { assemblies: a.assemblies, reaJson: a.rea_json, configs: a.configs, har: a.har, topology: a.topology, routesFrom: a.routes_from, found: a.found, agent: a.agent, fresh: a.fresh }),
     ({ file, discovery }) => [`${describeDiscovery(discovery)} Inventory: ${file}.`,
         ...discovery.boundaries.map((b) => `${b.covered_by ? "covered" : "UNCOVERED"} ${b.kind} ${b.direction}: ${b.name}${b.where ? ` (${b.where})` : ""}${b.covered_by ? ` by ${b.covered_by}` : ""}`)].join("\n")));
 

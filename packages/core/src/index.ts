@@ -24,6 +24,7 @@ export { startSession, exploreRequest, addFinding, endSession, type Session, typ
 export { draftDefects, redactor, type DefectDraft } from "./defects.js";
 export { initProject } from "./init.js";
 export { discover, loadDiscovery, describeDiscovery, renderDiscovery, describeConnection, runRea, discoveryFolder, type Boundary, type Discovery, type DiscoverInput, type FoundInput } from "./discover.js";
+export { readRoutesFromSource, readRouteSources, encodeRouteValue, decodeRouteValue, templateFromRea, sourceMatches, joinRoutes, isRouteAttribute, REA_ROUTE_GAP, type ReaAttribute, type SourceRoute, type SourceController } from "./routes.js";
 export { loadModel, modelFromSchema, modelFromOpenApi, listOperations, validate, type Field, type TargetModel, type Violation } from "./data/schema.js";
 export { stringFromPattern, patternLimits } from "./data/regex.js";
 export { planRecipe, loadRecipe, checkQuotas, isHappy, renderRecipe, recipeFolder, recipeFile, dataFolder, DEFAULT_QUOTAS, HOSTILE, type Recipe, type Row, type RecipeField, type Quotas, type PlanOptions } from "./data/recipe.js";

@@ -22,7 +22,7 @@ The **project** is the folder that holds the manifest. Pass `manifest` to every 
 
 | Tool | Server | When |
 |---|---|---|
-| `cmtk_discover` | `cmtk` | To record what each source shows. It reads assemblies (with REA's command), REA's saved output, settings files, HAR files and modernize's `topology.json`, and your findings in `found`. It adds to the last inventory unless you pass `fresh: true` |
+| `cmtk_discover` | `cmtk` | To record what each source shows. It reads assemblies (with REA's command), REA's saved output, `routes_from` (C# source, for `[Route]` attributes; when the source is there, always give it), settings files, HAR files and modernize's `topology.json`, and your findings in `found`. It adds to the last inventory unless you pass `fresh: true` |
 | `cmtk_check` | `cmtk` | At the end: it repeats each uncovered boundary as a warning |
 | `inspect_managed_members`, `analyze_javascript_application`, the browser and capture tools | `rea`, when connected | Only where the source is missing or can't be trusted: a compiled-only library, an Electron front end, a website. See "REA" below |
 

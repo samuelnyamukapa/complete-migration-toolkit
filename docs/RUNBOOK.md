@@ -62,6 +62,7 @@ You also need the `cmtk` command. Today, from a clone of the toolkit, run `npm i
 
    - `--assembly` reads a .NET assembly without running it, through REA (`npm install --global rea-agents`, which needs Node.js 22.19 or later). Give only the system's own assemblies, not `System.*` or NuGet packages.
    - `--config` reads `Web.config`, `App.config` or `appsettings.json`. Only the server and database of a connection string are copied, never a user name or password.
+   - `--routes-from` reads controllers' `[Route]` attributes from C# files or a folder. REA gives an attribute's length and sha256 but not its value, so real routes come from the source, and that sha256 proves the source matches the build. Without it, a controller with an attribute says so; only one with no attribute keeps a guess from its name. For saved output, give `rea inspect-managed-artifact <dll> --json` to `--rea-json` too.
    - `--har` reads a recording; `--topology` reads modernize's `analysis/<system>/topology.json`.
 
    Give the assembly and its settings in the same call, so a database context is matched to its connection string. `cmtk/discovery/BOUNDARIES.md` lists each boundary, where it was found, and which adapter covers it. For each **uncovered** kind, either write an adapter and list the kind under its `covers:` (see [ADAPTERS.md](ADAPTERS.md)), or have a person record why it is out of scope. Run `cmtk discover` again after adding a source: it adds to the inventory.

@@ -5,7 +5,9 @@
 // Sources, any mix of them:
 //   - assemblies, read by REA (Reverse Engineer Anything, https://github.com/morluto/rea) without
 //     running them: controllers, database, file, mail, queue and HTTP-client calls;
-//   - REA's saved output for an assembly (`rea inspect-managed-members <dll> --json`);
+//   - REA's saved output for an assembly (`rea inspect-managed-members <dll> --json`, and
+//     `rea inspect-managed-artifact <dll> --json` for its attributes);
+//   - C# source, for controllers' [Route] attributes;
 //   - configuration files: Web.config, App.config, appsettings.json;
 //   - HAR recordings of real use;
 //   - modernize's topology.json (from /modernize:map);
@@ -18,6 +20,7 @@ import path from "node:path";
 import { parseXml, type XNode } from "./diff.js";
 import { cleanUrl } from "./defects.js";
 import { inside, ManifestError } from "./manifest.js";
+import { isRouteAttribute, joinRoutes, readRouteSources, REA_ROUTE_GAP, sourceMatches, templateFromRea, type ReaAttribute, type SourceController, type SourceRoute } from "./routes.js";
 import { BOUNDARY_KINDS, type BoundaryKind, type Manifest } from "./types.js";
 
 
@@ -48,6 +51,8 @@ export interface FoundInput {
 export interface DiscoverInput {
     assemblies?: string[];
     reaJson?: string[];
+    /** C# files, or folders of them, to read route attributes from. */
+    routesFrom?: string[];
     configs?: string[];
     har?: string[];
     topology?: string[];
@@ -94,9 +99,17 @@ const MVC = /^System\.Web\.Mvc\.(Controller|ControllerBase)$|^Microsoft\.AspNetC
 const WEB_API = /^System\.Web\.Http\.ApiController$/;
 
 interface ReaMembers {
-    methods: Array<{ token: string; declaring_type?: string }>;
+    types?: Array<{ token?: string; full_name?: string }>;
+    methods: Array<{ token: string; declaring_type?: string; name?: string }>;
     call_edges: Array<{ caller_token?: string; caller?: string; target_declaring_type?: string }>;
 }
+
+/** Is this `rea inspect-managed-artifact` output? It lists attributes, and no methods. */
+function attributesOf(raw: unknown): ReaAttribute[] | undefined {
+    const n = (raw as any)?.normalized_result ?? raw;
+    return Array.isArray(n?.attributes) && !Array.isArray(n?.methods) ? (n.attributes as ReaAttribute[]) : undefined;
+}
+const assemblyName = (raw: unknown, what: string) => { const j = raw as any; return path.basename(String(j?.subject?.name ?? j?.normalized_result?.artifact?.path ?? what)); };
 
 function readReaMembers(raw: unknown, what: string): { assembly: string; members: ReaMembers } {
     const j = raw as any;
@@ -111,7 +124,44 @@ function readReaMembers(raw: unknown, what: string): { assembly: string; members
 /** A finding before it is merged: `users` are the types that use it, for matching a connection string to its context. */
 type Finding = Omit<Boundary, "id" | "covered_by"> & { users?: string[] };
 
-function fromReaMembers(assembly: string, n: ReaMembers, source: string): Finding[] {
+/** What is known of one controller's routes, from its attributes and its source. */
+function routeOf(type: string, n: ReaMembers, attrs: ReaAttribute[] | undefined, src: SourceController | undefined, guess: string): { where: string; evidence?: { source: string; detail: string }[] } {
+    const typeToken = (n.types ?? []).find((t) => t.full_name === type)?.token;
+    const tokens = new Map((n.methods ?? []).filter((m) => m.declaring_type === type).map((m) => [m.token, m.name ?? ""]));
+    const route = (attrs ?? []).filter((a) => isRouteAttribute(a.type_name));
+    const onType = route.filter((a) => a.parent_token === typeToken);
+    const onMethods = route.filter((a) => a.parent_token !== undefined && tokens.has(a.parent_token));
+    const found = [...onType, ...onMethods];
+    const srcRoutes: SourceRoute[] = src ? [...src.on_type, ...src.on_methods.flatMap((x) => x.routes)] : [];
+    const join = (t: (string | null)[], m: (string | null)[]) => joinRoutes(t, m).join(", ");
+    if (!found.length && !srcRoutes.length) {
+        return { where: `${guess} (by naming convention; ${attrs ? "it has no [Route] attribute" : "check the real route"})` };
+    }
+    // REA itself gives the value: nothing else is needed.
+    if (found.length) {
+        const fromRea = found.map(templateFromRea);
+        if (fromRea.every((t) => t !== undefined)) {
+            const heads = onType.map((a) => templateFromRea(a) as string);
+            return { where: join(heads, onMethods.map((a) => templateFromRea(a) as string)), evidence: [{ source: "REA", detail: `${found.length} route attribute${found.length === 1 ? "" : "s"} decoded` }] };
+        }
+    }
+    if (srcRoutes.length && src) {
+        const where = join(src.on_type.map((r) => r.template), src.on_methods.flatMap((x) => x.routes.map((r) => r.template)));
+        const at = srcRoutes.map((r) => `${r.file}:${r.line}`).join(", ");
+        if (!found.length) {
+            if (attrs) return { where: `${where} (from source; the assembly has no such attribute: is the source for this build?)`, evidence: [{ source: "source", detail: `route attributes at ${at}, none in the assembly` }] };
+            return { where: `${where} (from source; not checked against a build)`, evidence: [{ source: "source", detail: `route attributes at ${at}` }] };
+        }
+        const unmatched = found.filter((a) => !srcRoutes.some((s) => sourceMatches(s, a)));
+        if (!unmatched.length && srcRoutes.length === found.length) {
+            return { where, evidence: [{ source: "source", detail: `route attributes at ${at}, each matching the assembly's attribute by sha256` }] };
+        }
+        return { where: `${where} (from source; ${unmatched.length || "some"} of ${found.length} attributes in the assembly do not match it: is the source for this build?)`, evidence: [{ source: "source", detail: `route attributes at ${at}` }] };
+    }
+    return { where: `route attribute present, value not read: ${found.length} on this controller. Pass its source with --routes-from. ${REA_ROUTE_GAP}` };
+}
+
+function fromReaMembers(assembly: string, n: ReaMembers, source: string, attrs?: ReaAttribute[], sources: SourceController[] = []): Finding[] {
     const typeOf = new Map(n.methods.map((m) => [m.token, m.declaring_type ?? ""]));
     const callerType = (e: ReaMembers["call_edges"][number]) => {
         const t = (e.caller_token && typeOf.get(e.caller_token)) || "";
@@ -136,10 +186,11 @@ function fromReaMembers(assembly: string, n: ReaMembers, source: string): Findin
     }
     for (const [type, style] of [...controllers].sort()) {
         const short = type.split(".").pop()!.replace(/Controller\d*$/, (m) => m.replace("Controller", ""));
-        const route = style === "api" ? `/api/${short.toLowerCase()}` : `/${short}`;
+        const guess = style === "api" ? `/api/${short.toLowerCase()}` : `/${short}`;
+        const route = routeOf(type, n, attrs, sources.find((s) => s.type === type), guess);
         out.push({
-            kind: "http", direction: "in", name: type, where: `${route} (by naming convention; check the real route)`,
-            found_in: [{ source, detail: `${type} is ${style === "api" ? "a Web API" : "an MVC"} controller` }],
+            kind: "http", direction: "in", name: type, where: route.where,
+            found_in: [{ source, detail: `${type} is ${style === "api" ? "a Web API" : "an MVC"} controller` }, ...(route.evidence ?? [])],
         });
     }
     for (const k of byKind.values()) {
@@ -158,12 +209,12 @@ function fromReaMembers(assembly: string, n: ReaMembers, source: string): Findin
 }
 
 /** Run REA on one assembly. CMTK_REA can name its command: a path to REA's rea.mjs, or a program. */
-export function runRea(file: string): unknown {
+export function runRea(file: string, command: "inspect-managed-members" | "inspect-managed-artifact" = "inspect-managed-members"): unknown {
     const set = process.env.CMTK_REA?.trim();
     const [cmd, pre] = set ? (/\.(m?js|cjs)$/i.test(set) ? [process.execPath, [set]] : [set, []]) : [process.platform === "win32" ? "rea.cmd" : "rea", []];
     const shell = process.platform === "win32" && /\.(cmd|bat)$/i.test(cmd as string);
     if (shell && /["%^&|<>!\r\n]/.test(file)) throw new ManifestError(`${file}: the path holds a character the Windows shell would read; rename the file or folder.`);
-    const args = [...(pre as string[]), "inspect-managed-members", shell ? `"${file}"` : file, "--json"];
+    const args = [...(pre as string[]), command, shell ? `"${file}"` : file, "--json"];
     const r = spawnSync(cmd as string, args, { encoding: "utf8", maxBuffer: 512 * 1024 * 1024, timeout: 300_000, shell, windowsHide: true });
     if (r.error && (r.error as NodeJS.ErrnoException).code === "ENOENT" || (shell && r.status !== 0 && /not recognized/i.test(r.stderr ?? ""))) {
         throw new ManifestError("REA is not installed. Install it with `npm install --global rea-agents` (it needs Node.js 22.19 or later), or set CMTK_REA to its command. Or run `rea inspect-managed-members <dll> --json` elsewhere and pass the saved output with --rea-json.");
@@ -312,17 +363,48 @@ export function discover(m: Manifest, input: DiscoverInput, date = new Date().to
         if (!fs.existsSync(full) || !fs.statSync(full).isFile()) throw new ManifestError(`${what} ${f} does not exist.`);
         return full;
     };
+    const routeSources: SourceController[] = [];
+    for (const f of input.routesFrom ?? []) {
+        const full = inside(m, f);
+        if (!fs.existsSync(full)) throw new ManifestError(`The source ${f} does not exist.`);
+        routeSources.push(...readRouteSources(full, (x) => rel(m, x)));
+        sources.push(`C# source ${rel(m, full)}`);
+    }
+    const seenControllers = new Set<string>();
+    const fromRea = (assembly: string, members: ReaMembers, source: string, attrs?: ReaAttribute[]) => {
+        const out = fromReaMembers(assembly, members, source, attrs, routeSources);
+        for (const x of out) if (x.kind === "http") seenControllers.add(x.name);
+        found.push(...out);
+    };
     for (const f of input.assemblies ?? []) {
         const full = file(f, "The assembly");
         const { assembly, members } = readReaMembers(runRea(full), rel(m, full));
-        found.push(...fromReaMembers(assembly, members, `REA: ${rel(m, full)}`));
+        // Older versions of REA may not have this command: the routes then fall back, and say so.
+        let attrs: ReaAttribute[] | undefined;
+        try { attrs = attributesOf(runRea(full, "inspect-managed-artifact")); } catch { attrs = undefined; }
+        fromRea(assembly, members, `REA: ${rel(m, full)}`, attrs);
         sources.push(`REA on ${rel(m, full)}`);
     }
-    for (const f of input.reaJson ?? []) {
-        const full = file(f, "REA's output");
-        const { assembly, members } = readReaMembers(JSON.parse(fs.readFileSync(full, "utf8")), rel(m, full));
-        found.push(...fromReaMembers(assembly, members, `REA: ${rel(m, full)}`));
-        sources.push(`REA's saved output ${rel(m, full)}`);
+    // Saved output: a member inventory, and an artifact inspection with its attributes, in either order.
+    const saved = (input.reaJson ?? []).map((f) => { const full = file(f, "REA's output"); return { full, raw: JSON.parse(fs.readFileSync(full, "utf8")) as unknown }; });
+    const savedAttrs = new Map<string, ReaAttribute[]>();
+    for (const s of saved) {
+        const attrs = attributesOf(s.raw);
+        if (attrs) { savedAttrs.set(assemblyName(s.raw, rel(m, s.full)), attrs); sources.push(`REA's saved output ${rel(m, s.full)}`); }
+    }
+    for (const s of saved) {
+        if (attributesOf(s.raw)) continue;
+        const { assembly, members } = readReaMembers(s.raw, rel(m, s.full));
+        fromRea(assembly, members, `REA: ${rel(m, s.full)}`, savedAttrs.get(assembly));
+        sources.push(`REA's saved output ${rel(m, s.full)}`);
+    }
+    // A controller only the source shows is a boundary too, and says that no build confirmed it.
+    for (const s of routeSources) {
+        if (!s.controller || seenControllers.has(s.type)) continue;
+        const onMethods = s.on_methods.flatMap((x) => x.routes.map((r) => r.template));
+        const routes = joinRoutes(s.on_type.map((r) => r.template), onMethods);
+        const at = [...s.on_type, ...s.on_methods.flatMap((x) => x.routes)][0];
+        found.push({ kind: "http", direction: "in", name: s.type, where: routes.length ? `${routes.join(", ")} (from source; not checked against a build)` : "(no route attribute in the source)", found_in: [{ source: "source", detail: at ? `${at.file}:${at.line}` : `${s.type} looks like a controller` }] });
     }
     for (const f of input.configs ?? []) {
         const full = file(f, "The settings file");
@@ -354,7 +436,7 @@ export function discover(m: Manifest, input: DiscoverInput, date = new Date().to
         }
         sources.push(`findings from agent ${who.replace(/^agent:\s*/i, "")}`);
     }
-    if (!sources.length) throw new ManifestError("Give discover something to read: --assembly, --rea-json, --config, --har or --topology (or findings, from an agent).");
+    if (!sources.length) throw new ManifestError("Give discover something to read: --assembly, --rea-json, --routes-from, --config, --har or --topology (or findings, from an agent).");
 
     // An Entity Framework context reads its connection string by its own name: fold what REA saw into
     // the connection string from the settings, rather than listing one database twice.
@@ -408,7 +490,7 @@ export function renderDiscovery(d: Discovery): string {
     }
     L.push("## Limits", "",
         "- Assemblies are read by REA, never run. Calls made through reflection, dependency injection resolved at run time, or configuration may be missed.",
-        "- A controller's route is guessed from its name. Check it against the real routes.",
+        "- A controller's route comes from its [Route] attributes, read from its source with `--routes-from` and proved against the build by REA's sha256. REA does not give an attribute's value, so without the source a controller with an attribute says so, and only a controller with no attribute keeps a guess from its name.",
         "- Discovery lists what its sources show. It never proves that nothing else exists: add sources (configuration, recordings, the map) until the list stops growing.", "");
     return L.join("\n");
 }

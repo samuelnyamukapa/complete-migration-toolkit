@@ -53,7 +53,7 @@ Usage:
                                                                     remove old dated runs. Never follows a link
   cmtk status                                                       the latest verdicts
   cmtk check                                                        check settings and case files; sends nothing
-  cmtk discover [--assembly <dll>]... [--rea-json <file>]... [--config <file>]... [--har <file>]... [--topology <file>]... [--fresh]
+  cmtk discover [--assembly <dll>]... [--rea-json <file>]... [--routes-from <file or folder of C#>]... [--config <file>]... [--har <file>]... [--topology <file>]... [--fresh]
                                                                     list every boundary of the legacy system, and flag the uncovered ones
                                                                     (--assembly needs REA: npm install --global rea-agents)
   cmtk review                                                       a person accepts or rejects draft cases and proposals
@@ -136,6 +136,7 @@ async function main(argv: string[]): Promise<number> {
             surface: { type: "string" },
             assembly: { type: "string", multiple: true },
             "rea-json": { type: "string", multiple: true },
+            "routes-from": { type: "string", multiple: true },
             config: { type: "string", multiple: true },
             har: { type: "string", multiple: true },
             topology: { type: "string", multiple: true },
@@ -263,7 +264,7 @@ async function main(argv: string[]): Promise<number> {
         }
         case "discover": {
             const m = loadManifest(manifestFile);
-            const { file, discovery } = discover(m, { assemblies: values.assembly, reaJson: values["rea-json"], configs: values.config, har: values.har, topology: values.topology, fresh: values.fresh });
+            const { file, discovery } = discover(m, { assemblies: values.assembly, reaJson: values["rea-json"], routesFrom: values["routes-from"], configs: values.config, har: values.har, topology: values.topology, fresh: values.fresh });
             if (values.json) { console.log(JSON.stringify(discovery, null, 2)); return 0; }
             console.log(`Boundaries for ${discovery.system}: ${describeDiscovery(discovery)}`);
             for (const b of discovery.boundaries.filter((x) => !x.covered_by)) console.log(`  uncovered ${b.kind} ${b.direction}: ${b.name}${b.where ? ` (${b.where})` : ""}`);
