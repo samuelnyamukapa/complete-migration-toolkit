@@ -12,6 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { readStructured, ManifestError } from "../manifest.js";
+import { isCopybook, modelFromCopybook } from "./copybook.js";
 
 export type FieldType = "string" | "integer" | "number" | "boolean" | "object" | "array" | "null";
 
@@ -154,6 +155,10 @@ export function modelFromOpenApi(file: string, raw: unknown, operation: string):
 
 /** Load a JSON Schema or an OpenAPI file into a target model. */
 export function loadModel(file: string, operation?: string): TargetModel {
+    if (isCopybook(file)) {
+        if (operation) throw new ManifestError(`${path.basename(file)} is a copybook, so there is no operation to pick.`);
+        return modelFromCopybook(file, (schema, source) => { const fields: Field[] = []; collect(schema as S, "$", source, true, fields); return fields; });
+    }
     const raw = readStructured(file) as S;
     if (raw?.openapi || raw?.swagger) {
         if (!operation) throw new ManifestError(`${path.basename(file)} is an OpenAPI document: name the operation, such as --operation "POST /api/items". Operations: ${listOperations(raw).join(", ")}.`);
@@ -212,7 +217,7 @@ export function validate(schema: S, value: unknown, at = "$"): Violation[] {
         const exMax = schema.exclusiveMaximum === true || typeof schema.exclusiveMaximum === "number";
         if (min !== undefined && (exMin ? n <= min : n < min)) bad(exMin ? "exclusiveMinimum" : "minimum", `${exMin ? "not above" : "below"} ${min}`);
         if (max !== undefined && (exMax ? n >= max : n > max)) bad(exMax ? "exclusiveMaximum" : "maximum", `${exMax ? "not below" : "above"} ${max}`);
-        if (schema.multipleOf !== undefined && Math.abs(Math.round(n / schema.multipleOf) * schema.multipleOf - n) > 1e-9) bad("multipleOf", `not a multiple of ${schema.multipleOf}`);
+        if (schema.multipleOf !== undefined && Math.abs(Math.round(n / schema.multipleOf) * schema.multipleOf - n) > Math.max(1e-9, Math.abs(n) * Number.EPSILON * 4)) bad("multipleOf", `not a multiple of ${schema.multipleOf}`);
     }
     if (type === "array") {
         const a = value as unknown[];

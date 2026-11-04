@@ -14,7 +14,7 @@ import {
     addFinding, addProposal, casesToYaml, check, compare, describeCheck, describeProposal, describeSignoff, draftDefects, endSession, exploreRequest,
     importHar, initProject, inside, loadCases, loadManifest, loadProposals, PROPOSAL_KINDS, run, signoffState, startSession, type Report,
     BOUNDARY_KINDS, describeDiscovery, discover,
-    planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION,
+    planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, DATA_FORMATS, compareTables, readTables, describeComparison,
 } from "@cmtk/core";
 
 // Node 22 before 22.17 flags fs.globSync and path.matchesGlob as experimental and prints a warning
@@ -288,9 +288,22 @@ server.registerTool("cmtk_data_plan", {
 
 server.registerTool("cmtk_data_make", {
     description: "Regenerate a recipe's rows from its seed and clock, check every row against the schema (valid rows validate; invalid rows break it where they say), check the quotas, and write rows.json, rows.csv, one JSON and one CSV per row, and optionally rows.xlsx, with a manifest, under cmtk/data/<id>/.",
-    inputSchema: { manifest: manifestArg, id: z.string(), formats: z.array(z.enum(["json", "csv", "xlsx"])).optional() },
+    inputSchema: { manifest: manifestArg, id: z.string(), formats: z.array(z.enum(DATA_FORMATS)).optional() },
 }, async (a) => guarded(() => makeData(loadManifest(a.manifest), a.id, { formats: a.formats, generators: dataGenerators }),
     ({ folder, manifest }) => `${manifest.rows} rows (${manifest.valid_rows} valid, ${Math.round(manifest.quotas.happy_share * 100)}% happy paths) in ${folder}/; every row checked against the schema.${manifest.quotas.problems.length ? ` QUOTAS NOT MET: ${manifest.quotas.problems.join("; ")}.` : " Quotas met."}`));
+
+server.registerTool("cmtk_data_diff", {
+    description: "Compare two files by what they mean, never by their bytes: a CSV by key, an Excel workbook per sheet by key, fixed-width records decoded from a copybook first. In a CSV, null, empty and absent are one thing. It reads files and changes nothing.",
+    inputSchema: {
+        manifest: manifestArg, a: z.string(), b: z.string(), key: z.array(z.string()).min(1).describe("The columns that identify a row."),
+        as: z.enum(["csv", "xlsx", "fixed"]).optional(), epsilon: z.number().min(0).optional(), scrub: z.array(z.enum(["dates", "guids"])).optional(), ignore: z.array(z.string()).optional(),
+        copybook: z.string().optional(), delimiter: z.string().optional(), formulas: z.enum(["value", "formula"]).optional(), record_encoding: z.enum(["cp037", "ascii"]).optional(),
+    },
+}, async (a) => guarded(() => {
+    const m = loadManifest(a.manifest);
+    const read = { as: a.as, delimiter: a.delimiter, copybook: a.copybook ? inside(m, a.copybook) : undefined, record_encoding: a.record_encoding, formulas: a.formulas };
+    return describeComparison(compareTables(readTables(inside(m, a.a), read), readTables(inside(m, a.b), read), { key: a.key, epsilon: a.epsilon, scrub: a.scrub, ignore: a.ignore }));
+}, (lines) => lines.join("\n")));
 
 server.registerTool("cmtk_data_check", {
     description: "Check a recipe without writing files: its rows regenerate and check out against the schema, and the quotas are met. Run it after a person edits a recipe.",

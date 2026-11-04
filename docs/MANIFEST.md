@@ -247,3 +247,33 @@ Findings are approved like drift: `contract:<name>: <finding>` in the drift ledg
 | `rows` | One per condition. `name` says what it exercises; `technique` is `EP`, `BVA-3`, `pairwise` or `hostile`; `coverage_item` says it in words; `expect_valid` is what the schema says; `invalid_because: { path, keyword }` is confirmed by the validator; `oracle` is `specified`, `derived`, `implicit` or `human`; `set` and `unset` change the generated baseline by JSON path; `replace_body` replaces it |
 
 `cmtk data make` writes `rows.json`, `rows/<name>.json` (one file per row, for `body_file`), `rows.csv` (UTF-8 with a BOM, CRLF) and `rows/<name>.csv` (one row's data columns alone: the file an import takes for that one condition), `rows.xlsx` on request (its metadata pinned to the recipe's clock, so it never names a person), `DATA.md` and `MANIFEST.json` (seed, clock, versions, every file's SHA-256, the quota results). `cmtk data cases` writes one draft case per row: `--encoding form` sends the row as a form (`body_form`) rather than a JSON body, `--before-get /page --take field=selector` adds the page to read first, `--rows invalid` keeps only the rows the schema calls invalid (the ones a form answers without writing), `--only-rows` and `--except-rows` pick rows by name (for a rule the test environment cannot enforce, such as a database limit against a mock, whose rows belong in another file), and `--expect-valid` / `--expect-invalid` give the statuses when no document does; the draft note says they came from the command line, so the reviewer checks them against the requirement.
+
+### Files from a recipe
+
+`cmtk data make <id> --format <list>` writes what a system's import or batch job needs. Every file comes from the recipe, so the same recipe gives the same bytes (CSV, fixed-width) or the same content (Excel). A workbook never holds a real name or today's date: its `creator` and `lastModifiedBy` are `cmtk`, and its dates are the recipe's clock.
+
+| Format | Writes |
+|---|---|
+| `json`, `csv`, `xlsx` | `rows.json`, `rows.csv`, one file per row, `rows.xlsx` |
+| `fixed` | `records.dat` and `layout.json`, for a recipe planned from a copybook. The length of the file is checked to be a multiple of the record size, and every record is read back. A row a record can't hold (an emoji in EBCDIC) is left out, and `DATA.md` says which and why |
+| `edge-csv` | `edge/csv/`: empty, header only, one row, the most rows and one more, CRLF, LF, UTF-8 with and without a BOM, Latin-1, semicolons, a line break in a cell, and each OWASP injection character |
+| `edge-xlsx` | `edge/xlsx/`: merged cells, formulas with and without a stored value, a workbook named `.csv`, CSV named `.xlsx`, and a corrupted file |
+| `edge-fixed` | `edge/fixed/`: sign nibbles, valid and not; `OCCURS DEPENDING ON` out of range; a truncated file |
+
+Each edge file is labelled in `DATA.md` and `MANIFEST.json` with what it exercises and whether the format allows it. What the system should answer comes from the requirement or the legacy system.
+
+In a recipe, `csv:` sets `delimiter`, `quote`, `quoted`, `header`, `bom`, `line_ending` (`crlf` or `lf`) and `max_rows`, and `xlsx: { formulas: value | formula }` says whether a text cell that starts with `=` is written as text or as a formula. Excel files use the 1900 date system, and say so.
+
+A copybook (`.cpy`, `.cbl`, `.cob`) works as `--schema`, with `--record-encoding cp037` (the default) or `ascii`. It takes the same boundaries and negatives as JSON. `PIC X`, `A`, `9`, `S`, `V`, `COMP`, `COMP-3`, `SIGN SEPARATE`, `OCCURS` and `OCCURS DEPENDING ON` are read. `REDEFINES` is noted in the recipe, and rows follow the original field. `COMP-1` and `COMP-2` are refused. Money with more than 15 digits stays as text, because a number can't hold it exactly.
+
+### Comparing files
+
+`cmtk data diff <a> <b> --key <columns>` compares two files by what they mean. It exits 0 if they are the same and 1 if they differ. It never compares bytes.
+
+- **CSV:** parsed, with rows matched by key. Null, empty and absent are one thing, because the format can't tell them apart. `--no-fold-empty` turns that off.
+- **Excel:** each sheet to cells, with the first row as the header, by key. `--formulas formula` compares formulas rather than stored values.
+- **Fixed-width:** `--as fixed --copybook <file>` decodes records first, so an EBCDIC file and an ASCII file with the same data are the same. A record that can't be decoded makes the files different.
+- **Numbers:** `5`, `5.0` and `5.00` are equal, and `--epsilon 0.01` allows for rounding. `007` is an identifier, not 7.
+- **`--scrub dates,guids`:** each date and GUID becomes a counter (`DATE_1`, `GUID_1`), in key order, so two runs at different times compare the same, but a row that points at the wrong row still shows.
+
+PDF and Word files are not written or compared yet.

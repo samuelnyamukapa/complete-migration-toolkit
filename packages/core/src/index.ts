@@ -28,6 +28,9 @@ export { readRoutesFromSource, readRouteSources, encodeRouteValue, decodeRouteVa
 export { loadModel, modelFromSchema, modelFromOpenApi, listOperations, validate, type Field, type TargetModel, type Violation } from "./data/schema.js";
 export { stringFromPattern, patternLimits } from "./data/regex.js";
 export { planRecipe, loadRecipe, checkQuotas, isHappy, renderRecipe, recipeFolder, recipeFile, dataFolder, DEFAULT_QUOTAS, HOSTILE, type Recipe, type Row, type RecipeField, type Quotas, type PlanOptions } from "./data/recipe.js";
-export { writeXlsx, readXlsx, type Sheet, type Cell } from "./data/xlsx.js";
-export { makeRows, makeData, tabulate, rng, FAKER_VERSION, LOCALES, type MadeRow, type DataManifest, type MakeOptions, type DataFormat } from "./data/make.js";
+export { writeXlsx, readXlsx, type Sheet, type Cell, type FormulaCell, type ReadSheet, type WriteOptions } from "./data/xlsx.js";
+export { makeRows, makeData, tabulate, rng, FAKER_VERSION, LOCALES, DATA_FORMATS, type MadeRow, type DataManifest, type MakeOptions, type DataFormat } from "./data/make.js";
+export { parseCopybook, encodeRecord, decodeRecord, decodeFile, encodePacked, encodeText, decodeText, fixedEdges, schemaOfLayout, EncodeError, type Layout, type RecordEncoding } from "./data/copybook.js";
+export { csvBytes, csvEdges, xlsxEdges, FORMULA_LEADS, type CsvOptions, type XlsxOptions, type EdgeInfo } from "./data/files.js";
+export { compareTables, csvTable, xlsxTables, recordsTable, readTables, parseCsv, scrubber, describeComparison, type Table, type TableComparison, type CompareOptions, type ReadOptions, type Scrubbing } from "./data/compare.js";
 export { writeCases, describeLeftOut, type CasesOptions } from "./data/cases.js";

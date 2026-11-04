@@ -14,8 +14,7 @@ import YAML from "yaml";
 import {
     acceptDraft, adaptersFor, BOUNDARY_KINDS, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
-    initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target, shadow, SHADOW_FORMATS, type ShadowFormat, cleanHistory, HISTORY_MODES, trend, type HistoryMode,
-    planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat,
+    initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target, shadow, SHADOW_FORMATS, type ShadowFormat, cleanHistory, HISTORY_MODES, trend, type HistoryMode, planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat, DATA_FORMATS, compareTables, readTables, describeComparison, type Scrubbing,
 } from "@cmtk/core";
 
 import { commitInstall, describeInstall, describeList, listAdapters, prepareInstall, RegistryError } from "./registry.js";
@@ -61,7 +60,11 @@ Usage:
   cmtk probe <target> "GET /path" [--surface <name>]                send one read-only request and show the answer
   cmtk data plan --schema <file> [--operation "POST /path"] [--id <name>] [--seed <n>] [--clock <iso>] [--locale <loc>]
                                                                     compile a test-data recipe from a JSON Schema or an OpenAPI operation
-  cmtk data make <id> [--format json,csv,xlsx]                      regenerate the rows from the recipe, check them, write the files
+                       a copybook (.cpy) works as the schema too: [--record-encoding cp037|ascii]; CSV: [--csv-delimiter ;] [--csv-no-header] [--csv-no-bom] [--csv-lf]
+  cmtk data make <id> [--format json,csv,xlsx,fixed,edge-csv,edge-xlsx,edge-fixed]
+                                                                    regenerate the rows from the recipe, check them, write the files
+  cmtk data diff <a> <b> --key <col,col> [--as csv|xlsx|fixed] [--epsilon 0.01] [--scrub dates,guids] [--copybook <file>] [--csv-delimiter ;] [--formulas value|formula] [--ignore col,col] [--no-fold-empty]
+                                                                    compare two files by what they mean, never by their bytes
   cmtk data check <id>                                              check a recipe's rows and quotas without writing files
   cmtk data cases <id> [--path /api/x] [--requirement <id>] [--out <file>]
                        [--encoding form] [--before-get /page] [--take field=selector]...
@@ -177,6 +180,19 @@ async function main(argv: string[]): Promise<number> {
             redact: { type: "string", multiple: true },
             "keep-values": { type: "boolean", default: false },
             "capture-only": { type: "boolean", default: false },
+            "record-encoding": { type: "string" },
+            "csv-delimiter": { type: "string" },
+            "csv-no-header": { type: "boolean", default: false },
+            "csv-no-bom": { type: "boolean", default: false },
+            "csv-lf": { type: "boolean", default: false },
+            key: { type: "string" },
+            as: { type: "string" },
+            epsilon: { type: "string" },
+            scrub: { type: "string" },
+            copybook: { type: "string" },
+            formulas: { type: "string" },
+            ignore: { type: "string" },
+            "no-fold-empty": { type: "boolean", default: false },
             help: { type: "boolean", short: "h", default: false },
             version: { type: "boolean", short: "v", default: false },
         },
@@ -651,6 +667,11 @@ main(process.argv.slice(2)).then(
     },
 );
 
+function recordEncoding(s: string): "cp037" | "ascii" {
+    if (s !== "cp037" && s !== "ascii") throw new UsageError("--record-encoding is cp037 or ascii.");
+    return s;
+}
+
 async function dataCommand(args: string[], manifestFile: string, v: Record<string, any>): Promise<number> {
     const [sub, id] = args;
     const m = loadManifest(manifestFile);
@@ -659,7 +680,11 @@ async function dataCommand(args: string[], manifestFile: string, v: Record<strin
         case "plan": {
             if (!v.schema) throw new UsageError("`cmtk data plan` needs --schema <file>: a JSON Schema or an OpenAPI document inside the project.");
             const seed = v.seed === undefined ? undefined : Number(v.seed);
-            const { file, recipe } = planRecipe(m, { schema: v.schema, operation: v.operation, id: v.id, seed, clock: v.clock, locale: v.locale, generators });
+            const { file, recipe } = planRecipe(m, {
+                schema: v.schema, operation: v.operation, id: v.id, seed, clock: v.clock, locale: v.locale, generators,
+                ...(v["record-encoding"] ? { recordEncoding: recordEncoding(v["record-encoding"]) } : {}),
+                ...(v["csv-delimiter"] || v["csv-no-header"] || v["csv-no-bom"] || v["csv-lf"] ? { csv: { ...(v["csv-delimiter"] ? { delimiter: v["csv-delimiter"] } : {}), ...(v["csv-no-header"] ? { header: false } : {}), ...(v["csv-no-bom"] ? { bom: false } : {}), ...(v["csv-lf"] ? { line_ending: "lf" as const } : {}) } } : {}),
+            });
             const happy = recipe.rows.filter(isHappy).length;
             const byTechnique = Object.entries(recipe.rows.reduce<Record<string, number>>((acc, r) => ({ ...acc, [r.technique]: (acc[r.technique] ?? 0) + 1 }), {})).map(([k, n]) => `${n} ${k}`).join(", ");
             console.log(`Recipe ${recipe.id}: ${recipe.fields.length - 1} fields, ${recipe.rows.length} rows (${byTechnique}); ${happy} happy paths (${Math.round((happy / recipe.rows.length) * 100)}%).`);
@@ -672,10 +697,13 @@ async function dataCommand(args: string[], manifestFile: string, v: Record<strin
         case "make": {
             if (!id) throw new UsageError("`cmtk data make` needs the recipe id.");
             const formats = (v.format ? String(v.format).split(",") : ["json", "csv"]).map((f: string) => f.trim().toLowerCase());
-            for (const f of formats) if (!["json", "csv", "xlsx"].includes(f)) throw new UsageError(`Unknown format ${f}: use json, csv or xlsx.`);
+            for (const f of formats) if (!(DATA_FORMATS as readonly string[]).includes(f)) throw new UsageError(`Unknown format ${f}: use ${DATA_FORMATS.join(", ")}.`);
             const { folder, manifest } = await makeData(m, id, { formats: formats as DataFormat[], generators });
             console.log(`Made ${manifest.rows} rows (${manifest.valid_rows} valid, ${Math.round(manifest.quotas.happy_share * 100)}% happy paths) in ${folder}/: ${Object.keys(manifest.files).filter((f) => !f.startsWith("rows/")).join(", ")}.`);
             console.log(`Every valid row validates against the schema, and every invalid row breaks it where it says.`);
+            if (manifest.edge_files?.length) console.log(`${manifest.edge_files.length} edge files, each labelled in ${folder}/DATA.md.`);
+            if (manifest.fixed) console.log(`${manifest.fixed.records} fixed-width records of ${manifest.fixed.record_size} bytes in ${manifest.fixed.encoding}; ${manifest.fixed.left_out.length} rows left out, listed in ${folder}/DATA.md.`);
+            for (const x of manifest.not_written ?? []) console.log(`Not written: ${x.format}: ${x.why}.`);
             if (manifest.quotas.problems.length) { console.log(`Quotas not met: ${manifest.quotas.problems.join("; ")}.`); return 2; }
             console.log(`Next: \`cmtk data cases ${id} --path /api/...\` to draft one case per row.`);
             return 0;
@@ -718,8 +746,24 @@ async function dataCommand(args: string[], manifestFile: string, v: Record<strin
             console.log("Next: a person reviews them with `cmtk review`. They are skipped until then.");
             return 0;
         }
+        case "diff": {
+            const [a, b] = args.slice(1);
+            if (!a || !b) throw new UsageError("`cmtk data diff` needs two files.");
+            const list = (s: unknown) => (s === undefined ? [] : String(s).split(",").map((x) => x.trim()).filter(Boolean));
+            if (v.as !== undefined && !["csv", "xlsx", "fixed"].includes(v.as)) throw new UsageError("--as is csv, xlsx or fixed.");
+            if (v.formulas !== undefined && !["value", "formula"].includes(v.formulas)) throw new UsageError("--formulas is value or formula.");
+            const scrub = list(v.scrub);
+            for (const s of scrub) if (s !== "dates" && s !== "guids") throw new UsageError("--scrub takes dates and guids.");
+            const epsilon = v.epsilon === undefined ? undefined : Number(v.epsilon);
+            if (epsilon !== undefined && !(epsilon >= 0)) throw new UsageError("--epsilon must be a number, zero or more.");
+            const read = { as: v.as, delimiter: v["csv-delimiter"], copybook: v.copybook ? inside(m, v.copybook) : undefined, record_encoding: v["record-encoding"] ? recordEncoding(v["record-encoding"]) : undefined, formulas: v.formulas };
+            const c = compareTables(readTables(inside(m, a), read), readTables(inside(m, b), read), { key: list(v.key), ...(epsilon !== undefined ? { epsilon } : {}), scrub: scrub as Scrubbing[], ignore: list(v.ignore), fold_empty: !v["no-fold-empty"] });
+            if (v.json) console.log(JSON.stringify(c, null, 2));
+            else for (const line of describeComparison(c)) console.log(line);
+            return c.same ? 0 : 1;
+        }
         default:
-            throw new UsageError("`cmtk data` needs plan, make, check or cases.");
+            throw new UsageError("`cmtk data` needs plan, make, check, cases or diff.");
     }
 }
 

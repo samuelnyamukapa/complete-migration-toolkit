@@ -14,6 +14,8 @@ import YAML from "yaml";
 
 import { inside, ManifestError } from "../manifest.js";
 import type { Manifest } from "../types.js";
+import type { CsvOptions, XlsxOptions } from "./files.js";
+import type { RecordEncoding } from "./copybook.js";
 import { patternLimits } from "./regex.js";
 import { loadModel, type Field, type TargetModel } from "./schema.js";
 
@@ -80,6 +82,12 @@ export interface Recipe {
     responses?: Record<string, string>;
     /** Why the recipe is shaped as it is, for the reviewer. */
     notes?: string[];
+    /** How rows.csv and the CSV edge files are written. */
+    csv?: CsvOptions;
+    /** How rows.xlsx and the Excel edge files are written. The 1900 date system is always used. */
+    xlsx?: XlsxOptions;
+    /** For a copybook: how fixed-width records are written. */
+    fixed?: { encoding: RecordEncoding };
 }
 
 /** A happy path: a valid row that a partition or a pairwise combination chose, as opposed to a boundary or a hostile value. */
@@ -127,6 +135,10 @@ export interface PlanOptions {
     draft?: boolean;
     /** Generator versions to record: cmtk's own, and faker's. */
     generators?: Record<string, string>;
+    csv?: CsvOptions;
+    xlsx?: XlsxOptions;
+    /** For a copybook: cp037 (the default) or ascii. */
+    recordEncoding?: RecordEncoding;
 }
 
 /** Compile a recipe from a schema: the fields, and the rows every technique calls for. */
@@ -156,9 +168,15 @@ export function planRecipe(m: Manifest, o: PlanOptions): { file: string; recipe:
         return { path: f.path, type: f.type, required: f.required, nullable: f.nullable, constraints, source: f.source, valid_from, ...(note ? { note } : {}) };
     });
     const rows = planRows(model.fields, notes);
+    const layout = (model as { layout?: { notes: string[]; counters: string[]; record_size: number } }).layout;
+    if (layout) {
+        notes.push(`A record is ${layout.record_size} bytes.`, ...layout.notes);
+        if (layout.counters.length) notes.push(`${layout.counters.join(", ")}: set from the array's length, so not generated. The edge files hold them out of range.`);
+    }
     const recipe: Recipe = {
         id, ...(o.draft ? { draft: true } : {}), seed, clock, locale: o.locale ?? "en_GB", source: { ...model.source, file: path.relative(m.root, schemaFile).split(path.sep).join("/") },
         generators: { ...(o.generators ?? {}) }, quotas, fields, rows, ...(model.responses ? { responses: model.responses } : {}), ...(notes.length ? { notes } : {}),
+        ...(o.csv ? { csv: o.csv } : {}), ...(o.xlsx ? { xlsx: o.xlsx } : {}), ...(layout ? { fixed: { encoding: o.recordEncoding ?? "cp037" } } : {}),
     };
     const problems = checkQuotas(recipe);
     if (problems.length) throw new ManifestError(`The plan breaks its own quotas: ${problems.join("; ")}`);
@@ -230,32 +248,33 @@ function planRows(fields: Field[], notes: string[]): Row[] {
     for (const f of leaves) {
         const slug = slugOf(f.path);
         const p = f.path;
-        if (f.path.includes("[*]")) continue; // elements are varied through their array; a row names one element below
+        const first = f.path.replace(/\[\*\]/g, "[0]"); // a boundary on an array's element is tried on its first element
         // Boundaries, three values each: below, at, above (ISTQB's 3-value BVA).
         const num = f.type === "integer" || f.type === "number";
         const step = f.multipleOf ?? (f.type === "integer" ? 1 : 0.01);
         if (num && f.minimum !== undefined) {
             const at = f.exclusiveMinimum ? round(f.minimum + step, step) : f.minimum;
-            add(bva(slug, "minimum", "below", p, f.exclusiveMinimum ? f.minimum : round(f.minimum - step, step), false, f.exclusiveMinimum ? "exclusiveMinimum" : "minimum", `${p} ${f.exclusiveMinimum ? "at" : "below"} its minimum (${f.minimum})`));
-            add(bva(slug, "minimum", "at", p, at, true, undefined, `${p} at its lowest valid value (${at})`));
-            add(bva(slug, "minimum", "above", p, round(at + step, step), true, undefined, `${p} one step above its lowest valid value`));
+            add(bva(slug, "minimum", "below", first, f.exclusiveMinimum ? f.minimum : round(f.minimum - step, step), false, f.exclusiveMinimum ? "exclusiveMinimum" : "minimum", `${p} ${f.exclusiveMinimum ? "at" : "below"} its minimum (${f.minimum})`));
+            add(bva(slug, "minimum", "at", first, at, true, undefined, `${p} at its lowest valid value (${at})`));
+            add(bva(slug, "minimum", "above", first, round(at + step, step), true, undefined, `${p} one step above its lowest valid value`));
         }
         if (num && f.maximum !== undefined) {
             const at = f.exclusiveMaximum ? round(f.maximum - step, step) : f.maximum;
-            add(bva(slug, "maximum", "below", p, round(at - step, step), true, undefined, `${p} one step below its highest valid value`));
-            add(bva(slug, "maximum", "at", p, at, true, undefined, `${p} at its highest valid value (${at})`));
-            add(bva(slug, "maximum", "above", p, f.exclusiveMaximum ? f.maximum : round(f.maximum + step, step), false, f.exclusiveMaximum ? "exclusiveMaximum" : "maximum", `${p} ${f.exclusiveMaximum ? "at" : "above"} its maximum (${f.maximum})`));
+            add(bva(slug, "maximum", "below", first, round(at - step, step), true, undefined, `${p} one step below its highest valid value`));
+            add(bva(slug, "maximum", "at", first, at, true, undefined, `${p} at its highest valid value (${at})`));
+            add(bva(slug, "maximum", "above", first, f.exclusiveMaximum ? f.maximum : round(f.maximum + step, step), false, f.exclusiveMaximum ? "exclusiveMaximum" : "maximum", `${p} ${f.exclusiveMaximum ? "at" : "above"} its maximum (${f.maximum})`));
         }
         if (f.type === "string" && f.minLength !== undefined && f.minLength > 0 && !f.pattern && !f.enum) {
-            add(bva(slug, "minLength", "below", p, "a".repeat(f.minLength - 1), false, "minLength", `${p} one character shorter than ${f.minLength}`));
-            add(bva(slug, "minLength", "at", p, "a".repeat(f.minLength), true, undefined, `${p} exactly ${f.minLength} characters`));
-            add(bva(slug, "minLength", "above", p, "a".repeat(f.minLength + 1), true, undefined, `${p} ${f.minLength + 1} characters`));
+            add(bva(slug, "minLength", "below", first, "a".repeat(f.minLength - 1), false, "minLength", `${p} one character shorter than ${f.minLength}`));
+            add(bva(slug, "minLength", "at", first, "a".repeat(f.minLength), true, undefined, `${p} exactly ${f.minLength} characters`));
+            add(bva(slug, "minLength", "above", first, "a".repeat(f.minLength + 1), true, undefined, `${p} ${f.minLength + 1} characters`));
         }
         if (f.type === "string" && f.maxLength !== undefined && !f.pattern && !f.enum) {
-            add(bva(slug, "maxLength", "below", p, "b".repeat(Math.max(f.maxLength - 1, f.minLength ?? 0)), true, undefined, `${p} one character shorter than ${f.maxLength}`));
-            add(bva(slug, "maxLength", "at", p, "b".repeat(f.maxLength), true, undefined, `${p} exactly ${f.maxLength} characters`));
-            add(bva(slug, "maxLength", "above", p, "b".repeat(f.maxLength + 1), false, "maxLength", `${p} one character longer than ${f.maxLength}`));
+            add(bva(slug, "maxLength", "below", first, "b".repeat(Math.max(f.maxLength - 1, f.minLength ?? 0)), true, undefined, `${p} one character shorter than ${f.maxLength}`));
+            add(bva(slug, "maxLength", "at", first, "b".repeat(f.maxLength), true, undefined, `${p} exactly ${f.maxLength} characters`));
+            add(bva(slug, "maxLength", "above", first, "b".repeat(f.maxLength + 1), false, "maxLength", `${p} one character longer than ${f.maxLength}`));
         }
+        if (f.path.includes("[*]")) continue; // its other negatives come from one row below, which names one element
         // Negatives: one per way the field can be wrong.
         if (f.required) add({ name: `${slug}_missing`, technique: "EP", coverage_item: `${p} missing though required`, expect_valid: false, invalid_because: { path: p, keyword: "required" }, oracle: "specified", unset: [p] });
         if (!f.nullable) add({ name: `${slug}_null`, technique: "EP", coverage_item: `${p} null though not nullable`, expect_valid: false, invalid_because: { path: p, keyword: "type" }, oracle: "specified", set: { [p]: null } });

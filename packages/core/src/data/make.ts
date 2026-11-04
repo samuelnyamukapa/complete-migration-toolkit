@@ -15,6 +15,8 @@ import { faker as fakerFR } from "@faker-js/faker/locale/fr";
 import { faker as fakerES } from "@faker-js/faker/locale/es";
 
 import { writeXlsx } from "./xlsx.js";
+import { decodeFile, EncodeError, encodeRecord, fixedEdges, type Layout } from "./copybook.js";
+import { csvBytes, csvEdges, xlsxEdges, type EdgeInfo } from "./files.js";
 
 /** The locales bundled with the plugin. Each is a few hundred kilobytes, so not every one of Faker's seventy is here. */
 export const LOCALES: Record<string, Faker> = { en: fakerEN, en_GB: fakerEN_GB, en_US: fakerEN_US, de: fakerDE, fr: fakerFR, es: fakerES };
@@ -23,13 +25,11 @@ declare const __CMTK_FAKER_VERSION__: string | undefined;
 /** Faker's version: a different one may make different values from the same seed, so the manifest records it. */
 export const FAKER_VERSION: string = typeof __CMTK_FAKER_VERSION__ === "string" ? __CMTK_FAKER_VERSION__
     : (() => { try { return (createRequire(import.meta.url)("@faker-js/faker/package.json") as { version: string }).version; } catch { return "unknown"; } })();
-import { stringify } from "csv-stringify/sync";
-
-import { inside, ManifestError, readStructured } from "../manifest.js";
+import { inside, ManifestError } from "../manifest.js";
 import type { Manifest } from "../types.js";
 import { dataFolder, loadRecipe, checkQuotas, isHappy, type Recipe, type RecipeField, type Row } from "./recipe.js";
 import { stringFromPattern, type Rng } from "./regex.js";
-import { modelFromOpenApi, modelFromSchema, validate, type Field } from "./schema.js";
+import { loadModel, validate, type Field } from "./schema.js";
 
 export interface MadeRow {
     name: string;
@@ -58,6 +58,12 @@ export interface DataManifest {
     quotas: { max_happy_share: number; happy_share: number; problems: string[] };
     validation: { valid_rows_checked: number; invalid_rows_checked: number };
     files: Record<string, string>;
+    /** Edge files: what each exercises, and whether its format should be accepted. */
+    edge_files?: EdgeInfo[];
+    /** Fixed-width records: the size, the encoding, and the rows a record can't hold. */
+    fixed?: { record_size: number; encoding: string; records: number; left_out: { row: string; why: string }[] };
+    /** Formats asked for that were not written, and why. */
+    not_written?: { format: string; why: string }[];
 }
 
 /** A small, fast, seedable random source (mulberry32): the same seed gives the same rows on every platform. */
@@ -181,13 +187,12 @@ function unsetAt(root: unknown, p: string) {
     if (cur && typeof cur === "object") Array.isArray(cur) ? cur.splice(parts[parts.length - 1] as number, 1) : delete cur[parts[parts.length - 1] as string];
 }
 
-function fieldsOf(m: Manifest, r: Recipe): { fields: Field[]; schema: Record<string, unknown>; parameters: { name: string; in: string; required: boolean; schema: Record<string, unknown> }[]; hasBody: boolean } {
+function fieldsOf(m: Manifest, r: Recipe): { fields: Field[]; schema: Record<string, unknown>; parameters: { name: string; in: string; required: boolean; schema: Record<string, unknown> }[]; hasBody: boolean; layout?: Layout } {
     const file = inside(m, r.source.file);
     if (!fs.existsSync(file)) throw new ManifestError(`The recipe's schema ${r.source.file} no longer exists.`);
-    const raw = readStructured(file) as any;
-    const model = raw?.openapi || raw?.swagger ? modelFromOpenApi(file, raw, r.source.operation ?? "") : modelFromSchema(file, raw);
+    const model = loadModel(file, r.source.operation);
     if (r.source.sha256 && model.source.sha256 !== r.source.sha256) throw new ManifestError(`${r.source.file} has changed since the recipe was planned (sha256 ${model.source.sha256.slice(0, 12)}… now, ${r.source.sha256.slice(0, 12)}… then). Plan it again, or restore the file.`);
-    return { fields: model.fields, schema: model.schema, parameters: model.parameters ?? [], hasBody: model.fields.some((f) => f.path === "$") };
+    return { fields: model.fields, schema: model.schema, parameters: model.parameters ?? [], hasBody: model.fields.some((f) => f.path === "$"), ...((model as { layout?: Layout }).layout ? { layout: (model as { layout?: Layout }).layout } : {}) };
 }
 
 const onWire = (v: unknown) => (v === null ? "" : typeof v === "object" ? JSON.stringify(v) : String(v));
@@ -242,7 +247,8 @@ function hash(seed: number, name: string): number {
     return crypto.createHash("sha256").update(`${seed}:${name}`).digest().readUInt32BE(0) >>> 1;
 }
 
-export type DataFormat = "json" | "csv" | "xlsx";
+export const DATA_FORMATS = ["json", "csv", "xlsx", "fixed", "edge-csv", "edge-xlsx", "edge-fixed"] as const;
+export type DataFormat = (typeof DATA_FORMATS)[number];
 
 export interface MakeOptions {
     formats?: DataFormat[];
@@ -272,18 +278,67 @@ export async function makeData(m: Manifest, id: string, o: MakeOptions = {}): Pr
         for (const r of rows) if (r.value !== undefined) put(path.join("rows", `${r.name}.json`), JSON.stringify(r.value, null, 2) + "\n");
     }
     const table = tabulate(rows);
+    const csv = recipe.csv ?? {};
     if (formats.includes("csv")) {
-        const csvOpts = { bom: true, record_delimiter: "\r\n", cast: { boolean: (b: boolean) => (b ? "true" : "false") } } as const;
-        put("rows.csv", stringify(table.records, { header: true, columns: table.columns, ...csvOpts }));
+        put("rows.csv", csvBytes(table.columns, table.records, csv));
         // One CSV per row, data columns only: the file an import would take, for that one condition.
         for (const r of rows) {
             if (!r.value || typeof r.value !== "object" || Array.isArray(r.value)) continue;
             const one = tabulate([r]);
             const cols = one.columns.filter((c) => c !== "row" && c !== "expect_valid" && !c.startsWith("?"));
-            put(path.join("rows", `${r.name}.csv`), stringify(one.records, { header: true, columns: cols, ...csvOpts }));
+            put(path.join("rows", `${r.name}.csv`), csvBytes(cols, one.records, csv));
         }
     }
     if (formats.includes("xlsx")) put("rows.xlsx", workbook(table, recipe));
+    // The valid rows, data columns only: the files an import would take.
+    const validRows = rows.filter((r) => r.expect_valid && r.value && typeof r.value === "object" && !Array.isArray(r.value));
+    const data = (() => {
+        const t = tabulate(validRows);
+        return { columns: t.columns.filter((c) => c !== "row" && c !== "expect_valid" && !c.startsWith("?")), records: t.records };
+    })();
+    const edgeInfo: EdgeInfo[] = [];
+    const notWritten: { format: string; why: string }[] = [];
+    const putEdges = (folder: string, edges: (EdgeInfo & { bytes: Buffer })[]) => {
+        fs.mkdirSync(path.join(dir, "edge", folder), { recursive: true });
+        for (const e of edges) {
+            const rel = path.join("edge", folder, e.file);
+            put(rel, e.bytes);
+            edgeInfo.push({ file: rel.split(path.sep).join("/"), kind: e.kind, expect_valid: e.expect_valid, why: e.why });
+        }
+    };
+    const dataCheck = () => (data.columns.length && data.records.length ? undefined : "the recipe has no valid rows that are objects");
+    if (formats.includes("edge-csv")) { const why = dataCheck(); if (why) notWritten.push({ format: "edge-csv", why }); else putEdges("csv", csvEdges(data.columns, data.records, csv)); }
+    if (formats.includes("edge-xlsx")) { const why = dataCheck(); if (why) notWritten.push({ format: "edge-xlsx", why }); else putEdges("xlsx", xlsxEdges(data.columns, data.records, { creator: "cmtk", created: recipe.clock, ...(recipe.xlsx?.formulas ? { formulas: recipe.xlsx.formulas } : {}) })); }
+    let fixed: DataManifest["fixed"];
+    if (formats.includes("fixed") || formats.includes("edge-fixed")) {
+        const layout = fieldsOf(m, recipe).layout;
+        if (!layout) throw new ManifestError(`Recipe ${id} did not come from a copybook, so it has no fixed-width records. Plan it from a .cpy file.`);
+        const enc = recipe.fixed?.encoding ?? "cp037";
+        const records: Buffer[] = [];
+        const left_out: { row: string; why: string }[] = [];
+        let baseRecord: Record<string, unknown> | undefined;
+        for (const r of rows) {
+            if (!r.expect_valid) { left_out.push({ row: r.name, why: `an invalid row (${r.invalid_because?.path} ${r.invalid_because?.keyword}): the edge files hold what a record can hold of this kind` }); continue; }
+            try {
+                records.push(encodeRecord(layout, r.value as Record<string, unknown>, enc));
+                baseRecord ??= r.value as Record<string, unknown>;
+            } catch (err) {
+                if (!(err instanceof EncodeError)) throw err;
+                left_out.push({ row: r.name, why: err.message });
+            }
+        }
+        if (!baseRecord) throw new ManifestError(`No valid row of recipe ${id} fits a record.`);
+        const bytes = Buffer.concat(records);
+        // The self-check: a file of fixed-length records has a length that is a multiple of the record's, and every record reads back.
+        const back = decodeFile(layout, bytes, enc);
+        if (back.problems.length || back.records.length !== records.length) throw new ManifestError(`The fixed-width file failed its own check: ${back.problems[0] ?? `${back.records.length} records read back, not ${records.length}`}.`);
+        if (formats.includes("fixed")) {
+            put("records.dat", bytes);
+            put("layout.json", JSON.stringify({ name: layout.name, record_size: layout.record_size, encoding: enc, items: layout.items }, null, 2) + "\n");
+            fixed = { record_size: layout.record_size, encoding: enc, records: records.length, left_out };
+        }
+        if (formats.includes("edge-fixed")) putEdges("fixed", fixedEdges(layout, baseRecord, enc));
+    }
     const valid = rows.filter((r) => r.expect_valid).length;
     const manifest: DataManifest = {
         recipe: file, recipe_sha256: sha256, seed: recipe.seed, clock: recipe.clock, locale: recipe.locale, source: recipe.source,
@@ -291,6 +346,7 @@ export async function makeData(m: Manifest, id: string, o: MakeOptions = {}): Pr
         made_on: o.now ?? new Date().toISOString(), rows: rows.length, valid_rows: valid,
         quotas: { max_happy_share: recipe.quotas.max_happy_share, happy_share: rows.length ? Number((recipe.rows.filter(isHappy).length / rows.length).toFixed(3)) : 0, problems },
         validation: { valid_rows_checked: valid, invalid_rows_checked: rows.length - valid }, files,
+        ...(edgeInfo.length ? { edge_files: edgeInfo } : {}), ...(fixed ? { fixed } : {}), ...(notWritten.length ? { not_written: notWritten } : {}),
     };
     fs.writeFileSync(path.join(dir, "MANIFEST.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
     fs.writeFileSync(path.join(dir, "DATA.md"), renderData(recipe, rows, manifest), "utf8");
@@ -321,7 +377,7 @@ function workbook(table: { columns: string[]; records: Record<string, unknown>[]
     return writeXlsx([
         { name: "rows", rows: [table.columns, ...table.records.map((r) => table.columns.map((c) => cell(r[c])))] },
         { name: "recipe", rows: [["recipe", recipe.id], ["seed", recipe.seed], ["clock", recipe.clock], ["locale", recipe.locale], ["source", recipe.source.file]] },
-    ], { creator: "cmtk", created: recipe.clock }); // pinned, so the file never says who made it or when, and the same recipe gives the same bytes
+    ], { creator: "cmtk", created: recipe.clock, ...(recipe.xlsx?.formulas ? { formulas: recipe.xlsx.formulas } : {}) }); // pinned, so the file never says who made it or when, and the same recipe gives the same bytes
 }
 
 const cell = (s: unknown) => String(s ?? "").replace(/\|/g, "\\|").replace(/\r?\n/g, " ").slice(0, 120);
@@ -340,6 +396,8 @@ function renderData(r: Recipe, rows: MadeRow[], man: DataManifest): string {
     L.push("", "## Fields", "", "| Field | Type | Required | Constraints | Valid values from | Source |", "|---|---|---|---|---|---|");
     for (const f of r.fields) L.push(`| ${f.path} | ${f.type}${f.nullable ? " or null" : ""} | ${f.required ? "yes" : "no"} | ${cell(JSON.stringify(f.constraints))} | ${f.valid_from} | ${cell(f.source)} |`);
     if (r.notes?.length) L.push("", "## Notes", "", ...r.notes.map((n) => `- ${n}`));
+    if (man.edge_files?.length) L.push("", "## Edge files", "", "What each exercises, and whether the format allows it. What the system should answer comes from the requirement or the legacy system.", "", "| File | Kind | Format allows it | Why |", "|---|---|---|---|", ...man.edge_files.map((e) => `| ${e.file} | ${e.kind} | ${e.expect_valid ? "yes" : "no"} | ${cell(e.why)} |`));
+    if (man.fixed) L.push("", "## Fixed-width records", "", `${man.fixed.records} records of ${man.fixed.record_size} bytes, in ${man.fixed.encoding}. Left out: ${man.fixed.left_out.length}.`, "", ...man.fixed.left_out.map((x) => `- ${x.row}: ${cell(x.why)}`));
     L.push("", "## Files", "", ...Object.entries(man.files).map(([f, h]) => `- \`${f}\`: sha256 ${h.slice(0, 16)}…`), "");
     return L.join("\n");
 }
