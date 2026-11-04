@@ -1,0 +1,6 @@
+# Samples the conformance kit (`cmtk adapter check database`) replays twice: it reads rows and nothing else.
+cases:
+  - id: DB-ROWS
+    name: the rows of the chosen tables, sorted by key
+    surface: database
+    request: { method: GET, path: /rows }

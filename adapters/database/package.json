@@ -1,0 +1,19 @@
+{
+  "name": "cmtk-adapter-database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Read-only snapshots of chosen tables before and after a case, reported as rows added, removed and changed (SQL Server, PostgreSQL).",
+  "main": "index.mjs",
+  "peerDependencies": {
+    "mssql": "12.7.13",
+    "pg": "8.23.1"
+  },
+  "peerDependenciesMeta": {
+    "mssql": { "optional": true },
+    "pg": { "optional": true }
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.15"
+  }
+}
