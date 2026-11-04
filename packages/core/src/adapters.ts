@@ -20,6 +20,38 @@ import type { Before, BeforeOutcome, Case, FormValue, InputFile, Observation, Ta
 
 export const MAX_BODY = 5 * 1024 * 1024;
 
+const HIDDEN = "REDACTED";
+
+/** A Set-Cookie line with its value gone. The name and the attributes stay: they are what a case can fairly compare. */
+export const maskCookie = (line: string) => line.replace(/^([^=;]*=)[^;]*/, `$1${HIDDEN}`);
+
+/**
+ * An answer with these values replaced, in the forms a system might echo them: as sent, without a scheme such as
+ * Bearer, percent-encoded and JSON-escaped. It can only spot those forms, so a value a system encodes some other
+ * way stays. `sha256` stays the fingerprint of the real bytes, because two systems are compared on it.
+ */
+export function hideValues(obs: Observation, values: string[]): Observation {
+    const forms = new Set<string>();
+    for (const v of values) {
+        const bare = v.replace(/^[A-Za-z][A-Za-z0-9-]*\s+/, "");
+        for (const one of [v, bare]) {
+            if (one.length < 4) continue; // too short to tell from ordinary text
+            forms.add(one);
+            forms.add(encodeURIComponent(one));
+            forms.add(JSON.stringify(one).slice(1, -1));
+        }
+    }
+    if (!forms.size) return obs;
+    const longestFirst = [...forms].sort((a, b) => b.length - a.length);
+    const clean = (s: string) => longestFirst.reduce((t, form) => t.split(form).join(HIDDEN), s);
+    return {
+        ...obs,
+        ...(obs.body !== undefined ? { body: clean(obs.body) } : {}),
+        ...(obs.error !== undefined ? { error: clean(obs.error) } : {}),
+        ...(obs.headers ? { headers: Object.fromEntries(Object.entries(obs.headers).map(([k, v]) => [k, clean(v)])) } : {}),
+    };
+}
+
 export interface Adapter {
     run(c: Case, target: Target, extraHeaders: Record<string, string>): Promise<Observation>;
     reset?(target: Target): Promise<void>;
@@ -231,6 +263,11 @@ async function prepare(baseUrl: string, c: Case, before: Before, extra: Record<s
  * With `before`, a page is read first and its cookies and the values taken from it go on the request.
  */
 export async function send(baseUrl: string, c: Case, extra: Record<string, string>, opts: { timeoutS: number; insecureTls: boolean; root?: string }): Promise<Observation> {
+    // What goes in the evidence never holds a header value from the environment, even if the system echoes it.
+    return hideValues(await exchange(baseUrl, c, extra, opts), Object.values(extra));
+}
+
+async function exchange(baseUrl: string, c: Case, extra: Record<string, string>, opts: { timeoutS: number; insecureTls: boolean; root?: string }): Promise<Observation> {
     const req = c.request;
     if (!req.path.startsWith("/") || req.path.startsWith("//")) return { error: "the path must start with a single '/'" };
     if (!req.before) return (await transfer(baseUrl, c, extra, opts)).obs;
@@ -280,6 +317,8 @@ function transfer(baseUrl: string, c: Case, extra: Record<string, string>, opts:
                 const h: Record<string, string> = {};
                 for (const [k, v] of Object.entries(res.headers)) if (v !== undefined) h[k.toLowerCase()] = Array.isArray(v) ? v.join(", ") : String(v);
                 setCookie = res.headers["set-cookie"] ?? [];
+                // The real values go back to the same target in a `before` step, and never into the evidence.
+                if (setCookie.length) h["set-cookie"] = setCookie.map(maskCookie).join(", ");
                 const enc = String(res.headers["content-encoding"] ?? "").trim().toLowerCase();
                 const flush = { finishFlush: zlib.constants.Z_SYNC_FLUSH };
                 const stream: Readable = enc === "gzip" || enc === "x-gzip" ? res.pipe(zlib.createGunzip(flush))
