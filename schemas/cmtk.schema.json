@@ -244,6 +244,11 @@
         "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"
       }
     },
+    "adapter_registries": {
+      "type": "object",
+      "description": "Registries `cmtk adapter add` may use: a name to a git address or a folder. Never a credential.",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
     "adapters": {
       "type": "object",
       "propertyNames": {

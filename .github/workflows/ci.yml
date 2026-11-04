@@ -24,6 +24,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - name: The packages hold nothing they should not
+        if: runner.os == 'Linux'
+        run: npm run build && node scripts/check-package.mjs
       - name: The plugin's bundled server is up to date
         if: runner.os == 'Linux'
         run: npm run bundle && git diff --exit-code -- plugin
