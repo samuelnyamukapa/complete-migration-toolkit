@@ -42,6 +42,35 @@ test("tools: run, compare, import, status, and no sign-off", async () => {
     }
 });
 
+test("no tool installs an adapter, and an agent can only hand a person the command", async () => {
+    const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cmtk-mcp-"));
+    fs.writeFileSync(path.join(dir, "cmtk.yaml"), "system: s\ntargets:\n  candidate: { base_url: 'http://127.0.0.1:9' }\n");
+    fs.mkdirSync(path.join(dir, "cmtk/cases"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "cmtk/cases/a.yaml"), "cases:\n  - { id: Q1, requirement: R1, surface: queue, request: GET /q, expect: { status: 200 } }\n");
+    const client = new Client({ name: "test", version: "1" });
+    await client.connect(new StdioClientTransport({ command: process.execPath, args: [SERVER] }));
+    try {
+        const tools = (await client.listTools()).tools;
+        assert.ok(!tools.some((t) => /adapter|install|registry|plugin/i.test(t.name)), "no tool is named for it");
+        assert.ok(!tools.some((t) => /registry|pin\b/i.test(JSON.stringify(t.inputSchema))), "no tool takes a registry or a pin");
+        const people = await client.callTool({ name: "cmtk_commands_for_person", arguments: { manifest: path.join(dir, "cmtk.yaml") } });
+        assert.match(people.content[0].text, /install an adapter: .* adapter add <name>/);
+        // A report an agent reads names the gap too.
+        const r = await client.callTool({ name: "cmtk_run", arguments: { manifest: path.join(dir, "cmtk.yaml") } });
+        assert.match(r.content[0].text, /no adapter for surface queue, so nothing was sent for: Q1/);
+        assert.match(r.content[0].text, /verdict: NO EVIDENCE/);
+    } finally {
+        await client.close();
+    }
+    // The install code lives in the command, which the server does not import.
+    const src = fs.readFileSync(path.join(root, "packages/mcp/src/server.ts"), "utf8");
+    assert.ok(!/registry\.js|commitInstall|prepareInstall|complete-migration-toolkit"/.test(src.split("const server =")[0]));
+    const core = fs.readdirSync(path.join(root, "packages/core/src")).filter((f) => f.endsWith(".ts")).map((f) => fs.readFileSync(path.join(root, "packages/core/src", f), "utf8")).join("\n");
+    assert.ok(!/commitInstall|prepareInstall/.test(core), "core, which the server imports, cannot install");
+    assert.ok(!Object.keys(JSON.parse(fs.readFileSync(path.join(root, "packages/mcp/package.json"), "utf8")).dependencies).includes("complete-migration-toolkit"));
+});
+
 test("the plugin: bundled server and command, one version everywhere, seven skills", async () => {
     const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
     const plugin = path.join(root, "plugin");

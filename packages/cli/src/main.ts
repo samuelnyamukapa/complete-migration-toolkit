@@ -12,11 +12,13 @@ import { parseArgs } from "node:util";
 import YAML from "yaml";
 
 import {
-    acceptDraft, adaptersFor, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
+    acceptDraft, adaptersFor, BOUNDARY_KINDS, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
     initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target,
     planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat,
 } from "@cmtk/core";
+
+import { commitInstall, describeInstall, describeList, listAdapters, prepareInstall, RegistryError } from "./registry.js";
 
 // Node 22 before 22.17 flags fs.globSync and path.matchesGlob as experimental and prints a warning
 // on every run. They behave as documented, so keep that one warning out of what people read.
@@ -60,6 +62,9 @@ Usage:
   cmtk signoff run|compare                                          a person signs a report, at a terminal (never an agent)
   cmtk adapter new <name> [--lang node|csharp]                      write a new adapter from a template (default: node)
   cmtk adapter check <name> [--target <name>]                       the conformance kit, on a dummy target or one from cmtk.yaml
+  cmtk adapter add <name> [--registry <name, url or folder>] [--pin <tag, branch or commit>]
+                                                                    a person installs an adapter from a registry, at a terminal (never an agent)
+  cmtk adapter list                                                 the adapters here, and each one's level
 
 Options:
   --manifest <file>   default: cmtk.yaml in the current folder
@@ -94,6 +99,7 @@ function printReport(r: Report, json: boolean, manifestRoot: string, evidence: s
             : c.why ?? "";
         console.log(`  ${c.known_issues ? `FAIL (known issue ${c.known_issues.join(", ")})` : c.result} ${c.id} ${c.name}: ${first}`);
     }
+    for (const n of r.no_adapter ?? []) console.log(`  No adapter for surface ${n.surface}, so nothing was sent for: ${n.cases.join(", ")}`);
     const report = path.relative(process.cwd(), path.join(manifestRoot, evidence, r.mode, "REPORT.md")) || "REPORT.md";
     console.log(`Report: ${report}`);
     console.log(r.reason);
@@ -144,6 +150,8 @@ async function main(argv: string[]): Promise<number> {
             "only-rows": { type: "string" },
             "except-rows": { type: "string" },
             lang: { type: "string" },
+            registry: { type: "string" },
+            pin: { type: "string" },
             help: { type: "boolean", short: "h", default: false },
             version: { type: "boolean", short: "v", default: false },
         },
@@ -228,11 +236,11 @@ async function main(argv: string[]): Promise<number> {
             console.log(`Boundaries for ${discovery.system}: ${describeDiscovery(discovery)}`);
             for (const b of discovery.boundaries.filter((x) => !x.covered_by)) console.log(`  uncovered ${b.kind} ${b.direction}: ${b.name}${b.where ? ` (${b.where})` : ""}`);
             console.log(`Inventory: ${path.relative(process.cwd(), path.join(m.root, file))}`);
-            console.log(discovery.boundaries.some((x) => !x.covered_by) ? "Next: for each uncovered kind, add an adapter (`cmtk adapter new <name>`, then `covers:` in cmtk.yaml) or have a person record why it is out of scope." : "Next: write cases for each boundary, then `cmtk compare`.");
+            console.log(discovery.boundaries.some((x) => !x.covered_by) ? "Next: for each uncovered kind, add an adapter (`cmtk adapter new <name>` or `cmtk adapter add <name>`, then `covers:` in cmtk.yaml) or have a person record why it is out of scope." : "Next: write cases for each boundary, then `cmtk compare`.");
             return 0;
         }
         case "probe": return probe(manifestFile, rest, values.surface);
-        case "adapter": return adapterCommand(rest, manifestFile, values.lang, values.target);
+        case "adapter": return adapterCommand(rest, manifestFile, values);
         case "data": return dataCommand(rest, manifestFile, values);
         default:
             throw new UsageError(`Unknown command ${cmd}. Run \`cmtk help\`.`);
@@ -404,8 +412,14 @@ function writeTemplate(tpl: string, dir: string, name: string) {
     }
 }
 
-async function adapterCommand(args: string[], manifestFile: string, lang = "node", targetName?: string): Promise<number> {
+async function adapterCommand(args: string[], manifestFile: string, values: { lang?: string; target?: string; registry?: string; pin?: string; json?: boolean }): Promise<number> {
     const [sub, name] = args;
+    const lang = values.lang ?? "node";
+    if (sub === "list") return adapterList(manifestFile, values.json === true);
+    // Before anything else, the name included: a script learns nothing and fetches nothing.
+    if (sub === "add" && (!process.stdin.isTTY || !process.stdout.isTTY)) {
+        throw new UsageError("Installing an adapter runs someone else's code, so a person says yes at a keyboard: run `cmtk adapter add` in a terminal yourself. Agents and scripts do not install.");
+    }
     if (!name || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(name) || name === "http") throw new UsageError("Give the adapter a name of letters, digits, '.', '-' and '_' (not http, which is built in).");
     const root = path.dirname(manifestFile);
     const dir = path.join(root, "adapters", name);
@@ -422,8 +436,64 @@ async function adapterCommand(args: string[], manifestFile: string, lang = "node
         console.log(`Register it in cmtk.yaml:\n  adapters:\n    ${name}: { command: node, args: [adapters/${name}/index.mjs] }`);
         return 0;
     }
-    if (sub === "check") return adapterCheck(name, dir, manifestFile, targetName);
+<<<<<<< HEAD
+    if (sub === "check") return adapterCheck(name, dir, manifestFile, values.target);
     throw new UsageError("`cmtk adapter` takes `new <name>` or `check <name>`.");
+=======
+    if (sub === "check") return adapterCheck(name, dir, manifestFile);
+    if (sub === "add") return adapterAdd(name, root, manifestFile, values.registry, values.pin);
+    throw new UsageError("`cmtk adapter` takes `new <name>`, `check <name>`, `add <name>` or `list`.");
+}
+
+function adapterList(manifestFile: string, json: boolean): number {
+    const registered = fs.existsSync(manifestFile) ? loadManifest(manifestFile).adapters : {};
+    const rows = listAdapters(path.dirname(manifestFile), registered);
+    if (json) { console.log(JSON.stringify(rows, null, 2)); return 0; }
+    for (const line of describeList(rows)) console.log(line);
+    console.log("\nLevels: experimental passes the conformance kit; verified was used on one real project; core ships with the toolkit and has real use behind it. For an adapter from a registry, the level is what that registry says: `cmtk adapter check <name>` proves the kit here.");
+    const changed = rows.filter((r) => r.state === "CHANGED since install" || r.state === "MISSING").map((r) => r.name);
+    if (changed.length) console.log(`Warning: ${changed.join(", ")} no longer match what a person approved. Read the changes, or remove the folder and its entry in adapters/installed.yaml and add it again.`);
+    return 0;
+}
+
+/** The toolkit's own adapters folder, in a clone. Only this registry may list a core adapter. */
+const TOOLKIT_ADAPTERS = path.resolve(HERE, "..", "..", "..", "adapters");
+
+/** A person at the keyboard reads where an adapter comes from, and says yes. There is no flag or variable for this. */
+async function adapterAdd(name: string, root: string, manifestFile: string, registry: string | undefined, pin: string | undefined): Promise<number> {
+    const named = fs.existsSync(manifestFile) ? loadManifest(manifestFile).adapter_registries : {};
+    const chosen = registry === undefined ? undefined : Object.hasOwn(named, registry) ? { list: [named[registry]!], base: root } : { list: [registry], base: process.cwd() };
+    if (!chosen && !Object.keys(named).length) throw new UsageError("Name a registry: --registry <url or folder>, or list yours under `adapter_registries:` in cmtk.yaml. cmtk has no default registry, so it never fetches from somewhere you did not name.");
+    const prepared = prepareInstall({ name, root, registries: chosen?.list ?? Object.values(named), base: chosen?.base ?? root, pin, toolkitAdapters: TOOLKIT_ADAPTERS });
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const ask = (q: string) => new Promise<string | null>((resolve) => {
+        rl.once("close", () => resolve(null));
+        rl.question(q).then((a) => resolve(a), () => resolve(null));
+    });
+    try {
+        for (const line of describeInstall(prepared)) console.log(line);
+        const person = (await ask("\nYour full name: "))?.trim();
+        if (!person || person.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(person) || /^agent\b/i.test(person)) {
+            console.log("A person's name of up to 100 characters is needed: it goes beside this install. Nothing was installed.");
+            return 3;
+        }
+        const yes = (await ask(`Type yes to install ${name}, anything else to stop: `))?.trim().toLowerCase();
+        if (yes !== "yes") { console.log("Nothing was installed."); return 0; }
+        commitInstall(prepared, root, person, new Date().toISOString().slice(0, 10));
+        console.log(`Installed adapters/${name}${prepared.commit ? `, pinned to commit ${prepared.commit}` : `, pinned to ${prepared.fingerprint}`}. Recorded in adapters/installed.yaml.`);
+        const covers = prepared.entry.kinds.filter((k) => (BOUNDARY_KINDS as readonly string[]).includes(k));
+        const also = covers.length ? `, covers: [${covers.join(", ")}]` : "";
+        if (prepared.files.some((f) => f.endsWith(".csproj") && !f.includes("/"))) {
+            console.log(`Next: read the code, then \`dotnet build -c Release adapters/${name}\` and \`cmtk adapter check ${name}\`. Register the built program in cmtk.yaml; its README shows how.`);
+        } else if (prepared.files.includes("index.mjs")) {
+            console.log(`Next: read the code, then \`cmtk adapter check ${name}\`. Register it in cmtk.yaml:\n  adapters:\n    ${name}: { command: node, args: [adapters/${name}/index.mjs]${also} }`);
+        } else console.log(`Next: read the code and its README, register it in cmtk.yaml, then \`cmtk adapter check ${name}\`.`);
+        return 0;
+    } finally {
+        rl.close();
+        prepared.cleanup();
+    }
+>>>>>>> 138c467 (cmtk adapter add and list: install from a registry, pinned, only by a person (#24))
 }
 
 /** How to start a C# adapter nobody has registered: its build, which must not be older than its code. */
@@ -489,7 +559,7 @@ async function adapterCheck(name: string, dir: string, manifestFile: string, tar
 main(process.argv.slice(2)).then(
     (code) => process.exit(code),
     (err) => {
-        if (err instanceof UsageError || err instanceof ManifestError || err instanceof ConfigError || err instanceof PathError || err instanceof SignoffError) console.error(`cmtk: ${err.message}`);
+        if (err instanceof UsageError || err instanceof ManifestError || err instanceof ConfigError || err instanceof PathError || err instanceof SignoffError || err instanceof RegistryError) console.error(`cmtk: ${err.message}`);
         else console.error(`cmtk: ${err?.stack ?? err}`);
         process.exit(3);
     },

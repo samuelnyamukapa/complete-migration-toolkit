@@ -1,0 +1,12 @@
+# The adapters that ship with the toolkit, and the level of each. This folder is itself a registry:
+#   cmtk adapter add worker --registry <your clone>/adapters
+# Every folder here must be listed; a test fails if one is not. `http` is built in and is core.
+# A shipped adapter stays experimental until a real project has used it: a maintainer then raises it to core.
+adapters:
+  - name: worker
+    kinds: [worker, files, logs]
+    language: csharp
+    level: experimental # passes the kit in CI; no real service has been compared with it yet
+    source: worker
+    licence: Apache-2.0
+    owner: Complete Migration Toolkit maintainers
