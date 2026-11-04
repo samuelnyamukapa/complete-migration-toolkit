@@ -14,7 +14,7 @@ import YAML from "yaml";
 import {
     acceptDraft, adaptersFor, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
-    initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report,
+    initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target,
     planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat,
 } from "@cmtk/core";
 
@@ -59,7 +59,7 @@ Usage:
                                                                     one draft case per row, each sending its row from a file
   cmtk signoff run|compare                                          a person signs a report, at a terminal (never an agent)
   cmtk adapter new <name> [--lang node|csharp]                      write a new adapter from a template (default: node)
-  cmtk adapter check <name>                                         the conformance kit for an adapter
+  cmtk adapter check <name> [--target <name>]                       the conformance kit, on a dummy target or one from cmtk.yaml
 
 Options:
   --manifest <file>   default: cmtk.yaml in the current folder
@@ -232,7 +232,7 @@ async function main(argv: string[]): Promise<number> {
             return 0;
         }
         case "probe": return probe(manifestFile, rest, values.surface);
-        case "adapter": return adapterCommand(rest, manifestFile, values.lang);
+        case "adapter": return adapterCommand(rest, manifestFile, values.lang, values.target);
         case "data": return dataCommand(rest, manifestFile, values);
         default:
             throw new UsageError(`Unknown command ${cmd}. Run \`cmtk help\`.`);
@@ -404,7 +404,7 @@ function writeTemplate(tpl: string, dir: string, name: string) {
     }
 }
 
-async function adapterCommand(args: string[], manifestFile: string, lang = "node"): Promise<number> {
+async function adapterCommand(args: string[], manifestFile: string, lang = "node", targetName?: string): Promise<number> {
     const [sub, name] = args;
     if (!name || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(name) || name === "http") throw new UsageError("Give the adapter a name of letters, digits, '.', '-' and '_' (not http, which is built in).");
     const root = path.dirname(manifestFile);
@@ -422,7 +422,7 @@ async function adapterCommand(args: string[], manifestFile: string, lang = "node
         console.log(`Register it in cmtk.yaml:\n  adapters:\n    ${name}: { command: node, args: [adapters/${name}/index.mjs] }`);
         return 0;
     }
-    if (sub === "check") return adapterCheck(name, dir, manifestFile);
+    if (sub === "check") return adapterCheck(name, dir, manifestFile, targetName);
     throw new UsageError("`cmtk adapter` takes `new <name>` or `check <name>`.");
 }
 
@@ -444,8 +444,9 @@ function builtCsharpAdapter(name: string, dir: string): { command: string; args:
 }
 
 /** The conformance kit: an adapter is usable when every check here passes. */
-async function adapterCheck(name: string, dir: string, manifestFile: string): Promise<number> {
+async function adapterCheck(name: string, dir: string, manifestFile: string, targetName?: string): Promise<number> {
     let spec: { command: string; args: string[] } | undefined;
+    if (targetName !== undefined && !fs.existsSync(manifestFile)) throw new UsageError(`--target ${targetName} needs a cmtk.yaml that sets it; ${manifestFile} does not exist.`);
     if (fs.existsSync(manifestFile)) {
         const m = loadManifest(manifestFile);
         if (m.adapters[name]) spec = { command: m.adapters[name]!.command, args: m.adapters[name]!.args ?? [] };
@@ -455,8 +456,13 @@ async function adapterCheck(name: string, dir: string, manifestFile: string): Pr
     const doc = fs.existsSync(samplesFile) ? (readStructured(samplesFile) as { cases?: Case[]; check_target?: Record<string, string | number | boolean> }) : {};
     const samples = doc.cases ?? [];
     const secret = `cmtk-check-${Math.random().toString(36).slice(2)}`;
-    // An adapter that needs settings from its target, such as folders, gives them in its samples.
-    const target = { ...doc.check_target, name: "check", base_url: "http://127.0.0.1:9" };
+    // A dummy target by default, with any settings the samples give. With --target, a real one from cmtk.yaml, for an adapter whose settings say where its capture server or sandbox is.
+    let target: Target = { ...doc.check_target, name: "check", base_url: "http://127.0.0.1:9" };
+    if (targetName !== undefined) {
+        const named = loadManifest(manifestFile).targets[targetName];
+        if (!named) throw new UsageError(`--target ${targetName} is not in the targets of ${path.basename(manifestFile)}.`);
+        target = named;
+    }
     const checks: [string, boolean, string?][] = [];
     const adapter = processAdapter(name, { ...spec, timeout_s: 60 }, path.dirname(manifestFile));
     try {
