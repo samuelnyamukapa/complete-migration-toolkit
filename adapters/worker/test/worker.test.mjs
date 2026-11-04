@@ -410,6 +410,31 @@ function comparison(candidateStart, withUnsafe = true) {
     return dir;
 }
 
+test("cmtk compare, read-only: different outputs are NO PARITY, the folders are kept, and no worker starts", needsDotnet, async () => {
+    // A start that leaves a mark, so a launch can't pass unseen. A read must not launch one.
+    const marks = area();
+    const started = path.join(marks, "started.log");
+    const script = path.join(marks, "start.cjs");
+    fs.writeFileSync(script, `require("node:fs").appendFileSync(${JSON.stringify(started)}, "started\\n");\n`);
+    const dir = comparison(startSample());
+    const yaml = JSON.parse(fs.readFileSync(path.join(dir, "cmtk.yaml"), "utf8"));
+    for (const t of Object.values(yaml.targets)) t.start = `${quoted(process.execPath)} ${quoted(script)}`;
+    yaml.allow_unsafe_methods = false;
+    fs.writeFileSync(path.join(dir, "cmtk.yaml"), JSON.stringify(yaml));
+    fs.writeFileSync(path.join(dir, "cmtk", "cases", "worker.yaml"), JSON.stringify({ cases: [{ id: "LOOK", surface: "worker", request: { method: "GET", path: "/" } }] }));
+    for (const [side, text] of [["legacy", "ONE"], ["candidate", "TWO"]]) {
+        fs.mkdirSync(path.join(dir, side, "in"), { recursive: true });
+        fs.mkdirSync(path.join(dir, side, "out"), { recursive: true });
+        fs.writeFileSync(path.join(dir, side, "out", "order.txt"), text);
+    }
+    const r = await cmtk(dir, "compare");
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stdout, /verdict for orders: NO PARITY/);
+    assert.deepEqual(tree(path.join(dir, "legacy", "out")), ["order.txt"]);
+    assert.deepEqual(tree(path.join(dir, "candidate", "out")), ["order.txt"]);
+    assert.equal(fs.existsSync(started), false, "a read starts nothing");
+});
+
 test("cmtk compare: the planted difference is caught, and the worker and dotnet run agree when nothing differs", needsDotnet, async () => {
     const run = `dotnet run --project ${quoted(SAMPLE)} -c Release --no-build`;
     const same = await cmtk(comparison(run), "compare", "--allow-unsafe");

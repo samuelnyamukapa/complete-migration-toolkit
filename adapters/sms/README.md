@@ -20,7 +20,7 @@ adapters:
   sms: { command: node, args: [adapters/sms/index.mjs], covers: [sms] }
 ```
 
-A POST, PUT, PATCH or DELETE case is sent to the system, the adapter waits until messages stop arriving, and it reports only the new ones. A GET, HEAD or OPTIONS case only observes: it doesn't contact the system. `reset` clears the capture.
+A POST, PUT, PATCH or DELETE case is sent to the system, the adapter waits until messages stop arriving, and it reports only the new ones. A GET, HEAD or OPTIONS case only observes: it doesn't contact the system, and it compares what each capture holds now. `reset` clears the capture. `cmtk compare` calls it only before a case that writes.
 
 ## Twilio test credentials
 

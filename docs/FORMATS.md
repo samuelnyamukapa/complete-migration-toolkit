@@ -78,9 +78,9 @@ One JSON request per line on standard input, and one JSON reply per line on stan
 
 | Request | Reply |
 |---|---|
-| `{"op":"describe"}` | `{"name":…,"kinds":[…],"settings":[…]}` |
+| `{"op":"describe"}` | `{"name":…,"kinds":[…],"settings":[…]}`, and optionally `"reset_before_reads":true` |
 | `{"op":"run","case":…,"target":…,"headers":…}` | An observation: any of `status`, `headers`, `body`, `body_encoding`, `sha256`, `truncated`, `effects`, or `{"error":…}` |
-| `{"op":"reset","target":…}` | `{"ok":true}`, or anything else to fail that case |
+| `{"op":"reset","target":…}` | `{"ok":true}`, or anything else to fail that case. `cmtk compare` sends it before a case that writes, and before a read only if `describe` asked |
 
 ## MCP tools
 

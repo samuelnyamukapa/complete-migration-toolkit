@@ -10,7 +10,7 @@ A test follows this guide: it writes an adapter with these commands, publishes i
 cmtk adapter new mailbox
 ```
 
-This writes `adapters/mailbox/` with a working template. For C#, add `--lang csharp`. Write `run()`, and `reset()` if each case needs a clean start. The protocol, and the rules every adapter keeps, are in [ADAPTERS.md](ADAPTERS.md).
+This writes `adapters/mailbox/` with a working template. For C#, add `--lang csharp`. Write `run()`, and `reset()` if each case that writes needs a clean start. The protocol, and the rules every adapter keeps, are in [ADAPTERS.md](ADAPTERS.md).
 
 Add sample cases to `samples/cases.yaml`. If the adapter needs a service to talk to, start a local stand-in in your tests. Never use a real payment or messaging service.
 

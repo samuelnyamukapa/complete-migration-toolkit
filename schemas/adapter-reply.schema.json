@@ -22,6 +22,10 @@
         },
         "settings": {
           "type": "array"
+        },
+        "reset_before_reads": {
+          "type": "boolean",
+          "description": "Ask cmtk compare to reset before read-only cases too. Without it, only a case that writes gets a reset."
         }
       },
       "additionalProperties": true

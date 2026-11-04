@@ -131,6 +131,7 @@ const asSent = (c: Case, manifest: Manifest): Case => {
 const lacking = (surface: string, ...targets: Target[]) => targets.filter((t) => t.surfaces && !t.surfaces.includes(surface)).map((t) => t.name);
 const hasNo = (names: string[], surface: string) => `${names.join(" and ")} ${names.length > 1 ? "have" : "has"} no ${surface} surface`;
 
+const NOT_RESET_NOTE = "read-only, so the systems were not reset first: this compares what each holds now, including anything an earlier case or an earlier run left there";
 const DRAFT_WHY = "a draft: a person accepts it with `cmtk review` before it counts";
 const EXPECT_DRAFT_WHY = "draft expectation: review it with `cmtk review`. It records what the system answered, which a person confirms before it counts";
 const UNSAFE_WHY = "changes data: needs allow_unsafe_methods in cmtk.yaml and --allow-unsafe on this run";
@@ -346,6 +347,15 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
         const out: CaseOutcome[] = [];
         const models = modelCalls();
         let silent = 0; // cases in a row where a system gave no answer
+        const asked = new Map<string, boolean>();
+        const asksForResetBeforeReads = async (surface: string, adapter: Adapter) => {
+            if (!asked.has(surface)) {
+                // Only a clear yes counts. An adapter that can't say gets no reset, which at worst shows a difference.
+                const d = await adapter.describe?.().catch(() => undefined) as { reset_before_reads?: unknown } | undefined;
+                asked.set(surface, d?.reset_before_reads === true);
+            }
+            return asked.get(surface)!;
+        };
         try {
             const http = adapters.get("http");
             for (const k of manifest.contracts) {
@@ -384,7 +394,11 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
                 if (silent >= STOP_AFTER_NO_ANSWER) { out.push({ ...b, result: "SKIPPED", why: STOPPED_WHY }); continue; }
                 try {
                     const adapter = adapters.get(b.surface);
-                    if (adapter.reset) { await adapter.reset(ref); await adapter.reset(cand); }
+                    // A reset is for a case that changes something. Before a read it would wipe the very state the read came to compare.
+                    const reads = !writes(c) || safeConfirmed(c, manifest.root);
+                    const clean = !!adapter.reset && (!reads || await asksForResetBeforeReads(b.surface, adapter));
+                    if (clean) { await adapter.reset!(ref); await adapter.reset!(cand); }
+                    if (adapter.reset && !clean) b.note = NOT_RESET_NOTE;
                     const sent = asSent(c, manifest);
                     const ra = await adapter.run(sent, ref, extra);
                     const rb = await adapter.run(sent, cand, extra);
@@ -409,7 +423,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
                         ...b,
                         result: open.length ? "DIFFERENT" : diffs.length ? "DRIFT" : "MATCH",
                         ...(diffs.length ? { differences: diffs } : {}),
-                        ...(ra.truncated || rb.truncated ? { truncated: true as const, note: "an answer was over 5 MB; only the first 5 MB were compared" } : {}),
+                        ...(ra.truncated || rb.truncated ? { truncated: true as const, note: [b.note, "an answer was over 5 MB; only the first 5 MB were compared"].filter(Boolean).join("; ") } : {}),
                     });
                 } catch (err) {
                     out.push({ ...b, result: "ERROR", why: failed(err) });

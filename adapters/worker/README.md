@@ -22,7 +22,7 @@ Any other method, and `before`, `body_form` or `files`, gives an error naming it
 - **outputs:** every file in the output folder, sorted by path. A binary file, or one over 256 KB, gives `sha256` in place of `text`. No file times.
 - **events:** only with `event_source`, and only on Windows. The entries that source wrote during this case. No time, process id, thread id, record number, machine or user. Times and process ids in the message become `<time>`, `<date>` and `<id>`. Anything else that changes on every run needs a `scrub` rule in `cmtk.yaml`.
 
-`reset` stops the worker, empties the input and output folders, copies the baseline back, and starts the worker again.
+`reset` stops the worker, empties the input and output folders, copies the baseline back, and starts the worker again. `cmtk compare` calls it only before a case that writes, so a GET compares the outputs each system holds now.
 
 ## Settings
 

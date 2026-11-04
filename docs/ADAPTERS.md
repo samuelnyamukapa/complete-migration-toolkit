@@ -18,7 +18,7 @@ The toolkit starts the adapter once per run and writes one JSON request per line
 |---|---|
 | `{"op":"describe"}` | `{"name":"mailbox","kinds":["mailbox"],"settings":[]}`. The conformance kit asks for it |
 | `{"op":"run","case":{…},"target":{"name":"legacy","base_url":"…"},"headers":{…}}` | An observation (below) |
-| `{"op":"reset","target":{…}}` | `{"ok":true}`, once the target is back in its starting state. Called before each case in `cmtk compare`. Any other answer, such as `{"ok":false,"error":"database locked"}`, makes that case an error |
+| `{"op":"reset","target":{…}}` | `{"ok":true}`, once the target is back in its starting state. Called on both systems in `cmtk compare`, before each case that writes and is really sent. Not before a read: a read compares what each system holds now, and the report says so on that case. Any other answer, such as `{"ok":false,"error":"database locked"}`, makes that case an error |
 
 An observation:
 
@@ -37,7 +37,7 @@ An observation:
 ## Adding one
 
 1. Run `cmtk adapter new mailbox`. It writes `adapters/mailbox/` with a working Node template, a README and sample cases. For C#, see [below](#c).
-2. Write `run()`, and `reset()` if each case needs a clean start. Some examples:
+2. Write `run()`, and `reset()` if each case that writes needs a clean start. An adapter that truly needs one before reads too can say `"reset_before_reads": true` in its `describe` answer, but then a read can't see a difference in what the systems already held. Some examples:
    - **Mailbox:** read a capture server such as Mailpit, and report each message as sender, sorted recipients, subject, text and links;
    - **Queue:** publish the case's message, then report what reached the output queue;
    - **Worker:** drop the input file, wait until the worker has finished, then report the output folder.
@@ -65,7 +65,7 @@ An adapter can be written in any language: register its executable as the `comma
 
 `cmtk adapter new mailbox --lang csharp` writes a small .NET 8 console project with no packages.
 
-1. Write `Run()` in `Adapter.cs`, and `Reset()` if each case needs a clean start. `Program.cs` speaks the protocol, so you should not need to change it.
+1. Write `Run()` in `Adapter.cs`, and `Reset()` if each case that writes needs a clean start. `Program.cs` speaks the protocol, so you should not need to change it.
 2. Build it, then run the kit. The kit uses the build, and refuses one older than the code:
 
    ```

@@ -30,7 +30,7 @@ A case with `surface: mailbox` and POST, PUT, PATCH or DELETE:
 
 A GET, HEAD or OPTIONS case only observes. It doesn't contact the system, and it reports what the mailbox holds now. Reading a message does mark it as read in Mailpit; no report depends on that.
 
-`reset` empties the mailbox. `cmtk compare` calls it before each case.
+`reset` empties the mailbox. `cmtk compare` calls it before each case that sends mail. A GET compares what each mailbox holds now, and empties nothing.
 
 A case can't use `body_file`, `files`, `before`, or a `body_form` held in a file. The adapter answers an error naming the one it was given.
 
