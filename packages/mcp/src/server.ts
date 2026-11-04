@@ -15,7 +15,7 @@ import {
     importHar, initProject, inside, loadCases, loadManifest, loadProposals, PROPOSAL_KINDS, run, signoffState, startSession, type Report,
     BOUNDARY_KINDS, describeDiscovery, discover,
     planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, DATA_FORMATS, compareTables, readTables, describeComparison,
-    SAID_BY, INVARIANT_OPS, MUTATION_OPERATORS, addDataFinding, trafficAgainstSchema, loadDataFindings,
+    SAID_BY, INVARIANT_OPS, MUTATION_OPERATORS, addDataFinding, trafficAgainstSchema, loadDataFindings, writeSeed,
 } from "@cmtk/core";
 
 // Node 22 before 22.17 flags fs.globSync and path.matchesGlob as experimental and prints a warning
@@ -307,6 +307,12 @@ server.registerTool("cmtk_data_diff", {
     const read = { as: a.as, delimiter: a.delimiter, copybook: a.copybook ? inside(m, a.copybook) : undefined, record_encoding: a.record_encoding, formulas: a.formulas };
     return describeComparison(compareTables(readTables(inside(m, a.a), read), readTables(inside(m, a.b), read), { key: a.key, epsilon: a.epsilon, scrub: a.scrub, ignore: a.ignore }));
 }, (lines) => lines.join("\n")));
+
+server.registerTool("cmtk_data_seed", {
+    description: "From a T-SQL DDL script: the catalogue, a load order with cycles broken by deferring a nullable key, one SQL script for both systems, control totals and golden records, written under cmtk/data/seed-<id>/ with a manifest. It writes files only: nothing connects to a database, and nothing runs the script. A person or a CI job loads it, into disposable test databases.",
+    inputSchema: { manifest: manifestArg, ddl: z.string(), virtual_keys: z.string().optional().describe("A YAML file listing the keys the schema doesn't declare, each with a reason."), id: z.string().optional(), seed: z.number().int().optional(), rows: z.number().int().optional() },
+}, async (a) => guarded(() => writeSeed(loadManifest(a.manifest), { ddl: a.ddl, virtualKeys: a.virtual_keys, id: a.id, ...(a.seed !== undefined ? { seed: a.seed } : {}), ...(a.rows !== undefined ? { rows: a.rows } : {}) }),
+    ({ folder, manifest }) => [`${manifest.tables.length} tables in ${folder}/. Load order: ${manifest.load_order.join(", ")}.`, ...manifest.deferred_keys.map((d) => `Deferred, to break a cycle: ${d}.`), ...manifest.virtual_keys.map((k) => `Virtual key: ${k}.`), ...manifest.notes.map((n) => `Note: ${n}`), `Not done: ${manifest.not_done.join(" ")}`].join("\n")));
 
 const dataRuleBase = {
     manifest: manifestArg,

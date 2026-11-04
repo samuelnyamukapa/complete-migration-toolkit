@@ -295,6 +295,32 @@ A WSDL's operation also writes `rows/<name>.soap.xml`, in a SOAP envelope, with 
 
 Understood: elements, `sequence`, `choice`, `all`, `minOccurs`, `maxOccurs`, attributes, `ref`, named and inline types, extensions, and the facets `length`, `minLength`, `maxLength`, `pattern`, `enumeration`, `minInclusive`, `maxInclusive`, `minExclusive`, `maxExclusive`, `totalDigits` and `fractionDigits`. Local `xs:include` and `xs:import` files are followed; nothing is fetched. `xs:group` is refused. `xs:union` and `xs:list` are treated as plain text, and the recipe's notes say so. An `xs:long` is limited to what a number holds exactly.
 
+### Seeding both systems
+
+`cmtk data seed --ddl schema.sql [--virtual-keys keys.yaml] [--rows 50] [--seed n]` writes one SQL script that puts the same rows behind both systems, so a comparison starts from the same state. It reads the catalogue from a T-SQL script: tables, columns, widths, nullability, identity and computed columns, check constraints, unique indexes and foreign keys. **cmtk only writes files. It never connects to a database or runs the script.** A person or a CI job loads it, into disposable test databases. Never use `HasData` or `UseSeeding` as the way to seed for parity, because neither runs on the legacy side.
+
+A legacy schema often doesn't declare its keys. List them in a file, each with a reason:
+
+```yaml
+virtual_keys:
+  - { table: dbo.Item, columns: [BrandCode], references: { table: dbo.Brand, columns: [Code] }, reason: "the application joins on it; it was never declared" }
+```
+
+Files in `cmtk/data/seed-<id>/`:
+
+| File | What it is |
+|---|---|
+| `seed.sql` | Inserts in load order, parents first. A cycle is broken by leaving a nullable key out and setting it by `UPDATE` at the end. A cycle with no nullable key is refused. Identity values are explicit, so they match on both sides. The same catalogue and seed give the same bytes |
+| `reset.sql` | Empties the seeded tables, children first, to load again |
+| `control-totals.sql` | One result set of count, and sum, min, max and average per numeric column, the same from each side |
+| `control-totals.expected.csv` | What those totals must be, worked out from the rows |
+| `golden/<table>.csv` | Every row, to compare field by field with `cmtk data diff` and the table's key |
+| `SEED-MANIFEST.json` | Sources and fingerprints, load order, deferred and virtual keys, notes, and what isn't done |
+
+Load `seed.sql` into both databases, run `control-totals.sql` on each, save each result as CSV with a header, then `cmtk data reconcile one.csv other.csv`. A check constraint cmtk can't read is noted, and the load says if a row breaks it.
+
+Not done yet: reading the catalogue from a live SQL Server, the mapping step for a new side whose schema differs, and a masked profile or a Jailer subset for realism. A production copy needs a DPIA, and stays off the repository.
+
 ### Comparing files
 
 `cmtk data diff <a> <b> --key <columns>` compares two files by what they mean. It exits 0 if they are the same and 1 if they differ. It never compares bytes.

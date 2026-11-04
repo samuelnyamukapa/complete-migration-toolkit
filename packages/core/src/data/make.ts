@@ -377,7 +377,7 @@ export async function makeData(m: Manifest, id: string, o: MakeOptions = {}): Pr
     const put = (name: string, bytes: Buffer | string) => {
         const b = typeof bytes === "string" ? Buffer.from(bytes, "utf8") : bytes;
         fs.writeFileSync(path.join(dir, name), b);
-        files[name] = crypto.createHash("sha256").update(b).digest("hex");
+        files[name.split(path.sep).join("/")] = crypto.createHash("sha256").update(b).digest("hex");
     };
     if (formats.includes("json")) {
         put("rows.json", JSON.stringify(rows, null, 2) + "\n");

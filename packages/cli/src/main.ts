@@ -14,7 +14,7 @@ import YAML from "yaml";
 import {
     acceptDraft, adaptersFor, BOUNDARY_KINDS, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
-    initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target, shadow, SHADOW_FORMATS, type ShadowFormat, cleanHistory, HISTORY_MODES, trend, type HistoryMode, planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat, DATA_FORMATS, compareTables, readTables, describeComparison, type Scrubbing, trafficAgainstSchema, loadDataFindings,
+    initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target, shadow, SHADOW_FORMATS, type ShadowFormat, cleanHistory, HISTORY_MODES, trend, type HistoryMode, planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat, DATA_FORMATS, compareTables, readTables, describeComparison, type Scrubbing, trafficAgainstSchema, loadDataFindings, writeSeed,
 } from "@cmtk/core";
 
 import { commitInstall, describeInstall, describeList, listAdapters, prepareInstall, RegistryError } from "./registry.js";
@@ -67,6 +67,9 @@ Usage:
   cmtk data diff <a> <b> --key <col,col> [--as csv|xlsx|fixed] [--epsilon 0.01] [--scrub dates,guids] [--copybook <file>] [--csv-delimiter ;] [--formulas value|formula] [--ignore col,col] [--no-fold-empty]
                                                                     compare two files by what they mean, never by their bytes
   cmtk data check <id>                                              check a recipe's rows and quotas without writing files
+  cmtk data seed --ddl <script.sql> [--virtual-keys <file>] [--id <name>] [--seed <n>] [--rows <n>]
+                                                                    one SQL script to seed both systems, with load order and control totals; cmtk never runs it
+  cmtk data reconcile <a.csv> <b.csv>                               compare control totals from two sides
   cmtk data traffic <id> --har <file> [--path /x] [--method POST]   what recorded traffic says against the schema: paths and counts, never values
   cmtk data cases <id> [--path /api/x] [--requirement <id>] [--out <file>]
                        [--encoding form] [--before-get /page] [--take field=selector]...
@@ -161,7 +164,6 @@ async function main(argv: string[]): Promise<number> {
             take: { type: "string", multiple: true },
             "expect-valid": { type: "string" },
             "expect-invalid": { type: "string" },
-            rows: { type: "string" },
             "only-rows": { type: "string" },
             "except-rows": { type: "string" },
             lang: { type: "string" },
@@ -184,6 +186,9 @@ async function main(argv: string[]): Promise<number> {
             "capture-only": { type: "boolean", default: false },
             "record-encoding": { type: "string" },
             soap: { type: "string" },
+            ddl: { type: "string" },
+            "virtual-keys": { type: "string" },
+            rows: { type: "string" },
             "soap-action": { type: "string" },
             "csv-delimiter": { type: "string" },
             "csv-no-header": { type: "boolean", default: false },
@@ -760,6 +765,29 @@ async function dataCommand(args: string[], manifestFile: string, v: Record<strin
             console.log("Next: a person reviews them with `cmtk review`. They are skipped until then.");
             return 0;
         }
+        case "seed": {
+            if (!v.ddl) throw new UsageError("`cmtk data seed` needs --ddl <script.sql>: a T-SQL script of the legacy schema, inside the project.");
+            const seed = v.seed === undefined ? undefined : Number(v.seed);
+            if (seed !== undefined && (!Number.isInteger(seed) || seed < 0)) throw new UsageError("--seed must be a whole number.");
+            const count = v.rows === undefined ? undefined : Number(v.rows);
+            if (count !== undefined && (!Number.isInteger(count) || count < 0)) throw new UsageError("--rows must be a whole number.");
+            const { folder, manifest } = writeSeed(m, { ddl: v.ddl, virtualKeys: v["virtual-keys"], id: v.id, ...(seed !== undefined ? { seed } : {}), ...(count !== undefined ? { rows: count } : {}) });
+            console.log(`Seed for ${manifest.tables.length} tables, ${manifest.tables.reduce((n, t) => n + t.rows, 0)} rows, in ${folder}/.`);
+            console.log(`Load order: ${manifest.load_order.join(", ")}.`);
+            for (const d of manifest.deferred_keys) console.log(`Deferred, to break a cycle: ${d}.`);
+            for (const k of manifest.virtual_keys) console.log(`Virtual key: ${k}.`);
+            for (const n of manifest.notes) console.log(`Note: ${n}`);
+            console.log("cmtk does not run it. Next: load seed.sql into both disposable test databases, run control-totals.sql on each, save each result as CSV, then `cmtk data reconcile`.");
+            return 0;
+        }
+        case "reconcile": {
+            const [a, b] = args.slice(1);
+            if (!a || !b) throw new UsageError("`cmtk data reconcile` needs two CSV files of control totals.");
+            const c = compareTables(readTables(inside(m, a), { as: "csv" }), readTables(inside(m, b), { as: "csv" }), { key: ["table", "column", "measure"], epsilon: 0.000002 });
+            if (v.json) console.log(JSON.stringify(c, null, 2));
+            else for (const line of describeComparison(c)) console.log(line);
+            return c.same ? 0 : 1;
+        }
         case "traffic": {
             if (!id) throw new UsageError("`cmtk data traffic` needs the recipe id.");
             if (!v.har?.length) throw new UsageError("`cmtk data traffic` needs --har <file>.");
@@ -786,7 +814,7 @@ async function dataCommand(args: string[], manifestFile: string, v: Record<strin
             return c.same ? 0 : 1;
         }
         default:
-            throw new UsageError("`cmtk data` needs plan, make, check, cases or diff.");
+            throw new UsageError("`cmtk data` needs plan, make, check, cases, diff, traffic, seed or reconcile.");
     }
 }
 

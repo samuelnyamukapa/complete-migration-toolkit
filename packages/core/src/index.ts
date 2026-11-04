@@ -35,4 +35,5 @@ export { csvBytes, csvEdges, xlsxEdges, FORMULA_LEADS, type CsvOptions, type Xls
 export { compareTables, csvTable, xlsxTables, recordsTable, readTables, parseCsv, scrubber, describeComparison, type Table, type TableComparison, type CompareOptions, type ReadOptions, type Scrubbing } from "./data/compare.js";
 export { readXsd, toXml, validateXml, soapEnvelope, soapHeaders, xsdPattern, checkSimple, xsdFields, isXsd, XML_DECLARATION, type XsdModel, type SoapInfo, type XmlOp, type SimpleType } from "./data/xsd.js";
 export { checkDataRule, applyDataRule, mutationRow, addDataFinding, loadDataFindings, findingsFile, trafficAgainstSchema, SAID_BY, INVARIANT_OPS, MUTATION_OPERATORS, type DataRule, type DataFinding, type RecipeModel, type SaidBy, type TrafficDisagreement } from "./data/model.js";
+export { parseDdl, applyVirtualKeys, readVirtualKeys, loadOrder, buildSeed, expectedTotals, writeSeed, type Catalogue, type VirtualKey, type LoadOrder, type SeedManifest, type SeedOptions, type SeedResult } from "./data/seed.js";
 export { writeCases, describeLeftOut, type CasesOptions } from "./data/cases.js";

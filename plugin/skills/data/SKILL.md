@@ -28,6 +28,7 @@ The **project** is the folder that holds the manifest. Pass `manifest` to every 
 | `cmtk_data_propose` | Puts what the schema can't say in front of a person: an invariant, a vocabulary, a notional variable, a state machine, or a mutation. It waits for `cmtk review` |
 | `cmtk_data_finding` | Records a disagreement between structure, spec and production, as a question |
 | `cmtk_data_traffic` | Compares a HAR recording with the recipe's schema. Paths, counts and reasons only, never a value |
+| `cmtk_data_seed` | From a T-SQL script of the legacy schema: one SQL script to seed both systems, in load order, with control totals and golden records. It writes files only: a person or a CI job loads them |
 | `cmtk_data_diff` | Compares two files a system produced by what they mean: by key, never by bytes |
 | `cmtk_check`, `cmtk_commands_for_person` | As in every skill |
 
