@@ -307,6 +307,8 @@ export interface CaseOutcome {
     failures?: Failure[];
     differences?: Difference[];
     note?: string;
+    /** An answer was over 5 MB, so only its first 5 MB were checked. The verdict says so. */
+    truncated?: true;
     /** Set when result is FAIL and every failure is accepted by these known issues. */
     known_issues?: string[];
 }

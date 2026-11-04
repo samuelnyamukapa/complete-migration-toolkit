@@ -81,7 +81,7 @@ Scrubs, match levels, `compare_headers` and the drift ledger all work as they do
 | Verdict | Means | Exit code |
 |---|---|---|
 | UNEXPLAINED DIFFERENCES | At least one request answered differently, and no approved drift explains it | 1 |
-| INCOMPLETE | A request could not be compared, or a system stopped answering and the rest were not sent | 2 |
+| INCOMPLETE | A request could not be compared, an answer was over 5 MB, or a system stopped answering and the rest were not sent | 2 |
 | NO EVIDENCE | Nothing could be replayed. Also the verdict with `--capture-only`, which exits 0 because you asked for that | 2 |
 | NO UNEXPLAINED DIFFERENCES | Every request matched, or differed only by approved drift | 4 |
 

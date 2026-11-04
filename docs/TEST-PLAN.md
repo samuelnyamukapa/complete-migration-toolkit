@@ -53,6 +53,7 @@ These run in CI on every pull request, except the last one, which starts with ea
 - **Part of a system never reads as parity.** When a target lacks a surface, or a surface a target lists has no case, the verdict is PARTIAL COMPARISON at best, with exit code 4, and the report and the signature state the scope. Nothing is sent for a case that is not comparable.
 - **Evidence stays inside the project.** Clearing old evidence never follows a link outside it.
 - **Sandboxes only for money and messages.** Payment adapters refuse live keys, such as `sk_live_`, before any network call. Email and SMS adapters refuse anything that isn't a capture server or a test number. See `adapters/*/test/safety.test.mjs`.
+- **A cut answer never reads as a pass.** An answer over 5 MB is read only up to that limit, so the verdict is INCOMPLETE for `cmtk run` and `cmtk shadow`, and PARTIAL COMPARISON at best for `cmtk compare`.
 - **Evidence stays inside the project.** Clearing old evidence never follows a link outside it. That includes `cmtk trend clean`: a test points links at files outside, at every level of the history, and they must survive.
 - **Sandboxes only for money and messages.** Payment adapters refuse live keys, such as `sk_live_`, before any network call. Email and SMS adapters refuse anything that isn't a capture server or a test number.
 - **Pilot systems are never modified.** Each pilot checks the system's folder against a checksum list before and after every session.
@@ -63,6 +64,10 @@ These run in CI on every pull request, except the last one, which starts with ea
 - The toolkit needs Node 22.5 or later.
 - Windows gets its own checks: drive letters, spaces in paths, long paths, Windows line endings (CRLF), PowerShell environment variables, and file names Windows reserves. See [#7](https://github.com/samuelnyamukapa/complete-migration-toolkit/issues/7).
 - Pilots run where the system runs: eShop on Windows.
+
+## Limits and formats
+
+`packages/core/test/limits.test.mjs` tests the performance limits in [FORMATS.md](FORMATS.md). `packages/cli/test/formats.test.mjs` checks the examples and real output against the JSON Schemas in `schemas/`, and FORMATS.md's lists against the code.
 
 ## How to report a test gap
 

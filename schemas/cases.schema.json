@@ -1,0 +1,356 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/samuelnyamukapa/complete-migration-toolkit/main/schemas/cases.schema.json",
+  "title": "A case file",
+  "definitions": {
+    "request": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "One line, such as GET /api/items.",
+          "pattern": "^[A-Za-z]+\\s+/(?!/)\\S*$"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string",
+              "pattern": "^[A-Za-z]+$"
+            },
+            "path": {
+              "type": "string",
+              "description": "A path, never a host.",
+              "pattern": "^/(?!/)"
+            },
+            "headers": {
+              "type": "object",
+              "additionalProperties": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              }
+            },
+            "body": {},
+            "body_file": {
+              "type": "string",
+              "minLength": 1
+            },
+            "files": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "filename": {
+                    "type": "string"
+                  },
+                  "content_type": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "field",
+                  "path"
+                ]
+              }
+            },
+            "body_form": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null"
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "before": {
+              "type": "object",
+              "properties": {
+                "get": {
+                  "type": "string",
+                  "pattern": "^/(?!/)"
+                },
+                "take": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "get"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "path"
+          ]
+        }
+      ]
+    },
+    "expect": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          ]
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "matches": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "matches"
+                ]
+              }
+            ]
+          }
+        },
+        "json": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "equals": {}
+                },
+                "additionalProperties": false,
+                "required": [
+                  "equals"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "exists": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "exists"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "matches": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "matches"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "object",
+                      "array",
+                      "null"
+                    ]
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "type"
+                ]
+              }
+            ]
+          }
+        },
+        "body_contains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "body_excludes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "case": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$",
+          "not": {
+            "pattern": "^([cC][oO][nN]|[pP][rR][nN]|[aA][uU][xX]|[nN][uU][lL]|[cC][oO][mM][0-9]|[lL][pP][tT][0-9])(\\.|$)"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "requirement": {
+          "oneOf": [
+            {
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": [
+                  "string",
+                  "number"
+                ]
+              }
+            }
+          ]
+        },
+        "surface": {
+          "type": "string"
+        },
+        "request": {
+          "$ref": "#/definitions/request"
+        },
+        "expect": {
+          "$ref": "#/definitions/expect"
+        },
+        "match": {
+          "enum": [
+            "exact",
+            "semantic",
+            "contract"
+          ]
+        },
+        "safe": {
+          "type": "boolean"
+        },
+        "source": {
+          "type": "string"
+        },
+        "draft": {
+          "type": "boolean"
+        },
+        "draft_note": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        },
+        "accepted_by": {
+          "type": "string"
+        },
+        "accepted_on": {
+          "type": [
+            "string"
+          ]
+        },
+        "expect_draft": {
+          "type": "boolean"
+        },
+        "expect_confirmed_by": {
+          "type": "string"
+        },
+        "expect_confirmed_on": {
+          "type": [
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "request"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/case"
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "cases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/case"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "cases"
+      ]
+    }
+  ]
+}

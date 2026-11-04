@@ -65,7 +65,7 @@ Other commands:
 - `cmtk shadow --from access.log`: replays read-only requests from a log to both systems, and reports unexplained differences per endpoint ([docs/SHADOW.md](docs/SHADOW.md));
 - `cmtk compare --dated`, then `cmtk trend`: keeps each run, and shows across runs what is new, what keeps coming back and what is flaky ([docs/TRENDS.md](docs/TRENDS.md)).
 
-A person who has never seen the toolkit can follow [docs/RUNBOOK.md](docs/RUNBOOK.md) step by step.
+A person who has never seen the toolkit can follow [docs/RUNBOOK.md](docs/RUNBOOK.md) step by step. [docs/FORMATS.md](docs/FORMATS.md) says which files, tools and exit codes you can rely on, with [JSON Schemas](schemas/) so an editor checks them as you type.
 
 ## A case
 

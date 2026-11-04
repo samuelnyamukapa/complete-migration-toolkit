@@ -117,7 +117,7 @@ export interface ShadowReport {
         max: number;
         rate_per_second: number;
     };
-    replay: { sent: number; matched: number; drift: number; different: number; errors: number; not_sent: number };
+    replay: { sent: number; matched: number; drift: number; different: number; errors: number; not_sent: number; /** Requests with an answer over 5 MB, of which only the first 5 MB were compared. */ truncated: number };
     endpoints: ShadowEndpoint[];
     /** "withheld": differing values are not stored. "redacted": stored with personal data redacted. */
     values: "withheld" | "redacted";
@@ -410,6 +410,7 @@ function decide(c: ShadowReport["capture"], r: ShadowReport["replay"], captureOn
     if (r.different) return { verdict: "UNEXPLAINED DIFFERENCES" as ShadowVerdict, reason: `${say(r.different, "request")} answered differently, with no approved drift to explain ${r.different === 1 ? "it" : "them"}. ${limit}`, next: unexplainedNext };
     if (!r.sent) return { verdict: "NO EVIDENCE" as ShadowVerdict, reason: `No request got an answer from both systems: ${say(r.errors, "error")}, ${r.not_sent} not sent.`, next: "check both systems are up, then run again." };
     if (r.errors || r.not_sent) return { verdict: "INCOMPLETE" as ShadowVerdict, reason: `${say(r.errors, "request")} could not be compared and ${r.not_sent} ${r.not_sent === 1 ? "was" : "were"} not sent. ${limit}`, next: "check both systems are up, then run again." };
+    if (r.truncated) return { verdict: "INCOMPLETE" as ShadowVerdict, reason: `${say(r.truncated, "request")} had an answer over 5 MB, and only the first 5 MB were compared. ${limit}`, next: "a person checks those endpoints another way. The report's endpoints say which." };
     return { verdict: "NO UNEXPLAINED DIFFERENCES" as ShadowVerdict, reason: `No unexplained difference. ${limit}`, next: "keep replaying for the agreed period. This is one kind of evidence, and it says nothing about requests that change data, which `cmtk compare` covers." };
 }
 
@@ -428,7 +429,7 @@ export function renderShadow(r: ShadowReport): string {
         `| Kept for replay, at ${c.rate_per_second} a second | ${c.kept} |`, `| With something redacted | ${c.redacted_requests} |`, `| Credential headers stripped | ${c.credential_headers_stripped} |`, "");
     const kinds = Object.entries(c.redactions).sort();
     if (kinds.length) L.push(`Redacted: ${kinds.map(([k, n]) => `${cell(k)} (${n})`).join(", ")}. The values are gone, so these requests sent REDACTED to both systems.`, "");
-    L.push("## Replay", "", "| Sent | Matched | Approved drift | Unexplained | Errors | Not sent |", "| --- | --- | --- | --- | --- | --- |", `| ${p.sent} | ${p.matched} | ${p.drift} | ${p.different} | ${p.errors} | ${p.not_sent} |`, "");
+    L.push("## Replay", "", "| Sent | Matched | Approved drift | Unexplained | Errors | Not sent | Over 5 MB |", "| --- | --- | --- | --- | --- | --- | --- |", `| ${p.sent} | ${p.matched} | ${p.drift} | ${p.different} | ${p.errors} | ${p.not_sent} | ${p.truncated} |`, "");
     L.push("## Endpoints", "", "| Endpoint | Requests | Matched | Drift | Unexplained | Errors |", "| --- | --- | --- | --- | --- | --- |");
     for (const e of r.endpoints) L.push(`| \`${cell(e.endpoint)}\` | ${e.requests} | ${e.matched} | ${e.drift} | ${e.unexplained} | ${e.errors} |`);
     if (!r.endpoints.length) L.push("| (none) | 0 | 0 | 0 | 0 | 0 |");
@@ -474,7 +475,7 @@ export async function shadow(manifest: Manifest, o: ShadowOptions): Promise<Shad
         fs.rmSync(path.join(dir, "answers"), { recursive: true, force: true }); // shadow keeps no answers: they can hold personal data
         const captureFile = path.join(dir, "capture.jsonl");
         fs.writeFileSync(captureFile, requests.map((q) => JSON.stringify(q)).join("\n") + (requests.length ? "\n" : ""), "utf8");
-        const replay: ShadowReport["replay"] = { sent: 0, matched: 0, drift: 0, different: 0, errors: 0, not_sent: 0 };
+        const replay: ShadowReport["replay"] = { sent: 0, matched: 0, drift: 0, different: 0, errors: 0, not_sent: 0, truncated: 0 };
         const endpoints = new Map<string, ShadowEndpoint & { places: Map<string, ShadowDifference> }>();
         const noise = new Map<string, { kind: string | undefined; count: number }>();
         const used = new Set<string>();
@@ -507,7 +508,7 @@ export async function shadow(manifest: Manifest, o: ShadowOptions): Promise<Shad
                     continue;
                 }
                 replay.sent++;
-                if (ra.truncated || rb.truncated) e.truncated = (e.truncated ?? 0) + 1;
+                if (ra.truncated || rb.truncated) { e.truncated = (e.truncated ?? 0) + 1; replay.truncated++; }
                 const diffs: Difference[] = compareObservations(ra, rb, manifest, matchFor(c, manifest), fired);
                 for (const d of diffs) {
                     const hit = coveringDrift(drift, `shadow:${name}`, d.where);

@@ -16,7 +16,9 @@ function noise(cases: CaseOutcome[]) {
         for (const d of c.differences ?? []) {
             if (d.drift) continue;
             const k = d.where.replace(/\[\d+\]/g, "[*]");
-            byWhere.set(k, [...(byWhere.get(k) ?? []), d]);
+            const list = byWhere.get(k);
+            if (list) list.push(d);
+            else byWhere.set(k, [d]);
         }
     }
     const out: Report["suggested_scrubs"] = [];
@@ -142,6 +144,9 @@ function decide(x: { mode: "run" | "compare"; cases: CaseOutcome[]; contracts: C
     const errored = x.cases.filter((c) => c.result === "ERROR");
     const skipped = x.cases.filter((c) => c.result === "SKIPPED");
     const again = `\`cmtk ${x.mode}\` again`;
+    // What lies past the cap was not looked at, so it cannot be called a pass or parity.
+    const cut = x.cases.filter((c) => c.truncated).length;
+    const cutWords = `${plural(cut, "answer")} ${cut === 1 ? "was" : "were"} over 5 MB, and only the first 5 MB ${x.mode === "run" ? "were checked" : "were compared"}.`;
     const why = () => {
         const first = errored[0] ?? skipped[0];
         if (!first) return "";
@@ -160,6 +165,7 @@ function decide(x: { mode: "run" | "compare"; cases: CaseOutcome[]; contracts: C
         if (ran === 0) return { verdict: "NO EVIDENCE" as Verdict, reason: `No case ran: ${notRun()}.`, next: why() };
         if (errored.length || skipped.length) return { verdict: "INCOMPLETE" as Verdict, reason: `${notRun()}.${knownWords}`, next: why() };
         if (x.partial) return { verdict: "INCOMPLETE" as Verdict, reason: `Only the ${plural(ran, "case")} named with --only ran, ${known ? "with no new failures" : "and all passed"}.${knownWords}`, next: "run every case with `cmtk run` before anyone signs." };
+        if (cut) return { verdict: "INCOMPLETE" as Verdict, reason: `Nothing failed, but ${cutWords}${knownWords}`, next: "a person checks those cases another way, such as a smaller answer, before anyone signs." };
         if (known) return { verdict: "PASS WITH KNOWN ISSUES" as Verdict, reason: `${plural(ran - known, "case")} passed.${knownWords} These still fail: they are accepted, not fixed.`, next: "a person reviews the report, known issues included, and signs it with `cmtk signoff run`." };
         return { verdict: "PASS" as Verdict, reason: `All ${plural(ran, "case")} passed.`, next: "a person reviews the report and signs it with `cmtk signoff run`." };
     }
@@ -182,6 +188,7 @@ function decide(x: { mode: "run" | "compare"; cases: CaseOutcome[]; contracts: C
     }
     const drifted = counts.DRIFT || approvedFindings.length;
     if (x.partial) return { verdict: "INCOMPLETE" as Verdict, reason: `Only the ${plural(ran, "case")} named with --only ran, with no unapproved differences.`, next: "compare every case with `cmtk compare` before anyone signs." };
+    if (cut) return { verdict: "PARTIAL COMPARISON" as Verdict, reason: `No difference in what was compared, but ${cutWords}`, next: "a person reads which cases those were, and signs for what was compared. The rest of those answers still has to be compared another way." };
     // The word PARITY is kept from this verdict on purpose: part of a system never reads as parity for the whole of it.
     if (x.scope && !x.scope.whole) return { verdict: "PARTIAL COMPARISON" as Verdict, reason: drifted ? "On what was compared, every difference is approved drift." : "On what was compared, there are no differences.", next: "a person reads the scope and signs with `cmtk signoff compare` for what was compared. The rest of the system still has to be compared." };
     return drifted
@@ -241,7 +248,7 @@ export function renderReport(r: Report): string {
     for (const c of r.cases) {
         const mid = r.mode === "compare" ? c.match ?? "" : c.requirement.join(", ") || "—";
         const shown = c.known_issues ? `FAIL (known issue ${c.known_issues.join(", ")})` : c.result;
-        L.push(`| ${c.id} | ${cell(c.name)} | ${cell(mid)} | ${c.result === "NOT COMPARABLE" ? cell(c.why) : `${shown}${c.why ? ` — ${cell(c.why)}` : ""}`} |`);
+        L.push(`| ${c.id} | ${cell(c.name)} | ${cell(mid)} | ${c.result === "NOT COMPARABLE" ? cell(c.why) : `${shown}${c.why ? ` — ${cell(c.why)}` : ""}${c.note ? ` — ${cell(c.note)}` : ""}`} |`);
     }
     const sent = r.cases.filter((c) => c.inputs?.length);
     if (sent.length) {

@@ -1,0 +1,307 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/samuelnyamukapa/complete-migration-toolkit/main/schemas/cmtk.schema.json",
+  "title": "cmtk.yaml",
+  "type": "object",
+  "properties": {
+    "system": {
+      "type": "string",
+      "description": "A name for the system under test.",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"
+    },
+    "targets": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string",
+            "description": "The base URL.",
+            "pattern": "^https?://"
+          },
+          {
+            "type": "object",
+            "minProperties": 1,
+            "not": {
+              "required": [
+                "name"
+              ]
+            },
+            "properties": {
+              "base_url": {
+                "type": "string",
+                "description": "An http:// or https:// address.",
+                "pattern": "^https?://"
+              },
+              "surfaces": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"
+                },
+                "description": "What this target offers. Not listed: it takes part in every case."
+              }
+            },
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ],
+              "description": "A setting passed to the adapter."
+            }
+          }
+        ]
+      }
+    },
+    "default_target": {
+      "type": "string"
+    },
+    "reference": {
+      "type": "string"
+    },
+    "candidate": {
+      "type": "string"
+    },
+    "match": {
+      "enum": [
+        "exact",
+        "semantic",
+        "contract"
+      ]
+    },
+    "overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "A glob on the request path."
+          },
+          "match": {
+            "enum": [
+              "exact",
+              "semantic",
+              "contract"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "path"
+        ]
+      }
+    },
+    "scrub": {
+      "type": "object",
+      "properties": {
+        "json_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "xml_ignore": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "regex": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "type": "string"
+              },
+              "replace": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "pattern"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "compare_headers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "contracts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "description": "openapi, wsdl, xsd or text."
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^/"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "path"
+        ]
+      }
+    },
+    "cases": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      ]
+    },
+    "drift": {
+      "type": "string",
+      "minLength": 1
+    },
+    "known_issues": {
+      "type": "string",
+      "minLength": 1
+    },
+    "proposals": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_history": {
+      "type": "object",
+      "properties": {
+        "dated": {
+          "type": "boolean"
+        },
+        "keep_days": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "keep_runs": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "max_mb": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "explore_requests_per_day": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "allow_unsafe_methods": {
+      "type": "boolean"
+    },
+    "headers_from_env": {
+      "type": "object",
+      "description": "Header name to environment variable name. Never a value.",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "timeout_s": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "insecure_tls": {
+      "type": "boolean"
+    },
+    "compare_only_surfaces": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"
+      }
+    },
+    "adapters": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$",
+        "not": {
+          "const": "http"
+        }
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            }
+          },
+          "timeout_s": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "covers": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "http",
+                "soap",
+                "outbound-http",
+                "database",
+                "files",
+                "email",
+                "sms",
+                "queue",
+                "payments",
+                "worker",
+                "ui",
+                "logs"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "command"
+        ]
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "system",
+    "targets"
+  ]
+}

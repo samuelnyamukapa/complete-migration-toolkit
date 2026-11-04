@@ -260,7 +260,7 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
                     if (obs.error) { out.push({ ...b, ...sent, result: "ERROR", why: obs.error }); continue; }
                     const failures = checkExpectation(c.expect, obs);
                     const accepted = markKnown(c.id, failures, known);
-                    out.push({ ...b, ...sent, result: failures.length ? "FAIL" : "PASS", ...(failures.length ? { failures } : {}), ...(accepted ? { known_issues: accepted } : {}), ...(obs.truncated ? { note: "the answer was over 5 MB; only the first 5 MB were checked" } : {}) });
+                    out.push({ ...b, ...sent, result: failures.length ? "FAIL" : "PASS", ...(failures.length ? { failures } : {}), ...(accepted ? { known_issues: accepted } : {}), ...(obs.truncated ? { truncated: true as const, note: "the answer was over 5 MB; only the first 5 MB were checked" } : {}) });
                 } catch (err) {
                     out.push({ ...b, result: "ERROR", why: failed(err) });
                 }
@@ -346,7 +346,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
                         ...b,
                         result: open.length ? "DIFFERENT" : diffs.length ? "DRIFT" : "MATCH",
                         ...(diffs.length ? { differences: diffs } : {}),
-                        ...(ra.truncated || rb.truncated ? { note: "an answer was over 5 MB; only the first 5 MB were compared" } : {}),
+                        ...(ra.truncated || rb.truncated ? { truncated: true as const, note: "an answer was over 5 MB; only the first 5 MB were compared" } : {}),
                     });
                 } catch (err) {
                     out.push({ ...b, result: "ERROR", why: failed(err) });

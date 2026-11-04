@@ -1,0 +1,140 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/samuelnyamukapa/complete-migration-toolkit/main/schemas/adapter-reply.schema.json",
+  "title": "One line an adapter writes to standard output",
+  "description": "The answer to describe, to run (an observation) or to reset.",
+  "anyOf": [
+    {
+      "type": "object",
+      "required": [
+        "name",
+        "kinds"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "settings": {
+          "type": "array"
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "required": [
+        "ok"
+      ],
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "body": {
+          "type": "string"
+        },
+        "body_encoding": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "effects": {
+          "type": "object"
+        },
+        "error": {
+          "type": "string"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256",
+              "bytes"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              },
+              "bytes": {
+                "type": "integer"
+              },
+              "field": {
+                "type": "string"
+              },
+              "filename": {
+                "type": "string"
+              },
+              "content_type": {
+                "type": "string"
+              },
+              "as": {
+                "const": "form"
+              }
+            }
+          }
+        },
+        "before": {
+          "type": "object",
+          "required": [
+            "request",
+            "took",
+            "cookies"
+          ],
+          "properties": {
+            "request": {
+              "type": "string"
+            },
+            "status": {
+              "type": "integer"
+            },
+            "took": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "cookies": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

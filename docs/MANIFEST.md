@@ -1,5 +1,7 @@
 # Settings and case files
 
+The formats here are frozen by [FORMATS.md](FORMATS.md), and `schemas/` lets an editor check them as you type.
+
 ## cmtk.yaml
 
 `cmtk init` writes a commented starting point. Every relative path is resolved from the folder `cmtk.yaml` is in, and none may leave it.
@@ -121,7 +123,7 @@ Every entry needs `id`, `case`, `fails`, `reason` and `accepted_by`. Each item i
 |---|---|---|
 | PASS WITH KNOWN ISSUES | Every failure is in the ledger, and every other case passed | 4 |
 | FAIL | At least one failure is not in the ledger | 1 |
-| INCOMPLETE | Some cases were skipped or could not run, or `--only` was used, and nothing new failed | 2 |
+| INCOMPLETE | Some cases were skipped or could not run, `--only` was used, or an answer was over 5 MB so only its first 5 MB were checked; and nothing new failed | 2 |
 
 Exit code 4 is on purpose not 0. A pipeline written before this verdict stops and a person looks; a pipeline that accepts it says so (see [TESTER-RUNBOOK.md](TESTER-RUNBOOK.md)). It is also not 1, so a known issue is told apart from a new failure. A person can sign the report, and the signature records which known issues still fail and who accepted them.
 
@@ -152,7 +154,7 @@ A target that lists nothing takes part in every case, as before.
 | NO PARITY | An open difference on what was compared. The scope is stated too | 1 |
 | NO EVIDENCE | Nothing could be compared | 2 |
 | INCOMPLETE | A case was skipped or could not run | 2 |
-| PARTIAL COMPARISON | No open difference, but a surface a target lists was not compared, because the other target lacks it or no case covers it; or a contract could not be compared | 4 |
+| PARTIAL COMPARISON | No open difference, but a surface a target lists was not compared, because the other target lacks it or no case covers it; or a contract could not be compared; or an answer was over 5 MB, so only its first 5 MB were compared | 4 |
 | PARITY or DRIFT ONLY | Every surface the targets list was compared | 0 |
 
 The word PARITY is left out of PARTIAL COMPARISON on purpose, so that nobody reads, or searches for, parity in it. The exit code is 4 for the same reason: a pipeline that gates a release on parity does not pass on a partial comparison. A person can sign one, and the signature records the scope, so it covers what was compared and nothing else.
