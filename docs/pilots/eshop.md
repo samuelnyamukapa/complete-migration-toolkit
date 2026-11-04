@@ -270,3 +270,29 @@ The owner asked for what needed fixing to be fixed. On the toolkit's side (0.5.2
 | Restored, the script still failed: IIS Express started and ended at once, with nothing to read because it ran minimised from PowerShell. A shortcut straight to `iisexpress.exe` did the same | **Pilot:** `06b-start-legacy-console.cmd` runs IIS Express in the foreground, in a window that stays open and shows every request. It started first time |
 | 96 drafts to accept, one keypress each | **Fixed in 0.5.1:** `A` in `cmtk review` accepts the draft and every remaining draft in the same file, after the person types `yes` |
 | The schema the tester wrote from the rules was right about the model's attributes and wrong about the form (a picture field that isn't there; numbers that default to 0) | Expected: the schema is a draft for the owner, and the run is how its guesses get answered. The corrections are the owner's to make |
+
+## Part 6: cmtk 0.6 on eShop (4 November 2026)
+
+cmtk 0.6.0 on the same scratch copy of legacy eShop, from `11-verify-0.6.cmd` and `11b-verify-browser.cmd`. New evidence goes to `cmtk\evidence-0.6`, so the signed reports are untouched. The summaries are [reports/verify-0.6.summary.txt](../../examples/eshop-pilot/reports/verify-0.6.summary.txt) and [reports/verify-0.6-browser.summary.txt](../../examples/eshop-pilot/reports/verify-0.6-browser.summary.txt).
+
+| Check | Result |
+|---|---|
+| The signatures from 18 October, read by 0.6 | Both still hold |
+| Every settings file and case file from the pilot, read by 0.6's stricter loader | Valid, with no changes needed |
+| `cmtk run` on legacy | FAIL, 40 of 41, the one failure being LEG-1: the same as on 16 October |
+| `cmtk compare` with CatalogCore | PARITY, 24 of 24: the same as on 16 October |
+| One manifest for both (#42) | `cmtk run`: 40 of 41. `cmtk compare`: **PARTIAL COMPARISON**, exit 4, with 24 cases matching and 41 not comparable, because CatalogCore has no HTTP surface |
+| `cmtk discover --routes-from` on the controllers' source (#46) | `PicController` is listed at `/items/{catalogItemId:int}/pic`, not the guess `/Pic` |
+| The web adapter's kit, and a catalog journey in Chromium (#25) | Both pass. The journey opens the catalog, moves to page 2, and reports zero model calls |
+
+### What we learnt
+
+| What happened | What it means |
+|---|---|
+| The canary comparison now reads PARITY | Expected: the planted defect left CatalogCore's source after 16 October, as the pending P-001 warned. The canary no longer proves a defect is caught on eShop. A local test still does |
+| The journey's first version failed, and its screenshot showed why | Page 2 reads "Showing 10 of 12 products" over two rows, as `CAT-1-02` also shows. The journey's expectation was the tester's guess, and the wording is a question for the owner. The journey now checks only "Page 2 - 2". Separately, a `text:` locator did not find "Page 2 - 2" inside the longer sentence, so the reach step uses the Previous link |
+| **The desktop reader does not work on this Windows Forms sample (#27)** | UI Automation, as PowerShell loads it, shows each control as a `Pane` with its window handle as its id, so `automation_id: qty` finds nothing. It is the same on the CI machine and on a real desktop. Registering the client-side providers threw an error. The likely fix is a small C# reader on UIA3 (FlaUI), which has not been built |
+| `npm` is broken on the pilot machine (a known problem from part 1) | Playwright was installed from the linked VM, and node ran its browser installer. That installer also removed an unused WebKit from the machine's Playwright folder |
+
+Not run here: the review of P-001 and LEG-1, and the second forms run, both of which need a person (`12-review-0.6.cmd`); anything that needs the database-backed site; the seeding, CSV import and assembly contracts.
+

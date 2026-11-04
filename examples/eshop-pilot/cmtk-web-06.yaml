@@ -1,0 +1,13 @@
+# eShop pilot, part 6: a journey through the catalog pages in a real browser (cmtk 0.6). Read-only.
+system: eshop-legacy
+targets:
+  legacy: { base_url: http://localhost:53190 }
+default_target: legacy
+cases: [cmtk/cases-web/*.yaml]
+evidence: cmtk/evidence-0.6/web
+proposals: cmtk/proposals-web.yaml
+drift: cmtk/drift-web.yaml
+allow_unsafe_methods: false
+timeout_s: 120
+adapters:
+  web: { command: node, args: [adapters/web/index.mjs], covers: [ui], timeout_s: 180 }

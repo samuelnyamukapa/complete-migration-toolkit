@@ -1,5 +1,7 @@
 # Desktop adapter
 
+> **Known limit:** on Windows Forms apps, the UI Automation reader cannot yet find controls by `automation_id`. It sees each control as a `Pane` with its window handle as its id. This was seen on a CI machine and a real desktop, and only the stub reader passes end to end. See part 6 of [the eShop pilot](../../docs/pilots/eshop.md).
+
 Runs a recorded script against a desktop app and reports what the screens showed: window titles, fields and values. On Windows they are read through Windows UI Automation, the description of the screen that assistive tools use. The script's checks decide pass or fail, and the run makes no model calls.
 
 An agent works a journey out once, with `/cmtk:desktop`, and a person reviews the script. After that, no agent is involved.

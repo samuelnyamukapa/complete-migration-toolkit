@@ -1,0 +1,29 @@
+cases:
+  - id: WEB-CAT-01
+    name: A person pages through the catalog
+    requirement: RULE-005
+    surface: web
+    request: GET /
+    expect: { status: 200 }
+    journey:
+      goal: Open the catalog and move to its second page
+      step_timeout_ms: 90000
+      steps:
+        - goto: /
+        - reach: catalog
+          see: { role: columnheader, name: Name }
+        - read: pager
+          from: { css: "span.esh-pager-item" }
+        - check: the first page says page 1 of 2
+          value: pager
+          contains: "Showing 10 of 12 products - Page 1 - 2"
+        - capture: first-page
+        - click: { role: link, name: Next }
+        - reach: second page
+          see: { role: link, name: Previous }
+        - read: pager2
+          from: { css: "span.esh-pager-item" }
+        - check: the second page says page 2 of 2
+          value: pager2
+          contains: "Page 2 - 2"
+        - capture: second-page

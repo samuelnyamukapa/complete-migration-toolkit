@@ -1,7 +1,4 @@
 # eShop pilot, both parts in one manifest (#42).
-# NOT YET RUN against legacy eShop or CatalogCore. It needs cmtk 0.6 in tools\cmtk, and a person to run it on
-# Windows. Until then the signed reports in reports\ stand, from cmtk.yaml and compare-catalogcore.yaml. It has
-# only run against local stand-ins, in packages/cli/test/surfaces.test.mjs.
 #
 # Legacy is reached over HTTP and through the catalog adapter. CatalogCore is a class library with no web host
 # yet, so only through the adapter. Each target lists what it offers:
@@ -30,7 +27,7 @@ compare_headers: [content-type]
 cases: [cmtk/cases/legacy/*.yaml, cmtk/cases/catalogcore/*.yaml]
 compare_only_surfaces: [catalog]   # these cases have no expect: they exist to be compared
 drift: cmtk/drift-catalogcore.yaml
-evidence: cmtk/evidence-one-manifest
+evidence: cmtk/evidence-0.6/one-manifest
 
 allow_unsafe_methods: false   # read-only: GET, HEAD and OPTIONS only
 headers_from_env: {}          # eShop has no login
