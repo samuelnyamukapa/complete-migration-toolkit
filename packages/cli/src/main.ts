@@ -366,7 +366,7 @@ async function trendCommand(manifestFile: string, args: string[], v: Record<stri
 async function signoff(manifestFile: string, mode: string | undefined): Promise<number> {
     if (mode !== "run" && mode !== "compare") throw new UsageError("`cmtk signoff` needs `run` or `compare`.");
     if (!process.stdin.isTTY || !process.stdout.isTTY) {
-        throw new UsageError("Sign-off is for a person at a keyboard: run `cmtk signoff` in a terminal yourself. Agents and scripts do not sign.");
+        throw new UsageError("Sign-off is for a person at a keyboard: run `cmtk signoff` in a terminal yourself. Only a person signs.");
     }
     const manifest = loadManifest(manifestFile);
     const dir = path.join(manifest.root, manifest.evidence, mode);
@@ -552,7 +552,7 @@ async function adapterCommand(args: string[], manifestFile: string, values: { la
     if (sub === "list") return adapterList(manifestFile, values.json === true);
     // Before anything else, the name included: a script learns nothing and fetches nothing.
     if (sub === "add" && (!process.stdin.isTTY || !process.stdout.isTTY)) {
-        throw new UsageError("Installing an adapter runs someone else's code, so a person says yes at a keyboard: run `cmtk adapter add` in a terminal yourself. Agents and scripts do not install.");
+        throw new UsageError("Installing an adapter runs someone else's code, so a person says yes at a keyboard: run `cmtk adapter add` in a terminal yourself. Only a person installs.");
     }
     if (!name || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(name) || name === "http") throw new UsageError("Give the adapter a name of letters, digits, '.', '-' and '_' (not http, which is built in).");
     const root = path.dirname(manifestFile);

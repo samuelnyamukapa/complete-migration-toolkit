@@ -2,9 +2,10 @@
 // evidence file, so a signature on one run never carries over to another, and `cmtk status` can
 // tell a current signature from a stale one.
 //
-// The command asks at a terminal, which keeps agents that follow the rules from signing. It is not
-// a lock: anything that can fake a terminal can type a name. Where a signature must be binding,
-// keep the evidence folder under version control and require a reviewed commit for SIGNOFF.json.
+// The command asks at a terminal, which stops accidents and agents that follow the rules. It is not
+// a lock: anything that can fake a terminal can type a name, and this function needs no terminal at
+// all. Where a signature must be binding, keep the evidence folder under version control and require
+// a reviewed commit for SIGNOFF.json. See docs/TEST-PLAN.md.
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";

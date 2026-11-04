@@ -48,8 +48,8 @@ These run in CI on every pull request, except the last one, which starts with ea
 - **Requests go only to the targets in `cmtk.yaml`.** A case holds a path, never a host.
 - **Redirects are compared, not followed.**
 - **No proxies.** Requests go straight to the target, even when proxy environment variables are set.
-- **Only a person signs.** `cmtk signoff` refuses to run without a terminal, and the MCP server has no sign-off tool. A sign-off is tied to the evidence it covers, and a NO EVIDENCE report can't be signed.
-- **Only a person installs an adapter.** `cmtk adapter add` refuses to run without a terminal and has no flag to skip the question. The MCP server has no install tool. Nothing from the adapter runs during an install, the version is pinned, and links, submodules and addresses holding a credential are refused.
+- **Only a person signs.** `cmtk signoff` has a terminal check, so it refuses to run in a pipe or a CI job, and the MCP server has no sign-off tool. A sign-off is tied to the evidence it covers, and a NO EVIDENCE report can't be signed.
+- **Only a person installs an adapter.** `cmtk adapter add` has a terminal check, so it refuses to run in a pipe or a CI job, and has no flag to skip the question. The MCP server has no install tool. Nothing from the adapter runs during an install, the version is pinned, and links, submodules and addresses holding a credential are refused.
 - **A read changes nothing.** `cmtk compare` resets a system only before a case that writes and is really sent. Two different states read through a GET are NO PARITY, and both are left as they were. An adapter gets a reset before reads only by asking in `describe`. A test runs this on the SMS adapter, the worker adapter and a stand-in.
 - **A case with no adapter is never a pass.** Nothing is sent for it, it counts as an error, and the report names it.
 - **Only a person adds a known issue.** The ledger refuses an entry with no named person, or one naming an agent or a tool. It also refuses an entry that doesn't say how the case fails: `check: status` alone would accept any status. The drift ledger refuses an agent's name too, and an entry that would approve every difference in every case. An agent's proposal changes no verdict until a person accepts it in `cmtk review`. A failure the entry does not describe is still FAIL, and a known issue never counts as passed.
@@ -68,6 +68,18 @@ These run in CI on every pull request, except the last one, which starts with ea
 - **Evidence stays inside the project.** Clearing old evidence never follows a link outside it.
 - **Sandboxes only for money and messages.** Payment adapters refuse live keys, such as `sk_live_`, before any network call. Email and SMS adapters refuse anything that isn't a capture server or a test number.
 - **Pilot systems are never modified.** Each pilot checks the system's folder against a checksum list before and after every session.
+
+### What the terminal check does and does not stop
+
+`cmtk signoff`, `cmtk review` and `cmtk adapter add` check that they are talking to a terminal, and ask for a name. The MCP server offers no tool for any of them.
+
+That stops accidents, and agents that follow the rules. It does not stop a determined script. A script can fake a terminal and type a name. Code that imports `@cmtk/core` can call `recordSignoff` with no terminal at all, and a test shows this. An agent with file access can edit a ledger, or write a confirmation by hand. A name in a file is only a name: the toolkit refuses one that reads as an agent, but it can't tell who typed it.
+
+So where a decision must be binding, the proof is in version control, not in cmtk:
+
+- Keep `cmtk.yaml`, the case files, both ledgers and `adapters/installed.yaml` under version control. Keep the evidence there too if you sign it.
+- Make CI require a reviewed commit for any change to `SIGNOFF.json`, the ledgers, a `safe_confirmed_by` or `adapters/installed.yaml`, such as with a protected branch and a code owner.
+- Run agents with credentials that can't approve their own pull request.
 
 ## Platforms
 

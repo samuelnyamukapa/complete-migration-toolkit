@@ -81,7 +81,7 @@ The install is pinned. Use `--pin <tag, branch or commit>` to choose a version f
 
 `cmtk adapter add` refuses to start without a terminal. It has no `--yes` flag and no setting to skip the question, and no MCP tool installs an adapter. An agent can tell a person the command, and that is all.
 
-This stops agents that follow the rules, and every script. It cannot prove a person is there: something driving a fake terminal could type `yes`, as it could for `cmtk signoff`. So the name goes on the install, in `adapters/installed.yaml`.
+This stops accidents and agents that follow the rules. It does not stop a determined script, and it cannot prove a person is there: something driving a fake terminal could type `yes`, as it could for `cmtk signoff`. So the name goes on the install, in `adapters/installed.yaml`. Keep that file under version control, and require a reviewed commit to change it.
 
 ## Private registries
 

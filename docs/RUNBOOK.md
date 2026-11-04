@@ -50,7 +50,7 @@ You also need the `cmtk` command. Today, from a clone of the toolkit, run `npm i
    cmtk signoff run
    ```
 
-   It shows the verdict, then asks for your name, role and decision. It only works in a terminal, typed by a person, and it will not sign a report with no evidence. It records a fingerprint of the evidence, so `cmtk status` says "no longer counts" if anything in the folder changes, and running again clears the signature.
+   It shows the verdict, then asks for your name, role and decision. It refuses to run in a pipe or a CI job, and it will not sign a report with no evidence. That check stops accidents and agents that follow the rules, not a determined script. Where a signature must be binding, require a reviewed commit for `SIGNOFF.json`, as [TEST-PLAN.md](TEST-PLAN.md#what-the-terminal-check-does-and-does-not-stop) says. It records a fingerprint of the evidence, so `cmtk status` says "no longer counts" if anything in the folder changes, and running again clears the signature.
 
 ## Part 2: compare a migrated system with the old one
 
