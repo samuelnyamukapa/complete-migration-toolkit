@@ -12,7 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { parseXml, type XNode } from "../diff.js";
-import { ManifestError } from "../manifest.js";
+import { inside, ManifestError } from "../manifest.js";
 import type { FieldType, Violation } from "./schema.js";
 
 export interface SimpleType {
@@ -113,6 +113,9 @@ class Reader {
     private groups = 0;
     private readonly noted = new Set<string>();
 
+    /** Includes are followed only inside this folder: the project, or the main file's own folder. */
+    constructor(private readonly folder: string) {}
+
     add(node: XNode, file: string, seen = new Set<string>()) {
         this.schemas.push({ node, tns: node.attrs.get("targetNamespace") ?? "", qualified: node.attrs.get("elementFormDefault") === "qualified", attrQualified: node.attrs.get("attributeFormDefault") === "qualified", file });
         for (const inc of [...CHILD(node, "include"), ...CHILD(node, "import")]) {
@@ -120,6 +123,12 @@ class Reader {
             if (!loc) continue;
             const full = path.resolve(path.dirname(file), loc);
             if (/^[a-z]+:\/\//i.test(loc) || !fs.existsSync(full)) { this.note(`${path.basename(file)} refers to ${loc}, which was not read: only local files are followed, and nothing is fetched.`); continue; }
+            try {
+                inside({ root: this.folder }, full);
+            } catch {
+                this.note(`${path.basename(file)} refers to ${loc}, which was not read: it is outside the project.`);
+                continue;
+            }
             if (seen.has(full)) continue;
             seen.add(full);
             this.add(parseXml(fs.readFileSync(full, "utf8").replace(/^﻿/, "")), full, seen);
@@ -284,11 +293,11 @@ class Reader {
 export const isXsd = (file: string) => /\.(xsd|wsdl)$/i.test(file);
 
 /** A schema, or a WSDL's, as the model of one element. For a WSDL, `name` is an operation; for an XSD, an element. */
-export function readXsd(file: string, name?: string): XsdModel {
+export function readXsd(file: string, name?: string, root: string = path.dirname(path.resolve(file))): XsdModel {
     const text = fs.readFileSync(file, "utf8").replace(/^﻿/, "");
     let doc: XNode;
     try { doc = parseXml(text); } catch (err) { throw new ManifestError(`${path.basename(file)} is not XML: ${(err as Error).message}`); }
-    const r = new Reader();
+    const r = new Reader(root);
     let rootName = name;
     let soap: SoapInfo | undefined;
     if (doc.local === "definitions" || doc.local === "description") {

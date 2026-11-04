@@ -195,7 +195,7 @@ function unsetAt(root: unknown, p: string) {
 function fieldsOf(m: Manifest, r: Recipe): { fields: Field[]; schema: Record<string, unknown>; parameters: { name: string; in: string; required: boolean; schema: Record<string, unknown> }[]; hasBody: boolean; layout?: Layout; xsd?: XsdModel } {
     const file = inside(m, r.source.file);
     if (!fs.existsSync(file)) throw new ManifestError(`The recipe's schema ${r.source.file} no longer exists.`);
-    const model = loadModel(file, r.source.operation);
+    const model = loadModel(file, r.source.operation, m.root);
     if (r.source.sha256 && model.source.sha256 !== r.source.sha256) throw new ManifestError(`${r.source.file} has changed since the recipe was planned (sha256 ${model.source.sha256.slice(0, 12)}… now, ${r.source.sha256.slice(0, 12)}… then). Plan it again, or restore the file.`);
     return { fields: model.fields, schema: model.schema, parameters: model.parameters ?? [], hasBody: model.fields.some((f) => f.path === "$"), ...((model as { layout?: Layout }).layout ? { layout: (model as { layout?: Layout }).layout } : {}), ...(model.xsd ? { xsd: model.xsd } : {}) };
 }

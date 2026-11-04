@@ -198,7 +198,12 @@ export function inside(manifest: Pick<Manifest, "root">, rel: string): string {
     if (!within(manifest.root, full)) throw new ManifestError(`${rel} is outside the project folder.`);
     let existing = full;
     const rest: string[] = [];
-    while (!fs.existsSync(existing) && path.dirname(existing) !== existing) { rest.unshift(path.basename(existing)); existing = path.dirname(existing); }
+    while (!fs.existsSync(existing) && path.dirname(existing) !== existing) {
+        // A link that points nowhere reads as missing, and writing through it would create its target, wherever that is.
+        if (fs.lstatSync(existing, { throwIfNoEntry: false })?.isSymbolicLink()) throw new ManifestError(`${rel} leads through a link that points nowhere (${existing}).`);
+        rest.unshift(path.basename(existing));
+        existing = path.dirname(existing);
+    }
     const real = path.join(fs.realpathSync.native(existing), ...rest);
     if (!within(fs.realpathSync.native(manifest.root), real)) throw new ManifestError(`${rel} leads outside the project folder through a link (to ${real}).`);
     return full;

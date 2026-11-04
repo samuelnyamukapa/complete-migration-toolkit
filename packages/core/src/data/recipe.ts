@@ -165,7 +165,7 @@ export interface PlanOptions {
 export function planRecipe(m: Manifest, o: PlanOptions): { file: string; recipe: Recipe } {
     const schemaFile = inside(m, o.schema);
     if (!fs.existsSync(schemaFile)) throw new ManifestError(`${o.schema} does not exist.`);
-    const model = loadModel(schemaFile, o.operation);
+    const model = loadModel(schemaFile, o.operation, m.root);
     const id = o.id ?? (model.source.operation ? model.source.operation.replace(/^[A-Z]+\s+\/?/, "").replace(/[^A-Za-z0-9.-]+/g, "-").replace(/^-|-$/g, "") : path.basename(o.schema).replace(/\.[^.]+$/, "")).slice(0, 64);
     if (!ID.test(id)) throw new ManifestError(`The recipe id ${JSON.stringify(id)} must be letters, digits, '.', '-' and '_'.`);
     const clock = o.clock ?? "2026-01-15T09:30:00Z";

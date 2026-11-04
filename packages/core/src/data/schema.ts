@@ -164,9 +164,9 @@ export function modelFromOpenApi(file: string, raw: unknown, operation: string):
 }
 
 /** Load a JSON Schema or an OpenAPI file into a target model. */
-export function loadModel(file: string, operation?: string): TargetModel {
+export function loadModel(file: string, operation?: string, root?: string): TargetModel {
     if (isXsd(file)) {
-        const xsd = readXsd(file, operation);
+        const xsd = readXsd(file, operation, root);
         const fields: Field[] = xsdFields(xsd).map((x) => {
             const { simple, minItems, maxItems, choice, ...rest } = x;
             return { ...rest, ...(simple ?? {}), ...(minItems !== undefined ? { minItems } : {}), ...(maxItems !== undefined ? { maxItems } : {}), ...(choice ? { choice } : {}) } as Field;

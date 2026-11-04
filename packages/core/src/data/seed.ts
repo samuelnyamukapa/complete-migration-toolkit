@@ -422,6 +422,8 @@ export interface SeedResult {
 
 const br = (s: string) => `[${s.replace(/\]/g, "]]")}]`;
 const qn = (t: string) => t.split(".").map(br).join(".");
+/** A name from the DDL as an SQL string. A name is data: it may hold a quote. */
+const lit = (s: string) => `'${s.replace(/'/g, "''")}'`;
 
 /** The rows and the script, from nothing but the catalogue and the seed. */
 export function buildSeed(c: Catalogue, o: SeedOptions = {}): SeedResult {
@@ -509,7 +511,7 @@ export function buildSeed(c: Catalogue, o: SeedOptions = {}): SeedResult {
         if (!list.length) continue;
         const identity = t.columns.some((c) => c.identity);
         const cols = [...list[0]!.keys()];
-        L.push(`-- ${name}: ${list.length} rows`);
+        L.push(`-- ${name.replace(/[\r\n]+/g, " ")}: ${list.length} rows`);
         if (identity) L.push(`SET IDENTITY_INSERT ${qn(name)} ON;`);
         const deferred = deferredColumns(name);
         for (const row of list) L.push(`INSERT INTO ${qn(name)} (${cols.map(br).join(", ")}) VALUES (${cols.map((col) => (deferred.has(col) ? "NULL" : row.get(col)!.sql)).join(", ")});`);
@@ -535,12 +537,12 @@ function totalsSql(c: Catalogue, order: LoadOrder): string {
     const parts: string[] = [];
     for (const n of order.order) {
         const t = c.tables.find((x) => x.name === n)!;
-        parts.push(`SELECT '${n}' AS [table], '*' AS [column], 'count' AS [measure], CAST(COUNT(*) AS varchar(50)) AS [value] FROM ${qn(n)}`);
+        parts.push(`SELECT ${lit(n)} AS [table], '*' AS [column], 'count' AS [measure], CAST(COUNT(*) AS varchar(50)) AS [value] FROM ${qn(n)}`);
         for (const col of t.columns.filter((x) => NUMERIC.has(x.type) && !x.computed)) {
             // bit can't be summed or cast by itself in every engine: it counts as 0 and 1.
             const v = col.type === "bit" ? `CASE WHEN ${br(col.name)} = 1 THEN 1 WHEN ${br(col.name)} = 0 THEN 0 END` : br(col.name);
             for (const [m, f] of [["sum", "SUM"], ["min", "MIN"], ["max", "MAX"], ["avg", "AVG"]] as const) {
-                parts.push(`SELECT '${n}', '${col.name.replace(/'/g, "''")}', '${m}', CAST(${f}(CAST(${v} AS decimal(38,6))) AS varchar(50)) FROM ${qn(n)}`);
+                parts.push(`SELECT ${lit(n)}, ${lit(col.name)}, '${m}', CAST(${f}(CAST(${v} AS decimal(38,6))) AS varchar(50)) FROM ${qn(n)}`);
             }
         }
     }
