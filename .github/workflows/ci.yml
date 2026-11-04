@@ -50,3 +50,45 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: node --test packages/cli/test/csharp-adapter.test.mjs adapters/worker/test/worker.test.mjs
+
+  real-servers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      rabbitmq:
+        image: rabbitmq:3
+        env:
+          RABBITMQ_DEFAULT_VHOST: cmtk-test
+        ports: ["5672:5672"]
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping" --health-interval 10s --health-timeout 10s --health-retries 12
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: cmtk_test
+          POSTGRES_PASSWORD: test-only
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 12
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: Test-only-Passw0rd
+        ports: ["1433:1433"]
+    env:
+      CMTK_TEST_RABBITMQ_URL: amqp://guest:guest@localhost:5672/cmtk-test
+      CMTK_TEST_PG_ADMIN_URL: postgres://postgres:test-only@localhost:5432/cmtk_test
+      CMTK_TEST_MSSQL_ADMIN: Server=localhost,1433;Database=master;User Id=sa;Password=Test-only-Passw0rd;Encrypt=true;TrustServerCertificate=true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save amqplib@2.2.1 pg@8.23.1 mssql@12.7.13
+      - run: npm run build
+      - name: Wait for SQL Server
+        run: for i in $(seq 1 30); do (echo > /dev/tcp/localhost/1433) 2>/dev/null && break; sleep 2; done
+      - run: node --test adapters/queue/test/real-server.test.mjs adapters/database/test/real-server.test.mjs
