@@ -23,6 +23,15 @@ export function looksLikeTest(name) {
     return TEST_WORD.test(n) && !LIVE_WORD.test(n);
 }
 
+/** Functions a person has checked and listed. A list can only come from the settings file, never from a case or from cmtk.yaml. */
+function allowFunctionsOf(s, target) {
+    if (s.allow_functions === undefined) return [];
+    if (!Array.isArray(s.allow_functions) || !s.allow_functions.every((f) => typeof f === "string" && /^[\p{L}_][\p{L}\p{N}_$]*(\.[\p{L}_][\p{L}\p{N}_$]*)?$/u.test(f))) {
+        throw new Error(`target ${target.name}: allow_functions must be a list of plain names, each a function or schema.function`);
+    }
+    return s.allow_functions;
+}
+
 const positive = (v, key, fallback) => {
     if (v === undefined) return fallback;
     const n = Number(v);
@@ -65,8 +74,8 @@ function tablesOf(s, targetName) {
 }
 
 /** One table's rows, by key, sorted. `capped` when there were more than the cap. */
-async function snapshot(conn, driver, t, cap) {
-    if (t.query !== undefined) assertSelectOnly(t.query, driver.dialect); // before it is wrapped, so a person's query is judged by itself
+async function snapshot(conn, driver, t, cap, allowFunctions) {
+    if (t.query !== undefined) assertSelectOnly(t.query, driver.dialect, { allowFunctions }); // before it is wrapped, so a person's query is judged by itself
     const sql = t.query !== undefined ? driver.selectFrom(t.query, t.keys, cap + 1) : driver.selectAll(t.name, t.keys, cap + 1);
     const rows = await conn.query(sql);
     const capped = rows.length > cap;
@@ -151,7 +160,7 @@ export function createAdapter({ drivers = DRIVERS, settings = {}, env = process.
         if (!connection) throw new Error(`target ${target.name}: the environment variable ${s.connection_env} is not set`);
         secrets.add(connection);
         for (const p of driver.secretsOf(connection)) secrets.add(p);
-        return { s, driver, connection };
+        return { s, driver, connection, allowFunctions: allowFunctionsOf(s, target) };
     }
 
     /** Connect once per target. Nothing runs until the server itself has said this login cannot write. */
@@ -160,7 +169,7 @@ export function createAdapter({ drivers = DRIVERS, settings = {}, env = process.
         const p = prepare(target);
         const opening = (async () => {
             const raw = await p.driver.open(p.connection);
-            const conn = { query: (sql, params) => raw.query(assertSelectOnly(sql, p.driver.dialect), params), close: () => raw.close() };
+            const conn = { query: (sql, params) => raw.query(assertSelectOnly(sql, p.driver.dialect, { allowFunctions: p.allowFunctions }), params), close: () => raw.close() };
             try {
                 const name = await p.driver.databaseName(conn.query);
                 if (!looksLikeTest(name) && p.s.test_database !== name) {
@@ -194,7 +203,7 @@ export function createAdapter({ drivers = DRIVERS, settings = {}, env = process.
         if (!READ_ONLY.has(method) && !appUrl) return { error: `target ${target.name}: ${method} needs app_url, the system that receives the request; without it nothing would happen and the rows would look unchanged` };
 
         const before = [];
-        for (const t of tables) before.push(await snapshot(conn, driver, t, cap));
+        for (const t of tables) before.push(await snapshot(conn, driver, t, cap, s.allow_functions));
 
         const effects = { tables: {} };
         const out = { status: 200, effects };
@@ -211,7 +220,7 @@ export function createAdapter({ drivers = DRIVERS, settings = {}, env = process.
             const settle = s.settle_ms === undefined ? 0 : positive(s.settle_ms, "settle_ms", 0);
             if (settle) await sleep(settle);
             for (const [i, t] of tables.entries()) {
-                const after = await snapshot(conn, driver, t, cap);
+                const after = await snapshot(conn, driver, t, cap, s.allow_functions);
                 const wasCapped = before[i].capped || after.capped;
                 effects.tables[t.report] = { ...difference(before[i], after), ...(wasCapped ? { capped: true, row_cap: cap } : {}) };
                 if (wasCapped) capped.push(t.report);
@@ -244,7 +253,7 @@ export function createAdapter({ drivers = DRIVERS, settings = {}, env = process.
     const describe = () => ({
         name: NAME,
         kinds: [NAME],
-        settings: ["driver", "connection_env", "tables", "row_cap", "app_url", "app_timeout_s", "settle_ms", "test_database"],
+        settings: ["driver", "connection_env", "tables", "row_cap", "app_url", "app_timeout_s", "settle_ms", "test_database", "allow_functions"],
     });
 
     return { describe, run, reset, close, clean };
