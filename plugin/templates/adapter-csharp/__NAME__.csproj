@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>__NAME__</AssemblyName>
+    <RootNamespace>CmtkAdapter</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Registered as `dotnet <name>.dll`, the same line on Windows and Linux. -->
+    <UseAppHost>false</UseAppHost>
+    <RollForward>Major</RollForward>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- No packages, so nothing to audit, and it builds on a test machine with no network. Remove this if you add a package. -->
+    <NuGetAudit>false</NuGetAudit>
+  </PropertyGroup>
+
+</Project>

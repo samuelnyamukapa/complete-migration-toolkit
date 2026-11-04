@@ -55,7 +55,7 @@ Usage:
                        [--only-rows name,name] [--except-rows name,name]
                                                                     one draft case per row, each sending its row from a file
   cmtk signoff run|compare                                          a person signs a report, at a terminal (never an agent)
-  cmtk adapter new <name>                                           write a new adapter from the template
+  cmtk adapter new <name> [--lang node|csharp]                      write a new adapter from a template (default: node)
   cmtk adapter check <name>                                         the conformance kit for an adapter
 
 Options:
@@ -132,6 +132,7 @@ async function main(argv: string[]): Promise<number> {
             rows: { type: "string" },
             "only-rows": { type: "string" },
             "except-rows": { type: "string" },
+            lang: { type: "string" },
             help: { type: "boolean", short: "h", default: false },
             version: { type: "boolean", short: "v", default: false },
         },
@@ -214,7 +215,7 @@ async function main(argv: string[]): Promise<number> {
             return 0;
         }
         case "probe": return probe(manifestFile, rest, values.surface);
-        case "adapter": return adapterCommand(rest, manifestFile);
+        case "adapter": return adapterCommand(rest, manifestFile, values.lang);
         case "data": return dataCommand(rest, manifestFile, values);
         default:
             throw new UsageError(`Unknown command ${cmd}. Run \`cmtk help\`.`);
@@ -362,18 +363,29 @@ async function probe(manifestFile: string, args: string[], surface = "http"): Pr
     }
 }
 
-async function adapterCommand(args: string[], manifestFile: string): Promise<number> {
+/** Copy a template, filling in the name. npm leaves `.gitignore` out of a package, so templates hold it as `gitignore`. */
+function writeTemplate(tpl: string, dir: string, name: string) {
+    fs.mkdirSync(dir, { recursive: true });
+    for (const e of fs.readdirSync(tpl, { withFileTypes: true })) {
+        const to = path.join(dir, e.name === "gitignore" ? ".gitignore" : e.name.replaceAll("__NAME__", name));
+        if (e.isDirectory()) writeTemplate(path.join(tpl, e.name), to, name);
+        else fs.writeFileSync(to, fs.readFileSync(path.join(tpl, e.name), "utf8").replaceAll("__NAME__", name), "utf8");
+    }
+}
+
+async function adapterCommand(args: string[], manifestFile: string, lang = "node"): Promise<number> {
     const [sub, name] = args;
     if (!name || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(name) || name === "http") throw new UsageError("Give the adapter a name of letters, digits, '.', '-' and '_' (not http, which is built in).");
     const root = path.dirname(manifestFile);
     const dir = path.join(root, "adapters", name);
     if (sub === "new") {
+        if (lang !== "node" && lang !== "csharp") throw new UsageError(`--lang must be node or csharp, not ${lang}.`);
         if (fs.existsSync(dir)) throw new UsageError(`adapters/${name} already exists.`);
-        const tpl = path.join(HERE, "..", "templates", "adapter-node");
-        fs.cpSync(tpl, dir, { recursive: true });
-        for (const f of ["index.mjs", "README.md", path.join("samples", "cases.yaml")]) {
-            const p = path.join(dir, f);
-            fs.writeFileSync(p, fs.readFileSync(p, "utf8").replaceAll("__NAME__", name), "utf8");
+        writeTemplate(path.join(HERE, "..", "templates", `adapter-${lang}`), dir, name);
+        if (lang === "csharp") {
+            console.log(`Wrote adapters/${name}/. Next: write Run() in Adapter.cs, then \`dotnet build -c Release adapters/${name}\` and \`cmtk adapter check ${name}\`.`);
+            console.log(`Register it in cmtk.yaml:\n  adapters:\n    ${name}: { command: dotnet, args: [adapters/${name}/bin/Release/net8.0/${name}.dll] }`);
+            return 0;
         }
         console.log(`Wrote adapters/${name}/. Next: write run() in index.mjs, then \`cmtk adapter check ${name}\`.`);
         console.log(`Register it in cmtk.yaml:\n  adapters:\n    ${name}: { command: node, args: [adapters/${name}/index.mjs] }`);
@@ -383,18 +395,37 @@ async function adapterCommand(args: string[], manifestFile: string): Promise<num
     throw new UsageError("`cmtk adapter` takes `new <name>` or `check <name>`.");
 }
 
+/** How to start a C# adapter nobody has registered: its build, which must not be older than its code. */
+function builtCsharpAdapter(name: string, dir: string): { command: string; args: string[] } | undefined {
+    const top = fs.existsSync(dir) ? fs.readdirSync(dir) : [];
+    const project = top.find((f) => f.endsWith(".csproj"));
+    if (!project) return undefined;
+    const stem = project.slice(0, -".csproj".length);
+    const release = path.join(dir, "bin", "Release");
+    const frameworks = fs.existsSync(release) ? fs.readdirSync(release) : [];
+    const built = frameworks.map((f) => path.join(release, f, `${stem}.dll`)).find((f) => fs.existsSync(f));
+    const build = `Run: dotnet build -c Release adapters/${name}`;
+    if (!built) throw new UsageError(`adapters/${name} has not been built. ${build}`);
+    const code = top.filter((f) => f.endsWith(".cs") || f.endsWith(".csproj"));
+    const newer = code.find((f) => fs.statSync(path.join(dir, f)).mtimeMs > fs.statSync(built).mtimeMs);
+    if (newer) throw new UsageError(`adapters/${name}/${newer} is newer than the build. ${build}`);
+    return { command: "dotnet", args: [built] };
+}
+
 /** The conformance kit: an adapter is usable when every check here passes. */
 async function adapterCheck(name: string, dir: string, manifestFile: string): Promise<number> {
-    let spec = { command: process.execPath, args: [path.join(dir, "index.mjs")] };
+    let spec: { command: string; args: string[] } | undefined;
     if (fs.existsSync(manifestFile)) {
         const m = loadManifest(manifestFile);
         if (m.adapters[name]) spec = { command: m.adapters[name]!.command, args: m.adapters[name]!.args ?? [] };
     }
+    spec ??= builtCsharpAdapter(name, dir) ?? { command: process.execPath, args: [path.join(dir, "index.mjs")] };
     const samplesFile = path.join(dir, "samples", "cases.yaml");
-    const doc = fs.existsSync(samplesFile) ? (readStructured(samplesFile) as { cases?: Case[] }) : {};
+    const doc = fs.existsSync(samplesFile) ? (readStructured(samplesFile) as { cases?: Case[]; check_target?: Record<string, string | number | boolean> }) : {};
     const samples = doc.cases ?? [];
     const secret = `cmtk-check-${Math.random().toString(36).slice(2)}`;
-    const target = { name: "check", base_url: "http://127.0.0.1:9" };
+    // An adapter that needs settings from its target, such as folders, gives them in its samples.
+    const target = { ...doc.check_target, name: "check", base_url: "http://127.0.0.1:9" };
     const checks: [string, boolean, string?][] = [];
     const adapter = processAdapter(name, { ...spec, timeout_s: 60 }, path.dirname(manifestFile));
     try {

@@ -25,7 +25,7 @@ An observation:
 
 ## Adding one
 
-1. Run `cmtk adapter new mailbox`. It writes `adapters/mailbox/` with a working Node template, a README and sample cases.
+1. Run `cmtk adapter new mailbox`. It writes `adapters/mailbox/` with a working Node template, a README and sample cases. For C#, see [below](#c).
 2. Write `run()`, and `reset()` if each case needs a clean start. Some examples:
    - **Mailbox:** read a capture server such as Mailpit, and report each message as sender, sorted recipients, subject, text and links;
    - **Queue:** publish the case's message, then report what reached the output queue;
@@ -35,6 +35,8 @@ An observation:
    - each sample case gives an observation;
    - the same case twice gives the same observation;
    - no header value leaks into what the adapter reports.
+
+   It uses a dummy target. An adapter that needs settings from its target, such as folders, gives them in `samples/cases.yaml` under `check_target:`.
 4. Register it in `cmtk.yaml`, and give its cases `surface: mailbox`:
 
    ```yaml
@@ -44,7 +46,32 @@ An observation:
 
    `covers` lists the kinds of boundary the adapter checks, so `cmtk discover` stops flagging them as uncovered. The kinds are `http`, `soap`, `outbound-http`, `database`, `files`, `email`, `sms`, `queue`, `payments`, `worker`, `ui` and `logs`.
 
-An adapter can be written in any language, C# included: register its executable as the `command`.
+An adapter can be written in any language: register its executable as the `command`.
+
+## C#
+
+`cmtk adapter new mailbox --lang csharp` writes a small .NET 8 console project with no packages.
+
+1. Write `Run()` in `Adapter.cs`, and `Reset()` if each case needs a clean start. `Program.cs` speaks the protocol, so you should not need to change it.
+2. Build it, then run the kit. The kit uses the build, and refuses one older than the code:
+
+   ```
+   dotnet build -c Release adapters/mailbox
+   cmtk adapter check mailbox
+   ```
+
+3. Register the built program:
+
+   ```yaml
+   adapters:
+     mailbox: { command: dotnet, args: [adapters/mailbox/bin/Release/net8.0/mailbox.dll], covers: [email] }
+   ```
+
+   Or use `dotnet run`, with `--no-build`, because a build writes to standard output. The README in the project shows how.
+
+Three things keep it safe. `Console.WriteLine` goes to standard error, so a stray line cannot break the protocol. A reply that holds a header value is not sent: the case gets an error that names the header and not its value. Standard error hides those values too. It can only spot the exact value, so do not encode a header and report it.
+
+[adapters/worker](../adapters/worker/README.md) is a full example, for a Windows service or a .NET worker.
 
 ## Rules every adapter keeps
 
