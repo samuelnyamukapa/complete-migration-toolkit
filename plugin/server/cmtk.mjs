@@ -109,17 +109,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP2;
     visit.REMOVE = REMOVE;
-    function visit_(key2, node, visitor, path25) {
-      const ctrl = callVisitor(key2, node, visitor, path25);
+    function visit_(key2, node, visitor, path27) {
+      const ctrl = callVisitor(key2, node, visitor, path27);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key2, path25, ctrl);
-        return visit_(key2, ctrl, visitor, path25);
+        replaceNode(key2, path27, ctrl);
+        return visit_(key2, ctrl, visitor, path27);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path25 = Object.freeze(path25.concat(node));
+          path27 = Object.freeze(path27.concat(node));
           for (let i8 = 0; i8 < node.items.length; ++i8) {
-            const ci = visit_(i8, node.items[i8], visitor, path25);
+            const ci = visit_(i8, node.items[i8], visitor, path27);
             if (typeof ci === "number")
               i8 = ci - 1;
             else if (ci === BREAK)
@@ -130,13 +130,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path25 = Object.freeze(path25.concat(node));
-          const ck = visit_("key", node.key, visitor, path25);
+          path27 = Object.freeze(path27.concat(node));
+          const ck = visit_("key", node.key, visitor, path27);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path25);
+          const cv = visit_("value", node.value, visitor, path27);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -157,17 +157,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP2;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key2, node, visitor, path25) {
-      const ctrl = await callVisitor(key2, node, visitor, path25);
+    async function visitAsync_(key2, node, visitor, path27) {
+      const ctrl = await callVisitor(key2, node, visitor, path27);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key2, path25, ctrl);
-        return visitAsync_(key2, ctrl, visitor, path25);
+        replaceNode(key2, path27, ctrl);
+        return visitAsync_(key2, ctrl, visitor, path27);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path25 = Object.freeze(path25.concat(node));
+          path27 = Object.freeze(path27.concat(node));
           for (let i8 = 0; i8 < node.items.length; ++i8) {
-            const ci = await visitAsync_(i8, node.items[i8], visitor, path25);
+            const ci = await visitAsync_(i8, node.items[i8], visitor, path27);
             if (typeof ci === "number")
               i8 = ci - 1;
             else if (ci === BREAK)
@@ -178,13 +178,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path25 = Object.freeze(path25.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path25);
+          path27 = Object.freeze(path27.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path27);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path25);
+          const cv = await visitAsync_("value", node.value, visitor, path27);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -211,23 +211,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key2, node, visitor, path25) {
+    function callVisitor(key2, node, visitor, path27) {
       if (typeof visitor === "function")
-        return visitor(key2, node, path25);
+        return visitor(key2, node, path27);
       if (identity.isMap(node))
-        return visitor.Map?.(key2, node, path25);
+        return visitor.Map?.(key2, node, path27);
       if (identity.isSeq(node))
-        return visitor.Seq?.(key2, node, path25);
+        return visitor.Seq?.(key2, node, path27);
       if (identity.isPair(node))
-        return visitor.Pair?.(key2, node, path25);
+        return visitor.Pair?.(key2, node, path27);
       if (identity.isScalar(node))
-        return visitor.Scalar?.(key2, node, path25);
+        return visitor.Scalar?.(key2, node, path27);
       if (identity.isAlias(node))
-        return visitor.Alias?.(key2, node, path25);
+        return visitor.Alias?.(key2, node, path27);
       return void 0;
     }
-    function replaceNode(key2, path25, node) {
-      const parent = path25[path25.length - 1];
+    function replaceNode(key2, path27, node) {
+      const parent = path27[path27.length - 1];
       if (identity.isCollection(parent)) {
         parent.items[key2] = node;
       } else if (identity.isPair(parent)) {
@@ -839,10 +839,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path25, value) {
+    function collectionFromPath(schema, path27, value) {
       let v2 = value;
-      for (let i8 = path25.length - 1; i8 >= 0; --i8) {
-        const k2 = path25[i8];
+      for (let i8 = path27.length - 1; i8 >= 0; --i8) {
+        const k2 = path27[i8];
         if (typeof k2 === "number" && Number.isInteger(k2) && k2 >= 0) {
           const a4 = [];
           a4[k2] = v2;
@@ -861,7 +861,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path25) => path25 == null || typeof path25 === "object" && !!path25[Symbol.iterator]().next().done;
+    var isEmptyPath = (path27) => path27 == null || typeof path27 === "object" && !!path27[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -891,11 +891,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path25, value) {
-        if (isEmptyPath(path25))
+      addIn(path27, value) {
+        if (isEmptyPath(path27))
           this.add(value);
         else {
-          const [key2, ...rest] = path25;
+          const [key2, ...rest] = path27;
           const node = this.get(key2, true);
           if (identity.isCollection(node))
             node.addIn(rest, value);
@@ -909,8 +909,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path25) {
-        const [key2, ...rest] = path25;
+      deleteIn(path27) {
+        const [key2, ...rest] = path27;
         if (rest.length === 0)
           return this.delete(key2);
         const node = this.get(key2, true);
@@ -924,8 +924,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path25, keepScalar) {
-        const [key2, ...rest] = path25;
+      getIn(path27, keepScalar) {
+        const [key2, ...rest] = path27;
         const node = this.get(key2, true);
         if (rest.length === 0)
           return !keepScalar && identity.isScalar(node) ? node.value : node;
@@ -943,8 +943,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path25) {
-        const [key2, ...rest] = path25;
+      hasIn(path27) {
+        const [key2, ...rest] = path27;
         if (rest.length === 0)
           return this.has(key2);
         const node = this.get(key2, true);
@@ -954,8 +954,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path25, value) {
-        const [key2, ...rest] = path25;
+      setIn(path27, value) {
+        const [key2, ...rest] = path27;
         if (rest.length === 0) {
           this.set(key2, value);
         } else {
@@ -2374,14 +2374,14 @@ var require_bool = __commonJS({
 var require_stringifyNumber = __commonJS({
   "node_modules/yaml/dist/stringify/stringifyNumber.js"(exports) {
     "use strict";
-    function stringifyNumber({ format, minFractionDigits, tag, value }) {
+    function stringifyNumber({ format: format2, minFractionDigits, tag, value }) {
       if (typeof value === "bigint")
         return String(value);
       const num = typeof value === "number" ? value : Number(value);
       if (!isFinite(num))
         return isNaN(num) ? ".nan" : num < 0 ? "-.inf" : ".inf";
       let n3 = Object.is(value, -0) ? "-0" : JSON.stringify(value);
-      if (!format && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n3) && !n3.includes("e")) {
+      if (!format2 && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n3) && !n3.includes("e")) {
         let i8 = n3.indexOf(".");
         if (i8 < 0) {
           i8 = n3.length;
@@ -3470,9 +3470,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path25, value) {
+      addIn(path27, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path25, value);
+          this.contents.addIn(path27, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3547,14 +3547,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path25) {
-        if (Collection.isEmptyPath(path25)) {
+      deleteIn(path27) {
+        if (Collection.isEmptyPath(path27)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path25) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path27) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3569,10 +3569,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path25, keepScalar) {
-        if (Collection.isEmptyPath(path25))
+      getIn(path27, keepScalar) {
+        if (Collection.isEmptyPath(path27))
           return !keepScalar && identity.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity.isCollection(this.contents) ? this.contents.getIn(path25, keepScalar) : void 0;
+        return identity.isCollection(this.contents) ? this.contents.getIn(path27, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -3583,10 +3583,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path25) {
-        if (Collection.isEmptyPath(path25))
+      hasIn(path27) {
+        if (Collection.isEmptyPath(path27))
           return this.contents !== void 0;
-        return identity.isCollection(this.contents) ? this.contents.hasIn(path25) : false;
+        return identity.isCollection(this.contents) ? this.contents.hasIn(path27) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3603,13 +3603,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path25, value) {
-        if (Collection.isEmptyPath(path25)) {
+      setIn(path27, value) {
+        if (Collection.isEmptyPath(path27)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path25), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path27), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path25, value);
+          this.contents.setIn(path27, value);
         }
       }
       /**
@@ -5570,9 +5570,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP2;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path25) => {
+    visit.itemAtPath = (cst, path27) => {
       let item = cst;
-      for (const [field, index] of path25) {
+      for (const [field, index] of path27) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -5581,23 +5581,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path25) => {
-      const parent = visit.itemAtPath(cst, path25.slice(0, -1));
-      const field = path25[path25.length - 1][0];
+    visit.parentCollection = (cst, path27) => {
+      const parent = visit.itemAtPath(cst, path27.slice(0, -1));
+      const field = path27[path27.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path25, item, visitor) {
-      let ctrl = visitor(item, path25);
+    function _visit(path27, item, visitor) {
+      let ctrl = visitor(item, path27);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i8 = 0; i8 < token.items.length; ++i8) {
-            const ci = _visit(Object.freeze(path25.concat([[field, i8]])), token.items[i8], visitor);
+            const ci = _visit(Object.freeze(path27.concat([[field, i8]])), token.items[i8], visitor);
             if (typeof ci === "number")
               i8 = ci - 1;
             else if (ci === BREAK)
@@ -5608,10 +5608,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path25);
+            ctrl = ctrl(item, path27);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path25) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path27) : ctrl;
     }
     exports.visit = visit;
   }
@@ -6913,14 +6913,14 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs28 = this.flowScalar(this.type);
+              const fs30 = this.flowScalar(this.type);
               if (atNextItem || it2.value) {
-                map.items.push({ start, key: fs28, sep: [] });
+                map.items.push({ start, key: fs30, sep: [] });
                 this.onKeyLine = true;
               } else if (it2.sep) {
-                this.stack.push(fs28);
+                this.stack.push(fs30);
               } else {
-                Object.assign(it2, { key: fs28, sep: [] });
+                Object.assign(it2, { key: fs30, sep: [] });
                 this.onKeyLine = true;
               }
               return;
@@ -7048,13 +7048,13 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs28 = this.flowScalar(this.type);
+              const fs30 = this.flowScalar(this.type);
               if (!it2 || it2.value)
-                fc.items.push({ start: [], key: fs28, sep: [] });
+                fc.items.push({ start: [], key: fs30, sep: [] });
               else if (it2.sep)
-                this.stack.push(fs28);
+                this.stack.push(fs30);
               else
-                Object.assign(it2, { key: fs28, sep: [] });
+                Object.assign(it2, { key: fs30, sep: [] });
               return;
             }
             case "flow-map-end":
@@ -13842,12 +13842,12 @@ var require_lib = __commonJS({
 });
 
 // packages/cli/dist/main.js
-var import_yaml8 = __toESM(require_dist(), 1);
-import fs27 from "node:fs";
-import path24 from "node:path";
+var import_yaml9 = __toESM(require_dist(), 1);
+import fs29 from "node:fs";
+import path26 from "node:path";
 import readline3 from "node:readline/promises";
 import { fileURLToPath } from "node:url";
-import { parseArgs as parseArgs2 } from "node:util";
+import { format, parseArgs as parseArgs2 } from "node:util";
 
 // packages/core/dist/types.js
 var BOUNDARY_KINDS = ["http", "soap", "outbound-http", "database", "files", "email", "sms", "queue", "payments", "worker", "ui", "logs"];
@@ -13857,6 +13857,337 @@ var MATCH_LEVELS = ["exact", "semantic", "contract", "journey", "structure", "vi
 var import_yaml = __toESM(require_dist(), 1);
 import fs2 from "node:fs";
 import path2 from "node:path";
+
+// packages/core/dist/json.js
+var JsonNumber = class {
+  source;
+  constructor(source) {
+    this.source = source;
+  }
+  get value() {
+    return Number(this.source);
+  }
+  /** The same value for any way of writing it: `10`, `10.0` and `1e1` all give `1e1`. Exact for any size. */
+  get canonical() {
+    const m4 = /^(-?)(\d+)(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/.exec(this.source);
+    if (!m4)
+      return this.source;
+    const frac = m4[3] ?? "";
+    let digits = (m4[2] + frac).replace(/^0+/, "");
+    let exp = Number(m4[4] ?? 0) - frac.length;
+    if (!digits)
+      return "0";
+    while (digits.endsWith("0")) {
+      digits = digits.slice(0, -1);
+      exp++;
+    }
+    return `${m4[1]}${digits}e${exp}`;
+  }
+  toJSON() {
+    return this.value;
+  }
+};
+var JsonObject = class extends Map {
+  toJSON() {
+    return Object.fromEntries(this);
+  }
+};
+var MAX_DEPTH = 1e3;
+function parseJsonExact(text2) {
+  let i8 = 0;
+  const fail = (what) => {
+    throw new SyntaxError(`${what} at position ${i8}`);
+  };
+  const ws = () => {
+    for (; ; ) {
+      const c4 = text2.charCodeAt(i8);
+      if (c4 === 32 || c4 === 9 || c4 === 10 || c4 === 13)
+        i8++;
+      else
+        return;
+    }
+  };
+  const str = () => {
+    const start = i8++;
+    let escaped = false;
+    for (; ; ) {
+      if (i8 >= text2.length)
+        fail("unterminated string");
+      const c4 = text2.charCodeAt(i8);
+      if (c4 === 92) {
+        escaped = true;
+        i8 += 2;
+        continue;
+      }
+      if (c4 === 34)
+        break;
+      if (c4 < 32)
+        fail("control character in a string");
+      i8++;
+    }
+    i8++;
+    const raw = text2.slice(start, i8);
+    return escaped ? JSON.parse(raw) : raw.slice(1, -1);
+  };
+  const NUM = /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/y;
+  const value = (depth) => {
+    if (depth > MAX_DEPTH)
+      fail("nested too deeply");
+    ws();
+    const c4 = text2[i8];
+    if (c4 === "{") {
+      i8++;
+      const o4 = new JsonObject();
+      ws();
+      if (text2[i8] === "}") {
+        i8++;
+        return o4;
+      }
+      for (; ; ) {
+        ws();
+        if (text2[i8] !== '"')
+          fail("expected a key");
+        const k2 = str();
+        ws();
+        if (text2[i8] !== ":")
+          fail("expected ':'");
+        i8++;
+        o4.set(k2, value(depth + 1));
+        ws();
+        if (text2[i8] === ",") {
+          i8++;
+          continue;
+        }
+        if (text2[i8] === "}") {
+          i8++;
+          return o4;
+        }
+        fail("expected ',' or '}'");
+      }
+    }
+    if (c4 === "[") {
+      i8++;
+      const a4 = [];
+      ws();
+      if (text2[i8] === "]") {
+        i8++;
+        return a4;
+      }
+      for (; ; ) {
+        a4.push(value(depth + 1));
+        ws();
+        if (text2[i8] === ",") {
+          i8++;
+          continue;
+        }
+        if (text2[i8] === "]") {
+          i8++;
+          return a4;
+        }
+        fail("expected ',' or ']'");
+      }
+    }
+    if (c4 === '"')
+      return str();
+    if (text2.startsWith("true", i8)) {
+      i8 += 4;
+      return true;
+    }
+    if (text2.startsWith("false", i8)) {
+      i8 += 5;
+      return false;
+    }
+    if (text2.startsWith("null", i8)) {
+      i8 += 4;
+      return null;
+    }
+    NUM.lastIndex = i8;
+    const m4 = NUM.exec(text2);
+    if (!m4)
+      fail("unexpected character");
+    i8 = NUM.lastIndex;
+    if (/[0-9.eE+-]/.test(text2[i8] ?? ""))
+      fail("malformed number");
+    return new JsonNumber(m4[0]);
+  };
+  const v2 = value(0);
+  ws();
+  if (i8 < text2.length)
+    fail("unexpected text after the value");
+  return v2;
+}
+function entriesOf(v2) {
+  if (v2 instanceof JsonObject)
+    return [...v2.entries()];
+  return Object.entries(v2);
+}
+var isJsonObject = (v2) => v2 instanceof JsonObject || v2 !== null && typeof v2 === "object" && !Array.isArray(v2) && !(v2 instanceof JsonNumber) && !(v2 instanceof Map);
+function jsonEqual(a4, b2) {
+  if (a4 instanceof JsonNumber)
+    a4 = a4.value;
+  if (b2 instanceof JsonNumber)
+    b2 = b2.value;
+  if (Array.isArray(a4) || Array.isArray(b2)) {
+    return Array.isArray(a4) && Array.isArray(b2) && a4.length === b2.length && a4.every((x2, i8) => jsonEqual(x2, b2[i8]));
+  }
+  if (isJsonObject(a4) || isJsonObject(b2)) {
+    if (!isJsonObject(a4) || !isJsonObject(b2))
+      return false;
+    const ea = new Map(entriesOf(a4)), eb = new Map(entriesOf(b2));
+    return ea.size === eb.size && [...ea].every(([k2, v2]) => eb.has(k2) && jsonEqual(v2, eb.get(k2)));
+  }
+  return a4 === b2;
+}
+
+// packages/core/dist/jsonpath.js
+var PathError = class extends Error {
+};
+var TOKEN = /\.\.(?<desc>[^.[\]]+)|\.(?<key>[^.[\]]+)|\[(?<idx>\*|\d+)\]|\['(?<qkey>(?:[^'\\]|\\.)*)'\]/y;
+function parsePath(expr) {
+  if (typeof expr !== "string" || !expr.startsWith("$"))
+    throw new PathError(`JSON path ${JSON.stringify(expr)} must start with '$'.`);
+  const out = [];
+  let pos = 1;
+  while (pos < expr.length) {
+    TOKEN.lastIndex = pos;
+    const m4 = TOKEN.exec(expr);
+    if (!m4 || !m4.groups)
+      throw new PathError(`Cannot read JSON path ${JSON.stringify(expr)} at ${JSON.stringify(expr.slice(pos))}.`);
+    const g3 = m4.groups;
+    if (g3.desc !== void 0)
+      out.push({ kind: "desc", name: g3.desc });
+    else if (g3.key !== void 0)
+      out.push({ kind: "key", name: g3.key });
+    else if (g3.qkey !== void 0)
+      out.push({ kind: "key", name: g3.qkey.replace(/\\(.)/g, "$1") });
+    else
+      out.push({ kind: "idx", index: g3.idx === "*" ? "*" : Number(g3.idx) });
+    pos = TOKEN.lastIndex;
+  }
+  return out;
+}
+function matches(pattern, at2) {
+  if (pattern.length === 0)
+    return at2.length === 0;
+  const [head, ...rest] = pattern;
+  if (!head)
+    return at2.length === 0;
+  if (head.kind === "desc") {
+    for (let i8 = 0; i8 < at2.length; i8++) {
+      const step2 = at2[i8];
+      if (typeof step2 === "string" && (head.name === "*" || step2 === head.name) && matches(rest, at2.slice(i8 + 1)))
+        return true;
+    }
+    return false;
+  }
+  if (at2.length === 0)
+    return false;
+  const step = at2[0];
+  if (head.kind === "key" && typeof step === "string" && (head.name === "*" || head.name === step))
+    return matches(rest, at2.slice(1));
+  if (head.kind === "idx" && typeof step === "number" && (head.index === "*" || head.index === step))
+    return matches(rest, at2.slice(1));
+  return false;
+}
+function render(at2) {
+  let out = "$";
+  for (const step of at2) {
+    if (typeof step === "number")
+      out += `[${step}]`;
+    else if (/^[A-Za-z_][A-Za-z0-9_-]*$/.test(step))
+      out += `.${step}`;
+    else
+      out += `['${step.replace(/[\\']/g, "\\$&")}']`;
+  }
+  return out;
+}
+function locationOf(where2) {
+  return parsePath(where2).map((t3) => t3.kind === "idx" ? t3.index === "*" ? "*" : t3.index : t3.name);
+}
+function select(doc, pattern) {
+  const out = [];
+  const walk = (value, at2) => {
+    if (matches(pattern, at2))
+      out.push({ at: at2, value });
+    if (Array.isArray(value))
+      value.forEach((v2, i8) => walk(v2, [...at2, i8]));
+    else if (isJsonObject(value))
+      for (const [k2, v2] of entriesOf(value))
+        walk(v2, [...at2, k2]);
+  };
+  walk(doc, []);
+  return out;
+}
+
+// packages/core/dist/expect-shape.js
+var KEYS = /* @__PURE__ */ new Set(["status", "headers", "json", "body_contains", "body_excludes"]);
+var JSON_TYPES = /* @__PURE__ */ new Set(["object", "array", "string", "number", "boolean", "null"]);
+var isObject = (v2) => !!v2 && typeof v2 === "object" && !Array.isArray(v2);
+function jsonCheckProblem(check2) {
+  if (!isObject(check2))
+    return "must be one of { equals }, { matches }, { type } or { exists }";
+  const given = Object.keys(check2);
+  if (given.length !== 1 || !["equals", "matches", "type", "exists"].includes(given[0]))
+    return `must hold exactly one of equals, matches, type or exists, and holds ${given.length ? given.join(", ") : "nothing"}`;
+  if ("matches" in check2 && typeof check2.matches !== "string")
+    return "matches must be a regular expression, as text";
+  if ("type" in check2 && !JSON_TYPES.has(String(check2.type)))
+    return `type must be one of ${[...JSON_TYPES].join(", ")}`;
+  if ("exists" in check2 && typeof check2.exists !== "boolean")
+    return "exists must be true or false";
+  return void 0;
+}
+function expectProblem(exp) {
+  if (!isObject(exp))
+    return "must be a mapping of checks";
+  const unknown = Object.keys(exp).filter((k2) => !KEYS.has(k2));
+  if (unknown.length)
+    return `${unknown.join(", ")} ${unknown.length === 1 ? "is not a check" : "are not checks"}: use ${[...KEYS].join(", ")}`;
+  let checks = 0;
+  if (exp.status !== void 0) {
+    const list = Array.isArray(exp.status) ? exp.status : [exp.status];
+    if (!list.length || !list.every((s4) => Number.isInteger(s4)))
+      return "status must be a number or a list of numbers, such as 200 or [200, 204]";
+    checks++;
+  }
+  if (exp.headers !== void 0) {
+    if (!isObject(exp.headers))
+      return "headers must map a header name to its value or { matches }";
+    for (const [name, want] of Object.entries(exp.headers)) {
+      if (typeof want === "string") {
+        checks++;
+        continue;
+      }
+      if (!isObject(want) || Object.keys(want).join() !== "matches" || typeof want.matches !== "string")
+        return `headers.${name} must be text or { matches: <regular expression> }`;
+      checks++;
+    }
+  }
+  if (exp.json !== void 0) {
+    if (!isObject(exp.json))
+      return "json must map a JSON path to a check";
+    for (const [where2, check2] of Object.entries(exp.json)) {
+      try {
+        parsePath(where2);
+      } catch (err) {
+        return `json: ${where2}: ${err.message}`;
+      }
+      const bad = jsonCheckProblem(check2);
+      if (bad)
+        return `json: ${where2} ${bad}`;
+      checks++;
+    }
+  }
+  for (const k2 of ["body_contains", "body_excludes"]) {
+    const v2 = exp[k2];
+    if (v2 === void 0)
+      continue;
+    if (!Array.isArray(v2) || !v2.every((t3) => typeof t3 === "string"))
+      return `${k2} must be a list of text`;
+    checks += v2.length;
+  }
+  return checks ? void 0 : "holds no check, so it would pass whatever came back. Add one, or remove `expect:`";
+}
 
 // packages/core/dist/history.js
 import fs from "node:fs";
@@ -14007,6 +14338,13 @@ function historyOf(raw) {
   };
   const keepDays = num("keep_days"), keepRuns = num("keep_runs"), maxMb = num("max_mb");
   return { dated: r6.dated === true, keep_days: keepDays ?? DEFAULT_HISTORY.keep_days, ...keepRuns ? { keep_runs: keepRuns } : {}, max_mb: maxMb ?? DEFAULT_HISTORY.max_mb };
+}
+
+// packages/core/dist/people.js
+var TOOL_NAMES = /^(ai|a\.i\.|bot|llm|ml|model|assistant|ai assistant|automation|automated|script|system|ci|ci\/cd|pipeline|github actions|claude|claude code|anthropic|copilot|github copilot|chatgpt|openai|gpt|gemini|cursor|codex|cmtk)$/;
+function looksLikeAgent(name) {
+  const n3 = name.trim().toLowerCase().replace(/\s+/g, " ");
+  return /\bagents?\b/.test(n3) || /\bbots?\b/.test(n3) || /\[bot\]/.test(n3) || /\bcopilot\b|\bchatgpt\b|\bgpt-?\d/.test(n3) || /^claude[-:[(]/.test(n3) || /^claude (code|opus|sonnet|haiku)\b/.test(n3) || TOOL_NAMES.test(n3);
 }
 
 // packages/core/dist/manifest.js
@@ -14195,7 +14533,7 @@ function registriesOf(raw) {
       throw new ManifestError(`adapter_registries: the name ${JSON.stringify(name)} must be letters, digits, '.', '-' and '_'.`);
     if (typeof at2 !== "string" || !at2.trim())
       throw new ManifestError(`adapter_registries.${name} must be a git address or a folder.`);
-    if (/^https?:\/\/[^/]*@|^[a-z][a-z0-9+.-]*:\/\/[^/@]*:[^/@]*@/i.test(at2))
+    if (/^https?:\/\/[^/]*@|^[a-z][a-z0-9+.-]*:\/\/[^/@]*:[^/@]*@|^[^/\s@]*:[^/\s@]*@/i.test(at2))
       throw new ManifestError(`adapter_registries.${name} holds a credential. Remove it from cmtk.yaml, and let git's credential helper or your ssh key supply it.`);
   }
   return raw;
@@ -14225,6 +14563,8 @@ function inside(manifest, rel2) {
   let existing = full;
   const rest = [];
   while (!fs2.existsSync(existing) && path2.dirname(existing) !== existing) {
+    if (fs2.lstatSync(existing, { throwIfNoEntry: false })?.isSymbolicLink())
+      throw new ManifestError(`${rel2} leads through a link that points nowhere (${existing}).`);
     rest.unshift(path2.basename(existing));
     existing = path2.dirname(existing);
   }
@@ -14275,6 +14615,11 @@ function loadCases(manifest) {
         throw new ManifestError(`${where2}: \`draft\` must be true or false.`);
       if (c4.expect_draft !== void 0 && typeof c4.expect_draft !== "boolean")
         throw new ManifestError(`${where2}: \`expect_draft\` must be true or false.`);
+      if (c4.expect !== void 0 && c4.expect !== null) {
+        const bad = expectProblem(c4.expect);
+        if (bad)
+          throw new ManifestError(`${where2}: \`expect:\` ${bad}.`);
+      }
       if (c4.expect_draft && !c4.expect)
         throw new ManifestError(`${where2}: \`expect_draft\` marks a drafted \`expect:\` block, and this case has none.`);
       const method = String(req.method ?? "GET").toUpperCase();
@@ -14379,6 +14724,10 @@ function loadDrift(manifest) {
       if (typeof d4?.[k2] !== "string" || !d4[k2].trim())
         throw new ManifestError(`${manifest.drift} entry ${i8 + 1}: \`${k2}\` is required. Only a named person approves drift.`);
     }
+    if (looksLikeAgent(d4.approved_by))
+      throw new ManifestError(`${manifest.drift} entry ${i8 + 1}: \`approved_by\` must name a person, not an agent. An agent proposes with cmtk_propose, and a person approves with \`cmtk review\`.`);
+    if ((d4.case ?? "*") === "*" && d4.where.replace(/[*$.[\]\s:]/g, "").length < 2)
+      throw new ManifestError(`${manifest.drift} entry ${i8 + 1}: this would approve every difference in every case. Name a case, or a place from a report such as $.items[*].price.`);
     return { id: d4.id, case: d4.case ?? "*", where: d4.where, reason: d4.reason, approved_by: d4.approved_by, ...d4.date ? { date: String(d4.date) } : {} };
   });
 }
@@ -14435,9 +14784,9 @@ timeout_s: 30
 `;
 
 // packages/core/dist/shadow.js
-import crypto11 from "node:crypto";
-import fs19 from "node:fs";
-import path18 from "node:path";
+import crypto13 from "node:crypto";
+import fs21 from "node:fs";
+import path20 from "node:path";
 import readline2 from "node:readline";
 
 // packages/core/dist/adapters.js
@@ -14450,6 +14799,31 @@ import https from "node:https";
 import readline from "node:readline";
 import zlib from "node:zlib";
 var MAX_BODY = 5 * 1024 * 1024;
+var HIDDEN = "REDACTED";
+var maskCookie = (line2) => line2.replace(/^([^=;]*=)[^;]*/, `$1${HIDDEN}`);
+function hideValues(obs, values) {
+  const forms = /* @__PURE__ */ new Set();
+  for (const v2 of values) {
+    const bare = v2.replace(/^[A-Za-z][A-Za-z0-9-]*\s+/, "");
+    for (const one of [v2, bare]) {
+      if (one.length < 4)
+        continue;
+      forms.add(one);
+      forms.add(encodeURIComponent(one));
+      forms.add(JSON.stringify(one).slice(1, -1));
+    }
+  }
+  if (!forms.size)
+    return obs;
+  const longestFirst = [...forms].sort((a4, b2) => b2.length - a4.length);
+  const clean2 = (s4) => longestFirst.reduce((t3, form) => t3.split(form).join(HIDDEN), s4);
+  return {
+    ...obs,
+    ...obs.body !== void 0 ? { body: clean2(obs.body) } : {},
+    ...obs.error !== void 0 ? { error: clean2(obs.error) } : {},
+    ...obs.headers ? { headers: Object.fromEntries(Object.entries(obs.headers).map(([k2, v2]) => [k2, clean2(v2)])) } : {}
+  };
+}
 function httpAdapter(opts) {
   return {
     run: (c4, target2, extra) => target2.base_url ? send(target2.base_url, c4, extra, opts) : Promise.resolve({ error: `target ${target2.name} has no base_url, so HTTP cases cannot run on it` })
@@ -14643,6 +15017,9 @@ async function prepare(baseUrl, c4, before, extra, opts) {
   return { taken, cookies, outcome: { request: `GET ${before.get}`, status: page.obs.status, took: Object.keys(taken), cookies: Object.keys(cookies) } };
 }
 async function send(baseUrl, c4, extra, opts) {
+  return hideValues(await exchange(baseUrl, c4, extra, opts), Object.values(extra));
+}
+async function exchange(baseUrl, c4, extra, opts) {
   const req = c4.request;
   if (!req.path.startsWith("/") || req.path.startsWith("//"))
     return { error: "the path must start with a single '/'" };
@@ -14698,6 +15075,8 @@ function transfer(baseUrl, c4, extra, opts, taken = {}) {
           if (v2 !== void 0)
             h4[k2.toLowerCase()] = Array.isArray(v2) ? v2.join(", ") : String(v2);
         setCookie = res.headers["set-cookie"] ?? [];
+        if (setCookie.length)
+          h4["set-cookie"] = setCookie.map(maskCookie).join(", ");
         const enc = String(res.headers["content-encoding"] ?? "").trim().toLowerCase();
         const flush = { finishFlush: zlib.constants.Z_SYNC_FLUSH };
         const stream = enc === "gzip" || enc === "x-gzip" ? res.pipe(zlib.createGunzip(flush)) : enc === "deflate" ? res.pipe(zlib.createInflate(flush)) : enc === "br" ? res.pipe(zlib.createBrotliDecompress({ finishFlush: zlib.constants.BROTLI_OPERATION_FLUSH })) : res;
@@ -14823,8 +15202,8 @@ function processAdapter(name, spec, cwd) {
 }
 
 // packages/core/dist/defects.js
-import fs13 from "node:fs";
-import path12 from "node:path";
+import fs14 from "node:fs";
+import path13 from "node:path";
 
 // packages/core/dist/har.js
 var import_yaml2 = __toESM(require_dist(), 1);
@@ -14832,186 +15211,59 @@ import crypto2 from "node:crypto";
 import fs4 from "node:fs";
 import path4 from "node:path";
 
-// packages/core/dist/json.js
-var JsonNumber = class {
-  source;
-  constructor(source) {
-    this.source = source;
-  }
-  get value() {
-    return Number(this.source);
-  }
-  /** The same value for any way of writing it: `10`, `10.0` and `1e1` all give `1e1`. Exact for any size. */
-  get canonical() {
-    const m4 = /^(-?)(\d+)(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/.exec(this.source);
-    if (!m4)
-      return this.source;
-    const frac = m4[3] ?? "";
-    let digits = (m4[2] + frac).replace(/^0+/, "");
-    let exp = Number(m4[4] ?? 0) - frac.length;
-    if (!digits)
-      return "0";
-    while (digits.endsWith("0")) {
-      digits = digits.slice(0, -1);
-      exp++;
+// packages/core/dist/redact.js
+var REDACTED = "REDACTED";
+var luhn = (digits) => {
+  let sum = 0;
+  for (let i8 = 0; i8 < digits.length; i8++) {
+    let d4 = Number(digits[digits.length - 1 - i8]);
+    if (i8 % 2 === 1) {
+      d4 *= 2;
+      if (d4 > 9)
+        d4 -= 9;
     }
-    return `${m4[1]}${digits}e${exp}`;
+    sum += d4;
   }
-  toJSON() {
-    return this.value;
-  }
+  return sum % 10 === 0;
 };
-var JsonObject = class extends Map {
-  toJSON() {
-    return Object.fromEntries(this);
+var TOKENS = [
+  ["token", /\beyJ[\w-]{4,}\.[\w-]{4,}\.[\w-]*/g],
+  ["token", /\b(?:sk|pk|rk)_(?:live|test)_\w+/g],
+  ["token", /\b[A-Fa-f0-9]{32,}\b/g],
+  ["token", /[A-Za-z0-9+_-]{40,}={0,2}/g]
+];
+var SHAPES = [
+  ["email", /[^\s@/?&=;,"'<>[\]]+@[^\s@/?&=;,"'<>[\]]+\.[A-Za-z]{2,}/g],
+  ...TOKENS,
+  ["card number", /\b\d(?:[ -]?\d){12,18}\b/g, (m4) => luhn(m4.replace(/\D/g, ""))],
+  ["national number", /\b[A-CEGHJ-PR-TW-Z]{2}\s?\d{2}\s?\d{2}\s?\d{2}\s?[A-D]\b/gi],
+  ["national number", /\b\d{3}-\d{2}-\d{4}\b/g],
+  ["bank account", /\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b/g],
+  ["postcode", /\b[A-PR-UWYZ][A-HK-Y]?\d[A-Z\d]?[ +]?\d[ABD-HJLNP-UW-Z]{2}\b/gi],
+  ["phone number", /(?:\+|\b00)\d[\d ()-]{7,16}\d\b/g],
+  ["phone number", /\b0\d{9,10}\b/g],
+  ["IP address", /\b\d{1,3}(?:\.\d{1,3}){3}\b/g]
+];
+function redactText(text2, own = []) {
+  const kinds = [];
+  let out = text2;
+  for (const rx of own)
+    out = out.replace(rx, () => {
+      kinds.push("your --redact rule");
+      return REDACTED;
+    });
+  for (const [kind, rx, keep2] of SHAPES) {
+    out = out.replace(rx, (m4) => {
+      if (keep2 && !keep2(m4))
+        return m4;
+      kinds.push(kind);
+      return REDACTED;
+    });
   }
-};
-var MAX_DEPTH = 1e3;
-function parseJsonExact(text2) {
-  let i8 = 0;
-  const fail = (what) => {
-    throw new SyntaxError(`${what} at position ${i8}`);
-  };
-  const ws = () => {
-    for (; ; ) {
-      const c4 = text2.charCodeAt(i8);
-      if (c4 === 32 || c4 === 9 || c4 === 10 || c4 === 13)
-        i8++;
-      else
-        return;
-    }
-  };
-  const str = () => {
-    const start = i8++;
-    let escaped = false;
-    for (; ; ) {
-      if (i8 >= text2.length)
-        fail("unterminated string");
-      const c4 = text2.charCodeAt(i8);
-      if (c4 === 92) {
-        escaped = true;
-        i8 += 2;
-        continue;
-      }
-      if (c4 === 34)
-        break;
-      if (c4 < 32)
-        fail("control character in a string");
-      i8++;
-    }
-    i8++;
-    const raw = text2.slice(start, i8);
-    return escaped ? JSON.parse(raw) : raw.slice(1, -1);
-  };
-  const NUM = /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/y;
-  const value = (depth) => {
-    if (depth > MAX_DEPTH)
-      fail("nested too deeply");
-    ws();
-    const c4 = text2[i8];
-    if (c4 === "{") {
-      i8++;
-      const o4 = new JsonObject();
-      ws();
-      if (text2[i8] === "}") {
-        i8++;
-        return o4;
-      }
-      for (; ; ) {
-        ws();
-        if (text2[i8] !== '"')
-          fail("expected a key");
-        const k2 = str();
-        ws();
-        if (text2[i8] !== ":")
-          fail("expected ':'");
-        i8++;
-        o4.set(k2, value(depth + 1));
-        ws();
-        if (text2[i8] === ",") {
-          i8++;
-          continue;
-        }
-        if (text2[i8] === "}") {
-          i8++;
-          return o4;
-        }
-        fail("expected ',' or '}'");
-      }
-    }
-    if (c4 === "[") {
-      i8++;
-      const a4 = [];
-      ws();
-      if (text2[i8] === "]") {
-        i8++;
-        return a4;
-      }
-      for (; ; ) {
-        a4.push(value(depth + 1));
-        ws();
-        if (text2[i8] === ",") {
-          i8++;
-          continue;
-        }
-        if (text2[i8] === "]") {
-          i8++;
-          return a4;
-        }
-        fail("expected ',' or ']'");
-      }
-    }
-    if (c4 === '"')
-      return str();
-    if (text2.startsWith("true", i8)) {
-      i8 += 4;
-      return true;
-    }
-    if (text2.startsWith("false", i8)) {
-      i8 += 5;
-      return false;
-    }
-    if (text2.startsWith("null", i8)) {
-      i8 += 4;
-      return null;
-    }
-    NUM.lastIndex = i8;
-    const m4 = NUM.exec(text2);
-    if (!m4)
-      fail("unexpected character");
-    i8 = NUM.lastIndex;
-    if (/[0-9.eE+-]/.test(text2[i8] ?? ""))
-      fail("malformed number");
-    return new JsonNumber(m4[0]);
-  };
-  const v2 = value(0);
-  ws();
-  if (i8 < text2.length)
-    fail("unexpected text after the value");
-  return v2;
+  return { text: out, kinds };
 }
-function entriesOf(v2) {
-  if (v2 instanceof JsonObject)
-    return [...v2.entries()];
-  return Object.entries(v2);
-}
-var isJsonObject = (v2) => v2 instanceof JsonObject || v2 !== null && typeof v2 === "object" && !Array.isArray(v2) && !(v2 instanceof JsonNumber) && !(v2 instanceof Map);
-function jsonEqual(a4, b2) {
-  if (a4 instanceof JsonNumber)
-    a4 = a4.value;
-  if (b2 instanceof JsonNumber)
-    b2 = b2.value;
-  if (Array.isArray(a4) || Array.isArray(b2)) {
-    return Array.isArray(a4) && Array.isArray(b2) && a4.length === b2.length && a4.every((x2, i8) => jsonEqual(x2, b2[i8]));
-  }
-  if (isJsonObject(a4) || isJsonObject(b2)) {
-    if (!isJsonObject(a4) || !isJsonObject(b2))
-      return false;
-    const ea = new Map(entriesOf(a4)), eb = new Map(entriesOf(b2));
-    return ea.size === eb.size && [...ea].every(([k2, v2]) => eb.has(k2) && jsonEqual(v2, eb.get(k2)));
-  }
-  return a4 === b2;
-}
+var holdsToken = (text2) => TOKENS.some(([, rx]) => new RegExp(rx.source).test(text2));
+var redactTokens = (text2) => TOKENS.reduce((t3, [, rx]) => t3.replace(rx, REDACTED), text2);
 
 // packages/core/dist/har.js
 var STATIC = /\.(js|mjs|css|map|png|jpe?g|gif|svg|ico|woff2?|ttf|eot|webp|mp4|webm)$/i;
@@ -15043,23 +15295,30 @@ var DROPPED_HEADERS = /* @__PURE__ */ new Set([
   "pragma",
   "priority"
 ]);
-var REDACTED = "REDACTED";
 function looksSecret(name, kind = "field") {
   const n3 = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-  if (kind === "header" && n3.endsWith("key"))
+  if (kind === "header" && (n3.endsWith("key") || /session|auth(?!or)/.test(n3)))
     return true;
-  if (["key", "code", "sig", "sid", "pin", "otp", "totp", "mfa", "session", "jwt", "pass", "pwd", "secret", "token", "hash", "nonce", "pan"].includes(n3))
+  if (["key", "code", "sig", "sid", "pin", "otp", "totp", "mfa", "session", "jwt", "pass", "pwd", "pw", "sas", "ticket", "secret", "token", "hash", "nonce", "pan"].includes(n3))
     return true;
-  return /token|secret|passw|apikey|subscriptionkey|accesskey|privatekey|functionkey|signature|sessionid|credential|^x?auth(orization|key|code|header)?$|cookie|csrf|xsrf|bearer|pincode|cvv|cvc|cardnumber/.test(n3);
+  return /token|secret|passw|passphrase|ticket$|apikey|subscriptionkey|accesskey|privatekey|functionkey|signature|sessionid|credential|^x?auth(orization|key|code|header)?$|cookie|csrf|xsrf|bearer|pincode|cvv|cvc|cardnumber/.test(n3);
 }
 function redactJson(v2) {
   let hit2 = false;
   if (Array.isArray(v2))
-    for (const x2 of v2)
-      hit2 = redactJson(x2) || hit2;
+    v2.forEach((x2, i8) => {
+      if (typeof x2 === "string" && holdsToken(x2)) {
+        v2[i8] = REDACTED;
+        hit2 = true;
+      } else
+        hit2 = redactJson(x2) || hit2;
+    });
   else if (v2 instanceof JsonObject) {
     for (const [k2, x2] of v2) {
       if (looksSecret(k2) && x2 !== null) {
+        v2.set(k2, REDACTED);
+        hit2 = true;
+      } else if (typeof x2 === "string" && holdsToken(x2)) {
         v2.set(k2, REDACTED);
         hit2 = true;
       } else
@@ -15093,7 +15352,7 @@ function redactBody(text2, contentType) {
     const p4 = new URLSearchParams(text2);
     let hit2 = false;
     for (const k2 of [...new Set(p4.keys())])
-      if (looksSecret(k2)) {
+      if (looksSecret(k2) || p4.getAll(k2).some(holdsToken)) {
         p4.set(k2, REDACTED);
         hit2 = true;
       }
@@ -15112,9 +15371,10 @@ function redactBody(text2, contentType) {
       hit2 = true;
       return `<${tag}${attrs ?? ""}>${REDACTED}</${tag}>`;
     });
-    return [out, hit2];
+    const clean2 = redactTokens(out);
+    return [clean2, hit2 || clean2 !== out];
   }
-  return /passw|token|secret|api[-_]?key/i.test(text2) ? [REDACTED, true] : [text2, false];
+  return /passw|token|secret|api[-_]?key/i.test(text2) || holdsToken(text2) ? [REDACTED, true] : [text2, false];
 }
 var EXPECT_NOTE = "Expectation drafted from the recording: the status and content type legacy answered. That is legacy's behaviour, not the requirement. A person confirms it, or writes what the requirement says.";
 var CACHED_NOTE = "The browser had its own copy, so the recording says 304. A replay sends no If-None-Match, so it gets the page: the draft allows 200 or 304. Keep the one you mean.";
@@ -15135,6 +15395,34 @@ function draftExpectation(response) {
   return { expect, note: EXPECT_NOTE };
 }
 var key = (c4) => crypto2.createHash("sha256").update(JSON.stringify([c4.request.method, c4.request.path, c4.request.body ?? ""])).digest("hex");
+var CREDENTIAL_VALUE = /^\s*(bearer|basic|digest|negotiate|ntlm|token|apikey)\s+\S/i;
+var decodedPart = (s4) => {
+  try {
+    return decodeURIComponent(s4.replace(/\+/g, " "));
+  } catch {
+    return s4;
+  }
+};
+function cleanUrlParts(pathname, search) {
+  let hidden2 = false;
+  const hide = () => {
+    hidden2 = true;
+    return REDACTED;
+  };
+  const cleanPath2 = pathname.split("/").map((seg) => holdsToken(decodedPart(seg)) ? hide() : seg).join("/");
+  if (!search)
+    return { path: cleanPath2, hidden: hidden2 };
+  const query = search.slice(1).split(/([&;])/).map((pair, i8) => {
+    if (i8 % 2)
+      return pair;
+    const eq = pair.indexOf("=");
+    if (eq < 0)
+      return holdsToken(decodedPart(pair)) ? hide() : pair;
+    const value = decodedPart(pair.slice(eq + 1));
+    return looksSecret(decodedPart(pair.slice(0, eq))) || holdsToken(value) ? `${pair.slice(0, eq)}=${hide()}` : pair;
+  }).join("");
+  return { path: `${cleanPath2}?${query}`, hidden: hidden2 };
+}
 function importHar(files, opts = {}) {
   const inc = opts.include ? new RegExp(opts.include) : void 0;
   const exc = opts.exclude ? new RegExp(opts.exclude) : void 0;
@@ -15168,20 +15456,17 @@ function importHar(files, opts = {}) {
         const name = String(h4?.name ?? "");
         if (!name || name.startsWith(":"))
           continue;
-        if (DROPPED_HEADERS.has(name.toLowerCase()) || looksSecret(name, "header")) {
+        const value = String(h4.value ?? "");
+        if (DROPPED_HEADERS.has(name.toLowerCase()) || looksSecret(name, "header") || CREDENTIAL_VALUE.test(value) || holdsToken(value)) {
           dropped.add(name.toLowerCase());
           continue;
         }
-        headers[name] = String(h4.value ?? "");
+        headers[name] = value;
       }
       const method = String(r6.method ?? "GET").toUpperCase();
-      let hidden2 = false;
-      for (const k3 of [...new Set(u4.searchParams.keys())])
-        if (looksSecret(k3)) {
-          u4.searchParams.set(k3, REDACTED);
-          hidden2 = true;
-        }
-      const p4 = u4.pathname + u4.search;
+      const clean2 = cleanUrlParts(u4.pathname, u4.search);
+      let hidden2 = clean2.hidden;
+      const p4 = clean2.path;
       let body = r6.postData?.text || null;
       if (body) {
         const ct2 = String(r6.postData?.mimeType ?? Object.entries(headers).find(([h4]) => h4.toLowerCase() === "content-type")?.[1] ?? "");
@@ -15230,13 +15515,12 @@ function casesToYaml(cases, header = "Imported from HAR recordings. Add `require
 
 // packages/core/dist/proposals.js
 var import_yaml5 = __toESM(require_dist(), 1);
-import fs12 from "node:fs";
-import path11 from "node:path";
+import fs13 from "node:fs";
+import path12 from "node:path";
 
 // packages/core/dist/known.js
 import fs5 from "node:fs";
 var KNOWN_ISSUE_ID = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
-var isAgent = (name) => /^agent\b/i.test(name.trim());
 function knownFails(raw, where2) {
   if (!Array.isArray(raw) || raw.length === 0)
     throw new ManifestError(`${where2}: \`fails\` must list what fails, each as { check, expected?, actual? } copied from the report.`);
@@ -15251,6 +15535,9 @@ function knownFails(raw, where2) {
         throw new ManifestError(`${where2}: fails[${i8}].${k2} must be text, copied from the report.`);
       out[k2] = String(f4[k2]);
     }
+    const says = (v2) => v2 !== void 0 && !!v2.trim();
+    if (!says(out.actual) && !(out.check === "body" && says(out.expected)))
+      throw new ManifestError(`${where2}: fails[${i8}] must say how it fails: copy \`actual\` from the report${out.check === "body" ? ", or for a body give `expected`" : ""}. Without it the entry would accept any failure at ${out.check}.`);
     return out;
   });
 }
@@ -15276,7 +15563,7 @@ function loadKnownIssues(manifest) {
     seen.add(k2.id);
     if (k2.case.includes("*"))
       throw new ManifestError(`${where2}: \`case\` must name one case. A known issue never covers every case.`);
-    if (isAgent(k2.accepted_by))
+    if (looksLikeAgent(k2.accepted_by))
       throw new ManifestError(`${where2}: \`accepted_by\` must name a person, not an agent. An agent proposes with cmtk_propose, and a person accepts with \`cmtk review\`.`);
     if (k2.target !== void 0 && !manifest.targets[k2.target])
       throw new ManifestError(`${where2}: \`target\` names ${JSON.stringify(k2.target)}, which is not in targets (${Object.keys(manifest.targets).join(", ")}).`);
@@ -15312,95 +15599,89 @@ function knownInReport(entries, outcomes, allCaseIds) {
   });
 }
 
-// packages/core/dist/jsonpath.js
-var PathError = class extends Error {
+// packages/core/dist/methods.js
+import crypto3 from "node:crypto";
+import fs6 from "node:fs";
+import path5 from "node:path";
+var SAFE_METHODS = /* @__PURE__ */ new Set(["GET", "HEAD", "OPTIONS"]);
+var OVERRIDE_HEADERS = /* @__PURE__ */ new Set(["x-http-method-override", "x-http-method", "x-method-override", "x-original-method"]);
+var OVERRIDE_NAMES = /* @__PURE__ */ new Set(["httpmethod", "xhttpmethod", "xhttpmethodoverride", "httpmethodoverride", "methodoverride", "xmethodoverride"]);
+var WRITING_VERBS = /* @__PURE__ */ new Set(["POST", "PUT", "PATCH", "DELETE", "MERGE"]);
+var decoded = (s4) => {
+  try {
+    return decodeURIComponent(s4.replace(/\+/g, " "));
+  } catch {
+    return s4;
+  }
 };
-var TOKEN = /\.\.(?<desc>[^.[\]]+)|\.(?<key>[^.[\]]+)|\[(?<idx>\*|\d+)\]|\['(?<qkey>(?:[^'\\]|\\.)*)'\]/y;
-function parsePath(expr) {
-  if (typeof expr !== "string" || !expr.startsWith("$"))
-    throw new PathError(`JSON path ${JSON.stringify(expr)} must start with '$'.`);
-  const out = [];
-  let pos = 1;
-  while (pos < expr.length) {
-    TOKEN.lastIndex = pos;
-    const m4 = TOKEN.exec(expr);
-    if (!m4 || !m4.groups)
-      throw new PathError(`Cannot read JSON path ${JSON.stringify(expr)} at ${JSON.stringify(expr.slice(pos))}.`);
-    const g3 = m4.groups;
-    if (g3.desc !== void 0)
-      out.push({ kind: "desc", name: g3.desc });
-    else if (g3.key !== void 0)
-      out.push({ kind: "key", name: g3.key });
-    else if (g3.qkey !== void 0)
-      out.push({ kind: "key", name: g3.qkey.replace(/\\(.)/g, "$1") });
-    else
-      out.push({ kind: "idx", index: g3.idx === "*" ? "*" : Number(g3.idx) });
-    pos = TOKEN.lastIndex;
+function overrideIn(target2, headers = {}) {
+  for (const [k2, v2] of Object.entries(headers)) {
+    if (OVERRIDE_HEADERS.has(k2.toLowerCase()) && !SAFE_METHODS.has(String(v2).trim().toUpperCase()))
+      return String(v2).trim().toUpperCase();
   }
-  return out;
+  const hash2 = target2.indexOf("#");
+  for (const pair of (hash2 < 0 ? target2 : target2.slice(0, hash2)).split(/[?&;]/).slice(1)) {
+    const eq = pair.indexOf("=");
+    if (eq <= 0)
+      continue;
+    const raw = decoded(pair.slice(0, eq));
+    const name = raw.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const value = decoded(pair.slice(eq + 1)).trim().toUpperCase();
+    if (OVERRIDE_NAMES.has(name) || /^[_$]method$/i.test(raw)) {
+      if (!SAFE_METHODS.has(value))
+        return value;
+    } else if (name === "method" && WRITING_VERBS.has(value))
+      return value;
+  }
+  return void 0;
 }
-function matches(pattern, at2) {
-  if (pattern.length === 0)
-    return at2.length === 0;
-  const [head, ...rest] = pattern;
-  if (!head)
-    return at2.length === 0;
-  if (head.kind === "desc") {
-    for (let i8 = 0; i8 < at2.length; i8++) {
-      const step2 = at2[i8];
-      if (typeof step2 === "string" && (head.name === "*" || step2 === head.name) && matches(rest, at2.slice(i8 + 1)))
-        return true;
+var hasBody = (r6) => r6.body !== null && r6.body !== void 0 && r6.body !== "" || r6.body_file !== void 0 || r6.body_form !== void 0 || !!r6.files?.length;
+function writes(c4) {
+  const r6 = c4.request;
+  if (!SAFE_METHODS.has(r6.method))
+    return true;
+  if (overrideIn(r6.path, r6.headers) !== void 0)
+    return true;
+  if (r6.before && overrideIn(r6.before.get, r6.headers) !== void 0)
+    return true;
+  return (c4.surface ?? "http") === "http" && hasBody(r6);
+}
+var NOT_WHAT_IT_DOES = /* @__PURE__ */ new Set(["id", "name", "requirement", "expect", "expect_draft", "expect_confirmed_by", "expect_confirmed_on", "expect_changed_by", "expect_changed_on", "match", "source", "file", "draft", "draft_note", "note", "accepted_by", "accepted_on", "safe_confirmed_by", "safe_confirmed_on", "safe_print"]);
+var canonical = (v2) => {
+  if (Array.isArray(v2))
+    return v2.map(canonical);
+  if (v2 && typeof v2 === "object")
+    return Object.fromEntries(Object.entries(v2).sort(([a4], [b2]) => a4 < b2 ? -1 : 1).map(([k2, x2]) => [k2, canonical(x2)]));
+  return v2;
+};
+function safePrint(c4, root) {
+  const what = Object.fromEntries(Object.entries(c4).filter(([k2]) => !NOT_WHAT_IT_DOES.has(k2)));
+  const r6 = c4.request;
+  const files = [r6.body_file, typeof r6.body_form === "string" ? r6.body_form : void 0, ...(r6.files ?? []).map((f4) => f4.path), typeof c4.journey?.script === "string" ? c4.journey.script : void 0].filter((f4) => !!f4);
+  const h4 = crypto3.createHash("sha256").update(JSON.stringify(canonical(what)));
+  for (const f4 of files.sort()) {
+    let bytes = "(no such file)";
+    try {
+      bytes = fs6.readFileSync(path5.resolve(root, f4));
+    } catch {
     }
-    return false;
+    h4.update("\0").update(f4).update("\0").update(bytes);
   }
-  if (at2.length === 0)
-    return false;
-  const step = at2[0];
-  if (head.kind === "key" && typeof step === "string" && (head.name === "*" || head.name === step))
-    return matches(rest, at2.slice(1));
-  if (head.kind === "idx" && typeof step === "number" && (head.index === "*" || head.index === step))
-    return matches(rest, at2.slice(1));
-  return false;
+  return `sha256:${h4.digest("hex")}`;
 }
-function render(at2) {
-  let out = "$";
-  for (const step of at2) {
-    if (typeof step === "number")
-      out += `[${step}]`;
-    else if (/^[A-Za-z_][A-Za-z0-9_-]*$/.test(step))
-      out += `.${step}`;
-    else
-      out += `['${step.replace(/[\\']/g, "\\$&")}']`;
-  }
-  return out;
-}
-function locationOf(where2) {
-  return parsePath(where2).map((t3) => t3.kind === "idx" ? t3.index === "*" ? "*" : t3.index : t3.name);
-}
-function select(doc, pattern) {
-  const out = [];
-  const walk = (value, at2) => {
-    if (matches(pattern, at2))
-      out.push({ at: at2, value });
-    if (Array.isArray(value))
-      value.forEach((v2, i8) => walk(v2, [...at2, i8]));
-    else if (isJsonObject(value))
-      for (const [k2, v2] of entriesOf(value))
-        walk(v2, [...at2, k2]);
-  };
-  walk(doc, []);
-  return out;
+function safeConfirmed(c4, root) {
+  return c4.safe === true && typeof c4.safe_confirmed_by === "string" && !!c4.safe_confirmed_by.trim() && !looksLikeAgent(c4.safe_confirmed_by) && c4.safe_print === safePrint(c4, root);
 }
 
 // packages/core/dist/data/model.js
 var import_yaml4 = __toESM(require_dist(), 1);
-import fs11 from "node:fs";
-import path10 from "node:path";
+import fs12 from "node:fs";
+import path11 from "node:path";
 
 // packages/core/dist/data/make.js
-import crypto7 from "node:crypto";
-import fs10 from "node:fs";
-import path9 from "node:path";
+import crypto8 from "node:crypto";
+import fs11 from "node:fs";
+import path10 from "node:path";
 
 // node_modules/@faker-js/faker/dist/base-BpJm8uRb.js
 var e = class extends Error {
@@ -18117,9 +18398,9 @@ function readXlsx(b2, o4 = {}) {
 }
 
 // packages/core/dist/data/copybook.js
-import crypto3 from "node:crypto";
-import fs6 from "node:fs";
-import path5 from "node:path";
+import crypto4 from "node:crypto";
+import fs7 from "node:fs";
+import path6 from "node:path";
 function statements(text2) {
   const lines = text2.replace(/\r\n?/g, "\n").split("\n").map((l4) => {
     const fixed = /^[ \d]{6}[ *\/-]/.test(l4) || /^.{6}[*\/]/.test(l4);
@@ -18215,7 +18496,7 @@ function parseCopybook(text2, file = "copybook") {
   roots.forEach(size);
   const single = roots.length === 1 && roots[0].children.length > 0;
   const items = single ? roots[0].children : roots;
-  return { name: single ? roots[0].name : path5.basename(file), items, record_size: items.reduce((n3, c4) => n3 + c4.size * (c4.occurs?.max ?? 1), 0), counters, notes };
+  return { name: single ? roots[0].name : path6.basename(file), items, record_size: items.reduce((n3, c4) => n3 + c4.size * (c4.occurs?.max ?? 1), 0), counters, notes };
 }
 var isFiller = (i8) => /^FILLER-\d+$/.test(i8.name);
 var money = (digits) => digits > 15;
@@ -18247,10 +18528,10 @@ function schemaOfLayout(l4) {
 }
 var isCopybook = (file) => /\.(cpy|cbl|cob|copy)$/i.test(file);
 function modelFromCopybook(file, collect2) {
-  const bytes = fs6.readFileSync(file);
-  const layout = parseCopybook(bytes.toString("utf8"), path5.basename(file));
+  const bytes = fs7.readFileSync(file);
+  const layout = parseCopybook(bytes.toString("utf8"), path6.basename(file));
   const schema = schemaOfLayout(layout);
-  return { source: { file, sha256: crypto3.createHash("sha256").update(bytes).digest("hex") }, schema, fields: collect2(schema, `${path5.basename(file)}#`), layout };
+  return { source: { file, sha256: crypto4.createHash("sha256").update(bytes).digest("hex") }, schema, fields: collect2(schema, `${path6.basename(file)}#`), layout };
 }
 var CP037 = "0000000100020003009c00090086007f0097008d008e000b000c000d000e000f0010001100120013009d008500080087001800190092008f001c001d001e001f00800081008200830084000a0017001b00880089008a008b008c0005000600070090009100160093009400950096000400980099009a009b00140015009e001a002000a000e200e400e000e100e300e500e700f100a2002e003c0028002b007c002600e900ea00eb00e800ed00ee00ef00ec00df00210024002a0029003b00ac002d002f00c200c400c000c100c300c500c700d100a6002c0025005f003e003f00f800c900ca00cb00c800cd00ce00cf00cc0060003a002300400027003d002200d800610062006300640065006600670068006900ab00bb00f000fd00fe00b100b0006a006b006c006d006e006f00700071007200aa00ba00e600b800c600a400b5007e0073007400750076007700780079007a00a100bf00d000dd00de00ae005e00a300a500b700a900a700b600bc00bd00be005b005d00af00a800b400d7007b00410042004300440045004600470048004900ad00f400f600f200f300f5007d004a004b004c004d004e004f00500051005200b900fb00fc00f900fa00ff005c00f70053005400550056005700580059005a00b200d400d600d200d300d5003000310032003300340035003600370038003900b300db00dc00d900da009f";
 var TO_UNI = Array.from({ length: 256 }, (_2, i8) => String.fromCharCode(parseInt(CP037.slice(i8 * 4, i8 * 4 + 4), 16)));
@@ -18610,12 +18891,12 @@ var toKey = function(value) {
   const result = `${value}`;
   return result == "0" && 1 / value == -Infinity ? "-0" : result;
 };
-var get = function(object, path25) {
-  path25 = castPath(path25, object);
+var get = function(object, path27) {
+  path27 = castPath(path27, object);
   let index = 0;
-  const length = path25.length;
+  const length = path27.length;
   while (object != null && index < length) {
-    object = object[toKey(path25[index++])];
+    object = object[toKey(path27[index++])];
   }
   return index && index === length ? object : void 0;
 };
@@ -19285,9 +19566,9 @@ function xlsxEdges(columns, rows, w2) {
 
 // packages/core/dist/data/recipe.js
 var import_yaml3 = __toESM(require_dist(), 1);
-import crypto6 from "node:crypto";
-import fs9 from "node:fs";
-import path8 from "node:path";
+import crypto7 from "node:crypto";
+import fs10 from "node:fs";
+import path9 from "node:path";
 
 // packages/core/dist/data/regex.js
 var PRINTABLE = Array.from({ length: 95 }, (_2, i8) => String.fromCharCode(32 + i8));
@@ -19487,9 +19768,9 @@ function stringFromPattern(pattern, rng2, shortest = false) {
 }
 
 // packages/core/dist/data/xsd.js
-import crypto4 from "node:crypto";
-import fs7 from "node:fs";
-import path6 from "node:path";
+import crypto5 from "node:crypto";
+import fs8 from "node:fs";
+import path7 from "node:path";
 var BUILTIN_PREFIX = /^(xs|xsd|s|xsi|ser)$/i;
 var INT_RANGES = {
   int: [-2147483648, 2147483647],
@@ -19559,25 +19840,36 @@ var FIRST = (n3, local) => n3.children.find((c4) => c4.local === local);
 var localOf = (qname) => qname.split(":").pop();
 var prefixOf = (qname) => qname.includes(":") ? qname.split(":")[0] : "";
 var Reader = class {
+  folder;
   notes = [];
   schemas = [];
   groups = 0;
   noted = /* @__PURE__ */ new Set();
+  /** Includes are followed only inside this folder: the project, or the main file's own folder. */
+  constructor(folder) {
+    this.folder = folder;
+  }
   add(node, file, seen = /* @__PURE__ */ new Set()) {
     this.schemas.push({ node, tns: node.attrs.get("targetNamespace") ?? "", qualified: node.attrs.get("elementFormDefault") === "qualified", attrQualified: node.attrs.get("attributeFormDefault") === "qualified", file });
     for (const inc of [...CHILD(node, "include"), ...CHILD(node, "import")]) {
       const loc = inc.attrs.get("schemaLocation");
       if (!loc)
         continue;
-      const full = path6.resolve(path6.dirname(file), loc);
-      if (/^[a-z]+:\/\//i.test(loc) || !fs7.existsSync(full)) {
-        this.note(`${path6.basename(file)} refers to ${loc}, which was not read: only local files are followed, and nothing is fetched.`);
+      const full = path7.resolve(path7.dirname(file), loc);
+      if (/^[a-z]+:\/\//i.test(loc) || !fs8.existsSync(full)) {
+        this.note(`${path7.basename(file)} refers to ${loc}, which was not read: only local files are followed, and nothing is fetched.`);
+        continue;
+      }
+      try {
+        inside({ root: this.folder }, full);
+      } catch {
+        this.note(`${path7.basename(file)} refers to ${loc}, which was not read: it is outside the project.`);
         continue;
       }
       if (seen.has(full))
         continue;
       seen.add(full);
-      this.add(parseXml(fs7.readFileSync(full, "utf8").replace(/^﻿/, "")), full, seen);
+      this.add(parseXml(fs8.readFileSync(full, "utf8").replace(/^﻿/, "")), full, seen);
     }
   }
   note(s4) {
@@ -19799,21 +20091,21 @@ var Reader = class {
   root(name, file) {
     const g3 = this.global("element", name);
     if (!g3)
-      throw new ManifestError(`${path6.basename(file)} has no top-level element ${name}. It has: ${this.topElements().join(", ") || "none"}.`);
-    const e6 = this.element(g3.node, g3.schema, path6.basename(file) + "#", []);
+      throw new ManifestError(`${path7.basename(file)} has no top-level element ${name}. It has: ${this.topElements().join(", ") || "none"}.`);
+    const e6 = this.element(g3.node, g3.schema, path7.basename(file) + "#", []);
     return { ...e6, min: 1, max: 1 };
   }
 };
 var isXsd = (file) => /\.(xsd|wsdl)$/i.test(file);
-function readXsd(file, name) {
-  const text2 = fs7.readFileSync(file, "utf8").replace(/^﻿/, "");
+function readXsd(file, name, root = path7.dirname(path7.resolve(file))) {
+  const text2 = fs8.readFileSync(file, "utf8").replace(/^﻿/, "");
   let doc;
   try {
     doc = parseXml(text2);
   } catch (err) {
-    throw new ManifestError(`${path6.basename(file)} is not XML: ${err.message}`);
+    throw new ManifestError(`${path7.basename(file)} is not XML: ${err.message}`);
   }
-  const r6 = new Reader();
+  const r6 = new Reader(root);
   let rootName = name;
   let soap;
   if (doc.local === "definitions" || doc.local === "description") {
@@ -19821,14 +20113,14 @@ function readXsd(file, name) {
       for (const s4 of CHILD(types, "schema"))
         r6.add(s4, file);
     if (!r6.schemas.length)
-      throw new ManifestError(`${path6.basename(file)} holds no schema in its types. Give the XSD, or a single-file WSDL (?singleWsdl).`);
+      throw new ManifestError(`${path7.basename(file)} holds no schema in its types. Give the XSD, or a single-file WSDL (?singleWsdl).`);
     const portOps = CHILD(doc, "portType").flatMap((p4) => CHILD(p4, "operation"));
     const opNames = portOps.map((o4) => o4.attrs.get("name") ?? "");
     if (!name)
-      throw new ManifestError(`${path6.basename(file)} is a WSDL: name the operation with --operation. Operations: ${opNames.join(", ") || "none"}.`);
+      throw new ManifestError(`${path7.basename(file)} is a WSDL: name the operation with --operation. Operations: ${opNames.join(", ") || "none"}.`);
     const op = portOps.find((o4) => o4.attrs.get("name") === name);
     if (!op)
-      throw new ManifestError(`${path6.basename(file)} has no operation ${name}. Operations: ${opNames.join(", ") || "none"}.`);
+      throw new ManifestError(`${path7.basename(file)} has no operation ${name}. Operations: ${opNames.join(", ") || "none"}.`);
     const msgName = localOf(FIRST(op, "input")?.attrs.get("message") ?? "");
     const msg = CHILD(doc, "message").find((m4) => m4.attrs.get("name") === msgName);
     const part = msg ? FIRST(msg, "part") : void 0;
@@ -19842,18 +20134,18 @@ function readXsd(file, name) {
     soap = { version: isV12 ? "1.2" : "1.1", operation: name, ...soapOp?.attrs.get("soapAction") ? { action: soapOp.attrs.get("soapAction") } : {} };
   } else {
     if (doc.local !== "schema")
-      throw new ManifestError(`${path6.basename(file)} is neither an XSD nor a WSDL: its root is ${doc.local}.`);
+      throw new ManifestError(`${path7.basename(file)} is neither an XSD nor a WSDL: its root is ${doc.local}.`);
     r6.add(doc, file);
     if (!rootName) {
       const tops = r6.topElements();
       if (tops.length !== 1)
-        throw new ManifestError(`${path6.basename(file)} has ${tops.length} top-level elements: name one with --operation. They are: ${tops.join(", ") || "none"}.`);
+        throw new ManifestError(`${path7.basename(file)} has ${tops.length} top-level elements: name one with --operation. They are: ${tops.join(", ") || "none"}.`);
       rootName = tops[0];
     }
   }
   return { root: r6.root(rootName, file), notes: r6.notes, ...soap ? { soap } : {} };
 }
-var xsdSha = (file) => crypto4.createHash("sha256").update(fs7.readFileSync(file)).digest("hex");
+var xsdSha = (file) => crypto5.createHash("sha256").update(fs8.readFileSync(file)).digest("hex");
 var esc2 = (s4) => s4.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 var escAttr = (s4) => esc2(s4).replace(/"/g, "&quot;").replace(/\n/g, "&#10;").replace(/\r/g, "&#13;").replace(/\t/g, "&#9;");
 var NOT_XML = /[\u0000-\u0008\u000b\u000c\u000e-\u001f￾￿]/;
@@ -20168,9 +20460,9 @@ function xsdFields(model) {
 }
 
 // packages/core/dist/data/schema.js
-import crypto5 from "node:crypto";
-import fs8 from "node:fs";
-import path7 from "node:path";
+import crypto6 from "node:crypto";
+import fs9 from "node:fs";
+import path8 from "node:path";
 var SUPPORTED = /* @__PURE__ */ new Set([
   "type",
   "properties",
@@ -20290,10 +20582,10 @@ function collect(s4, at2, source, required, fields) {
 function modelFromSchema(file, raw, doc) {
   const schema = resolve(raw, doc ?? raw);
   const fields = [];
-  collect(schema, "$", `${path7.basename(file)}#`, true, fields);
+  collect(schema, "$", `${path8.basename(file)}#`, true, fields);
   return { source: { file, sha256: fileSha(file) }, schema, fields };
 }
-var fileSha = (file) => fs8.existsSync(file) ? crypto5.createHash("sha256").update(fs8.readFileSync(file)).digest("hex") : "";
+var fileSha = (file) => fs9.existsSync(file) ? crypto6.createHash("sha256").update(fs9.readFileSync(file)).digest("hex") : "";
 function modelFromOpenApi(file, raw, operation) {
   const doc = raw;
   if (!doc?.openapi && !doc?.swagger)
@@ -20310,10 +20602,10 @@ function modelFromOpenApi(file, raw, operation) {
   const bodySchema = json?.schema ? resolve(json.schema, doc) : void 0;
   const fields = [];
   if (bodySchema)
-    collect(bodySchema, "$", `${path7.basename(file)}#${method.toUpperCase()} ${p4}/requestBody`, op.requestBody?.required !== false, fields);
+    collect(bodySchema, "$", `${path8.basename(file)}#${method.toUpperCase()} ${p4}/requestBody`, op.requestBody?.required !== false, fields);
   const parameters = [...doc.paths?.[p4]?.parameters ?? [], ...op.parameters ?? []].map((x2) => resolve(x2, doc)).filter((x2) => x2.in === "query" || x2.in === "path").map((x2) => ({ name: String(x2.name), in: String(x2.in), required: x2.required === true || x2.in === "path", schema: x2.schema ?? { type: "string" } }));
   for (const q2 of parameters)
-    collect(q2.schema, `?${q2.name}`, `${path7.basename(file)}#${method.toUpperCase()} ${p4}/parameters/${q2.name}`, q2.required, fields);
+    collect(q2.schema, `?${q2.name}`, `${path8.basename(file)}#${method.toUpperCase()} ${p4}/parameters/${q2.name}`, q2.required, fields);
   const responses = {};
   for (const [code, r6] of Object.entries(op.responses ?? {}))
     responses[code] = String(r6?.description ?? "");
@@ -20321,9 +20613,9 @@ function modelFromOpenApi(file, raw, operation) {
     throw new ManifestError(`${method.toUpperCase()} ${p4} has no JSON request body and no query or path parameters, so there is nothing to generate.`);
   return { source: { file, sha256: fileSha(file), operation: `${method.toUpperCase()} ${p4}` }, schema: bodySchema ?? { type: "object", properties: {} }, fields, responses, parameters };
 }
-function loadModel(file, operation) {
+function loadModel(file, operation, root) {
   if (isXsd(file)) {
-    const xsd = readXsd(file, operation);
+    const xsd = readXsd(file, operation, root);
     const fields = xsdFields(xsd).map((x2) => {
       const { simple, minItems, maxItems, choice, ...rest } = x2;
       return { ...rest, ...simple ?? {}, ...minItems !== void 0 ? { minItems } : {}, ...maxItems !== void 0 ? { maxItems } : {}, ...choice ? { choice } : {} };
@@ -20332,7 +20624,7 @@ function loadModel(file, operation) {
   }
   if (isCopybook(file)) {
     if (operation)
-      throw new ManifestError(`${path7.basename(file)} is a copybook, so there is no operation to pick.`);
+      throw new ManifestError(`${path8.basename(file)} is a copybook, so there is no operation to pick.`);
     return modelFromCopybook(file, (schema, source) => {
       const fields = [];
       collect(schema, "$", source, true, fields);
@@ -20342,11 +20634,11 @@ function loadModel(file, operation) {
   const raw = readStructured(file);
   if (raw?.openapi || raw?.swagger) {
     if (!operation)
-      throw new ManifestError(`${path7.basename(file)} is an OpenAPI document: name the operation, such as --operation "POST /api/items". Operations: ${listOperations(raw).join(", ")}.`);
+      throw new ManifestError(`${path8.basename(file)} is an OpenAPI document: name the operation, such as --operation "POST /api/items". Operations: ${listOperations(raw).join(", ")}.`);
     return modelFromOpenApi(file, raw, operation);
   }
   if (operation)
-    throw new ManifestError(`${path7.basename(file)} is a JSON Schema, not an OpenAPI document, so there is no operation to pick.`);
+    throw new ManifestError(`${path8.basename(file)} is a JSON Schema, not an OpenAPI document, so there is no operation to pick.`);
   return modelFromSchema(file, raw);
 }
 function listOperations(doc) {
@@ -20453,17 +20745,17 @@ var HOSTILE = [
   { name: "long", value: "x".repeat(4096), why: "4,096 characters: past most column widths" }
 ];
 function recipeFolder(m4) {
-  return inside(m4, path8.join(path8.dirname(m4.proposals), "data"));
+  return inside(m4, path9.join(path9.dirname(m4.proposals), "data"));
 }
-var recipeFile = (m4, id) => path8.join(recipeFolder(m4), `${id}.yaml`);
-var dataFolder = (m4, id) => path8.join(recipeFolder(m4), id);
+var recipeFile = (m4, id) => path9.join(recipeFolder(m4), `${id}.yaml`);
+var dataFolder = (m4, id) => path9.join(recipeFolder(m4), id);
 var ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 function planRecipe(m4, o4) {
   const schemaFile = inside(m4, o4.schema);
-  if (!fs9.existsSync(schemaFile))
+  if (!fs10.existsSync(schemaFile))
     throw new ManifestError(`${o4.schema} does not exist.`);
-  const model = loadModel(schemaFile, o4.operation);
-  const id = o4.id ?? (model.source.operation ? model.source.operation.replace(/^[A-Z]+\s+\/?/, "").replace(/[^A-Za-z0-9.-]+/g, "-").replace(/^-|-$/g, "") : path8.basename(o4.schema).replace(/\.[^.]+$/, "")).slice(0, 64);
+  const model = loadModel(schemaFile, o4.operation, m4.root);
+  const id = o4.id ?? (model.source.operation ? model.source.operation.replace(/^[A-Z]+\s+\/?/, "").replace(/[^A-Za-z0-9.-]+/g, "-").replace(/^-|-$/g, "") : path9.basename(o4.schema).replace(/\.[^.]+$/, "")).slice(0, 64);
   if (!ID.test(id))
     throw new ManifestError(`The recipe id ${JSON.stringify(id)} must be letters, digits, '.', '-' and '_'.`);
   const clock = o4.clock ?? "2026-01-15T09:30:00Z";
@@ -20518,7 +20810,7 @@ function planRecipe(m4, o4) {
     seed,
     clock,
     locale: o4.locale ?? "en_GB",
-    source: { ...model.source, file: path8.relative(m4.root, schemaFile).split(path8.sep).join("/") },
+    source: { ...model.source, file: path9.relative(m4.root, schemaFile).split(path9.sep).join("/") },
     generators: { ...o4.generators ?? {} },
     quotas,
     fields,
@@ -20534,11 +20826,11 @@ function planRecipe(m4, o4) {
   if (problems.length)
     throw new ManifestError(`The plan breaks its own quotas: ${problems.join("; ")}`);
   const file = recipeFile(m4, id);
-  if (fs9.existsSync(file))
-    throw new ManifestError(`${path8.relative(m4.root, file)} already exists. Choose another --id, or delete it.`);
-  fs9.mkdirSync(path8.dirname(file), { recursive: true });
-  fs9.writeFileSync(file, renderRecipe(recipe), "utf8");
-  return { file: path8.relative(m4.root, file).split(path8.sep).join("/"), recipe };
+  if (fs10.existsSync(file))
+    throw new ManifestError(`${path9.relative(m4.root, file)} already exists. Choose another --id, or delete it.`);
+  fs10.mkdirSync(path9.dirname(file), { recursive: true });
+  fs10.writeFileSync(file, renderRecipe(recipe), "utf8");
+  return { file: path9.relative(m4.root, file).split(path9.sep).join("/"), recipe };
 }
 var HEADER = `# A test-data recipe, written by \`cmtk data plan\`. Review this file, not the rows: \`cmtk data make\`
 # regenerates the rows from it, the same ones every time, from the seed and the clock below.
@@ -20551,13 +20843,13 @@ function loadRecipe(m4, id) {
   if (!ID.test(id))
     throw new ManifestError(`The recipe id ${JSON.stringify(id)} must be letters, digits, '.', '-' and '_'.`);
   const file = recipeFile(m4, id);
-  if (!fs9.existsSync(file))
-    throw new ManifestError(`There is no recipe ${id}: ${path8.relative(m4.root, file)} does not exist. Make one with \`cmtk data plan\`.`);
-  const text2 = fs9.readFileSync(file, "utf8");
+  if (!fs10.existsSync(file))
+    throw new ManifestError(`There is no recipe ${id}: ${path9.relative(m4.root, file)} does not exist. Make one with \`cmtk data plan\`.`);
+  const text2 = fs10.readFileSync(file, "utf8");
   const doc = import_yaml3.default.parse(text2);
   const r6 = doc?.recipe;
   if (!r6 || r6.id !== id || !Array.isArray(r6.rows) || !Array.isArray(r6.fields))
-    throw new ManifestError(`${path8.relative(m4.root, file)} is not a recipe for ${id}.`);
+    throw new ManifestError(`${path9.relative(m4.root, file)} is not a recipe for ${id}.`);
   const names = /* @__PURE__ */ new Set();
   for (const row of r6.rows) {
     if (typeof row.name !== "string" || !/^[A-Za-z0-9_.-]+$/.test(row.name))
@@ -20570,7 +20862,7 @@ function loadRecipe(m4, id) {
     if (!row.expect_valid && !row.invalid_because?.path)
       throw new ManifestError(`${id}: row ${row.name} is invalid but does not say why (invalid_because: { path, keyword }).`);
   }
-  return { file: path8.relative(m4.root, file).split(path8.sep).join("/"), recipe: r6, sha256: crypto6.createHash("sha256").update(text2).digest("hex") };
+  return { file: path9.relative(m4.root, file).split(path9.sep).join("/"), recipe: r6, sha256: crypto7.createHash("sha256").update(text2).digest("hex") };
 }
 function checkQuotas(r6) {
   const out = [];
@@ -20847,8 +21139,8 @@ var round = (n3, step) => {
   const d4 = Math.max(0, Math.min(10, Math.ceil(-Math.log10(step))));
   return Number(n3.toFixed(d4));
 };
-function bva(slug3, edge, side, path25, value, valid, keyword, item) {
-  return { name: `${slug3}_${edge}_${side}_3bva`, technique: "BVA-3", coverage_item: item, expect_valid: valid, ...valid ? {} : { invalid_because: { path: path25, keyword } }, oracle: "specified", set: { [path25]: value } };
+function bva(slug3, edge, side, path27, value, valid, keyword, item) {
+  return { name: `${slug3}_${edge}_${side}_3bva`, technique: "BVA-3", coverage_item: item, expect_valid: valid, ...valid ? {} : { invalid_because: { path: path27, keyword } }, oracle: "specified", set: { [path27]: value } };
 }
 function wrongType(f4) {
   switch (f4.type) {
@@ -21038,25 +21330,25 @@ function unsetAt(root, p4) {
 }
 function fieldsOf(m4, r6) {
   const file = inside(m4, r6.source.file);
-  if (!fs10.existsSync(file))
+  if (!fs11.existsSync(file))
     throw new ManifestError(`The recipe's schema ${r6.source.file} no longer exists.`);
-  const model = loadModel(file, r6.source.operation);
+  const model = loadModel(file, r6.source.operation, m4.root);
   if (r6.source.sha256 && model.source.sha256 !== r6.source.sha256)
     throw new ManifestError(`${r6.source.file} has changed since the recipe was planned (sha256 ${model.source.sha256.slice(0, 12)}\u2026 now, ${r6.source.sha256.slice(0, 12)}\u2026 then). Plan it again, or restore the file.`);
   return { fields: model.fields, schema: model.schema, parameters: model.parameters ?? [], hasBody: model.fields.some((f4) => f4.path === "$"), ...model.layout ? { layout: model.layout } : {}, ...model.xsd ? { xsd: model.xsd } : {} };
 }
 var onWire = (v2) => v2 === null ? "" : typeof v2 === "object" ? JSON.stringify(v2) : String(v2);
 function rowContext(m4, r6) {
-  const { fields, schema, parameters, hasBody, xsd } = fieldsOf(m4, r6);
+  const { fields, schema, parameters, hasBody: hasBody2, xsd } = fieldsOf(m4, r6);
   for (const f4 of fields) {
     const v2 = r6.fields.find((x2) => x2.path === f4.path)?.vocabulary;
     if (v2?.length)
       f4.vocabulary = v2;
   }
-  return { fields, schema, parameters, hasBody, ...xsd ? { xsd } : {}, bodyFields: fields.filter((f4) => !f4.path.startsWith("?")), rand: rng(r6.seed), faker: fakerFor(r6.locale, r6.seed, r6.clock) };
+  return { fields, schema, parameters, hasBody: hasBody2, ...xsd ? { xsd } : {}, bodyFields: fields.filter((f4) => !f4.path.startsWith("?")), rand: rng(r6.seed), faker: fakerFor(r6.locale, r6.seed, r6.clock) };
 }
 function buildRow(c4, r6, row) {
-  const { fields, schema, parameters, hasBody, xsd, bodyFields, rand, faker } = c4;
+  const { fields, schema, parameters, hasBody: hasBody2, xsd, bodyFields, rand, faker } = c4;
   const rowRand = rng(hash(r6.seed, row.name));
   const rowFaker = fakerFor(r6.locale, hash(r6.seed, row.name), r6.clock);
   let value = row.replace_body !== void 0 ? structuredClone(row.replace_body) : baseline(bodyFields, "$", rowRand, rowFaker, r6.clock);
@@ -21104,7 +21396,7 @@ function buildRow(c4, r6, row) {
       leaveOneBranch(fields, value, Object.keys(row.set ?? {}));
     xml = toXml(xsd, value, row.xml_op);
     violations.push(...validateXml(xsd, xml));
-  } else if (hasBody)
+  } else if (hasBody2)
     violations.push(...validate(schema, value));
   return { value, query, violations, ...xml !== void 0 ? { xml } : {} };
 }
@@ -21219,7 +21511,7 @@ function leaveOneBranch(fields, value, setPaths) {
   }
 }
 function hash(seed, name) {
-  return crypto7.createHash("sha256").update(`${seed}:${name}`).digest().readUInt32BE(0) >>> 1;
+  return crypto8.createHash("sha256").update(`${seed}:${name}`).digest().readUInt32BE(0) >>> 1;
 }
 var DATA_FORMATS = ["json", "csv", "xlsx", "xml", "fixed", "edge-csv", "edge-xlsx", "edge-fixed"];
 async function makeData(m4, id, o4 = {}) {
@@ -21229,19 +21521,19 @@ async function makeData(m4, id, o4 = {}) {
   const asked = o4.formats ?? ["json", "csv"];
   const formats = recipe.source.format === "xsd" ? [.../* @__PURE__ */ new Set(["json", "xml", ...asked])] : asked;
   const dir = dataFolder(m4, id);
-  fs10.rmSync(dir, { recursive: true, force: true });
-  fs10.mkdirSync(path9.join(dir, "rows"), { recursive: true });
+  fs11.rmSync(dir, { recursive: true, force: true });
+  fs11.mkdirSync(path10.join(dir, "rows"), { recursive: true });
   const files = {};
   const put = (name, bytes) => {
     const b2 = typeof bytes === "string" ? Buffer.from(bytes, "utf8") : bytes;
-    fs10.writeFileSync(path9.join(dir, name), b2);
-    files[name.split(path9.sep).join("/")] = crypto7.createHash("sha256").update(b2).digest("hex");
+    fs11.writeFileSync(path10.join(dir, name), b2);
+    files[name.split(path10.sep).join("/")] = crypto8.createHash("sha256").update(b2).digest("hex");
   };
   if (formats.includes("json")) {
     put("rows.json", JSON.stringify(rows, null, 2) + "\n");
     for (const r6 of rows)
       if (r6.value !== void 0)
-        put(path9.join("rows", `${r6.name}.json`), JSON.stringify(r6.value, null, 2) + "\n");
+        put(path10.join("rows", `${r6.name}.json`), JSON.stringify(r6.value, null, 2) + "\n");
   }
   const table = tabulate(rows);
   const csv = recipe.csv ?? {};
@@ -21252,7 +21544,7 @@ async function makeData(m4, id, o4 = {}) {
         continue;
       const one = tabulate([r6]);
       const cols = one.columns.filter((c4) => c4 !== "row" && c4 !== "expect_valid" && !c4.startsWith("?"));
-      put(path9.join("rows", `${r6.name}.csv`), csvBytes(cols, one.records, csv));
+      put(path10.join("rows", `${r6.name}.csv`), csvBytes(cols, one.records, csv));
     }
   }
   if (formats.includes("xlsx"))
@@ -21263,9 +21555,9 @@ async function makeData(m4, id, o4 = {}) {
     for (const r6 of rows) {
       if (r6.xml === void 0)
         continue;
-      put(path9.join("rows", `${r6.name}.xml`), XML_DECLARATION + r6.xml + "\n");
+      put(path10.join("rows", `${r6.name}.xml`), XML_DECLARATION + r6.xml + "\n");
       if (recipe.soap)
-        put(path9.join("rows", `${r6.name}.soap.xml`), soapEnvelope(r6.xml, recipe.soap.version));
+        put(path10.join("rows", `${r6.name}.soap.xml`), soapEnvelope(r6.xml, recipe.soap.version));
     }
   }
   const validRows = rows.filter((r6) => r6.expect_valid && r6.value && typeof r6.value === "object" && !Array.isArray(r6.value));
@@ -21276,11 +21568,11 @@ async function makeData(m4, id, o4 = {}) {
   const edgeInfo = [];
   const notWritten = [];
   const putEdges = (folder, edges) => {
-    fs10.mkdirSync(path9.join(dir, "edge", folder), { recursive: true });
+    fs11.mkdirSync(path10.join(dir, "edge", folder), { recursive: true });
     for (const e6 of edges) {
-      const rel2 = path9.join("edge", folder, e6.file);
+      const rel2 = path10.join("edge", folder, e6.file);
       put(rel2, e6.bytes);
-      edgeInfo.push({ file: rel2.split(path9.sep).join("/"), kind: e6.kind, expect_valid: e6.expect_valid, why: e6.why });
+      edgeInfo.push({ file: rel2.split(path10.sep).join("/"), kind: e6.kind, expect_valid: e6.expect_valid, why: e6.why });
     }
   };
   const dataCheck = () => data.columns.length && data.records.length ? void 0 : "the recipe has no valid rows that are objects";
@@ -21354,9 +21646,9 @@ async function makeData(m4, id, o4 = {}) {
     ...fixed ? { fixed } : {},
     ...notWritten.length ? { not_written: notWritten } : {}
   };
-  fs10.writeFileSync(path9.join(dir, "MANIFEST.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
-  fs10.writeFileSync(path9.join(dir, "DATA.md"), renderData(recipe, rows, manifest), "utf8");
-  return { folder: path9.relative(m4.root, dir).split(path9.sep).join("/"), manifest, rows };
+  fs11.writeFileSync(path10.join(dir, "MANIFEST.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
+  fs11.writeFileSync(path10.join(dir, "DATA.md"), renderData(recipe, rows, manifest), "utf8");
+  return { folder: path10.relative(m4.root, dir).split(path10.sep).join("/"), manifest, rows };
 }
 function tabulate(rows) {
   const columns = /* @__PURE__ */ new Set(["row", "expect_valid"]);
@@ -21605,7 +21897,7 @@ function applyDataRule(m4, rule, who, date) {
   if (Object.keys(model).length)
     recipe.model = model;
   makeRows(m4, recipe);
-  fs11.writeFileSync(recipeFile(m4, rule.recipe), renderRecipe(recipe), "utf8");
+  fs12.writeFileSync(recipeFile(m4, rule.recipe), renderRecipe(recipe), "utf8");
   return done;
 }
 function describeDataRule(r6) {
@@ -21624,19 +21916,19 @@ function describeDataRule(r6) {
       return [head, `  try ${q2(r6.operator)} on ${q2(r6.path)}${r6.other ? ` from ${q2(r6.other)}` : ""}. The engine makes the row, and you say what should happen.`];
   }
 }
-var findingsFile = (m4, id) => path10.join(path10.dirname(recipeFile(m4, id)), `${id}.findings.yaml`);
+var findingsFile = (m4, id) => path11.join(path11.dirname(recipeFile(m4, id)), `${id}.findings.yaml`);
 function loadDataFindings(m4, id) {
   const f4 = findingsFile(m4, id);
-  if (!fs11.existsSync(f4))
+  if (!fs12.existsSync(f4))
     return [];
-  return import_yaml4.default.parse(fs11.readFileSync(f4, "utf8"))?.findings ?? [];
+  return import_yaml4.default.parse(fs12.readFileSync(f4, "utf8"))?.findings ?? [];
 }
 function trafficAgainstSchema(m4, id, harFile, o4 = {}) {
   const { recipe } = loadRecipe(m4, id);
   const full = inside(m4, harFile);
-  if (!fs11.existsSync(full))
+  if (!fs12.existsSync(full))
     throw new ManifestError(`The recording ${harFile} does not exist.`);
-  const entries = JSON.parse(fs11.readFileSync(full, "utf8"))?.log?.entries;
+  const entries = JSON.parse(fs12.readFileSync(full, "utf8"))?.log?.entries;
   if (!Array.isArray(entries))
     throw new ManifestError(`${harFile} is not a HAR file: it has no log.entries.`);
   const op = /^([A-Z]+)\s+(\S+)$/.exec(recipe.source.operation ?? "");
@@ -21699,17 +21991,17 @@ function schemaOf2(m4, recipe) {
 var HEADER2 = "# Proposals from agents. Each one waits for a person: only `cmtk review` accepts or rejects it.\n";
 var KNOWN_ISSUES_HEADER = "# Known issues: failures of `cmtk run` a named person accepted. Only a person adds an entry.\n# Each still shows as a failure, and anything an entry does not describe is an ordinary FAIL.\nknown_issues: []\n";
 function editYaml(file, fallback, fn) {
-  const text2 = fs12.existsSync(file) ? fs12.readFileSync(file, "utf8") : fallback;
+  const text2 = fs13.existsSync(file) ? fs13.readFileSync(file, "utf8") : fallback;
   const crlf = text2.includes("\r\n");
   const doc = import_yaml5.default.parseDocument(text2);
   if (doc.errors.length)
-    throw new ManifestError(`${path11.basename(file)} is not valid YAML: ${doc.errors[0].message}`);
+    throw new ManifestError(`${path12.basename(file)} is not valid YAML: ${doc.errors[0].message}`);
   fn(doc);
   let out = doc.toString({ lineWidth: 0 });
   if (crlf)
     out = out.replace(/\r?\n/g, "\r\n");
-  fs12.mkdirSync(path11.dirname(file), { recursive: true });
-  fs12.writeFileSync(file, out, "utf8");
+  fs13.mkdirSync(path12.dirname(file), { recursive: true });
+  fs13.writeFileSync(file, out, "utf8");
 }
 function seqAt(doc, key2) {
   const block = (s5) => {
@@ -21731,9 +22023,9 @@ function seqAt(doc, key2) {
 }
 function loadProposals(manifest) {
   const file = inside(manifest, manifest.proposals);
-  if (!fs12.existsSync(file))
+  if (!fs13.existsSync(file))
     return [];
-  const doc = import_yaml5.default.parse(fs12.readFileSync(file, "utf8"));
+  const doc = import_yaml5.default.parse(fs13.readFileSync(file, "utf8"));
   const list = Array.isArray(doc) ? doc : doc?.proposals ?? [];
   return list.filter((p4) => p4 && typeof p4.id === "string");
 }
@@ -21747,13 +22039,19 @@ var text = (v2, what, max = 2e3) => {
     throw new ManifestError(`${what} holds control characters; write plain text.`);
   return v2.trim();
 };
+var personName = (v2) => {
+  const who = text(v2, "Your name", 100);
+  if (looksLikeAgent(who))
+    throw new ManifestError(`${JSON.stringify(who)} reads as an agent or a tool. Only a person decides this, under their own name.`);
+  return who;
+};
 var plain = (v2) => String(v2 ?? "").replace(new RegExp(CONTROL.source, "g"), (c4) => `\\u${c4.charCodeAt(0).toString(16).padStart(4, "0")}`);
 var REPAIRABLE_ACTIONS = ["click", "fill", "select", "tick", "invoke", "set_value"];
 function readScript(manifest, rel2) {
   const full = inside(manifest, rel2);
-  if (!fs12.existsSync(full))
+  if (!fs13.existsSync(full))
     throw new ManifestError(`The script ${rel2} does not exist.`);
-  const raw = fs12.readFileSync(full, "utf8");
+  const raw = fs13.readFileSync(full, "utf8");
   let doc;
   try {
     doc = JSON.parse(raw);
@@ -21779,7 +22077,7 @@ function describeProposal(p4) {
   if (p4.kind === "drift")
     lines.push(`  approve the difference at ${q2(p4.where)} for ${p4.case === "*" ? "EVERY case" : `case ${q2(p4.case)}`}`);
   if (p4.kind === "known_issue")
-    lines.push(`  record known issue ${p4.issue_id ? q2(p4.issue_id) : "(the next free id)"}: case ${q2(p4.case)}${p4.target ? ` on target ${q2(p4.target)}` : ""} may keep failing like this: ${q2(p4.fails)}`, "  it still shows as a failure, and the run can read PASS WITH KNOWN ISSUES, with your name on it");
+    lines.push(`  record known issue ${p4.issue_id ? q2(p4.issue_id) : "(the next free id)"}: case ${q2(p4.case)}${p4.target ? ` on target ${q2(p4.target)}` : ""} may keep failing like this: ${q2(p4.fails)}`, "  it still shows as a failure, and the run can read PASS WITH KNOWN ISSUES, with your name on it", ...(p4.fails ?? []).filter((f4) => f4.actual === void 0).map((f4) => `  WARNING: ${q2(f4)} gives no actual answer, so it accepts any answer that fails ${f4.check} in this way, including one you have not seen`));
   if (p4.kind === "defect")
     lines.push(`  defect: ${q2(p4.title)}`, `  cases: ${q2(p4.cases)}`, ...p4.summary ? [`  summary: ${plain(p4.summary)}`] : []);
   if (p4.kind === "expectation")
@@ -21821,7 +22119,7 @@ function decideProposal(manifest, id, accept, person, date, note, shown2) {
     throw new ManifestError(`${id} was already ${p4.status}.`);
   if (shown2 && JSON.stringify(p4) !== JSON.stringify(shown2))
     throw new ManifestError(`${id} changed after it was shown to you. Nothing was applied; run \`cmtk review\` again.`);
-  const who = text(person, "Your name", 100);
+  const who = personName(person);
   if (!accept) {
     setStatus(manifest, id, { status: "rejected", decided_by: who, decided_on: date, ...note ? { decision_note: note } : {} });
     return { ...p4, status: "rejected", decided_by: who, decided_on: date };
@@ -21842,7 +22140,7 @@ function decideProposal(manifest, id, accept, person, date, note, shown2) {
         scrub.set(key2, list);
       list.add(doc.createNode(value));
     });
-    applied = `scrub rule added to ${path11.basename(manifest.file)}`;
+    applied = `scrub rule added to ${path12.basename(manifest.file)}`;
   }
   if (p4.kind === "drift") {
     const ledger = loadDrift(manifest);
@@ -21853,6 +22151,7 @@ function decideProposal(manifest, id, accept, person, date, note, shown2) {
     applied = `${next} in ${manifest.drift}`;
   }
   if (p4.kind === "known_issue") {
+    knownFails(p4.fails, `Proposal ${id}`);
     const ledger = loadKnownIssues(manifest);
     const next = p4.issue_id ?? `KNOWN-${String(1 + Math.max(0, ...ledger.map((k2) => Number(/^KNOWN-(\d+)$/.exec(k2.id)?.[1] ?? 0)))).padStart(3, "0")}`;
     if (ledger.some((k2) => k2.id === next))
@@ -21875,7 +22174,7 @@ function decideProposal(manifest, id, accept, person, date, note, shown2) {
     let out = JSON.stringify(doc, null, 2) + "\n";
     if (raw.includes("\r\n"))
       out = out.replace(/\n/g, "\r\n");
-    fs12.writeFileSync(full, out, "utf8");
+    fs13.writeFileSync(full, out, "utf8");
     applied = `step ${p4.step} of ${p4.script} on ${p4.target}`;
   }
   if (p4.kind === "data_rule")
@@ -21895,7 +22194,7 @@ function decideProposal(manifest, id, accept, person, date, note, shown2) {
   return { ...p4, status: "accepted", decided_by: who, decided_on: date, applied };
 }
 function acceptDraft(manifest, caseId, person, date, shown2) {
-  const who = text(person, "Your name", 100);
+  const who = personName(person);
   const { c: c4, file } = caseFileOf(manifest, caseId);
   if (!c4.draft)
     throw new ManifestError(`${caseId} is not a draft.`);
@@ -21909,6 +22208,8 @@ function acceptDraft(manifest, caseId, person, date, shown2) {
       node.set("note", c4.draft_note);
     node.set("accepted_by", who);
     node.set("accepted_on", date);
+    if (c4.safe === true)
+      stampSafe(node, who, date, safePrint(c4, manifest.root));
     if (c4.expect_draft) {
       node.delete("expect_draft");
       node.set("expect_confirmed_by", who);
@@ -21916,8 +22217,34 @@ function acceptDraft(manifest, caseId, person, date, shown2) {
     }
   });
 }
+function stampSafe(node, who, date, print) {
+  node.set("safe_confirmed_by", who);
+  node.set("safe_confirmed_on", date);
+  node.set("safe_print", print);
+}
+var unconfirmedSafe = (manifest, cases) => cases.filter((c4) => c4.safe !== void 0 && !safeConfirmed(c4, manifest.root));
+var describeSafe = (c4) => `${plain(c4.id)} is marked safe: true. If you accept this, ${plain(c4.request.method)} ${plain(c4.request.path)} is sent with neither switch on, on every run, to every target. Accept only if you know this exact request changes nothing. A journey or script may write, even on a GET. Changing the case later ends your confirmation.`;
+function confirmSafe(manifest, caseId, person, date, shown2) {
+  const who = personName(person);
+  const { c: c4, file } = caseFileOf(manifest, caseId);
+  if (c4.safe !== true)
+    throw new ManifestError(`${caseId} is not marked safe: true.`);
+  if (JSON.stringify(c4) !== JSON.stringify(shown2))
+    throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was confirmed; run \`cmtk review\` again.`);
+  editYaml(file, "", (doc) => stampSafe(caseNode(doc, caseId).node, who, date, safePrint(c4, manifest.root)));
+}
+function removeSafe(manifest, caseId, shown2) {
+  const { c: c4, file } = caseFileOf(manifest, caseId);
+  if (JSON.stringify(c4) !== JSON.stringify(shown2))
+    throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was changed; run \`cmtk review\` again.`);
+  editYaml(file, "", (doc) => {
+    const { node } = caseNode(doc, caseId);
+    for (const k2 of ["safe", "safe_confirmed_by", "safe_confirmed_on", "safe_print"])
+      node.delete(k2);
+  });
+}
 function confirmExpectation(manifest, caseId, person, date, shown2) {
-  const who = text(person, "Your name", 100);
+  const who = personName(person);
   const { c: c4, file } = caseFileOf(manifest, caseId);
   if (!c4.expect_draft)
     throw new ManifestError(`${caseId} has no drafted expectation.`);
@@ -21934,14 +22261,14 @@ function confirmExpectation(manifest, caseId, person, date, shown2) {
   });
 }
 function rejectExpectation(manifest, caseId, person, date, reason, shown2) {
-  const who = text(person, "Your name", 100);
+  const who = personName(person);
   const why = text(reason, "A reason", 1e3);
   const { c: c4, file } = caseFileOf(manifest, caseId);
   if (!c4.expect_draft)
     throw new ManifestError(`${caseId} has no drafted expectation.`);
   if (shown2 && JSON.stringify(c4) !== JSON.stringify(shown2))
     throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was changed; run \`cmtk review\` again.`);
-  const rejected = inside(manifest, path11.join(path11.dirname(manifest.proposals), "rejected.yaml"));
+  const rejected = inside(manifest, path12.join(path12.dirname(manifest.proposals), "rejected.yaml"));
   editYaml(rejected, "# Draft cases a person rejected, with the reason. Kept so the same draft is not proposed again.\nrejected: []\n", (doc) => {
     seqAt(doc, "rejected").add(doc.createNode({ id: c4.id, expect: c4.expect, rejected_by: who, rejected_on: date, rejected_because: why }));
   });
@@ -21953,13 +22280,13 @@ function rejectExpectation(manifest, caseId, person, date, reason, shown2) {
   });
 }
 function rejectDraft(manifest, caseId, person, date, reason) {
-  const who = text(person, "Your name", 100);
+  const who = personName(person);
   const why = text(reason, "A reason", 1e3);
   const { c: c4, file } = caseFileOf(manifest, caseId);
   if (!c4.draft)
     throw new ManifestError(`${caseId} is not a draft.`);
   const { file: _f, ...kept } = c4;
-  const rejected = inside(manifest, path11.join(path11.dirname(manifest.proposals), "rejected.yaml"));
+  const rejected = inside(manifest, path12.join(path12.dirname(manifest.proposals), "rejected.yaml"));
   editYaml(rejected, "# Draft cases a person rejected, with the reason. Kept so the same draft is not proposed again.\nrejected: []\n", (doc) => {
     seqAt(doc, "rejected").add(doc.createNode({ ...kept, rejected_by: who, rejected_on: date, rejected_because: why }));
   });
@@ -22027,11 +22354,11 @@ function stepsFor(c4, target2, clean2) {
 }
 var fieldOf = (c4) => /^(\$(?:\.[A-Za-z_][\w]*|\[\d+\]|\[\*\])*)\b/.exec(c4?.name ?? "")?.[1];
 function draftDefects(manifest, mode) {
-  const dir = inside(manifest, path12.join(manifest.evidence, mode));
-  const reportFile = path12.join(dir, "REPORT.json");
-  if (!fs13.existsSync(reportFile))
+  const dir = inside(manifest, path13.join(manifest.evidence, mode));
+  const reportFile = path13.join(dir, "REPORT.json");
+  if (!fs14.existsSync(reportFile))
     throw new ManifestError(`There is no ${mode} report yet. Run \`cmtk ${mode}\` first.`);
-  const report = JSON.parse(fs13.readFileSync(reportFile, "utf8"));
+  const report = JSON.parse(fs14.readFileSync(reportFile, "utf8"));
   const clean2 = redactor(manifest);
   const cases = new Map(loadCases(manifest).map((c4) => [c4.id, c4]));
   const [targetName, targetWhere] = Object.entries(report.targets).at(-1) ?? ["the target", ""];
@@ -22110,13 +22437,13 @@ field:${fieldOf(cases.get(c4.id))}` : "");
     ""
   ];
   for (const d4 of drafts) {
-    L2.push(`## ${d4.id}: ${d4.title}`, "", `- Requirements: ${d4.requirements.join(", ") || "(none named)"}`, `- Cases: ${d4.cases.join(", ")}`, `- Found by: ${d4.source === "triage" ? "triage of a comparison, accepted by a person" : `\`cmtk ${mode}\``} on ${report.date}`, "", "### Steps to reproduce", "", ...d4.steps.map((s4, i8) => `${i8 + 1}. ${s4}`), "", ...d4.why ? ["### Why it matters", "", d4.why, ""] : [], "### Expected", "", d4.expected, "", "### Actual", "", d4.actual, "", "### Evidence", "", ...d4.evidence.map((e6) => `- \`${path12.join(path12.relative(manifest.root, dir), e6).split(path12.sep).join("/")}\``), "");
+    L2.push(`## ${d4.id}: ${d4.title}`, "", `- Requirements: ${d4.requirements.join(", ") || "(none named)"}`, `- Cases: ${d4.cases.join(", ")}`, `- Found by: ${d4.source === "triage" ? "triage of a comparison, accepted by a person" : `\`cmtk ${mode}\``} on ${report.date}`, "", "### Steps to reproduce", "", ...d4.steps.map((s4, i8) => `${i8 + 1}. ${s4}`), "", ...d4.why ? ["### Why it matters", "", d4.why, ""] : [], "### Expected", "", d4.expected, "", "### Actual", "", d4.actual, "", "### Evidence", "", ...d4.evidence.map((e6) => `- \`${path13.join(path13.relative(manifest.root, dir), e6).split(path13.sep).join("/")}\``), "");
   }
   if (!drafts.length)
     L2.push("No defects: nothing failed.", "");
-  fs13.writeFileSync(path12.join(dir, "DEFECTS.md"), L2.join("\n"), "utf8");
-  fs13.writeFileSync(path12.join(dir, "DEFECTS.json"), JSON.stringify(drafts, null, 2) + "\n", "utf8");
-  return { file: path12.relative(manifest.root, path12.join(dir, "DEFECTS.md")), drafts };
+  fs14.writeFileSync(path13.join(dir, "DEFECTS.md"), L2.join("\n"), "utf8");
+  fs14.writeFileSync(path13.join(dir, "DEFECTS.json"), JSON.stringify(drafts, null, 2) + "\n", "utf8");
+  return { file: path13.relative(manifest.root, path13.join(dir, "DEFECTS.md")), drafts };
 }
 
 // packages/core/dist/drift.js
@@ -22138,24 +22465,127 @@ function covers2(pattern, where2) {
 var starGlob = (pattern) => new RegExp(`^${pattern.split("*").map((p4) => p4.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`, "s");
 
 // packages/core/dist/engine.js
-import crypto10 from "node:crypto";
+import crypto12 from "node:crypto";
+import fs20 from "node:fs";
+import path19 from "node:path";
+
+// packages/core/dist/adapter-pin.js
+var import_yaml6 = __toESM(require_dist(), 1);
+import crypto9 from "node:crypto";
+import fs15 from "node:fs";
+import path14 from "node:path";
+var BUILD_FOLDERS = /* @__PURE__ */ new Set(["bin", "obj", "node_modules"]);
+var textHash = (data) => {
+  const text2 = data.subarray(0, 8e3).includes(0) ? data : Buffer.from(data.toString("latin1").replace(/\r\n/g, "\n"), "latin1");
+  return crypto9.createHash("sha256").update(text2).digest("hex");
+};
+function fingerprint2(dir) {
+  const hash2 = crypto9.createHash("sha256");
+  const walk = (at2, prefix) => {
+    for (const e6 of fs15.readdirSync(at2, { withFileTypes: true }).sort((a4, b2) => a4.name < b2.name ? -1 : 1)) {
+      if (BUILD_FOLDERS.has(e6.name))
+        continue;
+      const rel2 = prefix + e6.name;
+      if (e6.isSymbolicLink()) {
+        hash2.update(`${rel2}\0link
+`);
+        continue;
+      }
+      if (e6.isDirectory()) {
+        walk(path14.join(at2, e6.name), `${rel2}/`);
+        continue;
+      }
+      hash2.update(`${rel2}\0${textHash(fs15.readFileSync(path14.join(at2, e6.name)))}
+`);
+    }
+  };
+  walk(dir, "");
+  return `sha256:${hash2.digest("hex")}`;
+}
+function buildFiles(dir) {
+  const hash2 = crypto9.createHash("sha256");
+  const files = [];
+  const walk = (at2, prefix, inBuild) => {
+    for (const e6 of fs15.readdirSync(at2, { withFileTypes: true }).sort((a4, b2) => a4.name < b2.name ? -1 : 1)) {
+      const rel2 = prefix + e6.name;
+      const full = path14.join(at2, e6.name);
+      const under = inBuild || BUILD_FOLDERS.has(e6.name);
+      if (e6.isSymbolicLink()) {
+        if (under) {
+          files.push(rel2);
+          hash2.update(`${rel2}\0link\0${fs15.readlinkSync(full)}
+`);
+        }
+        continue;
+      }
+      if (e6.isDirectory()) {
+        walk(full, `${rel2}/`, under);
+        continue;
+      }
+      if (under) {
+        files.push(rel2);
+        hash2.update(`${rel2}\0${textHash(fs15.readFileSync(full))}
+`);
+      }
+    }
+  };
+  walk(dir, "", false);
+  return { print: files.length ? `sha256:${hash2.digest("hex")}` : "", files };
+}
+function readInstalled(root) {
+  const f4 = path14.join(root, "adapters", "installed.yaml");
+  if (!fs15.existsSync(f4))
+    return {};
+  let doc;
+  try {
+    doc = import_yaml6.default.parse(fs15.readFileSync(f4, "utf8"));
+  } catch (err) {
+    throw new ManifestError(`adapters/installed.yaml is not valid YAML: ${err.message.split("\n")[0]}`);
+  }
+  return doc?.adapters ?? {};
+}
+function pinState(dir, rec) {
+  let st2;
+  try {
+    st2 = fs15.lstatSync(dir);
+  } catch {
+    return "MISSING";
+  }
+  if (st2.isSymbolicLink() || !st2.isDirectory())
+    return "CHANGED since install";
+  if (fingerprint2(dir) !== rec.fingerprint)
+    return "CHANGED since install";
+  return buildFiles(dir).print === (rec.build_fingerprint ?? "") ? "ok" : "BUILD FILES not approved";
+}
+function adapterPinProblem(root, name) {
+  const installed = readInstalled(root);
+  if (!Object.hasOwn(installed, name))
+    return void 0;
+  const rec = installed[name];
+  if (!rec || typeof rec !== "object")
+    return void 0;
+  const state = pinState(path14.join(root, "adapters", name), rec);
+  if (state === "ok")
+    return void 0;
+  if (state === "BUILD FILES not approved")
+    return `adapter ${name} was not started: its bin, obj or node_modules files are not ones a person approved. If you built or installed them yourself, read them, then run \`cmtk adapter approve ${name}\` in a terminal`;
+  return `adapter ${name} was not started: it no longer matches what a person approved (${state}). Read the changes, or remove the folder and its entry in adapters/installed.yaml and add it again`;
+}
+
+// packages/core/dist/assembly.js
+import crypto11 from "node:crypto";
 import fs18 from "node:fs";
 import path17 from "node:path";
 
-// packages/core/dist/assembly.js
-import crypto9 from "node:crypto";
-import fs16 from "node:fs";
-import path15 from "node:path";
-
 // packages/core/dist/discover.js
 import { spawnSync } from "node:child_process";
-import fs15 from "node:fs";
-import path14 from "node:path";
+import fs17 from "node:fs";
+import path16 from "node:path";
 
 // packages/core/dist/routes.js
-import crypto8 from "node:crypto";
-import fs14 from "node:fs";
-import path13 from "node:path";
+import crypto10 from "node:crypto";
+import fs16 from "node:fs";
+import path15 from "node:path";
 var ROUTE_ATTR = /(^|\.)(Route|RoutePrefix|HttpGet|HttpPost|HttpPut|HttpDelete|HttpPatch|HttpHead|HttpOptions|AcceptVerbs)Attribute$/;
 var SOURCE_ATTR = /^(?:[\w.]+\.)?(Route|RoutePrefix|HttpGet|HttpPost|HttpPut|HttpDelete|HttpPatch|HttpHead|HttpOptions)(?:Attribute)?$/;
 var isRouteAttribute = (name) => !!name && ROUTE_ATTR.test(name);
@@ -22195,7 +22625,7 @@ function decodeRouteValue(b2) {
     return void 0;
   }
 }
-var sha = (b2) => crypto8.createHash("sha256").update(b2).digest("hex");
+var sha = (b2) => crypto10.createHash("sha256").update(b2).digest("hex");
 function templateFromRea(a4) {
   if (typeof a4.decoded_fixed_string === "string")
     return a4.decoded_fixed_string;
@@ -22318,13 +22748,13 @@ var SKIP_DIRS = /* @__PURE__ */ new Set(["bin", "obj", "node_modules", ".git", "
 function readRouteSources(where2, label2) {
   const out = [];
   const visit = (p4) => {
-    const st2 = fs14.statSync(p4);
+    const st2 = fs16.statSync(p4);
     if (st2.isDirectory()) {
-      for (const e6 of fs14.readdirSync(p4).sort())
+      for (const e6 of fs16.readdirSync(p4).sort())
         if (!SKIP_DIRS.has(e6))
-          visit(path13.join(p4, e6));
+          visit(path15.join(p4, e6));
     } else if (/\.cs$/i.test(p4))
-      out.push(...readRoutesFromSource(fs14.readFileSync(p4, "utf8"), label2(p4)));
+      out.push(...readRoutesFromSource(fs16.readFileSync(p4, "utf8"), label2(p4)));
   };
   visit(where2);
   return out;
@@ -22363,7 +22793,7 @@ var clean = (v2, what, max = 500) => {
   return v2.trim().slice(0, max);
 };
 var slug2 = (s4) => s4.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "unnamed";
-var rel = (m4, f4) => path14.relative(m4.root, f4).split(path14.sep).join("/");
+var rel = (m4, f4) => path16.relative(m4.root, f4).split(path16.sep).join("/");
 var CALL_RULES = [
   [/^System\.ServiceModel\.(ServiceHost|ServiceHostBase)$/, "soap", "in"],
   [/^System\.ServiceModel\.(ClientBase`1|ChannelFactory`1)$/, "soap", "out"],
@@ -22385,7 +22815,7 @@ function attributesOf(raw) {
 }
 var assemblyName = (raw, what) => {
   const j2 = raw;
-  return path14.basename(String(j2?.subject?.name ?? j2?.normalized_result?.artifact?.path ?? what));
+  return path16.basename(String(j2?.subject?.name ?? j2?.normalized_result?.artifact?.path ?? what));
 };
 function readReaMembers(raw, what) {
   const j2 = raw;
@@ -22393,7 +22823,7 @@ function readReaMembers(raw, what) {
   if (!Array.isArray(n3?.methods) || !Array.isArray(n3?.call_edges)) {
     throw new ManifestError(`${what} is not the output of \`rea inspect-managed-members <dll> --json\`: it has no methods and call_edges.`);
   }
-  const assembly = path14.basename(String(j2?.subject?.name ?? n3?.artifact?.path ?? what));
+  const assembly = path16.basename(String(j2?.subject?.name ?? n3?.artifact?.path ?? what));
   return { assembly, members: n3 };
 }
 function routeOf(type, n3, attrs, src, guess) {
@@ -22503,13 +22933,13 @@ function runRea(file, command = "inspect-managed-members") {
     throw new ManifestError("REA is not installed. Install it with `npm install --global rea-agents` (it needs Node.js 22.19 or later), or set CMTK_REA to its command. Or run `rea inspect-managed-members <dll> --json` elsewhere and pass the saved output with --rea-json.");
   }
   if (r6.error)
-    throw new ManifestError(`REA failed on ${path14.basename(file)}: ${r6.error.message}`);
+    throw new ManifestError(`REA failed on ${path16.basename(file)}: ${r6.error.message}`);
   if (r6.status !== 0)
-    throw new ManifestError(`REA failed on ${path14.basename(file)}: ${(r6.stderr || r6.stdout || "").trim().split("\n")[0]?.slice(0, 300) ?? `exit ${r6.status}`}`);
+    throw new ManifestError(`REA failed on ${path16.basename(file)}: ${(r6.stderr || r6.stdout || "").trim().split("\n")[0]?.slice(0, 300) ?? `exit ${r6.status}`}`);
   try {
     return JSON.parse(r6.stdout);
   } catch {
-    throw new ManifestError(`REA's output for ${path14.basename(file)} is not JSON.`);
+    throw new ManifestError(`REA's output for ${path16.basename(file)} is not JSON.`);
   }
 }
 function describeConnection(cs) {
@@ -22683,13 +23113,13 @@ function coveredBy(b2, m4) {
   return void 0;
 }
 function discoveryFolder(m4) {
-  return inside(m4, path14.join(path14.dirname(m4.proposals), "discovery"));
+  return inside(m4, path16.join(path16.dirname(m4.proposals), "discovery"));
 }
 function loadDiscovery(m4) {
-  const f4 = path14.join(discoveryFolder(m4), "boundaries.json");
-  if (!fs15.existsSync(f4))
+  const f4 = path16.join(discoveryFolder(m4), "boundaries.json");
+  if (!fs17.existsSync(f4))
     return void 0;
-  const d4 = JSON.parse(fs15.readFileSync(f4, "utf8"));
+  const d4 = JSON.parse(fs17.readFileSync(f4, "utf8"));
   for (const b2 of d4.boundaries)
     b2.covered_by = coveredBy(b2, m4);
   return d4;
@@ -22700,14 +23130,14 @@ function discover(m4, input, date = (/* @__PURE__ */ new Date()).toISOString().s
   const notes = [];
   const file = (f4, what) => {
     const full = inside(m4, f4);
-    if (!fs15.existsSync(full) || !fs15.statSync(full).isFile())
+    if (!fs17.existsSync(full) || !fs17.statSync(full).isFile())
       throw new ManifestError(`${what} ${f4} does not exist.`);
     return full;
   };
   const routeSources = [];
   for (const f4 of input.routesFrom ?? []) {
     const full = inside(m4, f4);
-    if (!fs15.existsSync(full))
+    if (!fs17.existsSync(full))
       throw new ManifestError(`The source ${f4} does not exist.`);
     routeSources.push(...readRouteSources(full, (x2) => rel(m4, x2)));
     sources.push(`C# source ${rel(m4, full)}`);
@@ -22734,7 +23164,7 @@ function discover(m4, input, date = (/* @__PURE__ */ new Date()).toISOString().s
   }
   const saved = (input.reaJson ?? []).map((f4) => {
     const full = file(f4, "REA's output");
-    return { full, raw: JSON.parse(fs15.readFileSync(full, "utf8")) };
+    return { full, raw: JSON.parse(fs17.readFileSync(full, "utf8")) };
   });
   const savedAttrs = /* @__PURE__ */ new Map();
   for (const s4 of saved) {
@@ -22761,7 +23191,7 @@ function discover(m4, input, date = (/* @__PURE__ */ new Date()).toISOString().s
   }
   for (const f4 of input.configs ?? []) {
     const full = file(f4, "The settings file");
-    const text2 = fs15.readFileSync(full, "utf8").replace(/^﻿/, "");
+    const text2 = fs17.readFileSync(full, "utf8").replace(/^﻿/, "");
     found.push(.../\.json$/i.test(full) ? fromJsonConfig(JSON.parse(text2), rel(m4, full)) : fromXmlConfig(text2, rel(m4, full)));
     sources.push(rel(m4, full));
   }
@@ -22774,12 +23204,12 @@ function discover(m4, input, date = (/* @__PURE__ */ new Date()).toISOString().s
   }));
   for (const f4 of input.har ?? []) {
     const full = file(f4, "The HAR file");
-    found.push(...fromHar(JSON.parse(fs15.readFileSync(full, "utf8")), rel(m4, full), ownHosts));
+    found.push(...fromHar(JSON.parse(fs17.readFileSync(full, "utf8")), rel(m4, full), ownHosts));
     sources.push(rel(m4, full));
   }
   for (const f4 of input.topology ?? []) {
     const full = file(f4, "The topology file");
-    const t3 = fromTopology(JSON.parse(fs15.readFileSync(full, "utf8")), rel(m4, full));
+    const t3 = fromTopology(JSON.parse(fs17.readFileSync(full, "utf8")), rel(m4, full));
     found.push(...t3.found);
     if (t3.note)
       notes.push(t3.note);
@@ -22827,10 +23257,10 @@ function discover(m4, input, date = (/* @__PURE__ */ new Date()).toISOString().s
   const boundaries = [...byId.values()].map((b2) => ({ ...b2, covered_by: coveredBy(b2, m4) })).sort((a4, b2) => Number(!!a4.covered_by) - Number(!!b2.covered_by) || BOUNDARY_KINDS.indexOf(a4.kind) - BOUNDARY_KINDS.indexOf(b2.kind) || a4.name.localeCompare(b2.name));
   const discovery = { system: m4.system, date, sources: [.../* @__PURE__ */ new Set([...previous?.sources ?? [], ...sources])], boundaries, ...notes.length || previous?.notes?.length ? { notes: [.../* @__PURE__ */ new Set([...previous?.notes ?? [], ...notes])] } : {} };
   const dir = discoveryFolder(m4);
-  fs15.mkdirSync(dir, { recursive: true });
-  fs15.writeFileSync(path14.join(dir, "boundaries.json"), JSON.stringify(discovery, null, 2) + "\n", "utf8");
-  fs15.writeFileSync(path14.join(dir, "BOUNDARIES.md"), renderDiscovery(discovery), "utf8");
-  return { file: rel(m4, path14.join(dir, "BOUNDARIES.md")), discovery };
+  fs17.mkdirSync(dir, { recursive: true });
+  fs17.writeFileSync(path16.join(dir, "boundaries.json"), JSON.stringify(discovery, null, 2) + "\n", "utf8");
+  fs17.writeFileSync(path16.join(dir, "BOUNDARIES.md"), renderDiscovery(discovery), "utf8");
+  return { file: rel(m4, path16.join(dir, "BOUNDARIES.md")), discovery };
 }
 var cell2 = (s4) => (s4 ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
 function describeDiscovery(d4) {
@@ -22897,7 +23327,7 @@ function readInventory(raw, what) {
     if (row && String(r6.parent_token).toLowerCase().startsWith("0x01"))
       refs.set(row, r6.parent_name);
   }
-  return { assembly: path15.basename(String(j2?.subject?.name ?? what)), types, methods: n3.methods, fields: n3.fields ?? [], complete: (n3.coverage?.state ?? "complete") === "complete", defs, refs, seen };
+  return { assembly: path17.basename(String(j2?.subject?.name ?? what)), types, methods: n3.methods, fields: n3.fields ?? [], complete: (n3.coverage?.state ?? "complete") === "complete", defs, refs, seen };
 }
 var rowOf = (token) => token ? parseInt(token.slice(4), 16) || void 0 : void 0;
 var LIKELY = {
@@ -22919,7 +23349,7 @@ var LIKELY = {
 var likelyNames = () => Object.entries(LIKELY).flatMap(([ns, names]) => names.map((n3) => `${ns}.${n3}`));
 function nameDigest(full) {
   const i8 = full.lastIndexOf(".");
-  return crypto9.createHash("sha256").update(Buffer.from([0])).update(i8 < 0 ? "" : full.slice(0, i8)).update(Buffer.from([0])).update(full.slice(i8 + 1)).digest();
+  return crypto11.createHash("sha256").update(Buffer.from([0])).update(i8 < 0 ? "" : full.slice(0, i8)).update(Buffer.from([0])).update(full.slice(i8 + 1)).digest();
 }
 var ELEMENTS = { void: 1, bool: 2, char: 3, i1: 4, u1: 5, i2: 6, u2: 7, i4: 8, u4: 9, i8: 10, u8: 11, r4: 12, r8: 13, string: 14, "native-int": 24, "native-uint": 25, object: 28, typedbyref: 22 };
 var compressed2 = (n3) => n3 < 128 ? [n3] : n3 < 16384 ? [128 | n3 >> 8, n3 & 255] : [192 | n3 >>> 24, n3 >> 16 & 255, n3 >> 8 & 255, n3 & 255];
@@ -22994,7 +23424,7 @@ function encodeSignature(s4) {
 var operandsOf = (text2) => [...text2.matchAll(/(?:class|valuetype):(\d+)/g)].map((m4) => Number(m4[1]));
 var allTypes = (s4) => [s4.return_type ?? "", s4.field_type ?? "", ...s4.parameter_types ?? []];
 function resolvedDigest(parts, digest) {
-  const h4 = crypto9.createHash("sha256");
+  const h4 = crypto11.createHash("sha256");
   let run2 = [];
   for (const p4 of parts) {
     if (typeof p4 === "number") {
@@ -23034,7 +23464,7 @@ function proveTypeNames(inv, members, extra = []) {
     if (!parts)
       return [];
     const raw = Buffer.from(parts.flatMap((p4) => typeof p4 === "number" ? [p4] : compressed2(p4.operand)));
-    if (crypto9.createHash("sha256").update(raw).digest("hex") !== s4.raw_sha256)
+    if (crypto11.createHash("sha256").update(raw).digest("hex") !== s4.raw_sha256)
       return [];
     return [{ s: s4, parts }];
   });
@@ -23197,9 +23627,9 @@ function diffAssemblies(legacy, candidate, c4) {
 }
 function inventoryOf(m4, file, what) {
   const full = inside(m4, file);
-  if (!fs16.existsSync(full) || !fs16.statSync(full).isFile())
+  if (!fs18.existsSync(full) || !fs18.statSync(full).isFile())
     throw new ManifestError(`${what} ${file} does not exist.`);
-  return readInventory(/\.json$/i.test(full) ? JSON.parse(fs16.readFileSync(full, "utf8")) : runRea(full), file);
+  return readInventory(/\.json$/i.test(full) ? JSON.parse(fs18.readFileSync(full, "utf8")) : runRea(full), file);
 }
 function checkAssemblyContract(m4, c4) {
   const base2 = { name: c4.name, kind: c4.kind };
@@ -23357,6 +23787,10 @@ function checkContract(c4, ref, cand) {
     if (r6.status !== 200)
       return { ...base2, result: "ERROR", findings: [{ breaking: false, what: `${side} answered HTTP ${r6.status}` }] };
   }
+  for (const [side, r6] of [["reference", ref], ["candidate", cand]]) {
+    if (r6.truncated)
+      return { ...base2, result: "ERROR", findings: [{ breaking: false, what: `${side}: the contract is over 5 MB and only the first 5 MB were read, so it was not checked. Serve a smaller one, or compare it by hand` }] };
+  }
   let findings = [];
   try {
     const kind = c4.kind.toLowerCase();
@@ -23376,8 +23810,8 @@ function checkContract(c4, ref, cand) {
 }
 
 // packages/core/dist/trend.js
-import fs17 from "node:fs";
-import path16 from "node:path";
+import fs19 from "node:fs";
+import path18 from "node:path";
 var position = (w2) => w2.replace(/\[\d+\]/g, "[*]");
 var RESULT = { PASS: "pass", MATCH: "pass", DRIFT: "pass", FAIL: "fail", DIFFERENT: "fail", ERROR: "error" };
 function scrubRules(s4) {
@@ -23545,7 +23979,7 @@ function trend(manifest, o4 = {}) {
   const unreadable = [];
   for (const r6 of runs) {
     try {
-      const doc = JSON.parse(fs17.readFileSync(path16.join(r6.dir, "REPORT.json"), "utf8"));
+      const doc = JSON.parse(fs19.readFileSync(path18.join(r6.dir, "REPORT.json"), "utf8"));
       if (typeof doc?.verdict !== "string")
         throw new Error("no verdict");
       rows.push(mode === "shadow" ? fromShadow(r6.name, doc) : fromReport(r6.name, doc));
@@ -23556,11 +23990,11 @@ function trend(manifest, o4 = {}) {
   const report = trendOf(mode, manifest.system, rows, unreadable);
   if (!rows.length)
     return { report };
-  const dir = ownedFolder(manifest, path16.join(manifest.evidence, "trend", mode));
-  fs17.mkdirSync(dir, { recursive: true });
-  fs17.writeFileSync(path16.join(dir, "TREND.json"), JSON.stringify(report, null, 2) + "\n", "utf8");
-  fs17.writeFileSync(path16.join(dir, "TREND.md"), renderTrend(report), "utf8");
-  return { report, file: path16.relative(manifest.root, path16.join(dir, "TREND.md")).split(path16.sep).join("/") };
+  const dir = ownedFolder(manifest, path18.join(manifest.evidence, "trend", mode));
+  fs19.mkdirSync(dir, { recursive: true });
+  fs19.writeFileSync(path18.join(dir, "TREND.json"), JSON.stringify(report, null, 2) + "\n", "utf8");
+  fs19.writeFileSync(path18.join(dir, "TREND.md"), renderTrend(report), "utf8");
+  return { report, file: path18.relative(manifest.root, path18.join(dir, "TREND.md")).split(path18.sep).join("/") };
 }
 
 // packages/core/dist/expect.js
@@ -23572,24 +24006,24 @@ function regex(pattern, where2) {
   }
 }
 var typeOf3 = (v2) => v2 === null ? "null" : Array.isArray(v2) ? "array" : typeof v2;
-function checkJson(path25, check2, doc) {
-  const found = select(doc, parsePath(path25));
+function checkJson(path27, check2, doc) {
+  const found = select(doc, parsePath(path27));
   if ("exists" in check2) {
-    return found.length > 0 === check2.exists ? [] : [{ check: path25, expected: check2.exists ? "present" : "absent", actual: found.length ? short(found[0].value) : "(missing)" }];
+    return found.length > 0 === check2.exists ? [] : [{ check: path27, expected: check2.exists ? "present" : "absent", actual: found.length ? short(found[0].value) : "(missing)" }];
   }
   if (found.length === 0)
-    return [{ check: path25, expected: describe(check2), actual: "(missing)" }];
+    return [{ check: path27, expected: describe(check2), actual: "(missing)" }];
   const out = [];
   for (const { at: at2, value } of found) {
     let ok = true;
     if ("equals" in check2)
       ok = jsonEqual(value, check2.equals);
     else if ("matches" in check2)
-      ok = typeof value === "string" && regex(check2.matches, path25).test(value);
+      ok = typeof value === "string" && regex(check2.matches, path27).test(value);
     else if ("type" in check2)
       ok = typeOf3(value) === check2.type;
     if (!ok)
-      out.push({ check: found.length > 1 ? render(at2) : path25, expected: describe(check2), actual: short(value) });
+      out.push({ check: found.length > 1 ? render(at2) : path27, expected: describe(check2), actual: short(value) });
   }
   return out;
 }
@@ -23603,6 +24037,9 @@ function describe(check2) {
   return check2.exists ? "present" : "absent";
 }
 function checkExpectation(exp, obs) {
+  const problem = expectProblem(exp);
+  if (problem)
+    return [{ check: "expect", expected: "an expectation that checks something", actual: problem }];
   const out = [];
   if (exp.status !== void 0) {
     const allowed = Array.isArray(exp.status) ? exp.status : [exp.status];
@@ -23622,8 +24059,8 @@ function checkExpectation(exp, obs) {
     } catch {
       return [...out, { check: "body", expected: "JSON", actual: short(obs.body ?? "", 60) }];
     }
-    for (const [path25, check2] of Object.entries(exp.json))
-      out.push(...checkJson(path25, check2, doc));
+    for (const [path27, check2] of Object.entries(exp.json))
+      out.push(...checkJson(path27, check2, doc));
   }
   for (const text2 of exp.body_contains ?? []) {
     if (!(obs.body ?? "").includes(text2))
@@ -23936,7 +24373,6 @@ function renderReport(r6) {
 }
 
 // packages/core/dist/engine.js
-var SAFE_METHODS = /* @__PURE__ */ new Set(["GET", "HEAD", "OPTIONS"]);
 var today = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
 function envHeaders(manifest) {
   const out = {};
@@ -23954,7 +24390,7 @@ function matchFor(c4, manifest) {
   let level2 = manifest.match;
   const p4 = c4.request.path.split("?")[0];
   for (const o4 of manifest.overrides)
-    if (path17.posix.matchesGlob(p4, o4.path))
+    if (path19.posix.matchesGlob(p4, o4.path))
       level2 = o4.match;
   return c4.match ?? level2;
 }
@@ -23966,9 +24402,12 @@ function adaptersFor(manifest) {
       if (!cache.has(s4)) {
         if (s4 === "http")
           cache.set(s4, httpAdapter({ timeoutS: manifest.timeout_s, insecureTls: manifest.insecure_tls, root: manifest.root }));
-        else if (manifest.adapters[s4])
+        else if (manifest.adapters[s4]) {
+          const problem = adapterPinProblem(manifest.root, s4);
+          if (problem)
+            throw new ManifestError(problem);
           cache.set(s4, processAdapter(s4, manifest.adapters[s4], manifest.root));
-        else
+        } else
           throw new ManifestError(`No adapter for surface "${s4}". Add it under \`adapters:\` in cmtk.yaml, or run \`cmtk adapter new ${s4}\`.`);
       }
       return cache.get(s4);
@@ -24007,11 +24446,18 @@ function base(c4) {
   return { id: c4.id, name: c4.name ?? `${c4.request.method} ${c4.request.path}`, request: `${c4.request.method} ${c4.request.path}`, requirement: requirementsOf(c4), surface: c4.surface ?? "http" };
 }
 function unsafe(c4, manifest, opts) {
-  const safe = SAFE_METHODS.has(c4.request.method) || c4.safe === true;
-  return !safe && !(manifest.allow_unsafe_methods && opts.allowUnsafe);
+  return writes(c4) && !safeConfirmed(c4, manifest.root) && !(manifest.allow_unsafe_methods && opts.allowUnsafe);
 }
+var unsafeWhy = (c4) => c4.safe !== void 0 ? `${UNSAFE_WHY}. It is marked \`safe: true\`, but no person has confirmed this exact case: \`cmtk review\` shows it` : UNSAFE_WHY;
+var asSent = (c4, manifest) => {
+  if (c4.safe === void 0 || safeConfirmed(c4, manifest.root))
+    return c4;
+  const { safe: _safe, ...rest } = c4;
+  return rest;
+};
 var lacking = (surface, ...targets) => targets.filter((t3) => t3.surfaces && !t3.surfaces.includes(surface)).map((t3) => t3.name);
 var hasNo = (names, surface) => `${names.join(" and ")} ${names.length > 1 ? "have" : "has"} no ${surface} surface`;
+var NOT_RESET_NOTE = "read-only, so the systems were not reset first: this compares what each holds now, including anything an earlier case or an earlier run left there";
 var DRAFT_WHY = "a draft: a person accepts it with `cmtk review` before it counts";
 var EXPECT_DRAFT_WHY = "draft expectation: review it with `cmtk review`. It records what the system answered, which a person confirms before it counts";
 var UNSAFE_WHY = "changes data: needs allow_unsafe_methods in cmtk.yaml and --allow-unsafe on this run";
@@ -24030,35 +24476,35 @@ function alive(pid) {
 }
 function evidenceDir(manifest, mode, opts = {}) {
   ownedFolder(manifest, manifest.evidence);
-  const final = ownedFolder(manifest, path17.join(manifest.evidence, mode));
-  const work = ownedFolder(manifest, path17.join(manifest.evidence, `.${mode}.partial`));
-  const lock = ownedFolder(manifest, path17.join(manifest.evidence, `.${mode}.lock`));
-  fs18.mkdirSync(path17.dirname(lock), { recursive: true });
+  const final = ownedFolder(manifest, path19.join(manifest.evidence, mode));
+  const work = ownedFolder(manifest, path19.join(manifest.evidence, `.${mode}.partial`));
+  const lock = ownedFolder(manifest, path19.join(manifest.evidence, `.${mode}.lock`));
+  fs20.mkdirSync(path19.dirname(lock), { recursive: true });
   const mine = JSON.stringify({ pid: process.pid, started: (/* @__PURE__ */ new Date()).toISOString() });
   try {
-    fs18.writeFileSync(lock, mine, { flag: "wx" });
+    fs20.writeFileSync(lock, mine, { flag: "wx" });
   } catch {
     let held = {};
     try {
-      held = JSON.parse(fs18.readFileSync(lock, "utf8"));
+      held = JSON.parse(fs20.readFileSync(lock, "utf8"));
     } catch {
     }
     const age = held.started ? Date.now() - Date.parse(held.started) : Infinity;
     if (typeof held.pid === "number" && alive(held.pid) && age < LOCK_STALE_MS) {
-      throw new ManifestError(`Another \`cmtk ${mode}\` is writing ${path17.relative(manifest.root, final)} (process ${held.pid}, started ${held.started}). Wait for it to finish, then run again.`);
+      throw new ManifestError(`Another \`cmtk ${mode}\` is writing ${path19.relative(manifest.root, final)} (process ${held.pid}, started ${held.started}). Wait for it to finish, then run again.`);
     }
-    fs18.writeFileSync(lock, mine);
+    fs20.writeFileSync(lock, mine);
   }
   const release = () => {
     try {
-      if (fs18.readFileSync(lock, "utf8") === mine)
-        fs18.rmSync(lock, { force: true });
+      if (fs20.readFileSync(lock, "utf8") === mine)
+        fs20.rmSync(lock, { force: true });
     } catch {
     }
   };
   try {
-    fs18.rmSync(work, { recursive: true, force: true });
-    fs18.mkdirSync(path17.join(work, "answers"), { recursive: true });
+    fs20.rmSync(work, { recursive: true, force: true });
+    fs20.mkdirSync(path19.join(work, "answers"), { recursive: true });
   } catch (err) {
     release();
     throw err;
@@ -24066,8 +24512,8 @@ function evidenceDir(manifest, mode, opts = {}) {
   return {
     dir: work,
     commit() {
-      fs18.rmSync(final, { recursive: true, force: true });
-      fs18.renameSync(work, final);
+      fs20.rmSync(final, { recursive: true, force: true });
+      fs20.renameSync(work, final);
       if (opts.dated || manifest.evidence_history.dated) {
         const note = opts.note ?? ((line2) => {
           process.stderr.write(`${line2}
@@ -24075,7 +24521,7 @@ function evidenceDir(manifest, mode, opts = {}) {
         });
         try {
           const kept = keepDated(manifest, mode, final);
-          note(`Kept a dated copy: ${path17.join(manifest.evidence, "history", mode, kept.name).split(path17.sep).join("/")}.`);
+          note(`Kept a dated copy: ${path19.join(manifest.evidence, "history", mode, kept.name).split(path19.sep).join("/")}.`);
           if (kept.removed.length)
             note(`Removed old dated runs by the clean-up rule: ${kept.removed.join(", ")}.`);
           for (const w2 of kept.warnings)
@@ -24092,8 +24538,8 @@ function evidenceDir(manifest, mode, opts = {}) {
 var failed = (err) => err instanceof Error ? err.message : String(err);
 function settingsOf(manifest, drift, known) {
   return {
-    manifest: path17.relative(manifest.root, manifest.file).split(path17.sep).join("/"),
-    manifest_sha256: crypto10.createHash("sha256").update(fs18.readFileSync(manifest.file)).digest("hex"),
+    manifest: path19.relative(manifest.root, manifest.file).split(path19.sep).join("/"),
+    manifest_sha256: crypto12.createHash("sha256").update(fs20.readFileSync(manifest.file)).digest("hex"),
     match: manifest.match,
     overrides: manifest.overrides,
     scrub: manifest.scrub,
@@ -24104,7 +24550,7 @@ function settingsOf(manifest, drift, known) {
   };
 }
 var where = (t3) => (t3.base_url ? cleanUrl(t3.base_url) : void 0) ?? Object.entries(t3).filter(([k2]) => k2 !== "name" && k2 !== "surfaces").map(([k2, v2]) => `${k2}=${v2}`).join(", ");
-var writeJson = (file, data) => fs18.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8");
+var writeJson = (file, data) => fs20.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8");
 function evidenceOf(obs, dir, stem) {
   const { screenshots, ...rest } = obs;
   if (!screenshots?.length)
@@ -24116,8 +24562,8 @@ function evidenceOf(obs, dir, stem) {
     screenshots: screenshots.map((s4, i8) => {
       const bytes = Buffer.from(String(s4.png_base64), "base64");
       const file = `${stem}.screen-${String(i8 + 1).padStart(2, "0")}.png`;
-      fs18.writeFileSync(path17.join(dir, file), bytes);
-      return { page: String(s4.page), file, sha256: crypto10.createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length };
+      fs20.writeFileSync(path19.join(dir, file), bytes);
+      return { page: String(s4.page), file, sha256: crypto12.createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length };
     })
   };
 }
@@ -24184,7 +24630,7 @@ async function run(manifest, opts = {}) {
           continue;
         }
         if (unsafe(c4, manifest, opts)) {
-          out.push({ ...b2, result: "SKIPPED", why: UNSAFE_WHY });
+          out.push({ ...b2, result: "SKIPPED", why: unsafeWhy(c4) });
           continue;
         }
         if (silent >= STOP_AFTER_NO_ANSWER) {
@@ -24192,8 +24638,8 @@ async function run(manifest, opts = {}) {
           continue;
         }
         try {
-          const obs = await adapters.get(b2.surface).run(c4, t3, extra);
-          writeJson(path17.join(dir, "answers", `${c4.id}.json`), evidenceOf(obs, path17.join(dir, "answers"), c4.id));
+          const obs = await adapters.get(b2.surface).run(asSent(c4, manifest), t3, extra);
+          writeJson(path19.join(dir, "answers", `${c4.id}.json`), evidenceOf(obs, path19.join(dir, "answers"), c4.id));
           models.add(b2.surface, obs);
           silent = noAnswer(obs) ? silent + 1 : 0;
           const sent = { ...obs.inputs?.length ? { inputs: obs.inputs } : {}, ...obs.before ? { before: obs.before } : {} };
@@ -24212,8 +24658,8 @@ async function run(manifest, opts = {}) {
       await adapters.closeAll();
     }
     const report = summarise({ mode: "run", manifest, targets: { [t3.name]: where(t3) }, cases: out, contracts: [], drift: [], usedDrift: /* @__PURE__ */ new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, [], known), modelCalls: models.tally, excludedDrafts: selected.excluded, excludedCompareOnly: leftOut, compareOnlySurfaces: manifest.compare_only_surfaces, known: knownInReport(known, out, new Set(loadCases(manifest).map((c4) => c4.id))) });
-    writeJson(path17.join(dir, "REPORT.json"), report);
-    fs18.writeFileSync(path17.join(dir, "REPORT.md"), renderReport(report), "utf8");
+    writeJson(path19.join(dir, "REPORT.json"), report);
+    fs20.writeFileSync(path19.join(dir, "REPORT.md"), renderReport(report), "utf8");
     ev.commit();
     return report;
   } finally {
@@ -24239,6 +24685,14 @@ async function compare(manifest, opts = {}) {
     const out = [];
     const models = modelCalls();
     let silent = 0;
+    const asked = /* @__PURE__ */ new Map();
+    const asksForResetBeforeReads = async (surface, adapter) => {
+      if (!asked.has(surface)) {
+        const d4 = await adapter.describe?.().catch(() => void 0);
+        asked.set(surface, d4?.reset_before_reads === true);
+      }
+      return asked.get(surface);
+    };
     try {
       const http2 = adapters.get("http");
       for (const k2 of manifest.contracts) {
@@ -24263,9 +24717,9 @@ async function compare(manifest, opts = {}) {
         const [a4, b2] = [await http2.run(probe2, ref, extra), await http2.run(probe2, cand, extra)];
         const slug3 = k2.name.replace(/[^A-Za-z0-9_.-]/g, "_").slice(0, 64);
         if (a4.body !== void 0)
-          fs18.writeFileSync(path17.join(dir, "answers", `contract-${slug3}.reference.txt`), a4.body, "utf8");
+          fs20.writeFileSync(path19.join(dir, "answers", `contract-${slug3}.reference.txt`), a4.body, "utf8");
         if (b2.body !== void 0)
-          fs18.writeFileSync(path17.join(dir, "answers", `contract-${slug3}.candidate.txt`), b2.body, "utf8");
+          fs20.writeFileSync(path19.join(dir, "answers", `contract-${slug3}.candidate.txt`), b2.body, "utf8");
         const outcome = checkContract(k2, a4, b2);
         for (const f4 of outcome.findings) {
           const hit2 = f4.where ? coveringDrift(drift, `contract-${k2.name}`, f4.where) : void 0;
@@ -24293,7 +24747,7 @@ async function compare(manifest, opts = {}) {
           continue;
         }
         if (unsafe(c4, manifest, opts)) {
-          out.push({ ...b2, result: "SKIPPED", why: UNSAFE_WHY });
+          out.push({ ...b2, result: "SKIPPED", why: unsafeWhy(c4) });
           continue;
         }
         if (silent >= STOP_AFTER_NO_ANSWER) {
@@ -24302,14 +24756,19 @@ async function compare(manifest, opts = {}) {
         }
         try {
           const adapter = adapters.get(b2.surface);
-          if (adapter.reset) {
+          const reads = !writes(c4) || safeConfirmed(c4, manifest.root);
+          const clean2 = !!adapter.reset && (!reads || await asksForResetBeforeReads(b2.surface, adapter));
+          if (clean2) {
             await adapter.reset(ref);
             await adapter.reset(cand);
           }
-          const ra = await adapter.run(c4, ref, extra);
-          const rb = await adapter.run(c4, cand, extra);
-          writeJson(path17.join(dir, "answers", `${c4.id}.reference.json`), evidenceOf(ra, path17.join(dir, "answers"), `${c4.id}.reference`));
-          writeJson(path17.join(dir, "answers", `${c4.id}.candidate.json`), evidenceOf(rb, path17.join(dir, "answers"), `${c4.id}.candidate`));
+          if (adapter.reset && !clean2)
+            b2.note = NOT_RESET_NOTE;
+          const sent = asSent(c4, manifest);
+          const ra = await adapter.run(sent, ref, extra);
+          const rb = await adapter.run(sent, cand, extra);
+          writeJson(path19.join(dir, "answers", `${c4.id}.reference.json`), evidenceOf(ra, path19.join(dir, "answers"), `${c4.id}.reference`));
+          writeJson(path19.join(dir, "answers", `${c4.id}.candidate.json`), evidenceOf(rb, path19.join(dir, "answers"), `${c4.id}.candidate`));
           models.add(b2.surface, ra);
           models.add(b2.surface, rb);
           silent = noAnswer(ra) || noAnswer(rb) ? silent + 1 : 0;
@@ -24334,7 +24793,7 @@ async function compare(manifest, opts = {}) {
             ...b2,
             result: open.length ? "DIFFERENT" : diffs.length ? "DRIFT" : "MATCH",
             ...diffs.length ? { differences: diffs } : {},
-            ...ra.truncated || rb.truncated ? { truncated: true, note: "an answer was over 5 MB; only the first 5 MB were compared" } : {}
+            ...ra.truncated || rb.truncated ? { truncated: true, note: [b2.note, "an answer was over 5 MB; only the first 5 MB were compared"].filter(Boolean).join("; ") } : {}
           });
         } catch (err) {
           out.push({ ...b2, result: "ERROR", why: failed(err) });
@@ -24344,8 +24803,8 @@ async function compare(manifest, opts = {}) {
       await adapters.closeAll();
     }
     const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), modelCalls: models.tally, excludedDrafts: cases.excluded, surfaces: { [ref.name]: ref.surfaces, [cand.name]: cand.surfaces }, ...fired.size ? { scrubFired: Object.fromEntries(fired) } : {} });
-    writeJson(path17.join(dir, "REPORT.json"), report);
-    fs18.writeFileSync(path17.join(dir, "REPORT.md"), renderReport(report), "utf8");
+    writeJson(path19.join(dir, "REPORT.json"), report);
+    fs20.writeFileSync(path19.join(dir, "REPORT.md"), renderReport(report), "utf8");
     ev.commit();
     return report;
   } finally {
@@ -24356,62 +24815,17 @@ async function compare(manifest, opts = {}) {
 // packages/core/dist/shadow.js
 var SHADOW_FORMATS = ["auto", "clf", "w3c", "jsonl"];
 var DEFAULT_HEADERS = /* @__PURE__ */ new Set(["accept", "accept-language"]);
-var OVERRIDE_HEADERS = /* @__PURE__ */ new Set(["x-http-method-override", "x-http-method", "x-method-override"]);
-var OVERRIDE_QUERY = /^(_method|\$method|x-http-method(-override)?|x-method-override)$/i;
 var NO_ANSWER2 = /^(ETIMEDOUT|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENETUNREACH|ENOTFOUND|EAI_AGAIN)\b/;
 var MAX_PATH = 8e3;
 var MAX_PLACES = 200;
 function looksPersonal(name) {
   const n3 = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-  return /^(name|forename|givenname|familyname|displayname|username|user|login|mail|telephone|tel|msisdn|address|addressline\d?|street|postalcode|zip|zipcode|dob|birthdate|birthday|ssn|nino|licencenumber|licensenumber|iban|sortcode|accountnumber|cardholder|ip|ipaddress|clientip|contact)$/.test(n3) || /(email|phone|mobile|surname|lastname|firstname|fullname|postcode|dateofbirth|passport|nationalinsurance)/.test(n3);
+  return /^(name|forename|givenname|familyname|displayname|username|user|login|mail|telephone|tel|msisdn|address|addressline\d?|street|postalcode|zip|zipcode|dob|birthdate|birthday|ssn|nino|licencenumber|licensenumber|iban|sortcode|accountnumber|cardholder|ip|ipaddress|clientip|contact|guest|customer|patient|recipient|person|employee)$/.test(n3) || /^(guest|customer|client|patient|member|person|employee|recipient|sender|tenant|landlord|owner)(full)?name$/.test(n3) || /(email|phone|mobile|surname|lastname|firstname|fullname|postcode|dateofbirth|passport|nationalinsurance)/.test(n3);
 }
-var luhn = (digits) => {
-  let sum = 0;
-  for (let i8 = 0; i8 < digits.length; i8++) {
-    let d4 = Number(digits[digits.length - 1 - i8]);
-    if (i8 % 2 === 1) {
-      d4 *= 2;
-      if (d4 > 9)
-        d4 -= 9;
-    }
-    sum += d4;
-  }
-  return sum % 10 === 0;
-};
-var SHAPES = [
-  ["email", /[^\s@/?&=;,"'<>]+@[^\s@/?&=;,"'<>]+\.[A-Za-z]{2,}/g],
-  ["token", /\beyJ[\w-]{4,}\.[\w-]{4,}\.[\w-]*/g],
-  ["token", /\b(?:sk|pk|rk)_(?:live|test)_\w+/g],
-  ["token", /\b[A-Fa-f0-9]{32,}\b/g],
-  ["token", /[A-Za-z0-9+_-]{40,}={0,2}/g],
-  ["card number", /\b\d(?:[ -]?\d){12,18}\b/g, (m4) => luhn(m4.replace(/\D/g, ""))],
-  ["national number", /\b[A-CEGHJ-PR-TW-Z]{2}\s?\d{2}\s?\d{2}\s?\d{2}\s?[A-D]\b/gi],
-  ["national number", /\b\d{3}-\d{2}-\d{4}\b/g],
-  ["bank account", /\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b/g],
-  ["postcode", /\b[A-PR-UWYZ][A-HK-Y]?\d[A-Z\d]?[ +]?\d[ABD-HJLNP-UW-Z]{2}\b/gi],
-  ["phone number", /(?:\+|\b00)\d[\d ()-]{7,16}\d\b/g],
-  ["phone number", /\b0\d{9,10}\b/g],
-  ["IP address", /\b\d{1,3}(?:\.\d{1,3}){3}\b/g]
-];
-function redactText(text2, own = []) {
-  const kinds = [];
-  let out = text2;
-  for (const rx of own)
-    out = out.replace(rx, () => {
-      kinds.push("your --redact rule");
-      return REDACTED;
-    });
-  for (const [kind, rx, keep2] of SHAPES) {
-    out = out.replace(rx, (m4) => {
-      if (keep2 && !keep2(m4))
-        return m4;
-      kinds.push(kind);
-      return REDACTED;
-    });
-  }
-  return { text: out, kinds };
-}
-var decoded = (s4) => {
+var PEOPLE = /* @__PURE__ */ new Set(["users", "user", "customers", "customer", "members", "member", "people", "persons", "person", "profiles", "profile", "guests", "guest", "clients", "client", "employees", "employee", "staff", "patients", "patient", "tenants", "tenant", "landlords", "landlord", "contacts", "contact"]);
+var ROUTES = /^(me|self|current|search|new|list|all|count|export|import|login|logout|register|settings|profile|orders|\{.*\}|:.*)$/i;
+var IDENTIFIER = /^(\d+|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+var decoded2 = (s4) => {
   try {
     return decodeURIComponent(s4.replace(/\+/g, " "));
   } catch {
@@ -24427,7 +24841,7 @@ function cleanValue(raw, name, own, kinds) {
     kinds.push("personal field");
     return REDACTED;
   }
-  const r6 = redactText(decoded(raw), own);
+  const r6 = redactText(decoded2(raw), own);
   if (!r6.kinds.length)
     return raw;
   kinds.push(...r6.kinds);
@@ -24446,9 +24860,12 @@ function cleanTarget(target2, own = []) {
   const pathPart = q2 < 0 ? t3 : t3.slice(0, q2);
   const query = q2 < 0 ? void 0 : t3.slice(q2 + 1);
   const kinds = [];
-  const segments = pathPart.split("/").map((seg) => {
+  const segments = pathPart.split("/").map((seg, i8, all) => {
     const [head, ...params] = seg.split(";");
-    const r6 = redactText(decoded(head), own);
+    const r6 = redactText(decoded2(head), own);
+    const before = decoded2(all[i8 - 1]?.split(";")[0] ?? "").toLowerCase();
+    if (head && !r6.kinds.length && PEOPLE.has(before) && !IDENTIFIER.test(head) && !ROUTES.test(decoded2(head)))
+      r6.kinds.push("personal field");
     kinds.push(...r6.kinds);
     const cleanParams = params.map((p4) => {
       const eq = p4.indexOf("=");
@@ -24458,16 +24875,18 @@ function cleanTarget(target2, own = []) {
   });
   let out = segments.join("/");
   if (query !== void 0) {
-    out += `?${query.split("&").map((pair) => {
+    out += `?${query.split(/([&;])/).map((pair, i8) => {
+      if (i8 % 2)
+        return pair;
       const eq = pair.indexOf("=");
       if (eq < 0) {
-        const r6 = redactText(decoded(pair), own);
+        const r6 = redactText(decoded2(pair), own);
         kinds.push(...r6.kinds);
         return r6.kinds.length ? REDACTED : pair;
       }
-      const name = decoded(pair.slice(0, eq));
+      const name = decoded2(pair.slice(0, eq));
       return `${pair.slice(0, eq)}=${cleanValue(pair.slice(eq + 1), name, own, kinds)}`;
-    }).join("&")}`;
+    }).join("")}`;
   }
   return { path: out, kinds };
 }
@@ -24510,7 +24929,7 @@ function fromJson(line2) {
   const body = o4.body ?? o4.request_body ?? o4.postData;
   return { method, target: target2, headers, hasBody: body !== void 0 && body !== null && body !== "" && body !== "-" };
 }
-function lineReader(format) {
+function lineReader(format2) {
   let fields;
   return (line2) => {
     if (!line2.trim())
@@ -24520,7 +24939,7 @@ function lineReader(format) {
         fields = line2.slice(8).trim().split(/\s+/);
       return "skip";
     }
-    const kind = format !== "auto" ? format : fields ? "w3c" : line2.trimStart().startsWith("{") ? "jsonl" : "clf";
+    const kind = format2 !== "auto" ? format2 : fields ? "w3c" : line2.trimStart().startsWith("{") ? "jsonl" : "clf";
     if (kind === "jsonl")
       return fromJson(line2);
     if (kind === "w3c") {
@@ -24538,24 +24957,12 @@ function lineReader(format) {
     return m4 ? { method: m4[1], target: m4[2], headers: {}, hasBody: false } : void 0;
   };
 }
-function unsafeWhy(method, raw) {
+function unsafeWhy2(method, raw) {
   if (!SAFE_METHODS.has(method))
     return method;
   if (raw.hasBody)
     return `${method} with a body`;
-  for (const [k2, v2] of Object.entries(raw.headers)) {
-    if (OVERRIDE_HEADERS.has(k2.toLowerCase()) && !SAFE_METHODS.has(v2.trim().toUpperCase()))
-      return `${method} that overrides its method`;
-  }
-  const q2 = raw.target.indexOf("?");
-  if (q2 >= 0) {
-    for (const pair of raw.target.slice(q2 + 1).split("&")) {
-      const eq = pair.indexOf("=");
-      if (eq > 0 && OVERRIDE_QUERY.test(decoded(pair.slice(0, eq))) && !SAFE_METHODS.has(decoded(pair.slice(eq + 1)).trim().toUpperCase()))
-        return `${method} that overrides its method`;
-    }
-  }
-  return void 0;
+  return overrideIn(raw.target, raw.headers) === void 0 ? void 0 : `${method} that overrides its method`;
 }
 function endpointOf(method, p4) {
   const clean2 = p4.split("?")[0].split("/").map((s4) => /^\d+$/.test(s4) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s4) || /^[0-9a-f]{16,}$/i.test(s4) || s4 === REDACTED ? "{id}" : s4).join("/");
@@ -24590,10 +24997,10 @@ async function captureRequests(sources, o4) {
   const requests = [];
   let eligible = 0;
   for (const file of sources) {
-    if (!fs19.existsSync(file) || !fs19.statSync(file).isFile())
-      throw new ManifestError(`${path18.basename(file)} does not exist or is not a file.`);
+    if (!fs21.existsSync(file) || !fs21.statSync(file).isFile())
+      throw new ManifestError(`${path20.basename(file)} does not exist or is not a file.`);
     const read = lineReader(o4.format ?? "auto");
-    const lines = readline2.createInterface({ input: fs19.createReadStream(file, "utf8"), crlfDelay: Infinity });
+    const lines = readline2.createInterface({ input: fs21.createReadStream(file, "utf8"), crlfDelay: Infinity });
     for await (const line2 of lines) {
       const raw = read(line2);
       if (raw === "skip")
@@ -24608,7 +25015,7 @@ async function captureRequests(sources, o4) {
         stats.unreadable++;
         continue;
       }
-      const unsafe2 = unsafeWhy(method, raw);
+      const unsafe2 = unsafeWhy2(method, raw);
       if (unsafe2) {
         stats.dropped[unsafe2] = (stats.dropped[unsafe2] ?? 0) + 1;
         stats.dropped_total++;
@@ -24624,7 +25031,7 @@ async function captureRequests(sources, o4) {
         continue;
       }
       const ordinal = eligible++;
-      if (o4.sample < 1 && crypto11.createHash("sha256").update(`${o4.seed}:${ordinal}`).digest().readUInt32BE(0) / 2 ** 32 >= o4.sample) {
+      if (o4.sample < 1 && crypto13.createHash("sha256").update(`${o4.seed}:${ordinal}`).digest().readUInt32BE(0) / 2 ** 32 >= o4.sample) {
         stats.sampled_out++;
         continue;
       }
@@ -24746,9 +25153,9 @@ async function shadow(manifest, o4) {
   const ev = evidenceDir(manifest, "shadow", { dated: o4.dated, note: o4.note });
   try {
     const dir = ev.dir;
-    fs19.rmSync(path18.join(dir, "answers"), { recursive: true, force: true });
-    const captureFile = path18.join(dir, "capture.jsonl");
-    fs19.writeFileSync(captureFile, requests.map((q2) => JSON.stringify(q2)).join("\n") + (requests.length ? "\n" : ""), "utf8");
+    fs21.rmSync(path20.join(dir, "answers"), { recursive: true, force: true });
+    const captureFile = path20.join(dir, "capture.jsonl");
+    fs21.writeFileSync(captureFile, requests.map((q2) => JSON.stringify(q2)).join("\n") + (requests.length ? "\n" : ""), "utf8");
     const replay = { sent: 0, matched: 0, drift: 0, different: 0, errors: 0, not_sent: 0, truncated: 0 };
     const endpoints = /* @__PURE__ */ new Map();
     const noise2 = /* @__PURE__ */ new Map();
@@ -24757,7 +25164,7 @@ async function shadow(manifest, o4) {
     const sleep = o4.sleep ?? ((ms) => new Promise((res) => setTimeout(res, ms)));
     const now = o4.now ?? (() => performance.now());
     if (!o4.captureOnly) {
-      const toSend = fs19.readFileSync(captureFile, "utf8").split("\n").filter(Boolean).map((l4) => JSON.parse(l4));
+      const toSend = fs21.readFileSync(captureFile, "utf8").split("\n").filter(Boolean).map((l4) => JSON.parse(l4));
       const http2 = httpAdapter({ timeoutS: manifest.timeout_s, insecureTls: manifest.insecure_tls, root: manifest.root });
       const gap = 1e3 / rate;
       let next2 = now();
@@ -24809,7 +25216,7 @@ async function shadow(manifest, o4) {
           replay.matched++;
         }
         for (const d4 of diffs) {
-          const where2 = d4.where.replace(/\[\d+\]/g, "[*]");
+          const where2 = redactText(d4.where.replace(/\[\d+\]/g, "[*]")).text;
           const placeKey = `${where2}\0${d4.drift ?? ""}`;
           const kept = e6.places.get(placeKey);
           if (kept)
@@ -24836,7 +25243,7 @@ async function shadow(manifest, o4) {
       date: o4.date ?? (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
       verdict,
       targets: { [ref.name]: cleanUrl(ref.base_url), [cand.name]: cleanUrl(cand.base_url) },
-      sources: o4.from.map((f4) => path18.basename(f4)),
+      sources: o4.from.map((f4) => path20.basename(f4)),
       // the file name only: a full path can name a person's folders
       capture: stats,
       replay,
@@ -24850,8 +25257,8 @@ async function shadow(manifest, o4) {
       reason,
       next
     };
-    fs19.writeFileSync(path18.join(dir, "REPORT.json"), JSON.stringify(report, null, 2) + "\n", "utf8");
-    fs19.writeFileSync(path18.join(dir, "REPORT.md"), renderShadow(report), "utf8");
+    fs21.writeFileSync(path20.join(dir, "REPORT.json"), JSON.stringify(report, null, 2) + "\n", "utf8");
+    fs21.writeFileSync(path20.join(dir, "REPORT.md"), renderShadow(report), "utf8");
     ev.commit();
     return report;
   } finally {
@@ -24860,9 +25267,9 @@ async function shadow(manifest, o4) {
 }
 
 // packages/core/dist/signoff.js
-import crypto12 from "node:crypto";
-import fs20 from "node:fs";
-import path19 from "node:path";
+import crypto14 from "node:crypto";
+import fs22 from "node:fs";
+import path21 from "node:path";
 var DECISIONS = ["accept", "accept with conditions", "reject"];
 var SignoffError = class extends Error {
 };
@@ -24870,8 +25277,8 @@ var SKIP = /* @__PURE__ */ new Set(["SIGNOFF.json", "DEFECTS.md", "DEFECTS.json"
 function evidenceFingerprint(dir) {
   const files = [];
   const walk = (d4) => {
-    for (const e6 of fs20.readdirSync(d4, { withFileTypes: true })) {
-      const full = path19.join(d4, e6.name);
+    for (const e6 of fs22.readdirSync(d4, { withFileTypes: true })) {
+      const full = path21.join(d4, e6.name);
       if (e6.isDirectory())
         walk(full);
       else if (e6.isFile() && !(d4 === dir && SKIP.has(e6.name)))
@@ -24879,22 +25286,22 @@ function evidenceFingerprint(dir) {
     }
   };
   walk(dir);
-  const h4 = crypto12.createHash("sha256");
-  for (const f4 of files.map((f5) => path19.relative(dir, f5).split(path19.sep).join("/")).sort()) {
-    let bytes = fs20.readFileSync(path19.join(dir, f4));
+  const h4 = crypto14.createHash("sha256");
+  for (const f4 of files.map((f5) => path21.relative(dir, f5).split(path21.sep).join("/")).sort()) {
+    let bytes = fs22.readFileSync(path21.join(dir, f4));
     if (f4 === "REPORT.md")
       bytes = Buffer.from(bytes.toString("utf8").split(/\r?\n## Sign-off\r?\n/)[0], "utf8");
-    h4.update(f4).update("\0").update(crypto12.createHash("sha256").update(bytes).digest("hex")).update("\n");
+    h4.update(f4).update("\0").update(crypto14.createHash("sha256").update(bytes).digest("hex")).update("\n");
   }
   return h4.digest("hex");
 }
 function signoffState(dir) {
-  const file = path19.join(dir, "SIGNOFF.json");
-  if (!fs20.existsSync(file))
+  const file = path21.join(dir, "SIGNOFF.json");
+  if (!fs22.existsSync(file))
     return { state: "none" };
   let s4;
   try {
-    s4 = JSON.parse(fs20.readFileSync(file, "utf8"));
+    s4 = JSON.parse(fs22.readFileSync(file, "utf8"));
   } catch {
     return { state: "none" };
   }
@@ -24908,14 +25315,14 @@ function describeSignoff(st2) {
   return st2.state === "signed" ? `signed by ${s4.name} (${s4.role}): ${s4.decision}, ${s4.date}${covers3}${s4.scope ? `; for what was compared only. ${s4.scope}` : ""}` : `the signature by ${s4.name} is for different evidence, so it no longer counts`;
 }
 function recordSignoff(dir, who, date, manifest) {
-  const json = path19.join(dir, "REPORT.json"), md = path19.join(dir, "REPORT.md");
-  if (!fs20.existsSync(json) || !fs20.existsSync(md))
+  const json = path21.join(dir, "REPORT.json"), md = path21.join(dir, "REPORT.md");
+  if (!fs22.existsSync(json) || !fs22.existsSync(md))
     throw new SignoffError("There is no report in this folder yet.");
-  const report = JSON.parse(fs20.readFileSync(json, "utf8"));
+  const report = JSON.parse(fs22.readFileSync(json, "utf8"));
   if (report.verdict === "NO EVIDENCE")
     throw new SignoffError("This report holds no evidence, so there is nothing to sign. Add cases and run again.");
   if (manifest && report.settings) {
-    const named = path19.relative(manifest.root, manifest.file).split(path19.sep).join("/");
+    const named = path21.relative(manifest.root, manifest.file).split(path21.sep).join("/");
     if (named !== report.settings.manifest) {
       throw new SignoffError(`This report was produced from ${report.settings.manifest}, not ${named}. Read ${report.settings.manifest}, then sign with --manifest ${report.settings.manifest}, or run again with ${named}.`);
     }
@@ -24925,6 +25332,8 @@ function recordSignoff(dir, who, date, manifest) {
     throw new SignoffError(`Name, role and one of ${DECISIONS.join(" / ")} are all needed. Nothing was signed.`);
   if (/[\u0000-\u001f\u007f-\u009f]/.test(name + role))
     throw new SignoffError("Name and role must be plain text. Nothing was signed.");
+  if (looksLikeAgent(name))
+    throw new SignoffError(`${JSON.stringify(name)} reads as an agent or a tool. Only a person signs. Nothing was signed.`);
   const known = (report.known_issues ?? []).filter((k2) => k2.state === "still fails").map((k2) => `${k2.id} (accepted by ${k2.accepted_by})`);
   const s4 = {
     name,
@@ -24939,14 +25348,14 @@ function recordSignoff(dir, who, date, manifest) {
   };
   const cell6 = (v2) => v2.replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
   const row = (label2, value) => (t3) => t3.replace(new RegExp(`^\\| ${label2} \\|.*\\|$`, "m"), () => `| ${label2} | ${value} |`);
-  const text2 = [row("Name", cell6(name)), row("Role", cell6(role)), row("Date", date), row("Decision", decision), row("Evidence", `sha256 ${s4.evidence_sha256}`)].reduce((t3, f4) => f4(t3), fs20.readFileSync(md, "utf8"));
-  fs20.writeFileSync(path19.join(dir, "SIGNOFF.json"), JSON.stringify(s4, null, 2) + "\n", "utf8");
-  fs20.writeFileSync(md, text2, "utf8");
+  const text2 = [row("Name", cell6(name)), row("Role", cell6(role)), row("Date", date), row("Decision", decision), row("Evidence", `sha256 ${s4.evidence_sha256}`)].reduce((t3, f4) => f4(t3), fs22.readFileSync(md, "utf8"));
+  fs22.writeFileSync(path21.join(dir, "SIGNOFF.json"), JSON.stringify(s4, null, 2) + "\n", "utf8");
+  fs22.writeFileSync(md, text2, "utf8");
   return s4;
 }
 
 // packages/core/dist/check.js
-import fs21 from "node:fs";
+import fs23 from "node:fs";
 function check(manifest) {
   const cases = loadCases(manifest);
   loadDrift(manifest);
@@ -24964,13 +25373,15 @@ function check(manifest) {
       warnings.push(`${c4.id}: names no requirement, so its result is not traced to a story.`);
     if (!c4.expect && Object.keys(manifest.targets).length === 1)
       warnings.push(`${c4.id}: has no \`expect:\` block, so \`cmtk run\` skips it.`);
-    if (typeof c4.journey?.script === "string" && !fs21.existsSync(inside(manifest, c4.journey.script)))
+    if (typeof c4.journey?.script === "string" && !fs23.existsSync(inside(manifest, c4.journey.script)))
       warnings.push(`${c4.id}: the script ${c4.journey.script} does not exist, so the case will error.`);
     for (const f4 of [c4.request.body_file, typeof c4.request.body_form === "string" ? c4.request.body_form : void 0, ...(c4.request.files ?? []).map((x2) => x2.path)].filter((x2) => !!x2)) {
-      if (!fs21.existsSync(inside(manifest, f4)))
+      if (!fs23.existsSync(inside(manifest, f4)))
         warnings.push(`${c4.id}: the input file ${f4} does not exist, so the case will error.`);
     }
   }
+  for (const c4 of unconfirmedSafe(manifest, cases))
+    warnings.push(`${c4.id}: says safe: true, but no person has confirmed this exact case, so it needs both switches. \`cmtk review\` shows it.`);
   const pair = [manifest.targets[manifest.reference], manifest.targets[manifest.candidate]].filter((t3) => t3?.surfaces);
   const counted = /* @__PURE__ */ new Map();
   for (const c4 of cases)
@@ -24984,19 +25395,17 @@ function check(manifest) {
   for (const k2 of known) {
     if (!ids.has(k2.case))
       warnings.push(`known issue ${k2.id}: there is no case ${k2.case}.`);
-    if (k2.fails.some((f4) => f4.actual === void 0 && f4.expected === void 0))
-      warnings.push(`known issue ${k2.id}: one of its failures accepts any answer at that check, so a new way of failing there would be hidden. Copy \`expected\` or \`actual\` from the report.`);
   }
   for (const k2 of manifest.contracts) {
     if (!k2.assembly)
       continue;
     for (const f4 of [k2.assembly.legacy, k2.assembly.candidate])
-      if (!fs21.existsSync(inside(manifest, f4)))
+      if (!fs23.existsSync(inside(manifest, f4)))
         warnings.push(`contract ${k2.name}: ${f4} does not exist, so the comparison will report an error.`);
   }
   if (!cases.length)
     warnings.push(`No case files match ${manifest.cases.join(", ")}.`);
-  if (!fs21.existsSync(inside(manifest, manifest.evidence)))
+  if (!fs23.existsSync(inside(manifest, manifest.evidence)))
     warnings.push(`${manifest.evidence} does not exist yet: the first run creates it.`);
   const d4 = loadDiscovery(manifest);
   for (const b2 of d4?.boundaries.filter((x2) => !x2.covered_by) ?? [])
@@ -25025,8 +25434,8 @@ function describeCheck(r6) {
 }
 
 // packages/core/dist/init.js
-import fs22 from "node:fs";
-import path20 from "node:path";
+import fs24 from "node:fs";
+import path22 from "node:path";
 var EXAMPLE_CASES = `# Cases for \`cmtk run\` (one system, checked against expectations) and \`cmtk compare\`
 # (the same request to the reference and the candidate). Each case says which requirement it answers for.
 cases:
@@ -25048,42 +25457,42 @@ var DRIFT_HEADER = `# Approved drift: differences between the reference and the 
 drift: []
 `;
 function initProject(manifestFile, o4) {
-  if (fs22.existsSync(manifestFile))
-    throw new ManifestError(`${path20.basename(manifestFile)} already exists; edit it instead.`);
+  if (fs24.existsSync(manifestFile))
+    throw new ManifestError(`${path22.basename(manifestFile)} already exists; edit it instead.`);
   if (!/\.ya?ml$/i.test(manifestFile))
     throw new ManifestError("The settings file must be a .yaml file, such as cmtk.yaml.");
-  const root = path20.dirname(manifestFile);
-  if (!fs22.existsSync(root))
+  const root = path22.dirname(manifestFile);
+  if (!fs24.existsSync(root))
     throw new ManifestError(`${root} does not exist. cmtk init only writes into an existing project folder.`);
   for (const [k2, v2] of Object.entries({ candidate: o4.candidate, legacy: o4.legacy })) {
     if (v2 !== void 0 && !isBaseUrl(v2))
       throw new ManifestError(`--${k2} must be an http:// or https:// URL, such as http://localhost:5002.`);
   }
-  const system = (o4.system ?? path20.basename(root)).replace(/[^A-Za-z0-9_.-]/g, "-").replace(/^[^A-Za-z0-9]+/, "") || "system";
-  fs22.mkdirSync(path20.join(root, "cmtk", "cases"), { recursive: true });
-  fs22.writeFileSync(manifestFile, STARTER_MANIFEST(system, o4.legacy, o4.candidate), "utf8");
+  const system = (o4.system ?? path22.basename(root)).replace(/[^A-Za-z0-9_.-]/g, "-").replace(/^[^A-Za-z0-9]+/, "") || "system";
+  fs24.mkdirSync(path22.join(root, "cmtk", "cases"), { recursive: true });
+  fs24.writeFileSync(manifestFile, STARTER_MANIFEST(system, o4.legacy, o4.candidate), "utf8");
   const written = [manifestFile];
   try {
     loadManifest(manifestFile);
   } catch (err) {
-    fs22.rmSync(manifestFile);
+    fs24.rmSync(manifestFile);
     throw err;
   }
-  const example = path20.join(root, "cmtk", "cases", "example.yaml");
-  if (!fs22.existsSync(example)) {
-    fs22.writeFileSync(example, EXAMPLE_CASES, "utf8");
+  const example = path22.join(root, "cmtk", "cases", "example.yaml");
+  if (!fs24.existsSync(example)) {
+    fs24.writeFileSync(example, EXAMPLE_CASES, "utf8");
     written.push(example);
   }
-  const drift = path20.join(root, "cmtk", "drift.yaml");
-  if (o4.legacy && !fs22.existsSync(drift)) {
-    fs22.writeFileSync(drift, DRIFT_HEADER, "utf8");
+  const drift = path22.join(root, "cmtk", "drift.yaml");
+  if (o4.legacy && !fs24.existsSync(drift)) {
+    fs24.writeFileSync(drift, DRIFT_HEADER, "utf8");
     written.push(drift);
   }
   return written;
 }
 
 // packages/core/dist/data/compare.js
-import fs23 from "node:fs";
+import fs25 from "node:fs";
 function parseCsv(text2, delimiter = ",") {
   const s4 = text2.replace(/^﻿/, "");
   const all = [];
@@ -25285,7 +25694,7 @@ function recordsTable(records, name, problems = []) {
   return { name, columns: [...columns], rows, problems };
 }
 function readTables(file, o4 = {}) {
-  const bytes = fs23.readFileSync(file);
+  const bytes = fs25.readFileSync(file);
   const as = o4.as ?? (/\.xlsx$/i.test(file) ? "xlsx" : /\.csv$/i.test(file) ? "csv" : /\.(dat|ebc|txt)$/i.test(file) && o4.copybook ? "fixed" : void 0);
   if (as === "csv")
     return [csvTable(bytes.toString(o4.encoding ?? "utf8"), "csv", o4.delimiter)];
@@ -25299,7 +25708,7 @@ function readTables(file, o4 = {}) {
   if (as === "fixed") {
     if (!o4.copybook)
       throw new ManifestError(`Reading ${file} as fixed-width records needs --copybook.`);
-    const layout = parseCopybook(fs23.readFileSync(o4.copybook, "utf8"), o4.copybook);
+    const layout = parseCopybook(fs25.readFileSync(o4.copybook, "utf8"), o4.copybook);
     const { records, problems } = decodeFile(layout, bytes, o4.record_encoding ?? "cp037");
     return [recordsTable(records, "records", problems)];
   }
@@ -25331,10 +25740,10 @@ function describeComparison(c4) {
 }
 
 // packages/core/dist/data/seed.js
-var import_yaml6 = __toESM(require_dist(), 1);
-import crypto13 from "node:crypto";
-import fs24 from "node:fs";
-import path21 from "node:path";
+var import_yaml7 = __toESM(require_dist(), 1);
+import crypto15 from "node:crypto";
+import fs26 from "node:fs";
+import path23 from "node:path";
 function stripComments(sql) {
   return sql.replace(/'(?:[^']|'')*'|\[[^\]]*\]|"[^"]*"|--[^\n]*|\/\*[\s\S]*?\*\//g, (m4) => m4.startsWith("--") || m4.startsWith("/*") ? " " : m4);
 }
@@ -25569,9 +25978,9 @@ function applyVirtualKeys(c4, keys) {
   }
 }
 function readVirtualKeys(file) {
-  const doc = import_yaml6.default.parse(fs24.readFileSync(file, "utf8"));
+  const doc = import_yaml7.default.parse(fs26.readFileSync(file, "utf8"));
   if (!Array.isArray(doc?.virtual_keys))
-    throw new ManifestError(`${path21.basename(file)} needs a list under virtual_keys.`);
+    throw new ManifestError(`${path23.basename(file)} needs a list under virtual_keys.`);
   return doc.virtual_keys;
 }
 var keyLabel = (t3, k2) => `${t3}(${k2.columns.join(",")}) -> ${k2.ref_table}(${k2.ref_columns.join(",")})`;
@@ -25657,7 +26066,7 @@ function readChecks(t3) {
   return { limits, unread };
 }
 var NULL = { sql: "NULL", text: null };
-var hashTo = (s4) => crypto13.createHash("sha256").update(s4).digest();
+var hashTo = (s4) => crypto15.createHash("sha256").update(s4).digest();
 var pick2 = (seed, key2, n3) => hashTo(`${seed}:${key2}`).readUInt32BE(0) % n3;
 var WORDS2 = ["Alder", "Birch", "Cedar", "Damson", "Elm", "Fir", "Ginkgo", "Hazel", "Ivy", "Juniper", "Larch", "Maple", "Oak", "Pine", "Rowan", "Spruce", "Willow", "Yew"];
 var INT_RANGE = { tinyint: [0n, 255n], smallint: [-32768n, 32767n], int: [-2147483648n, 2147483647n], bigint: [-(2n ** 63n), 2n ** 63n - 1n] };
@@ -25807,6 +26216,7 @@ var EncodeUnknown = class extends Error {
 };
 var br = (s4) => `[${s4.replace(/\]/g, "]]")}]`;
 var qn = (t3) => t3.split(".").map(br).join(".");
+var lit = (s4) => `'${s4.replace(/'/g, "''")}'`;
 function buildSeed(c4, o4 = {}) {
   const seed = o4.seed ?? 20260115;
   const order = loadOrder(c4);
@@ -25917,7 +26327,7 @@ function buildSeed(c4, o4 = {}) {
       continue;
     const identity = t3.columns.some((c5) => c5.identity);
     const cols = [...list[0].keys()];
-    L2.push(`-- ${name}: ${list.length} rows`);
+    L2.push(`-- ${name.replace(/[\r\n]+/g, " ")}: ${list.length} rows`);
     if (identity)
       L2.push(`SET IDENTITY_INSERT ${qn(name)} ON;`);
     const deferred = deferredColumns(name);
@@ -25947,11 +26357,11 @@ function totalsSql(c4, order) {
   const parts = [];
   for (const n3 of order.order) {
     const t3 = c4.tables.find((x2) => x2.name === n3);
-    parts.push(`SELECT '${n3}' AS [table], '*' AS [column], 'count' AS [measure], CAST(COUNT(*) AS varchar(50)) AS [value] FROM ${qn(n3)}`);
+    parts.push(`SELECT ${lit(n3)} AS [table], '*' AS [column], 'count' AS [measure], CAST(COUNT(*) AS varchar(50)) AS [value] FROM ${qn(n3)}`);
     for (const col of t3.columns.filter((x2) => NUMERIC2.has(x2.type) && !x2.computed)) {
       const v2 = col.type === "bit" ? `CASE WHEN ${br(col.name)} = 1 THEN 1 WHEN ${br(col.name)} = 0 THEN 0 END` : br(col.name);
       for (const [m4, f4] of [["sum", "SUM"], ["min", "MIN"], ["max", "MAX"], ["avg", "AVG"]]) {
-        parts.push(`SELECT '${n3}', '${col.name.replace(/'/g, "''")}', '${m4}', CAST(${f4}(CAST(${v2} AS decimal(38,6))) AS varchar(50)) FROM ${qn(n3)}`);
+        parts.push(`SELECT ${lit(n3)}, ${lit(col.name)}, '${m4}', CAST(${f4}(CAST(${v2} AS decimal(38,6))) AS varchar(50)) FROM ${qn(n3)}`);
       }
     }
   }
@@ -25990,30 +26400,30 @@ function expectedTotals(s4) {
 var ID2 = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 function writeSeed(m4, o4) {
   const ddlFile = inside(m4, o4.ddl);
-  if (!fs24.existsSync(ddlFile))
+  if (!fs26.existsSync(ddlFile))
     throw new ManifestError(`${o4.ddl} does not exist.`);
-  const id = o4.id ?? path21.basename(o4.ddl).replace(/\.[^.]+$/, "");
+  const id = o4.id ?? path23.basename(o4.ddl).replace(/\.[^.]+$/, "");
   if (!ID2.test(id))
     throw new ManifestError(`The seed's name ${JSON.stringify(id)} must be letters, digits, '.', '-' and '_'.`);
-  const text2 = fs24.readFileSync(ddlFile);
+  const text2 = fs26.readFileSync(ddlFile);
   const catalogue = parseDdl(text2.toString("utf8").replace(/^﻿/, ""));
   let vkBytes;
   if (o4.virtualKeys) {
     const f4 = inside(m4, o4.virtualKeys);
-    if (!fs24.existsSync(f4))
+    if (!fs26.existsSync(f4))
       throw new ManifestError(`${o4.virtualKeys} does not exist.`);
-    vkBytes = fs24.readFileSync(f4);
+    vkBytes = fs26.readFileSync(f4);
     applyVirtualKeys(catalogue, readVirtualKeys(f4));
   }
   const result = buildSeed(catalogue, o4);
-  const dir = inside(m4, path21.join(path21.relative(m4.root, recipeFolder(m4)), `seed-${id}`));
-  fs24.rmSync(dir, { recursive: true, force: true });
-  fs24.mkdirSync(path21.join(dir, "golden"), { recursive: true });
+  const dir = inside(m4, path23.join(path23.relative(m4.root, recipeFolder(m4)), `seed-${id}`));
+  fs26.rmSync(dir, { recursive: true, force: true });
+  fs26.mkdirSync(path23.join(dir, "golden"), { recursive: true });
   const files = {};
   const put = (name, bytes) => {
     const b2 = typeof bytes === "string" ? Buffer.from(bytes, "utf8") : bytes;
-    fs24.writeFileSync(path21.join(dir, name), b2);
-    files[name.split(path21.sep).join("/")] = crypto13.createHash("sha256").update(b2).digest("hex");
+    fs26.writeFileSync(path23.join(dir, name), b2);
+    files[name.split(path23.sep).join("/")] = crypto15.createHash("sha256").update(b2).digest("hex");
   };
   put("seed.sql", result.script);
   put("reset.sql", result.reset);
@@ -26023,11 +26433,11 @@ function writeSeed(m4, o4) {
   for (const [name, rows] of result.rows) {
     const t3 = catalogue.tables.find((x2) => x2.name === name);
     const cols = rows[0] ? [...rows[0].keys()] : t3.columns.filter((c4) => !c4.computed).map((c4) => c4.name);
-    put(path21.join("golden", `${name}.csv`), csvBytes(cols, rows.map((r6) => Object.fromEntries(cols.map((c4) => [c4, r6.get(c4)?.text ?? null]))), { bom: false, line_ending: "lf" }));
+    put(path23.join("golden", `${name}.csv`), csvBytes(cols, rows.map((r6) => Object.fromEntries(cols.map((c4) => [c4, r6.get(c4)?.text ?? null]))), { bom: false, line_ending: "lf" }));
   }
   const manifest = {
     id,
-    source: { ddl: path21.relative(m4.root, ddlFile).split(path21.sep).join("/"), ddl_sha256: crypto13.createHash("sha256").update(text2).digest("hex"), ...o4.virtualKeys && vkBytes ? { virtual_keys: o4.virtualKeys, virtual_keys_sha256: crypto13.createHash("sha256").update(vkBytes).digest("hex") } : {} },
+    source: { ddl: path23.relative(m4.root, ddlFile).split(path23.sep).join("/"), ddl_sha256: crypto15.createHash("sha256").update(text2).digest("hex"), ...o4.virtualKeys && vkBytes ? { virtual_keys: o4.virtualKeys, virtual_keys_sha256: crypto15.createHash("sha256").update(vkBytes).digest("hex") } : {} },
     seed: o4.seed ?? 20260115,
     tables: result.order.order.map((n3) => ({ table: n3, rows: result.rows.get(n3).length })),
     load_order: result.order.order,
@@ -26041,13 +26451,13 @@ function writeSeed(m4, o4) {
       "A masked profile or a Jailer subset for realism: these rows are synthetic."
     ]
   };
-  fs24.writeFileSync(path21.join(dir, "SEED-MANIFEST.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
-  return { folder: path21.relative(m4.root, dir).split(path21.sep).join("/"), manifest, result };
+  fs26.writeFileSync(path23.join(dir, "SEED-MANIFEST.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
+  return { folder: path23.relative(m4.root, dir).split(path23.sep).join("/"), manifest, result };
 }
 
 // packages/core/dist/data/cases.js
-import fs25 from "node:fs";
-import path22 from "node:path";
+import fs27 from "node:fs";
+import path24 from "node:path";
 function statuses(responses) {
   const codes = Object.keys(responses ?? {}).map(Number).filter((c4) => !Number.isNaN(c4)).sort((a4, b2) => a4 - b2);
   return { ok: codes.find((c4) => c4 >= 200 && c4 < 300), bad: codes.find((c4) => c4 === 400 || c4 === 422) };
@@ -26078,11 +26488,11 @@ function describeLeftOut(leftOut) {
 }
 function writeCases(m4, id, o4 = {}) {
   const { recipe } = loadRecipe(m4, id);
-  const rowsDir = path22.join(dataFolder(m4, id), "rows");
-  const rowsFile = path22.join(dataFolder(m4, id), "rows.json");
-  if (!fs25.existsSync(rowsDir) || !fs25.existsSync(rowsFile))
+  const rowsDir = path24.join(dataFolder(m4, id), "rows");
+  const rowsFile = path24.join(dataFolder(m4, id), "rows.json");
+  if (!fs27.existsSync(rowsDir) || !fs27.existsSync(rowsFile))
     throw new ManifestError(`There are no rows for ${id} yet: run \`cmtk data make ${id}\` first.`);
-  const made = new Map(JSON.parse(fs25.readFileSync(rowsFile, "utf8")).map((r6) => [r6.name, r6]));
+  const made = new Map(JSON.parse(fs27.readFileSync(rowsFile, "utf8")).map((r6) => [r6.name, r6]));
   const op = /^([A-Z]+)\s+(\S+)$/.exec(recipe.source.operation ?? "");
   const reqPath = o4.path ?? op?.[2];
   if (!reqPath || !reqPath.startsWith("/") || reqPath.startsWith("//"))
@@ -26121,10 +26531,10 @@ function writeCases(m4, id, o4 = {}) {
       continue;
     if (only && !only.has(row.name) || except.has(row.name))
       continue;
-    const rowFile = path22.join(rowsDir, `${row.name}${!isXml ? ".json" : soapRows ? ".soap.xml" : ".xml"}`);
+    const rowFile = path24.join(rowsDir, `${row.name}${!isXml ? ".json" : soapRows ? ".soap.xml" : ".xml"}`);
     const value = made.get(row.name)?.value;
-    const hasBody = value !== void 0;
-    if (hasBody && !fs25.existsSync(rowFile))
+    const hasBody2 = value !== void 0;
+    if (hasBody2 && !fs27.existsSync(rowFile))
       throw new ManifestError(`Row ${row.name} has no file: run \`cmtk data make ${id}\` again.`);
     if (encoding === "form") {
       const why = notAForm(row, recipe.fields, value);
@@ -26138,7 +26548,7 @@ function writeCases(m4, id, o4 = {}) {
     const status = row.oracle === "human" ? void 0 : row.expect_valid ? ok : bad;
     if (status === void 0)
       withoutExpect++;
-    const rel2 = path22.relative(m4.root, rowFile).split(path22.sep).join("/");
+    const rel2 = path24.relative(m4.root, rowFile).split(path24.sep).join("/");
     const notes = [
       `From recipe ${id}, row ${row.name} (${row.technique}): ${row.coverage_item}. The schema says the body is ${row.expect_valid ? "valid" : `invalid (${row.invalid_because?.path} ${row.invalid_because?.keyword})`}; the oracle is ${row.oracle}.`,
       encoding === "form" ? "Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields." : "",
@@ -26156,7 +26566,7 @@ function writeCases(m4, id, o4 = {}) {
         method,
         path: reqPath + qs,
         ...o4.headers || isXml ? { headers: { ...soapRows ? soapHeaders(recipe.soap) : isXml ? { "Content-Type": "application/xml; charset=utf-8" } : {}, ...o4.headers ?? {} } } : {},
-        ...hasBody ? encoding === "form" ? { body_form: rel2 } : { body_file: rel2 } : {},
+        ...hasBody2 ? encoding === "form" ? { body_form: rel2 } : { body_file: rel2 } : {},
         ...o4.before ? { before: structuredClone(o4.before) } : {}
       },
       ...status !== void 0 ? { expect: { status } } : {},
@@ -26164,27 +26574,25 @@ function writeCases(m4, id, o4 = {}) {
       draft_note: notes.join(" ")
     });
   }
-  const out = inside(m4, o4.out ?? path22.join("cmtk", "cases", `data-${id}.yaml`));
-  if (fs25.existsSync(out))
-    throw new ManifestError(`${path22.relative(m4.root, out)} already exists; choose another --out, or delete it.`);
-  fs25.mkdirSync(path22.dirname(out), { recursive: true });
+  const out = inside(m4, o4.out ?? path24.join("cmtk", "cases", `data-${id}.yaml`));
+  if (fs27.existsSync(out))
+    throw new ManifestError(`${path24.relative(m4.root, out)} already exists; choose another --out, or delete it.`);
+  fs27.mkdirSync(path24.dirname(out), { recursive: true });
   const how = encoding === "form" ? "as a form" : "as the body";
   const subset = which === "all" ? "one per row" : `one per ${which} row (the rows the schema calls ${which})`;
-  fs25.writeFileSync(out, casesToYaml(cases, `Draft cases from the test-data recipe ${id}: ${subset}, each sending its row from cmtk/data/${id}/rows/ ${how}. A person accepts them with \`cmtk review\`.`), "utf8");
-  return { file: path22.relative(m4.root, out).split(path22.sep).join("/"), cases, withoutExpect, leftOut };
+  fs27.writeFileSync(out, casesToYaml(cases, `Draft cases from the test-data recipe ${id}: ${subset}, each sending its row from cmtk/data/${id}/rows/ ${how}. A person accepts them with \`cmtk review\`.`), "utf8");
+  return { file: path24.relative(m4.root, out).split(path24.sep).join("/"), cases, withoutExpect, leftOut };
 }
 
 // packages/cli/dist/registry.js
-var import_yaml7 = __toESM(require_dist(), 1);
+var import_yaml8 = __toESM(require_dist(), 1);
 import { spawnSync as spawnSync2 } from "node:child_process";
-import crypto14 from "node:crypto";
-import fs26 from "node:fs";
+import fs28 from "node:fs";
 import os from "node:os";
-import path23 from "node:path";
+import path25 from "node:path";
 var RegistryError = class extends Error {
 };
 var LEVELS = ["experimental", "verified", "core"];
-var LEFT_OUT = /* @__PURE__ */ new Set(["bin", "obj", "node_modules"]);
 var MAX_FILES = 5e3;
 var MAX_BYTES = 100 * 1024 * 1024;
 var NAME3 = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
@@ -26236,7 +26644,7 @@ function sourceOf(raw, where2) {
 function parseRegistry(text2, label2, opts = {}) {
   let doc;
   try {
-    doc = import_yaml7.default.parse(text2);
+    doc = import_yaml8.default.parse(text2);
   } catch (err) {
     throw new RegistryError(`${label2} is not valid YAML: ${err.message.split("\n")[0]}`);
   }
@@ -26279,6 +26687,8 @@ function classifyLocation(location, base2) {
   const refuse = (why) => new RegistryError(`That registry location is refused: ${why}`);
   if (typeof location !== "string" || !location.trim() || location.startsWith("-") || UNSHOWABLE.test(location))
     throw refuse("it is empty or starts with a dash.");
+  if (/^[^/\s@]*:[^/\s@]*@/.test(location))
+    throw refuse("it holds a credential. Leave it out: git asks your credential helper or your ssh key. The location was not stored or printed.");
   if (/^[a-z0-9+.-]+::/i.test(location))
     throw refuse("git's remote helpers can run commands. Use https, ssh or a folder.");
   const scheme = /^([a-z][a-z0-9+.-]*):\/\/([^/]*)/i.exec(location);
@@ -26294,10 +26704,10 @@ function classifyLocation(location, base2) {
   }
   if (/^[\w.-]+@[\w.-]+:/.test(location))
     return { kind: "git", at: location };
-  const at2 = path23.resolve(base2, location);
-  if (!fs26.existsSync(at2) || !fs26.statSync(at2).isDirectory())
+  const at2 = path25.resolve(base2, location);
+  if (!fs28.existsSync(at2) || !fs28.statSync(at2).isDirectory())
     throw new RegistryError(`There is no folder at ${at2}, and it is not an https or ssh address.`);
-  const isGit = fs26.existsSync(path23.join(at2, ".git")) || fs26.existsSync(path23.join(at2, "HEAD")) && fs26.existsSync(path23.join(at2, "objects"));
+  const isGit = fs28.existsSync(path25.join(at2, ".git")) || fs28.existsSync(path25.join(at2, "HEAD")) && fs28.existsSync(path25.join(at2, "objects"));
   return { kind: isGit ? "git" : "folder", at: at2 };
 }
 function git(args, what) {
@@ -26330,11 +26740,11 @@ function resolveCommit(repo, ref, what) {
     throw new RegistryError(`${what}: there is no such commit.`);
   return out;
 }
-var keep = (rel2) => !rel2.split("/").some((p4) => LEFT_OUT.has(p4));
+var keep = (rel2) => !rel2.split("/").some((p4) => BUILD_FOLDERS.has(p4));
 function writeFile(stage, rel2, data, executable) {
-  const to = path23.join(stage, ...rel2.split("/"));
-  fs26.mkdirSync(path23.dirname(to), { recursive: true });
-  fs26.writeFileSync(to, data, { flag: "wx", mode: executable ? 493 : 420 });
+  const to = path25.join(stage, ...rel2.split("/"));
+  fs28.mkdirSync(path25.dirname(to), { recursive: true });
+  fs28.writeFileSync(to, data, { flag: "wx", mode: executable ? 493 : 420 });
 }
 function stageFromGit(repo, commit, sub, stage) {
   const prefix = sub === "." ? "" : `${sub}/`;
@@ -26365,24 +26775,24 @@ function stageFromGit(repo, commit, sub, stage) {
   return files;
 }
 function stageFromFolder(root, sub, stage) {
-  const from = path23.resolve(root, sub);
-  const realRoot = fs26.realpathSync(root);
-  if (!fs26.existsSync(from) || !fs26.statSync(from).isDirectory())
+  const from = path25.resolve(root, sub);
+  const realRoot = fs28.realpathSync(root);
+  if (!fs28.existsSync(from) || !fs28.statSync(from).isDirectory())
     throw new RegistryError(`The registry has no folder ${sub}.`);
-  const real = fs26.realpathSync(from);
-  if (real !== realRoot && !real.startsWith(realRoot + path23.sep))
+  const real = fs28.realpathSync(from);
+  if (real !== realRoot && !real.startsWith(realRoot + path25.sep))
     throw new RegistryError(`Refused: ${sub} leaves the registry.`);
   const files = [];
   let bytes = 0;
   const walk = (dir, prefix) => {
-    for (const e6 of fs26.readdirSync(dir, { withFileTypes: true }).sort((a4, b2) => a4.name < b2.name ? -1 : 1)) {
-      if (e6.name === ".git" || LEFT_OUT.has(e6.name))
+    for (const e6 of fs28.readdirSync(dir, { withFileTypes: true }).sort((a4, b2) => a4.name < b2.name ? -1 : 1)) {
+      if (e6.name === ".git" || BUILD_FOLDERS.has(e6.name))
         continue;
       const rel2 = prefix + e6.name;
       const problem = pathProblem(rel2);
       if (problem)
         throw new RegistryError(`Refused: the adapter holds a file with a bad path: ${problem}.`);
-      const full = path23.join(dir, e6.name);
+      const full = path25.join(dir, e6.name);
       if (e6.isSymbolicLink())
         throw new RegistryError(`Refused: ${rel2} is a symbolic link. An adapter is plain files only, so what you approve is all you get.`);
       if (e6.isDirectory()) {
@@ -26393,56 +26803,30 @@ function stageFromFolder(root, sub, stage) {
         throw new RegistryError(`Refused: ${rel2} is not a plain file.`);
       if (files.length >= MAX_FILES)
         throw new RegistryError(`Refused: the adapter holds more than ${MAX_FILES} files.`);
-      const data = fs26.readFileSync(full);
+      const data = fs28.readFileSync(full);
       bytes += data.length;
       if (bytes > MAX_BYTES)
         throw new RegistryError(`Refused: the adapter is over ${MAX_BYTES / 1024 / 1024} MB.`);
-      writeFile(stage, rel2, data, process.platform !== "win32" && (fs26.statSync(full).mode & 73) !== 0);
+      writeFile(stage, rel2, data, process.platform !== "win32" && (fs28.statSync(full).mode & 73) !== 0);
       files.push(rel2);
     }
   };
   walk(from, "");
   return files;
 }
-function fingerprint2(dir) {
-  const hash2 = crypto14.createHash("sha256");
-  const walk = (at2, prefix) => {
-    for (const e6 of fs26.readdirSync(at2, { withFileTypes: true }).sort((a4, b2) => a4.name < b2.name ? -1 : 1)) {
-      if (LEFT_OUT.has(e6.name))
-        continue;
-      const rel2 = prefix + e6.name;
-      if (e6.isSymbolicLink()) {
-        hash2.update(`${rel2}\0link
-`);
-        continue;
-      }
-      if (e6.isDirectory()) {
-        walk(path23.join(at2, e6.name), `${rel2}/`);
-        continue;
-      }
-      let data = fs26.readFileSync(path23.join(at2, e6.name));
-      if (!data.subarray(0, 8e3).includes(0))
-        data = Buffer.from(data.toString("latin1").replace(/\r\n/g, "\n"), "latin1");
-      hash2.update(`${rel2}\0${crypto14.createHash("sha256").update(data).digest("hex")}
-`);
-    }
-  };
-  walk(dir, "");
-  return `sha256:${hash2.digest("hex")}`;
-}
 function openRegistry(location, base2, work, pin, toolkitAdapters) {
   const { kind, at: at2 } = classifyLocation(location, base2);
   if (kind === "folder") {
     if (pin)
       throw new RegistryError(`${at2} is a plain folder, which has no history to pin to. Leave --pin out; the fingerprint of the files is the pin.`);
-    const file = path23.join(at2, "registry.yaml");
-    if (!fs26.existsSync(file) || !fs26.lstatSync(file).isFile())
+    const file = path25.join(at2, "registry.yaml");
+    if (!fs28.existsSync(file) || !fs28.lstatSync(file).isFile())
       throw new RegistryError(`${at2} has no registry.yaml.`);
-    return { location, kind, at: at2, entries: parseRegistry(fs26.readFileSync(file, "utf8"), `${location}/registry.yaml`, { allowCore: !!toolkitAdapters && path23.resolve(at2) === path23.resolve(toolkitAdapters) }) };
+    return { location, kind, at: at2, entries: parseRegistry(fs28.readFileSync(file, "utf8"), `${location}/registry.yaml`, { allowCore: !!toolkitAdapters && path25.resolve(at2) === path25.resolve(toolkitAdapters) }) };
   }
   if (pin && !PIN.test(pin))
     throw new RegistryError("--pin must be a tag, a branch or a commit id.");
-  const repo = cloneBare(at2, fs26.mkdtempSync(path23.join(work, "registry-")), `Fetching registry ${location}`);
+  const repo = cloneBare(at2, fs28.mkdtempSync(path25.join(work, "registry-")), `Fetching registry ${location}`);
   const commit = resolveCommit(repo, pin ?? "HEAD", `Finding ${pin ?? "the latest commit"} in registry ${location}`);
   let text2;
   try {
@@ -26453,12 +26837,12 @@ function openRegistry(location, base2, work, pin, toolkitAdapters) {
   return { location, kind, at: at2, repo, commit, entries: parseRegistry(text2, `${location}/registry.yaml`) };
 }
 function prepareInstall(o4) {
-  const dir = path23.join(o4.root, "adapters");
-  if (fs26.existsSync(path23.join(dir, o4.name)))
+  const dir = adaptersFolder(o4.root);
+  if (fs28.existsSync(path25.join(dir, o4.name)))
     throw new RegistryError(`adapters/${o4.name} already exists. A person removes it first, then adds the version they want.`);
-  fs26.mkdirSync(dir, { recursive: true });
-  const work = fs26.mkdtempSync(path23.join(dir, ".cmtk-staging-"));
-  const cleanup = () => fs26.rmSync(work, { recursive: true, force: true, maxRetries: 3 });
+  fs28.mkdirSync(dir, { recursive: true });
+  const work = fs28.mkdtempSync(path25.join(dir, ".cmtk-staging-"));
+  const cleanup = () => fs28.rmSync(work, { recursive: true, force: true, maxRetries: 3 });
   try {
     const opened = o4.registries.map((r6) => openRegistry(r6, o4.base, work, o4.pin, o4.toolkitAdapters));
     const holders = opened.filter((r6) => r6.entries.some((e6) => e6.name === o4.name));
@@ -26468,8 +26852,8 @@ function prepareInstall(o4) {
       throw new RegistryError(`${o4.name} is not in ${o4.registries.join(", ")}.`);
     const reg = holders[0];
     const entry = reg.entries.find((e6) => e6.name === o4.name);
-    const stage = path23.join(work, "adapter");
-    fs26.mkdirSync(stage);
+    const stage = path25.join(work, "adapter");
+    fs28.mkdirSync(stage);
     let files, source, commit;
     if (typeof entry.source === "string") {
       source = `${reg.location}${entry.source === "." ? "" : `, folder ${entry.source}`}`;
@@ -26481,7 +26865,7 @@ function prepareInstall(o4) {
         throw new RegistryError(`${o4.name}: \`source.git\` is not a git repository.`);
       if (!sourceAllowed(entry.source.git, reg.location))
         throw new RegistryError(`${o4.name}: a remote registry may not point at a repository on this machine.`);
-      const repo = cloneBare(where2.at, fs26.mkdtempSync(path23.join(work, "source-")), `Fetching ${entry.source.git}`);
+      const repo = cloneBare(where2.at, fs28.mkdtempSync(path25.join(work, "source-")), `Fetching ${entry.source.git}`);
       commit = resolveCommit(repo, entry.source.commit, `Finding the commit the registry names in ${entry.source.git}`);
       source = `${entry.source.git}${entry.source.path === "." ? "" : `, folder ${entry.source.path}`}`;
       files = stageFromGit(repo, commit, entry.source.path, stage);
@@ -26494,13 +26878,19 @@ function prepareInstall(o4) {
     throw err;
   }
 }
+function adaptersFolder(root) {
+  const dir = path25.join(root, "adapters");
+  if (fs28.lstatSync(dir, { throwIfNoEntry: false })?.isSymbolicLink())
+    throw new RegistryError("adapters/ is a link, and could lead outside the project. Nothing was written. Make it a plain folder.");
+  return dir;
+}
 function notesOn(stage, files) {
   const notes = [];
   if (!files.some((f4) => !f4.includes("/") && /^(?:licen[sc]e|copying)/i.test(f4)))
     notes.push("It holds no LICENSE file, so only the registry's word says what the licence is.");
   if (files.includes("package.json")) {
     try {
-      const pkg = JSON.parse(fs26.readFileSync(path23.join(stage, "package.json"), "utf8"));
+      const pkg = JSON.parse(fs28.readFileSync(path25.join(stage, "package.json"), "utf8"));
       const hooks = ["preinstall", "install", "postinstall", "prepare"].filter((k2) => pkg.scripts?.[k2]);
       if (hooks.length)
         notes.push(`package.json has install scripts (${hooks.join(", ")}). cmtk does not run them, but npm install would.`);
@@ -26535,23 +26925,55 @@ function describeInstall(p4) {
     "Once installed, it runs with your rights whenever you run `cmtk adapter check`, `run` or `compare`."
   ];
 }
-var installedFile = (root) => path23.join(root, "adapters", "installed.yaml");
+var installedFile = (root) => path25.join(root, "adapters", "installed.yaml");
 function loadInstalled(root) {
-  const f4 = installedFile(root);
-  if (!fs26.existsSync(f4))
-    return {};
-  let doc;
   try {
-    doc = import_yaml7.default.parse(fs26.readFileSync(f4, "utf8"));
+    return readInstalled(root);
   } catch (err) {
-    throw new RegistryError(`adapters/installed.yaml is not valid YAML: ${err.message.split("\n")[0]}`);
+    throw err instanceof ManifestError ? new RegistryError(err.message) : err;
   }
-  return doc?.adapters ?? {};
+}
+function writeInstalled(root, all) {
+  const tmp = `${installedFile(root)}.${process.pid}.tmp`;
+  fs28.writeFileSync(tmp, `# Written by \`cmtk adapter add\`, once a person said yes. Each entry pins what was installed.
+${import_yaml8.default.stringify({ adapters: all }, { lineWidth: 0 })}`, "utf8");
+  return tmp;
+}
+function describeBuild(root, name) {
+  const rec = loadInstalled(root)[name];
+  if (!rec || !Object.hasOwn(loadInstalled(root), name))
+    throw new RegistryError(`${name} was not installed from a registry, so it has no pin to approve.`);
+  const dir = path25.join(root, "adapters", name);
+  const state = pinState(dir, rec);
+  if (state === "MISSING" || state === "CHANGED since install")
+    throw new RegistryError(`adapters/${name} is ${state}: its code no longer matches what a person approved, and this command only covers build files. Read the changes, or remove the folder and its entry in adapters/installed.yaml and add it again.`);
+  const { files } = buildFiles(dir);
+  const by = /* @__PURE__ */ new Map();
+  for (const f4 of files) {
+    const top = f4.split("/").find((p4) => BUILD_FOLDERS.has(p4));
+    by.set(top, (by.get(top) ?? 0) + 1);
+  }
+  return [
+    `Adapter ${name}: its code still matches what ${rec.approved_by} approved.`,
+    files.length ? `Build files now: ${[...by].map(([k2, n3]) => `${n3} file${n3 === 1 ? "" : "s"} in ${k2}`).join(", ")}.` : "It has no build files now.",
+    ...files.slice(0, 12).map((f4) => `  ${f4}`),
+    ...files.length > 12 ? [`  and ${files.length - 12} more`] : [],
+    "",
+    "These run with your rights whenever the adapter does. Say yes only if you wrote them, or ran the build or the install yourself."
+  ];
+}
+function approveBuild(root, name, approvedBy, date) {
+  const all = loadInstalled(root);
+  const rec = all[name];
+  const { print } = buildFiles(path25.join(root, "adapters", name));
+  const { build_fingerprint: _p, build_approved_by: _b, build_approved_on: _o, ...rest } = rec;
+  all[name] = { ...rest, ...print ? { build_fingerprint: print, build_approved_by: approvedBy, build_approved_on: date } : {} };
+  fs28.renameSync(writeInstalled(root, all), installedFile(root));
 }
 function commitInstall(p4, root, approvedBy, date) {
   const e6 = p4.entry;
-  const to = path23.join(root, "adapters", e6.name);
-  if (fs26.existsSync(to))
+  const to = path25.join(root, "adapters", e6.name);
+  if (fs28.existsSync(to))
     throw new RegistryError(`adapters/${e6.name} appeared while you were reading. Nothing was changed.`);
   if (fingerprint2(p4.stage) !== p4.fingerprint)
     throw new RegistryError("The fetched files changed while you were reading. Nothing was installed.");
@@ -26571,25 +26993,23 @@ function commitInstall(p4, root, approvedBy, date) {
   };
   const all = { ...loadInstalled(root), [e6.name]: record };
   const f4 = installedFile(root);
-  const tmp = `${f4}.${process.pid}.tmp`;
-  fs26.writeFileSync(tmp, `# Written by \`cmtk adapter add\`, once a person said yes. Each entry pins what was installed.
-${import_yaml7.default.stringify({ adapters: all }, { lineWidth: 0 })}`, "utf8");
-  fs26.renameSync(p4.stage, to);
+  const tmp = writeInstalled(root, all);
+  fs28.renameSync(p4.stage, to);
   try {
-    fs26.renameSync(tmp, f4);
+    fs28.renameSync(tmp, f4);
   } catch (err) {
-    fs26.rmSync(to, { recursive: true, force: true });
-    fs26.rmSync(tmp, { force: true });
+    fs28.rmSync(to, { recursive: true, force: true });
+    fs28.rmSync(tmp, { force: true });
     throw err;
   }
   return record;
 }
 function listAdapters(root, registered) {
-  const dir = path23.join(root, "adapters");
+  const dir = path25.join(root, "adapters");
   const installed = loadInstalled(root);
-  const shippedFile = path23.join(dir, "registry.yaml");
-  const shipped = fs26.existsSync(shippedFile) ? parseRegistry(fs26.readFileSync(shippedFile, "utf8"), "adapters/registry.yaml", { allowCore: true }) : [];
-  const folders = fs26.existsSync(dir) ? fs26.readdirSync(dir, { withFileTypes: true }).filter((e6) => e6.isDirectory() && !e6.name.startsWith(".")).map((e6) => e6.name) : [];
+  const shippedFile = path25.join(dir, "registry.yaml");
+  const shipped = fs28.existsSync(shippedFile) ? parseRegistry(fs28.readFileSync(shippedFile, "utf8"), "adapters/registry.yaml", { allowCore: true }) : [];
+  const folders = fs28.existsSync(dir) ? fs28.readdirSync(dir, { withFileTypes: true }).filter((e6) => e6.isDirectory() && !e6.name.startsWith(".")).map((e6) => e6.name) : [];
   const rows = [{ name: "http", level: "core", state: "built in", registered: true, origin: "the toolkit" }];
   for (const name of [.../* @__PURE__ */ new Set([...folders, ...Object.keys(installed), ...Object.keys(registered)])].sort()) {
     const has = folders.includes(name);
@@ -26601,7 +27021,7 @@ function listAdapters(root, registered) {
         level: LEVELS.includes(rec.level) ? rec.level : "none",
         registered: reg,
         origin: `${rec.source}, approved by ${rec.approved_by} on ${rec.date}`,
-        state: !has ? "MISSING" : fingerprint2(path23.join(dir, name)) === rec.fingerprint ? "ok" : "CHANGED since install",
+        state: pinState(path25.join(dir, name), rec),
         ...rec.commit ? { commit: rec.commit } : {},
         ...rec.version ? { version: rec.version } : {},
         licence: rec.licence,
@@ -26631,8 +27051,12 @@ process.on("warning", (w2) => {
   if (w2.name !== "ExperimentalWarning")
     console.error(`${w2.name}: ${w2.message}`);
 });
-var HERE = path24.dirname(fileURLToPath(import.meta.url));
-var VERSION = true ? "0.6.0" : JSON.parse(fs27.readFileSync(path24.join(HERE, "..", "package.json"), "utf8")).version;
+for (const stream of ["log", "error"]) {
+  const write = console[stream].bind(console);
+  console[stream] = (...args) => write("%s", plain(format(...args).replace(/\r\n/g, "\n")));
+}
+var HERE = path26.dirname(fileURLToPath(import.meta.url));
+var VERSION = true ? "0.6.0" : JSON.parse(fs29.readFileSync(path26.join(HERE, "..", "package.json"), "utf8")).version;
 var HELP = `cmtk ${VERSION}: test any system from its requirements, and prove a migrated system behaves like the old one.
 
 Usage:
@@ -26659,6 +27083,7 @@ Usage:
   cmtk discover [--assembly <dll>]... [--rea-json <file>]... [--routes-from <file or folder of C#>]... [--config <file>]... [--har <file>]... [--topology <file>]... [--fresh]
                                                                     list every boundary of the legacy system, and flag the uncovered ones
                                                                     (--assembly needs REA: npm install --global rea-agents)
+  cmtk adapter approve <name>                                       a person approves what their own build or install wrote into an installed adapter
   cmtk review                                                       a person accepts or rejects draft cases and proposals
   cmtk defects run|compare                                          draft defects from the latest report
   cmtk probe <target> "GET /path" [--surface <name>]                send one read-only request and show the answer
@@ -26717,7 +27142,7 @@ function printReport(r6, json, manifestRoot, evidence) {
   }
   for (const n3 of r6.no_adapter ?? [])
     console.log(`  No adapter for surface ${n3.surface}, so nothing was sent for: ${n3.cases.join(", ")}`);
-  const report = path24.relative(process.cwd(), path24.join(manifestRoot, evidence, r6.mode, "REPORT.md")) || "REPORT.md";
+  const report = path26.relative(process.cwd(), path26.join(manifestRoot, evidence, r6.mode, "REPORT.md")) || "REPORT.md";
   console.log(`Report: ${report}`);
   console.log(r6.reason);
   console.log(`Next: ${r6.next}`);
@@ -26814,14 +27239,14 @@ async function main(argv) {
     console.log(HELP);
     return 0;
   }
-  const manifestFile = path24.resolve(values.manifest);
+  const manifestFile = path26.resolve(values.manifest);
   const only = values.only ? values.only.split(",").map((s4) => s4.trim()).filter(Boolean) : void 0;
   switch (cmd) {
     case "init": {
       if (!values.candidate)
         throw new UsageError("`cmtk init` needs --candidate <url> (and --legacy <url> to compare two systems).");
       const written = initProject(manifestFile, { candidate: values.candidate, legacy: values.legacy, system: values.system });
-      console.log(`Wrote ${written.map((f4) => path24.relative(process.cwd(), f4)).join(", ")}.`);
+      console.log(`Wrote ${written.map((f4) => path26.relative(process.cwd(), f4)).join(", ")}.`);
       console.log(`Next: edit the example case for your system, then \`cmtk run\`${values.legacy ? " and `cmtk compare`" : ""}.`);
       return 0;
     }
@@ -26830,13 +27255,13 @@ async function main(argv) {
         throw new UsageError("`cmtk import-har` needs at least one .har file.");
       const manifest = loadManifest(manifestFile);
       const existing = loadCases(manifest);
-      const res = importHar(rest.map((f4) => path24.resolve(f4)), { include: values.include, exclude: values.exclude, existing, draftExpect: values["draft-expect"] });
+      const res = importHar(rest.map((f4) => path26.resolve(f4)), { include: values.include, exclude: values.exclude, existing, draftExpect: values["draft-expect"] });
       const out = inside(manifest, values.out ?? "cmtk/cases/har.yaml");
-      if (fs27.existsSync(out))
-        throw new UsageError(`${path24.relative(process.cwd(), out)} already exists; pass --out <new file>.`);
-      fs27.mkdirSync(path24.dirname(out), { recursive: true });
-      fs27.writeFileSync(out, casesToYaml(res.cases, values["draft-expect"] ? "Imported from HAR recordings. Each drafted expect: is what the system answered, not the requirement: `cmtk review` confirms it, and `cmtk run` skips the case until then." : void 0), "utf8");
-      console.log(`Added ${res.cases.length} cases to ${path24.relative(process.cwd(), out)}; skipped ${res.skipped} (static files, filtered or duplicates).`);
+      if (fs29.existsSync(out))
+        throw new UsageError(`${path26.relative(process.cwd(), out)} already exists; pass --out <new file>.`);
+      fs29.mkdirSync(path26.dirname(out), { recursive: true });
+      fs29.writeFileSync(out, casesToYaml(res.cases, values["draft-expect"] ? "Imported from HAR recordings. Each drafted expect: is what the system answered, not the requirement: `cmtk review` confirms it, and `cmtk run` skips the case until then." : void 0), "utf8");
+      console.log(`Added ${res.cases.length} cases to ${path26.relative(process.cwd(), out)}; skipped ${res.skipped} (static files, filtered or duplicates).`);
       if (res.droppedHeaders.length)
         console.log(`Dropped these headers from every case: ${res.droppedHeaders.join(", ")}. Credentials come from headers_from_env at run time.`);
       if (res.redacted.length)
@@ -26866,18 +27291,18 @@ async function main(argv) {
       const manifest = loadManifest(manifestFile);
       let any = false;
       for (const mode of ["run", "compare"]) {
-        const dir = path24.join(manifest.root, manifest.evidence, mode);
-        const f4 = path24.join(dir, "REPORT.json");
-        if (!fs27.existsSync(f4))
+        const dir = path26.join(manifest.root, manifest.evidence, mode);
+        const f4 = path26.join(dir, "REPORT.json");
+        if (!fs29.existsSync(f4))
           continue;
         any = true;
-        const r6 = JSON.parse(fs27.readFileSync(f4, "utf8"));
+        const r6 = JSON.parse(fs29.readFileSync(f4, "utf8"));
         console.log(`${mode}: ${r6.verdict} on ${r6.date}${r6.settings ? ` from ${r6.settings.manifest}` : ""}, ${describeSignoff(signoffState(dir))}`);
       }
-      const shadowFile = path24.join(manifest.root, manifest.evidence, "shadow", "REPORT.json");
-      if (fs27.existsSync(shadowFile)) {
+      const shadowFile = path26.join(manifest.root, manifest.evidence, "shadow", "REPORT.json");
+      if (fs29.existsSync(shadowFile)) {
         any = true;
-        const r6 = JSON.parse(fs27.readFileSync(shadowFile, "utf8"));
+        const r6 = JSON.parse(fs29.readFileSync(shadowFile, "utf8"));
         console.log(`shadow: ${r6.verdict} on ${r6.date}`);
       }
       if (!any)
@@ -26898,7 +27323,7 @@ async function main(argv) {
         throw new UsageError("`cmtk defects` needs `run` or `compare`.");
       const m4 = loadManifest(manifestFile);
       const { file, drafts } = draftDefects(m4, mode);
-      console.log(drafts.length ? `Drafted ${drafts.length} defect${drafts.length === 1 ? "" : "s"} in ${path24.relative(process.cwd(), path24.join(m4.root, file))}.` : `Nothing failed, so there are no defects to draft (${file}).`);
+      console.log(drafts.length ? `Drafted ${drafts.length} defect${drafts.length === 1 ? "" : "s"} in ${path26.relative(process.cwd(), path26.join(m4.root, file))}.` : `Nothing failed, so there are no defects to draft (${file}).`);
       if (drafts.length)
         console.log("Next: a person checks each draft and files it in your tracker.");
       return 0;
@@ -26915,7 +27340,7 @@ async function main(argv) {
         console.log(`  uncovered ${b2.kind} ${b2.direction}: ${b2.name}${b2.where ? ` (${b2.where})` : ""}`);
       for (const n3 of discovery.notes ?? [])
         console.log(`Note: ${n3}`);
-      console.log(`Inventory: ${path24.relative(process.cwd(), path24.join(m4.root, file))}`);
+      console.log(`Inventory: ${path26.relative(process.cwd(), path26.join(m4.root, file))}`);
       console.log(discovery.boundaries.some((x2) => !x2.covered_by) ? "Next: for each uncovered kind, add an adapter (`cmtk adapter new <name>` or `cmtk adapter add <name>`, then `covers:` in cmtk.yaml) or have a person record why it is out of scope." : "Next: write cases for each boundary, then `cmtk compare`.");
       return 0;
     }
@@ -26937,7 +27362,7 @@ async function shadowCommand(manifestFile, v2) {
   const num = (name) => v2[name] === void 0 ? void 0 : Number(v2[name]);
   const m4 = loadManifest(manifestFile);
   const r6 = await shadow(m4, {
-    from: v2.from.map((f4) => path24.resolve(f4)),
+    from: v2.from.map((f4) => path26.resolve(f4)),
     format: v2.format,
     sample: num("sample"),
     seed: num("seed"),
@@ -26960,7 +27385,7 @@ async function shadowCommand(manifestFile, v2) {
     console.log(`Sent ${r6.replay.sent} to both systems: ${r6.replay.matched} matched, ${r6.replay.drift} approved drift, ${r6.replay.different} unexplained, ${r6.replay.errors} errors, ${r6.replay.not_sent} not sent.`);
     for (const e6 of r6.endpoints.filter((x2) => x2.unexplained).slice(0, 20))
       console.log(`  ${e6.endpoint}: ${e6.unexplained} of ${e6.requests} unexplained, at ${e6.differences.filter((d4) => !d4.drift).slice(0, 3).map((d4) => d4.where).join(", ")}`);
-    console.log(`Report: ${path24.relative(process.cwd(), path24.join(m4.root, m4.evidence, "shadow", "REPORT.md"))}`);
+    console.log(`Report: ${path26.relative(process.cwd(), path26.join(m4.root, m4.evidence, "shadow", "REPORT.md"))}`);
     console.log(r6.reason);
     console.log(`Next: ${r6.next}`);
   }
@@ -27011,21 +27436,21 @@ async function trendCommand(manifestFile, args, v2) {
     console.log(`  drift that stopped matching: ${report.drift_stopped_matching.join(", ")}`);
   if (report.scrubs_never_fired.length)
     console.log(`  scrubs that never fired: ${report.scrubs_never_fired.join(", ")}`);
-  console.log(`Report: ${path24.relative(process.cwd(), path24.join(m4.root, file))}`);
+  console.log(`Report: ${path26.relative(process.cwd(), path26.join(m4.root, file))}`);
   return 0;
 }
 async function signoff(manifestFile, mode) {
   if (mode !== "run" && mode !== "compare")
     throw new UsageError("`cmtk signoff` needs `run` or `compare`.");
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
-    throw new UsageError("Sign-off is for a person at a keyboard: run `cmtk signoff` in a terminal yourself. Agents and scripts do not sign.");
+    throw new UsageError("Sign-off is for a person at a keyboard: run `cmtk signoff` in a terminal yourself. Only a person signs.");
   }
   const manifest = loadManifest(manifestFile);
-  const dir = path24.join(manifest.root, manifest.evidence, mode);
-  const json = path24.join(dir, "REPORT.json");
-  if (!fs27.existsSync(json))
+  const dir = path26.join(manifest.root, manifest.evidence, mode);
+  const json = path26.join(dir, "REPORT.json");
+  if (!fs29.existsSync(json))
     throw new UsageError(`There is no ${mode} report yet. Run \`cmtk ${mode}\` first.`);
-  const report = JSON.parse(fs27.readFileSync(json, "utf8"));
+  const report = JSON.parse(fs29.readFileSync(json, "utf8"));
   console.log(`${mode} report for ${report.system}: ${report.verdict} (${report.date}). ${report.reason}`);
   if (report.settings) {
     const st2 = report.settings;
@@ -27038,7 +27463,7 @@ async function signoff(manifestFile, mode) {
   for (const k2 of report.known_issues ?? [])
     if (k2.state === "still fails")
       console.log(`Known issue ${k2.id} still fails on case ${k2.case}: accepted by ${k2.accepted_by}. Your signature covers this report with that failure in it. ${k2.reason}`);
-  console.log(`Read it first: ${path24.relative(process.cwd(), path24.join(dir, "REPORT.md"))}`);
+  console.log(`Read it first: ${path26.relative(process.cwd(), path26.join(dir, "REPORT.md"))}`);
   const rl = readline3.createInterface({ input: process.stdin, output: process.stdout });
   try {
     const name = await rl.question("Your full name: ");
@@ -27059,14 +27484,15 @@ async function review(manifestFile) {
   const drafts = loadCases(m4).filter((c4) => c4.draft);
   const drafted = loadCases(m4).filter((c4) => c4.expect_draft && !c4.draft);
   const pending = loadProposals(m4).filter((p4) => p4.status === "pending");
-  if (!drafts.length && !drafted.length && !pending.length) {
+  const marked = unconfirmedSafe(m4, loadCases(m4)).filter((c4) => !c4.draft);
+  if (!drafts.length && !drafted.length && !pending.length && !marked.length) {
     console.log("Nothing to review: no draft cases, no drafted expectations and no proposals.");
     return 0;
   }
-  console.log(`${drafts.length} draft case${drafts.length === 1 ? "" : "s"}, ${drafted.length} drafted expectation${drafted.length === 1 ? "" : "s"} and ${pending.length} proposal${pending.length === 1 ? "" : "s"} to review.`);
+  console.log(`${drafts.length} draft case${drafts.length === 1 ? "" : "s"}, ${drafted.length} drafted expectation${drafted.length === 1 ? "" : "s"}${marked.length ? `, ${marked.length} unconfirmed safe mark${marked.length === 1 ? "" : "s"}` : ""} and ${pending.length} proposal${pending.length === 1 ? "" : "s"} to review.`);
   console.log("For each: a = accept, r = reject (you give a reason), s = skip for now, q = stop.");
   console.log("A = accept this draft and every remaining draft in the same file (you confirm first): for the cases a recipe generated, once you have read the recipe.");
-  console.log("A drafted expectation records what the system answered, not what the requirement says, so you confirm each one on its own.\n");
+  console.log("A drafted expectation records what the system answered, not what the requirement says, so you confirm each one on its own. So is a case marked safe: true, which would run with neither unsafe switch.\n");
   const rl = readline3.createInterface({ input: process.stdin, output: process.stdout });
   const date = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
   const tally = { accepted: 0, rejected: 0, skipped: 0, failed: 0 };
@@ -27076,13 +27502,16 @@ async function review(manifestFile) {
   });
   try {
     const name = (await rl.question("Your full name: ")).trim();
-    if (!name || name.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(name))
-      throw new UsageError("A name of up to 100 characters is needed: it goes on everything you accept or reject. Nothing was changed.");
+    if (!name || name.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(name) || looksLikeAgent(name))
+      throw new UsageError("A person's name of up to 100 characters is needed: it goes on everything you accept or reject. Nothing was changed.");
     const ask = async (all = false) => {
       for (; ; ) {
         const raw = (await rl.question(`Accept, reject, skip or quit? [a/${all ? "A/" : ""}r/s/q] `)).trim();
-        if (all && raw === "A")
-          return "A";
+        if (raw === "A") {
+          if (all)
+            return "A";
+          continue;
+        }
         const v2 = raw.toLowerCase();
         if (["a", "r", "s", "q"].includes(v2))
           return v2;
@@ -27096,9 +27525,11 @@ async function review(manifestFile) {
         const { file: _file, draft: _d, ...shown2 } = c4;
         console.log(`
 Draft case ${c4.id} in ${c4.file}:
-${import_yaml8.default.stringify(shown2, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
-        const rest = drafts.filter((d4) => d4.file === c4.file && !done.has(d4.id) && !d4.expect_draft);
-        let v2 = await ask(!c4.expect_draft && rest.length > 1);
+${import_yaml9.default.stringify(shown2, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
+        if (c4.safe !== void 0)
+          console.log(`  ${describeSafe(c4)}`);
+        const rest = drafts.filter((d4) => d4.file === c4.file && !done.has(d4.id) && !d4.expect_draft && d4.safe === void 0);
+        let v2 = await ask(!c4.expect_draft && c4.safe === void 0 && rest.length > 1);
         while (v2 === "A") {
           const yes = (await rl.question(`Accept all ${rest.length} remaining drafts in ${c4.file}, ${c4.id} included? Type yes to confirm: `)).trim().toLowerCase();
           if (yes === "yes")
@@ -27139,7 +27570,7 @@ ${import_yaml8.default.stringify(shown2, { lineWidth: 0 }).trimEnd().replace(/^/
         const { file: _file, expect_draft: _d, ...shown2 } = c4;
         console.log(`
 Drafted expectation for case ${c4.id} in ${c4.file}. It is what the system answered in the recording; accept it only if that is what should happen:
-${import_yaml8.default.stringify(shown2, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
+${import_yaml9.default.stringify(shown2, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
         const v2 = await ask();
         if (v2 === "q")
           return false;
@@ -27149,6 +27580,28 @@ ${import_yaml8.default.stringify(shown2, { lineWidth: 0 }).trimEnd().replace(/^/
         }
         if (v2 === "r") {
           rejectExpectation(m4, c4.id, name, date, (await rl.question("Why reject it? The case stays, with no expectation. ")).trim() || "no reason given", c4);
+          tally.rejected++;
+        }
+        if (v2 === "s")
+          tally.skipped++;
+        return true;
+      }),
+      ...marked.map((c4) => async () => {
+        const { file: _file, ...shown2 } = c4;
+        console.log(`
+Case ${c4.id} in ${c4.file}:
+${import_yaml9.default.stringify(shown2, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}
+  ${describeSafe(c4)}
+  Reject it to remove the mark: the case then needs both switches.`);
+        const v2 = await ask();
+        if (v2 === "q")
+          return false;
+        if (v2 === "a") {
+          confirmSafe(m4, c4.id, name, date, c4);
+          tally.accepted++;
+        }
+        if (v2 === "r") {
+          removeSafe(m4, c4.id, c4);
           tally.rejected++;
         }
         if (v2 === "s")
@@ -27210,6 +27663,9 @@ async function probe(manifestFile, args, surface = "http") {
   const method = r6[1].toUpperCase();
   if (!SAFE_METHODS.has(method))
     throw new UsageError(`probe only reads: use GET, HEAD or OPTIONS, not ${method}.`);
+  const asks = overrideIn(r6[2]);
+  if (asks !== void 0)
+    throw new UsageError(`probe only reads: that path asks to be treated as ${asks}.`);
   const adapters = adaptersFor(m4);
   try {
     const o4 = await adapters.get(surface).run({ id: "probe", request: { method, path: r6[2], headers: {}, body: null }, surface }, target2, envHeaders(m4));
@@ -27229,13 +27685,13 @@ async function probe(manifestFile, args, surface = "http") {
   }
 }
 function writeTemplate(tpl, dir, name) {
-  fs27.mkdirSync(dir, { recursive: true });
-  for (const e6 of fs27.readdirSync(tpl, { withFileTypes: true })) {
-    const to = path24.join(dir, e6.name === "gitignore" ? ".gitignore" : e6.name.replaceAll("__NAME__", name));
+  fs29.mkdirSync(dir, { recursive: true });
+  for (const e6 of fs29.readdirSync(tpl, { withFileTypes: true })) {
+    const to = path26.join(dir, e6.name === "gitignore" ? ".gitignore" : e6.name.replaceAll("__NAME__", name));
     if (e6.isDirectory())
-      writeTemplate(path24.join(tpl, e6.name), to, name);
+      writeTemplate(path26.join(tpl, e6.name), to, name);
     else
-      fs27.writeFileSync(to, fs27.readFileSync(path24.join(tpl, e6.name), "utf8").replaceAll("__NAME__", name), "utf8");
+      fs29.writeFileSync(to, fs29.readFileSync(path26.join(tpl, e6.name), "utf8").replaceAll("__NAME__", name), "utf8");
   }
 }
 async function adapterCommand(args, manifestFile, values) {
@@ -27243,19 +27699,20 @@ async function adapterCommand(args, manifestFile, values) {
   const lang = values.lang ?? "node";
   if (sub === "list")
     return adapterList(manifestFile, values.json === true);
-  if (sub === "add" && (!process.stdin.isTTY || !process.stdout.isTTY)) {
-    throw new UsageError("Installing an adapter runs someone else's code, so a person says yes at a keyboard: run `cmtk adapter add` in a terminal yourself. Agents and scripts do not install.");
+  if ((sub === "add" || sub === "approve") && (!process.stdin.isTTY || !process.stdout.isTTY)) {
+    throw new UsageError(`Installing an adapter runs someone else's code, so a person says yes at a keyboard: run \`cmtk adapter ${sub}\` in a terminal yourself. Only a person installs.`);
   }
   if (!name || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(name) || name === "http")
     throw new UsageError("Give the adapter a name of letters, digits, '.', '-' and '_' (not http, which is built in).");
-  const root = path24.dirname(manifestFile);
-  const dir = path24.join(root, "adapters", name);
+  const root = path26.dirname(manifestFile);
+  const dir = path26.join(root, "adapters", name);
   if (sub === "new") {
     if (lang !== "node" && lang !== "csharp")
       throw new UsageError(`--lang must be node or csharp, not ${lang}.`);
-    if (fs27.existsSync(dir))
+    adaptersFolder(root);
+    if (fs29.existsSync(dir))
       throw new UsageError(`adapters/${name} already exists.`);
-    writeTemplate(path24.join(HERE, "..", "templates", `adapter-${lang}`), dir, name);
+    writeTemplate(path26.join(HERE, "..", "templates", `adapter-${lang}`), dir, name);
     if (lang === "csharp") {
       console.log(`Wrote adapters/${name}/. Next: write Run() in Adapter.cs, then \`dotnet build -c Release adapters/${name}\` and \`cmtk adapter check ${name}\`.`);
       console.log(`Register it in cmtk.yaml:
@@ -27269,15 +27726,21 @@ async function adapterCommand(args, manifestFile, values) {
     ${name}: { command: node, args: [adapters/${name}/index.mjs] }`);
     return 0;
   }
-  if (sub === "check")
+  if (sub === "check") {
+    const problem = adapterPinProblem(root, name);
+    if (problem)
+      throw new UsageError(problem);
     return adapterCheck(name, dir, manifestFile, values.target);
+  }
+  if (sub === "approve")
+    return adapterApprove(name, root);
   if (sub === "add")
     return adapterAdd(name, root, manifestFile, values.registry, values.pin);
-  throw new UsageError("`cmtk adapter` takes `new <name>`, `check <name>`, `add <name>` or `list`.");
+  throw new UsageError("`cmtk adapter` takes `new <name>`, `check <name>`, `add <name>`, `approve <name>` or `list`.");
 }
 function adapterList(manifestFile, json) {
-  const registered = fs27.existsSync(manifestFile) ? loadManifest(manifestFile).adapters : {};
-  const rows = listAdapters(path24.dirname(manifestFile), registered);
+  const registered = fs29.existsSync(manifestFile) ? loadManifest(manifestFile).adapters : {};
+  const rows = listAdapters(path26.dirname(manifestFile), registered);
   if (json) {
     console.log(JSON.stringify(rows, null, 2));
     return 0;
@@ -27287,12 +27750,41 @@ function adapterList(manifestFile, json) {
   console.log("\nLevels: experimental passes the conformance kit; verified was used on one real project; core ships with the toolkit and has real use behind it. For an adapter from a registry, the level is what that registry says: `cmtk adapter check <name>` proves the kit here.");
   const changed = rows.filter((r6) => r6.state === "CHANGED since install" || r6.state === "MISSING").map((r6) => r6.name);
   if (changed.length)
-    console.log(`Warning: ${changed.join(", ")} no longer match what a person approved. Read the changes, or remove the folder and its entry in adapters/installed.yaml and add it again.`);
+    console.log(`Warning: ${changed.join(", ")} no longer match what a person approved, so \`cmtk run\` and \`cmtk compare\` will not start them. Read the changes, or remove the folder and its entry in adapters/installed.yaml and add it again.`);
+  const built = rows.filter((r6) => r6.state === "BUILD FILES not approved").map((r6) => r6.name);
+  if (built.length)
+    console.log(`Warning: ${built.join(", ")} hold bin, obj or node_modules files no person approved, so they will not be started. If you built them yourself, read them, then run \`cmtk adapter approve <name>\` in a terminal.`);
   return 0;
 }
-var TOOLKIT_ADAPTERS = path24.resolve(HERE, "..", "..", "..", "adapters");
+async function adapterApprove(name, root) {
+  for (const line2 of describeBuild(root, name))
+    console.log(line2);
+  const rl = readline3.createInterface({ input: process.stdin, output: process.stdout });
+  const ask = (q2) => new Promise((resolve2) => {
+    rl.once("close", () => resolve2(null));
+    rl.question(q2).then((a4) => resolve2(a4), () => resolve2(null));
+  });
+  try {
+    const person = (await ask("\nYour full name: "))?.trim();
+    if (!person || person.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(person) || looksLikeAgent(person)) {
+      console.log("A person's name of up to 100 characters is needed. Nothing was approved.");
+      return 3;
+    }
+    const yes = (await ask(`Type yes to approve these files for ${name}, anything else to stop: `))?.trim().toLowerCase();
+    if (yes !== "yes") {
+      console.log("Nothing was approved.");
+      return 0;
+    }
+    approveBuild(root, name, person, (/* @__PURE__ */ new Date()).toISOString().slice(0, 10));
+    console.log(`Approved. Recorded in adapters/installed.yaml. If the files change, ${name} stops starting until a person approves them again.`);
+    return 0;
+  } finally {
+    rl.close();
+  }
+}
+var TOOLKIT_ADAPTERS = path26.resolve(HERE, "..", "..", "..", "adapters");
 async function adapterAdd(name, root, manifestFile, registry, pin) {
-  const named = fs27.existsSync(manifestFile) ? loadManifest(manifestFile).adapter_registries : {};
+  const named = fs29.existsSync(manifestFile) ? loadManifest(manifestFile).adapter_registries : {};
   const chosen = registry === void 0 ? void 0 : Object.hasOwn(named, registry) ? { list: [named[registry]], base: root } : { list: [registry], base: process.cwd() };
   if (!chosen && !Object.keys(named).length)
     throw new UsageError("Name a registry: --registry <url or folder>, or list yours under `adapter_registries:` in cmtk.yaml. cmtk has no default registry, so it never fetches from somewhere you did not name.");
@@ -27306,7 +27798,7 @@ async function adapterAdd(name, root, manifestFile, registry, pin) {
     for (const line2 of describeInstall(prepared))
       console.log(line2);
     const person = (await ask("\nYour full name: "))?.trim();
-    if (!person || person.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(person) || /^agent\b/i.test(person)) {
+    if (!person || person.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(person) || looksLikeAgent(person)) {
       console.log("A person's name of up to 100 characters is needed: it goes beside this install. Nothing was installed.");
       return 3;
     }
@@ -27320,7 +27812,7 @@ async function adapterAdd(name, root, manifestFile, registry, pin) {
     const covers3 = prepared.entry.kinds.filter((k2) => BOUNDARY_KINDS.includes(k2));
     const also = covers3.length ? `, covers: [${covers3.join(", ")}]` : "";
     if (prepared.files.some((f4) => f4.endsWith(".csproj") && !f4.includes("/"))) {
-      console.log(`Next: read the code, then \`dotnet build -c Release adapters/${name}\` and \`cmtk adapter check ${name}\`. Register the built program in cmtk.yaml; its README shows how.`);
+      console.log(`Next: read the code, then \`dotnet build -c Release adapters/${name}\`, \`cmtk adapter approve ${name}\` and \`cmtk adapter check ${name}\`. Register the built program in cmtk.yaml; its README shows how.`);
     } else if (prepared.files.includes("index.mjs")) {
       console.log(`Next: read the code, then \`cmtk adapter check ${name}\`. Register it in cmtk.yaml:
   adapters:
@@ -27334,46 +27826,46 @@ async function adapterAdd(name, root, manifestFile, registry, pin) {
   }
 }
 function builtCsharpAdapter(name, dir) {
-  const top = fs27.existsSync(dir) ? fs27.readdirSync(dir) : [];
+  const top = fs29.existsSync(dir) ? fs29.readdirSync(dir) : [];
   const project = top.find((f4) => f4.endsWith(".csproj"));
   if (!project)
     return void 0;
   const stem = project.slice(0, -".csproj".length);
-  const release = path24.join(dir, "bin", "Release");
-  const frameworks = fs27.existsSync(release) ? fs27.readdirSync(release) : [];
-  const built = frameworks.map((f4) => path24.join(release, f4, `${stem}.dll`)).find((f4) => fs27.existsSync(f4));
+  const release = path26.join(dir, "bin", "Release");
+  const frameworks = fs29.existsSync(release) ? fs29.readdirSync(release) : [];
+  const built = frameworks.map((f4) => path26.join(release, f4, `${stem}.dll`)).find((f4) => fs29.existsSync(f4));
   const build = `Run: dotnet build -c Release adapters/${name}`;
   if (!built)
     throw new UsageError(`adapters/${name} has not been built. ${build}`);
   const code = top.filter((f4) => f4.endsWith(".cs") || f4.endsWith(".csproj"));
-  const newer = code.find((f4) => fs27.statSync(path24.join(dir, f4)).mtimeMs > fs27.statSync(built).mtimeMs);
+  const newer = code.find((f4) => fs29.statSync(path26.join(dir, f4)).mtimeMs > fs29.statSync(built).mtimeMs);
   if (newer)
     throw new UsageError(`adapters/${name}/${newer} is newer than the build. ${build}`);
   return { command: "dotnet", args: [built] };
 }
 async function adapterCheck(name, dir, manifestFile, targetName) {
   let spec;
-  if (targetName !== void 0 && !fs27.existsSync(manifestFile))
+  if (targetName !== void 0 && !fs29.existsSync(manifestFile))
     throw new UsageError(`--target ${targetName} needs a cmtk.yaml that sets it; ${manifestFile} does not exist.`);
-  if (fs27.existsSync(manifestFile)) {
+  if (fs29.existsSync(manifestFile)) {
     const m4 = loadManifest(manifestFile);
     if (m4.adapters[name])
       spec = { command: m4.adapters[name].command, args: m4.adapters[name].args ?? [] };
   }
-  spec ??= builtCsharpAdapter(name, dir) ?? { command: process.execPath, args: [path24.join(dir, "index.mjs")] };
-  const samplesFile = path24.join(dir, "samples", "cases.yaml");
-  const doc = fs27.existsSync(samplesFile) ? readStructured(samplesFile) : {};
+  spec ??= builtCsharpAdapter(name, dir) ?? { command: process.execPath, args: [path26.join(dir, "index.mjs")] };
+  const samplesFile = path26.join(dir, "samples", "cases.yaml");
+  const doc = fs29.existsSync(samplesFile) ? readStructured(samplesFile) : {};
   const samples = doc.cases ?? [];
   const secret = `cmtk-check-${Math.random().toString(36).slice(2)}`;
   let target2 = { ...doc.check_target, name: "check", base_url: "http://127.0.0.1:9" };
   if (targetName !== void 0) {
     const named = loadManifest(manifestFile).targets[targetName];
     if (!named)
-      throw new UsageError(`--target ${targetName} is not in the targets of ${path24.basename(manifestFile)}.`);
+      throw new UsageError(`--target ${targetName} is not in the targets of ${path26.basename(manifestFile)}.`);
     target2 = named;
   }
   const checks = [];
-  const adapter = processAdapter(name, { ...spec, timeout_s: 60 }, path24.dirname(manifestFile));
+  const adapter = processAdapter(name, { ...spec, timeout_s: 60 }, path26.dirname(manifestFile));
   try {
     const d4 = await adapter.describe().catch((err) => ({ error: err.message }));
     checks.push(["answers describe with a name and its kinds", typeof d4?.name === "string" && Array.isArray(d4?.kinds), d4?.error ?? 'reply {"name":"\u2026","kinds":["\u2026"],"settings":[]}']);
