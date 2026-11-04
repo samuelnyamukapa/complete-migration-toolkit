@@ -1,6 +1,6 @@
 {
   "name": "cmtk",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "So that `npx cmtk` runs the Complete Migration Toolkit. This package holds only a pointer to complete-migration-toolkit.",
   "license": "Apache-2.0",
   "type": "module",
@@ -26,6 +26,6 @@
     "NOTICE"
   ],
   "dependencies": {
-    "complete-migration-toolkit": "0.5.2"
+    "complete-migration-toolkit": "0.6.0"
   }
 }

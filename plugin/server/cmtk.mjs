@@ -109,17 +109,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP2;
     visit.REMOVE = REMOVE;
-    function visit_(key2, node, visitor, path19) {
-      const ctrl = callVisitor(key2, node, visitor, path19);
+    function visit_(key2, node, visitor, path25) {
+      const ctrl = callVisitor(key2, node, visitor, path25);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key2, path19, ctrl);
-        return visit_(key2, ctrl, visitor, path19);
+        replaceNode(key2, path25, ctrl);
+        return visit_(key2, ctrl, visitor, path25);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path19 = Object.freeze(path19.concat(node));
+          path25 = Object.freeze(path25.concat(node));
           for (let i8 = 0; i8 < node.items.length; ++i8) {
-            const ci = visit_(i8, node.items[i8], visitor, path19);
+            const ci = visit_(i8, node.items[i8], visitor, path25);
             if (typeof ci === "number")
               i8 = ci - 1;
             else if (ci === BREAK)
@@ -130,13 +130,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path19 = Object.freeze(path19.concat(node));
-          const ck = visit_("key", node.key, visitor, path19);
+          path25 = Object.freeze(path25.concat(node));
+          const ck = visit_("key", node.key, visitor, path25);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path19);
+          const cv = visit_("value", node.value, visitor, path25);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -157,17 +157,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP2;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key2, node, visitor, path19) {
-      const ctrl = await callVisitor(key2, node, visitor, path19);
+    async function visitAsync_(key2, node, visitor, path25) {
+      const ctrl = await callVisitor(key2, node, visitor, path25);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key2, path19, ctrl);
-        return visitAsync_(key2, ctrl, visitor, path19);
+        replaceNode(key2, path25, ctrl);
+        return visitAsync_(key2, ctrl, visitor, path25);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path19 = Object.freeze(path19.concat(node));
+          path25 = Object.freeze(path25.concat(node));
           for (let i8 = 0; i8 < node.items.length; ++i8) {
-            const ci = await visitAsync_(i8, node.items[i8], visitor, path19);
+            const ci = await visitAsync_(i8, node.items[i8], visitor, path25);
             if (typeof ci === "number")
               i8 = ci - 1;
             else if (ci === BREAK)
@@ -178,13 +178,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path19 = Object.freeze(path19.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path19);
+          path25 = Object.freeze(path25.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path25);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path19);
+          const cv = await visitAsync_("value", node.value, visitor, path25);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -211,23 +211,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key2, node, visitor, path19) {
+    function callVisitor(key2, node, visitor, path25) {
       if (typeof visitor === "function")
-        return visitor(key2, node, path19);
+        return visitor(key2, node, path25);
       if (identity.isMap(node))
-        return visitor.Map?.(key2, node, path19);
+        return visitor.Map?.(key2, node, path25);
       if (identity.isSeq(node))
-        return visitor.Seq?.(key2, node, path19);
+        return visitor.Seq?.(key2, node, path25);
       if (identity.isPair(node))
-        return visitor.Pair?.(key2, node, path19);
+        return visitor.Pair?.(key2, node, path25);
       if (identity.isScalar(node))
-        return visitor.Scalar?.(key2, node, path19);
+        return visitor.Scalar?.(key2, node, path25);
       if (identity.isAlias(node))
-        return visitor.Alias?.(key2, node, path19);
+        return visitor.Alias?.(key2, node, path25);
       return void 0;
     }
-    function replaceNode(key2, path19, node) {
-      const parent = path19[path19.length - 1];
+    function replaceNode(key2, path25, node) {
+      const parent = path25[path25.length - 1];
       if (identity.isCollection(parent)) {
         parent.items[key2] = node;
       } else if (identity.isPair(parent)) {
@@ -839,10 +839,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path19, value) {
+    function collectionFromPath(schema, path25, value) {
       let v2 = value;
-      for (let i8 = path19.length - 1; i8 >= 0; --i8) {
-        const k2 = path19[i8];
+      for (let i8 = path25.length - 1; i8 >= 0; --i8) {
+        const k2 = path25[i8];
         if (typeof k2 === "number" && Number.isInteger(k2) && k2 >= 0) {
           const a4 = [];
           a4[k2] = v2;
@@ -861,7 +861,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path19) => path19 == null || typeof path19 === "object" && !!path19[Symbol.iterator]().next().done;
+    var isEmptyPath = (path25) => path25 == null || typeof path25 === "object" && !!path25[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -891,11 +891,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path19, value) {
-        if (isEmptyPath(path19))
+      addIn(path25, value) {
+        if (isEmptyPath(path25))
           this.add(value);
         else {
-          const [key2, ...rest] = path19;
+          const [key2, ...rest] = path25;
           const node = this.get(key2, true);
           if (identity.isCollection(node))
             node.addIn(rest, value);
@@ -909,8 +909,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path19) {
-        const [key2, ...rest] = path19;
+      deleteIn(path25) {
+        const [key2, ...rest] = path25;
         if (rest.length === 0)
           return this.delete(key2);
         const node = this.get(key2, true);
@@ -924,8 +924,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path19, keepScalar) {
-        const [key2, ...rest] = path19;
+      getIn(path25, keepScalar) {
+        const [key2, ...rest] = path25;
         const node = this.get(key2, true);
         if (rest.length === 0)
           return !keepScalar && identity.isScalar(node) ? node.value : node;
@@ -943,8 +943,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path19) {
-        const [key2, ...rest] = path19;
+      hasIn(path25) {
+        const [key2, ...rest] = path25;
         if (rest.length === 0)
           return this.has(key2);
         const node = this.get(key2, true);
@@ -954,8 +954,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path19, value) {
-        const [key2, ...rest] = path19;
+      setIn(path25, value) {
+        const [key2, ...rest] = path25;
         if (rest.length === 0) {
           this.set(key2, value);
         } else {
@@ -3470,9 +3470,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path19, value) {
+      addIn(path25, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path19, value);
+          this.contents.addIn(path25, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3547,14 +3547,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path19) {
-        if (Collection.isEmptyPath(path19)) {
+      deleteIn(path25) {
+        if (Collection.isEmptyPath(path25)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path19) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path25) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3569,10 +3569,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path19, keepScalar) {
-        if (Collection.isEmptyPath(path19))
+      getIn(path25, keepScalar) {
+        if (Collection.isEmptyPath(path25))
           return !keepScalar && identity.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity.isCollection(this.contents) ? this.contents.getIn(path19, keepScalar) : void 0;
+        return identity.isCollection(this.contents) ? this.contents.getIn(path25, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -3583,10 +3583,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path19) {
-        if (Collection.isEmptyPath(path19))
+      hasIn(path25) {
+        if (Collection.isEmptyPath(path25))
           return this.contents !== void 0;
-        return identity.isCollection(this.contents) ? this.contents.hasIn(path19) : false;
+        return identity.isCollection(this.contents) ? this.contents.hasIn(path25) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3603,13 +3603,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path19, value) {
-        if (Collection.isEmptyPath(path19)) {
+      setIn(path25, value) {
+        if (Collection.isEmptyPath(path25)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path19), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path25), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path19, value);
+          this.contents.setIn(path25, value);
         }
       }
       /**
@@ -5570,9 +5570,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP2;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path19) => {
+    visit.itemAtPath = (cst, path25) => {
       let item = cst;
-      for (const [field, index] of path19) {
+      for (const [field, index] of path25) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -5581,23 +5581,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path19) => {
-      const parent = visit.itemAtPath(cst, path19.slice(0, -1));
-      const field = path19[path19.length - 1][0];
+    visit.parentCollection = (cst, path25) => {
+      const parent = visit.itemAtPath(cst, path25.slice(0, -1));
+      const field = path25[path25.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path19, item, visitor) {
-      let ctrl = visitor(item, path19);
+    function _visit(path25, item, visitor) {
+      let ctrl = visitor(item, path25);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i8 = 0; i8 < token.items.length; ++i8) {
-            const ci = _visit(Object.freeze(path19.concat([[field, i8]])), token.items[i8], visitor);
+            const ci = _visit(Object.freeze(path25.concat([[field, i8]])), token.items[i8], visitor);
             if (typeof ci === "number")
               i8 = ci - 1;
             else if (ci === BREAK)
@@ -5608,10 +5608,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path19);
+            ctrl = ctrl(item, path25);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path19) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path25) : ctrl;
     }
     exports.visit = visit;
   }
@@ -6913,14 +6913,14 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs21 = this.flowScalar(this.type);
+              const fs28 = this.flowScalar(this.type);
               if (atNextItem || it2.value) {
-                map.items.push({ start, key: fs21, sep: [] });
+                map.items.push({ start, key: fs28, sep: [] });
                 this.onKeyLine = true;
               } else if (it2.sep) {
-                this.stack.push(fs21);
+                this.stack.push(fs28);
               } else {
-                Object.assign(it2, { key: fs21, sep: [] });
+                Object.assign(it2, { key: fs28, sep: [] });
                 this.onKeyLine = true;
               }
               return;
@@ -7048,13 +7048,13 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs21 = this.flowScalar(this.type);
+              const fs28 = this.flowScalar(this.type);
               if (!it2 || it2.value)
-                fc.items.push({ start: [], key: fs21, sep: [] });
+                fc.items.push({ start: [], key: fs28, sep: [] });
               else if (it2.sep)
-                this.stack.push(fs21);
+                this.stack.push(fs28);
               else
-                Object.assign(it2, { key: fs21, sep: [] });
+                Object.assign(it2, { key: fs28, sep: [] });
               return;
             }
             case "flow-map-end":
@@ -7366,7 +7366,7 @@ var require_dist = __commonJS({
 var require_conventions = __commonJS({
   "node_modules/@xmldom/xmldom/lib/conventions.js"(exports) {
     "use strict";
-    function find(list, predicate, ac) {
+    function find2(list, predicate, ac) {
       if (ac === void 0) {
         ac = Array.prototype;
       }
@@ -7553,7 +7553,7 @@ var require_conventions = __commonJS({
       XMLNS: "http://www.w3.org/2000/xmlns/"
     });
     exports.assign = assign;
-    exports.find = find;
+    exports.find = find2;
     exports.freeze = freeze;
     exports.HTML_BOOLEAN_ATTRIBUTES = HTML_BOOLEAN_ATTRIBUTES;
     exports.HTML_RAW_TEXT_ELEMENTS = HTML_RAW_TEXT_ELEMENTS;
@@ -7942,7 +7942,7 @@ var require_dom = __commonJS({
   "node_modules/@xmldom/xmldom/lib/dom.js"(exports) {
     "use strict";
     var conventions = require_conventions();
-    var find = conventions.find;
+    var find2 = conventions.find;
     var hasDefaultHTMLNamespace = conventions.hasDefaultHTMLNamespace;
     var hasOwn = conventions.hasOwn;
     var isHTMLMimeType = conventions.isHTMLMimeType;
@@ -9317,10 +9317,10 @@ var require_dom = __commonJS({
     }
     function isElementInsertionPossible(doc, child) {
       var parentChildNodes = doc.childNodes || [];
-      if (find(parentChildNodes, isElementNode) || isDocTypeNode(child)) {
+      if (find2(parentChildNodes, isElementNode) || isDocTypeNode(child)) {
         return false;
       }
-      var docTypeNode = find(parentChildNodes, isDocTypeNode);
+      var docTypeNode = find2(parentChildNodes, isDocTypeNode);
       return !(child && docTypeNode && parentChildNodes.indexOf(docTypeNode) > parentChildNodes.indexOf(child));
     }
     function isElementReplacementPossible(doc, child) {
@@ -9328,10 +9328,10 @@ var require_dom = __commonJS({
       function hasElementChildThatIsNotChild(node) {
         return isElementNode(node) && node !== child;
       }
-      if (find(parentChildNodes, hasElementChildThatIsNotChild)) {
+      if (find2(parentChildNodes, hasElementChildThatIsNotChild)) {
         return false;
       }
-      var docTypeNode = find(parentChildNodes, isDocTypeNode);
+      var docTypeNode = find2(parentChildNodes, isDocTypeNode);
       return !(child && docTypeNode && parentChildNodes.indexOf(docTypeNode) > parentChildNodes.indexOf(child));
     }
     function assertPreInsertionValidity1to5(parent, node, child) {
@@ -9360,7 +9360,7 @@ var require_dom = __commonJS({
       var nodeChildNodes = node.childNodes || [];
       if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
         var nodeChildElements = nodeChildNodes.filter(isElementNode);
-        if (nodeChildElements.length > 1 || find(nodeChildNodes, isTextNode)) {
+        if (nodeChildElements.length > 1 || find2(nodeChildNodes, isTextNode)) {
           throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, "More than one element or text in fragment");
         }
         if (nodeChildElements.length === 1 && !isElementInsertionPossible(parent, child)) {
@@ -9373,10 +9373,10 @@ var require_dom = __commonJS({
         }
       }
       if (isDocTypeNode(node)) {
-        if (find(parentChildNodes, isDocTypeNode)) {
+        if (find2(parentChildNodes, isDocTypeNode)) {
           throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, "Only one doctype is allowed");
         }
-        var parentElementChild = find(parentChildNodes, isElementNode);
+        var parentElementChild = find2(parentChildNodes, isElementNode);
         if (child && parentChildNodes.indexOf(parentElementChild) < parentChildNodes.indexOf(child)) {
           throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, "Doctype can only be inserted before an element");
         }
@@ -9390,7 +9390,7 @@ var require_dom = __commonJS({
       var nodeChildNodes = node.childNodes || [];
       if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
         var nodeChildElements = nodeChildNodes.filter(isElementNode);
-        if (nodeChildElements.length > 1 || find(nodeChildNodes, isTextNode)) {
+        if (nodeChildElements.length > 1 || find2(nodeChildNodes, isTextNode)) {
           throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, "More than one element or text in fragment");
         }
         if (nodeChildElements.length === 1 && !isElementReplacementPossible(parent, child)) {
@@ -9406,10 +9406,10 @@ var require_dom = __commonJS({
         let hasDoctypeChildThatIsNotChild = function(node2) {
           return isDocTypeNode(node2) && node2 !== child;
         };
-        if (find(parentChildNodes, hasDoctypeChildThatIsNotChild)) {
+        if (find2(parentChildNodes, hasDoctypeChildThatIsNotChild)) {
           throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, "Only one doctype is allowed");
         }
-        var parentElementChild = find(parentChildNodes, isElementNode);
+        var parentElementChild = find2(parentChildNodes, isElementNode);
         if (child && parentChildNodes.indexOf(parentElementChild) < parentChildNodes.indexOf(child)) {
           throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, "Doctype can only be inserted before an element");
         }
@@ -13842,12 +13842,12 @@ var require_lib = __commonJS({
 });
 
 // packages/cli/dist/main.js
-var import_yaml6 = __toESM(require_dist(), 1);
-import fs20 from "node:fs";
-import path18 from "node:path";
+var import_yaml8 = __toESM(require_dist(), 1);
+import fs27 from "node:fs";
+import path24 from "node:path";
 import readline3 from "node:readline/promises";
 import { fileURLToPath } from "node:url";
-import { parseArgs } from "node:util";
+import { parseArgs as parseArgs2 } from "node:util";
 
 // packages/core/dist/types.js
 var BOUNDARY_KINDS = ["http", "soap", "outbound-http", "database", "files", "email", "sms", "queue", "payments", "worker", "ui", "logs"];
@@ -14082,7 +14082,7 @@ function loadManifest(file) {
   if (Object.keys(targets).length === 0)
     throw new ManifestError("`targets` needs at least one system, such as `candidate: { base_url: http://localhost:5002 }`.");
   const names = Object.keys(targets);
-  const pick2 = (key2, fallback) => {
+  const pick3 = (key2, fallback) => {
     const v2 = raw[key2] ?? fallback;
     if (v2 !== void 0 && !targets[v2])
       throw new ManifestError(`\`${key2}\` names ${JSON.stringify(v2)}, which is not in targets (${names.join(", ")}).`);
@@ -14094,6 +14094,19 @@ function loadManifest(file) {
     return { path: o4.path, match: level(o4.match, `overrides[${i8}]`) };
   });
   const contracts = (raw.contracts ?? []).map((c4, i8) => {
+    if (String(c4?.kind ?? "").toLowerCase() === "assembly") {
+      const list = (v2) => Array.isArray(v2) && v2.length > 0 && v2.every((x2) => typeof x2 === "string" && x2.trim());
+      if (typeof c4.legacy !== "string" || typeof c4.candidate !== "string")
+        throw new ManifestError(`contracts[${i8}] is kind assembly, so it needs \`legacy\` and \`candidate\`: each an assembly or REA's saved output, inside the project.`);
+      if (!list(c4.types))
+        throw new ManifestError(`contracts[${i8}] is kind assembly, so it needs \`types\`: the types that form the contract, such as [MyApp.Services.ICatalogService].`);
+      if (c4.namespace_map !== void 0 && (typeof c4.namespace_map !== "object" || c4.namespace_map === null || Array.isArray(c4.namespace_map) || !Object.values(c4.namespace_map).every((v2) => typeof v2 === "string")))
+        throw new ManifestError(`contracts[${i8}].namespace_map maps a legacy namespace to a candidate namespace, such as { MyApp: MyApp.Core }.`);
+      if (c4.known_types !== void 0 && !list(c4.known_types))
+        throw new ManifestError(`contracts[${i8}].known_types is a list of type names.`);
+      const name = String(c4.name ?? c4.legacy);
+      return { name, kind: "assembly", path: "", assembly: { legacy: c4.legacy, candidate: c4.candidate, types: c4.types, ...c4.namespace_map ? { namespace_map: c4.namespace_map } : {}, ...c4.known_types ? { known_types: c4.known_types } : {} } };
+    }
     if (!c4 || typeof c4.path !== "string" || !c4.path.startsWith("/"))
       throw new ManifestError(`contracts[${i8}] needs a \`path\` starting with '/', served by every target.`);
     return { name: String(c4.name ?? c4.path), kind: String(c4.kind ?? "text"), path: c4.path };
@@ -14116,9 +14129,9 @@ function loadManifest(file) {
   return {
     system: raw.system,
     targets,
-    default_target: pick2("default_target", names.includes("candidate") ? "candidate" : names[0]),
-    reference: pick2("reference", names.includes("legacy") ? "legacy" : void 0),
-    candidate: pick2("candidate", names.includes("candidate") ? "candidate" : void 0),
+    default_target: pick3("default_target", names.includes("candidate") ? "candidate" : names[0]),
+    reference: pick3("reference", names.includes("legacy") ? "legacy" : void 0),
+    candidate: pick3("candidate", names.includes("candidate") ? "candidate" : void 0),
     match: level(raw.match, "match"),
     overrides,
     scrub: { json_paths: scrub.json_paths ?? [], xml_ignore: scrub.xml_ignore ?? [], regex: scrub.regex ?? [] },
@@ -14422,9 +14435,9 @@ timeout_s: 30
 `;
 
 // packages/core/dist/shadow.js
-import crypto4 from "node:crypto";
-import fs10 from "node:fs";
-import path9 from "node:path";
+import crypto11 from "node:crypto";
+import fs19 from "node:fs";
+import path18 from "node:path";
 import readline2 from "node:readline";
 
 // packages/core/dist/adapters.js
@@ -14810,8 +14823,8 @@ function processAdapter(name, spec, cwd) {
 }
 
 // packages/core/dist/defects.js
-import fs7 from "node:fs";
-import path6 from "node:path";
+import fs13 from "node:fs";
+import path12 from "node:path";
 
 // packages/core/dist/har.js
 var import_yaml2 = __toESM(require_dist(), 1);
@@ -15162,11 +15175,11 @@ function importHar(files, opts = {}) {
         headers[name] = String(h4.value ?? "");
       }
       const method = String(r6.method ?? "GET").toUpperCase();
-      let hidden = false;
+      let hidden2 = false;
       for (const k3 of [...new Set(u4.searchParams.keys())])
         if (looksSecret(k3)) {
           u4.searchParams.set(k3, REDACTED);
-          hidden = true;
+          hidden2 = true;
         }
       const p4 = u4.pathname + u4.search;
       let body = r6.postData?.text || null;
@@ -15174,7 +15187,7 @@ function importHar(files, opts = {}) {
         const ct2 = String(r6.postData?.mimeType ?? Object.entries(headers).find(([h4]) => h4.toLowerCase() === "content-type")?.[1] ?? "");
         const [b2, hit2] = redactBody(body, ct2);
         body = b2;
-        hidden ||= hit2;
+        hidden2 ||= hit2;
       }
       const id = `${prefix}-${String(n3).padStart(3, "0")}`;
       const c4 = {
@@ -15191,7 +15204,7 @@ function importHar(files, opts = {}) {
         continue;
       }
       seen.add(k2);
-      if (hidden)
+      if (hidden2)
         redacted.push(id);
       if (opts.draftExpect) {
         const d4 = draftExpectation(e6?.response);
@@ -15216,9 +15229,9 @@ function casesToYaml(cases, header = "Imported from HAR recordings. Add `require
 }
 
 // packages/core/dist/proposals.js
-var import_yaml3 = __toESM(require_dist(), 1);
-import fs6 from "node:fs";
-import path5 from "node:path";
+var import_yaml5 = __toESM(require_dist(), 1);
+import fs12 from "node:fs";
+import path11 from "node:path";
 
 // packages/core/dist/known.js
 import fs5 from "node:fs";
@@ -15379,4103 +15392,15 @@ function select(doc, pattern) {
   return out;
 }
 
-// packages/core/dist/proposals.js
-var HEADER = "# Proposals from agents. Each one waits for a person: only `cmtk review` accepts or rejects it.\n";
-var KNOWN_ISSUES_HEADER = "# Known issues: failures of `cmtk run` a named person accepted. Only a person adds an entry.\n# Each still shows as a failure, and anything an entry does not describe is an ordinary FAIL.\nknown_issues: []\n";
-function editYaml(file, fallback, fn) {
-  const text2 = fs6.existsSync(file) ? fs6.readFileSync(file, "utf8") : fallback;
-  const crlf = text2.includes("\r\n");
-  const doc = import_yaml3.default.parseDocument(text2);
-  if (doc.errors.length)
-    throw new ManifestError(`${path5.basename(file)} is not valid YAML: ${doc.errors[0].message}`);
-  fn(doc);
-  let out = doc.toString({ lineWidth: 0 });
-  if (crlf)
-    out = out.replace(/\r?\n/g, "\r\n");
-  fs6.mkdirSync(path5.dirname(file), { recursive: true });
-  fs6.writeFileSync(file, out, "utf8");
-}
-function seqAt(doc, key2) {
-  const block = (s5) => {
-    if (s5.flow && s5.items.length === 0)
-      s5.flow = false;
-    return s5;
-  };
-  if ((0, import_yaml3.isSeq)(doc.contents))
-    return block(doc.contents);
-  if (!(0, import_yaml3.isMap)(doc.contents))
-    doc.contents = doc.createNode({});
-  const map = doc.contents;
-  const found = map.get(key2, true);
-  if ((0, import_yaml3.isSeq)(found))
-    return block(found);
-  const s4 = new import_yaml3.YAMLSeq();
-  map.set(key2, s4);
-  return s4;
-}
-function loadProposals(manifest) {
-  const file = inside(manifest, manifest.proposals);
-  if (!fs6.existsSync(file))
-    return [];
-  const doc = import_yaml3.default.parse(fs6.readFileSync(file, "utf8"));
-  const list = Array.isArray(doc) ? doc : doc?.proposals ?? [];
-  return list.filter((p4) => p4 && typeof p4.id === "string");
-}
-var CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/;
-var text = (v2, what, max = 2e3) => {
-  if (typeof v2 !== "string" || !v2.trim())
-    throw new ManifestError(`${what} is required.`);
-  if (v2.length > max)
-    throw new ManifestError(`${what} is longer than ${max} characters.`);
-  if (CONTROL.test(v2))
-    throw new ManifestError(`${what} holds control characters; write plain text.`);
-  return v2.trim();
-};
-var plain = (v2) => String(v2 ?? "").replace(new RegExp(CONTROL.source, "g"), (c4) => `\\u${c4.charCodeAt(0).toString(16).padStart(4, "0")}`);
-var REPAIRABLE_ACTIONS = ["click", "fill", "select", "tick", "invoke", "set_value"];
-function readScript(manifest, rel2) {
-  const full = inside(manifest, rel2);
-  if (!fs6.existsSync(full))
-    throw new ManifestError(`The script ${rel2} does not exist.`);
-  const raw = fs6.readFileSync(full, "utf8");
-  let doc;
-  try {
-    doc = JSON.parse(raw);
-  } catch {
-    throw new ManifestError(`The script ${rel2} is not JSON.`);
-  }
-  if (doc?.cmtk_script !== 1 || !Array.isArray(doc.steps))
-    throw new ManifestError(`${rel2} is not a recorded script.`);
-  return { full, raw, doc };
-}
-function actionOf(step, target2) {
-  if (!step || "read" in step || "check" in step || "reach" in step)
-    return void 0;
-  const merged = { ...step, ...step.on?.[target2] ?? {} };
-  const action = REPAIRABLE_ACTIONS.find((a4) => a4 in merged);
-  return action ? { action, locator: merged[action] } : void 0;
-}
-function describeProposal(p4) {
-  const q2 = (v2) => JSON.stringify(v2 ?? null);
-  const lines = [`${plain(p4.id)}  ${plain(p4.kind)}, proposed by ${plain(p4.proposed_by)} on ${plain(p4.proposed_on)}`];
-  if (p4.kind === "scrub")
-    lines.push(`  hide on every run: ${q2(p4.rule)}`);
-  if (p4.kind === "drift")
-    lines.push(`  approve the difference at ${q2(p4.where)} for ${p4.case === "*" ? "EVERY case" : `case ${q2(p4.case)}`}`);
-  if (p4.kind === "known_issue")
-    lines.push(`  record known issue ${p4.issue_id ? q2(p4.issue_id) : "(the next free id)"}: case ${q2(p4.case)}${p4.target ? ` on target ${q2(p4.target)}` : ""} may keep failing like this: ${q2(p4.fails)}`, "  it still shows as a failure, and the run can read PASS WITH KNOWN ISSUES, with your name on it");
-  if (p4.kind === "defect")
-    lines.push(`  defect: ${q2(p4.title)}`, `  cases: ${q2(p4.cases)}`, ...p4.summary ? [`  summary: ${plain(p4.summary)}`] : []);
-  if (p4.kind === "expectation")
-    lines.push(`  change what case ${q2(p4.case)} expects to: ${q2(p4.expect)}`);
-  if (p4.kind === "locator")
-    lines.push(`  repair step ${q2(p4.step)} of ${q2(p4.script)} (case ${q2(p4.case)}) on target ${q2(p4.target)}`, `  it finds its element by: ${q2(p4.was)}`, `  it would find it by:    ${q2(p4.locator)}`, "  this changes how the step finds an element, never what the case expects. Check it is the same element: the new name came from the page");
-  lines.push(`  why: ${plain(p4.reason)}`);
-  return lines.join("\n");
-}
-function setStatus(manifest, id, fields) {
-  editYaml(inside(manifest, manifest.proposals), HEADER + "proposals: []\n", (doc) => {
-    const item = seqAt(doc, "proposals").items.find((n3) => (0, import_yaml3.isMap)(n3) && n3.get("id") === id);
-    if (!item)
-      throw new ManifestError(`There is no proposal ${id}.`);
-    for (const [k2, v2] of Object.entries(fields))
-      item.set(k2, v2);
-  });
-}
-function caseFileOf(manifest, caseId) {
-  const c4 = loadCases(manifest).find((x2) => x2.id === caseId);
-  if (!c4?.file)
-    throw new ManifestError(`There is no case ${caseId}.`);
-  return { c: c4, file: inside(manifest, c4.file) };
-}
-function caseNode(doc, caseId) {
-  const seq = seqAt(doc, "cases");
-  const index = seq.items.findIndex((n3) => (0, import_yaml3.isMap)(n3) && n3.get("id") === caseId);
-  if (index < 0)
-    throw new ManifestError(`Case ${caseId} is not in its file any more.`);
-  return { seq, index, node: seq.items[index] };
-}
-function decideProposal(manifest, id, accept, person, date, note, shown2) {
-  const p4 = loadProposals(manifest).find((x2) => x2.id === id);
-  if (!p4)
-    throw new ManifestError(`There is no proposal ${id}.`);
-  if (p4.status !== "pending")
-    throw new ManifestError(`${id} was already ${p4.status}.`);
-  if (shown2 && JSON.stringify(p4) !== JSON.stringify(shown2))
-    throw new ManifestError(`${id} changed after it was shown to you. Nothing was applied; run \`cmtk review\` again.`);
-  const who = text(person, "Your name", 100);
-  if (!accept) {
-    setStatus(manifest, id, { status: "rejected", decided_by: who, decided_on: date, ...note ? { decision_note: note } : {} });
-    return { ...p4, status: "rejected", decided_by: who, decided_on: date };
-  }
-  let applied = "";
-  if (p4.kind === "scrub") {
-    editYaml(manifest.file, "", (doc) => {
-      const root = doc.contents;
-      let scrub = root.get("scrub", true);
-      if (!(0, import_yaml3.isMap)(scrub)) {
-        scrub = new import_yaml3.YAMLMap();
-        root.set("scrub", scrub);
-      }
-      const [key2, value] = p4.rule.json_path !== void 0 ? ["json_paths", p4.rule.json_path] : p4.rule.regex ? ["regex", p4.rule.regex] : ["xml_ignore", p4.rule.xml_ignore];
-      const found = scrub.get(key2, true);
-      const list = (0, import_yaml3.isSeq)(found) ? found : new import_yaml3.YAMLSeq();
-      if (!(0, import_yaml3.isSeq)(found))
-        scrub.set(key2, list);
-      list.add(doc.createNode(value));
-    });
-    applied = `scrub rule added to ${path5.basename(manifest.file)}`;
-  }
-  if (p4.kind === "drift") {
-    const ledger = loadDrift(manifest);
-    const next = `DRIFT-${String(1 + Math.max(0, ...ledger.map((d4) => Number(/^DRIFT-(\d+)$/.exec(d4.id)?.[1] ?? 0)))).padStart(3, "0")}`;
-    editYaml(inside(manifest, manifest.drift), "# Approved drift: each entry names the person who approved it.\ndrift: []\n", (doc) => {
-      seqAt(doc, "drift").add(doc.createNode({ id: next, case: p4.case, where: p4.where, reason: p4.reason, approved_by: who, date }));
-    });
-    applied = `${next} in ${manifest.drift}`;
-  }
-  if (p4.kind === "known_issue") {
-    const ledger = loadKnownIssues(manifest);
-    const next = p4.issue_id ?? `KNOWN-${String(1 + Math.max(0, ...ledger.map((k2) => Number(/^KNOWN-(\d+)$/.exec(k2.id)?.[1] ?? 0)))).padStart(3, "0")}`;
-    if (ledger.some((k2) => k2.id === next))
-      throw new ManifestError(`The ledger already holds ${next}. Nothing was applied.`);
-    editYaml(inside(manifest, manifest.known_issues), KNOWN_ISSUES_HEADER, (doc) => {
-      seqAt(doc, "known_issues").add(doc.createNode({ id: next, case: p4.case, fails: p4.fails, reason: p4.reason, accepted_by: who, date, ...p4.target ? { target: p4.target } : {} }));
-    });
-    applied = `${next} in ${manifest.known_issues}`;
-  }
-  if (p4.kind === "defect")
-    applied = "listed by `cmtk defects compare`";
-  if (p4.kind === "locator") {
-    const { full, raw, doc } = readScript(manifest, p4.script);
-    const step = doc.steps[p4.step - 1];
-    const now = actionOf(step, p4.target);
-    if (!now || JSON.stringify(now.locator) !== JSON.stringify(p4.was))
-      throw new ManifestError(`Step ${p4.step} of ${p4.script} changed after this was proposed. Nothing was applied.`);
-    step.on = { ...step.on ?? {}, [p4.target]: { ...step.on?.[p4.target] ?? {}, [now.action]: p4.locator } };
-    doc.recorded = { ...doc.recorded ?? {}, repairs: [...doc.recorded?.repairs ?? [], { step: p4.step, target: p4.target, was: p4.was, now: p4.locator, accepted_by: who, date }] };
-    let out = JSON.stringify(doc, null, 2) + "\n";
-    if (raw.includes("\r\n"))
-      out = out.replace(/\n/g, "\r\n");
-    fs6.writeFileSync(full, out, "utf8");
-    applied = `step ${p4.step} of ${p4.script} on ${p4.target}`;
-  }
-  if (p4.kind === "expectation") {
-    const { file } = caseFileOf(manifest, p4.case);
-    editYaml(file, "", (doc) => {
-      const { node } = caseNode(doc, p4.case);
-      node.set("expect", doc.createNode(p4.expect));
-      node.delete("expect_draft");
-      node.set("expect_changed_by", who);
-      node.set("expect_changed_on", date);
-    });
-    applied = `case ${p4.case} now expects the proposed block`;
-  }
-  setStatus(manifest, id, { status: "accepted", decided_by: who, decided_on: date, applied, ...note ? { decision_note: note } : {} });
-  return { ...p4, status: "accepted", decided_by: who, decided_on: date, applied };
-}
-function acceptDraft(manifest, caseId, person, date, shown2) {
-  const who = text(person, "Your name", 100);
-  const { c: c4, file } = caseFileOf(manifest, caseId);
-  if (!c4.draft)
-    throw new ManifestError(`${caseId} is not a draft.`);
-  if (shown2 && JSON.stringify(c4) !== JSON.stringify(shown2))
-    throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was accepted; run \`cmtk review\` again.`);
-  editYaml(file, "", (doc) => {
-    const { node } = caseNode(doc, caseId);
-    node.delete("draft");
-    node.delete("draft_note");
-    if (c4.draft_note)
-      node.set("note", c4.draft_note);
-    node.set("accepted_by", who);
-    node.set("accepted_on", date);
-    if (c4.expect_draft) {
-      node.delete("expect_draft");
-      node.set("expect_confirmed_by", who);
-      node.set("expect_confirmed_on", date);
-    }
-  });
-}
-function confirmExpectation(manifest, caseId, person, date, shown2) {
-  const who = text(person, "Your name", 100);
-  const { c: c4, file } = caseFileOf(manifest, caseId);
-  if (!c4.expect_draft)
-    throw new ManifestError(`${caseId} has no drafted expectation.`);
-  if (shown2 && JSON.stringify(c4) !== JSON.stringify(shown2))
-    throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was confirmed; run \`cmtk review\` again.`);
-  editYaml(file, "", (doc) => {
-    const { node } = caseNode(doc, caseId);
-    node.delete("expect_draft");
-    node.delete("draft_note");
-    if (c4.draft_note)
-      node.set("note", c4.draft_note);
-    node.set("expect_confirmed_by", who);
-    node.set("expect_confirmed_on", date);
-  });
-}
-function rejectExpectation(manifest, caseId, person, date, reason, shown2) {
-  const who = text(person, "Your name", 100);
-  const why = text(reason, "A reason", 1e3);
-  const { c: c4, file } = caseFileOf(manifest, caseId);
-  if (!c4.expect_draft)
-    throw new ManifestError(`${caseId} has no drafted expectation.`);
-  if (shown2 && JSON.stringify(c4) !== JSON.stringify(shown2))
-    throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was changed; run \`cmtk review\` again.`);
-  const rejected = inside(manifest, path5.join(path5.dirname(manifest.proposals), "rejected.yaml"));
-  editYaml(rejected, "# Draft cases a person rejected, with the reason. Kept so the same draft is not proposed again.\nrejected: []\n", (doc) => {
-    seqAt(doc, "rejected").add(doc.createNode({ id: c4.id, expect: c4.expect, rejected_by: who, rejected_on: date, rejected_because: why }));
-  });
-  editYaml(file, "", (doc) => {
-    const { node } = caseNode(doc, caseId);
-    node.delete("expect");
-    node.delete("expect_draft");
-    node.delete("draft_note");
-  });
-}
-function rejectDraft(manifest, caseId, person, date, reason) {
-  const who = text(person, "Your name", 100);
-  const why = text(reason, "A reason", 1e3);
-  const { c: c4, file } = caseFileOf(manifest, caseId);
-  if (!c4.draft)
-    throw new ManifestError(`${caseId} is not a draft.`);
-  const { file: _f, ...kept } = c4;
-  const rejected = inside(manifest, path5.join(path5.dirname(manifest.proposals), "rejected.yaml"));
-  editYaml(rejected, "# Draft cases a person rejected, with the reason. Kept so the same draft is not proposed again.\nrejected: []\n", (doc) => {
-    seqAt(doc, "rejected").add(doc.createNode({ ...kept, rejected_by: who, rejected_on: date, rejected_because: why }));
-  });
-  editYaml(file, "", (doc) => {
-    const { seq, index } = caseNode(doc, caseId);
-    seq.items.splice(index, 1);
-  });
-}
-
-// packages/core/dist/defects.js
-var REMOVED = "[removed]";
-function redactor(manifest) {
-  const known = Object.values(manifest.headers_from_env).map((v2) => process.env[v2]).filter((v2) => !!v2 && v2.length >= 4);
-  return (s4) => {
-    let out = s4;
-    for (const v2 of known)
-      out = out.split(v2).join(REMOVED);
-    return out.replace(/\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]{8,}/g, `$1 ${REMOVED}`).replace(/\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]+/g, REMOVED).replace(/\b(sk|pk|rk)_(live|test)_[A-Za-z0-9]{8,}/g, REMOVED);
-  };
-}
-var norm = (where2) => where2.replace(/\[\d+\]/g, "[*]");
-function whyOf(c4) {
-  const note = (c4?.note ?? c4?.draft_note)?.trim();
-  if (!note)
-    return void 0;
-  const line2 = /^Why it looks wrong:\s*(.+)$/im.exec(note)?.[1]?.trim();
-  return (line2 ?? note).slice(0, 1e3);
-}
-function cleanPath(p4, clean2) {
-  const q2 = p4.indexOf("?");
-  if (q2 < 0)
-    return clean2(p4);
-  const params = new URLSearchParams(p4.slice(q2 + 1));
-  for (const k2 of [...new Set(params.keys())])
-    if (looksSecret(k2))
-      params.set(k2, REMOVED);
-  return clean2(`${p4.slice(0, q2)}?${params.toString()}`);
-}
-function cleanUrl(u4) {
-  try {
-    const url = new URL(u4);
-    if (!url.username && !url.password)
-      return u4;
-    url.username = "";
-    url.password = "";
-    return url.toString().replace(/\/$/, "");
-  } catch {
-    return u4.replace(/\/\/[^/@]*@/, "//");
-  }
-}
-function stepsFor(c4, target2, clean2) {
-  if (!c4)
-    return ["(the case is no longer in the case files)"];
-  const headers = Object.entries(c4.request.headers ?? {}).map(([k2, v2]) => `${k2}: ${looksSecret(k2, "header") ? REMOVED : clean2(v2)}`);
-  const contentType = Object.entries(c4.request.headers ?? {}).find(([k2]) => k2.toLowerCase() === "content-type")?.[1] ?? "";
-  return [
-    `Send \`${c4.request.method} ${cleanPath(c4.request.path, clean2)}\` to ${target2}${c4.surface && c4.surface !== "http" ? ` through the ${c4.surface} adapter` : ""}.`,
-    ...headers.length ? [`With headers: ${headers.join("; ")}.`] : [],
-    ...c4.request.body ? [`With the body: ${clean2(redactBody(String(c4.request.body), contentType)[0]).slice(0, 500)}`] : [],
-    ...c4.request.body_file ? [`With the body from the file \`${c4.request.body_file}\`.`] : [],
-    ...typeof c4.request.body_form === "string" ? [`As a form (application/x-www-form-urlencoded), the fields from \`${c4.request.body_form}\`.`] : c4.request.body_form ? [`As a form (application/x-www-form-urlencoded) with the fields: ${clean2(Object.entries(c4.request.body_form).map(([k2, v2]) => `${k2}=${looksSecret(k2) ? REMOVED : JSON.stringify(v2)}`).join(", ")).slice(0, 500)}`] : [],
-    ...c4.request.files?.length ? [`With the files: ${c4.request.files.map((f4) => `${f4.field} = \`${f4.path}\``).join(", ")}.`] : [],
-    ...c4.request.before ? [`Before it, read \`GET ${cleanPath(c4.request.before.get, clean2)}\` on the same target and carry its cookies${c4.request.before.take ? `, with ${Object.entries(c4.request.before.take).map(([k2, s4]) => `${k2} taken from \`${s4}\``).join(", ")} into the form` : ""}.`] : []
-  ];
-}
-var fieldOf = (c4) => /^(\$(?:\.[A-Za-z_][\w]*|\[\d+\]|\[\*\])*)\b/.exec(c4?.name ?? "")?.[1];
-function draftDefects(manifest, mode) {
-  const dir = inside(manifest, path6.join(manifest.evidence, mode));
-  const reportFile = path6.join(dir, "REPORT.json");
-  if (!fs7.existsSync(reportFile))
-    throw new ManifestError(`There is no ${mode} report yet. Run \`cmtk ${mode}\` first.`);
-  const report = JSON.parse(fs7.readFileSync(reportFile, "utf8"));
-  const clean2 = redactor(manifest);
-  const cases = new Map(loadCases(manifest).map((c4) => [c4.id, c4]));
-  const [targetName, targetWhere] = Object.entries(report.targets).at(-1) ?? ["the target", ""];
-  const target2 = `${targetName}${targetWhere ? ` (${clean2(cleanUrl(targetWhere))})` : ""}`;
-  const groups = /* @__PURE__ */ new Map();
-  for (const c4 of report.cases) {
-    if (mode === "run" && c4.result === "FAIL" && !c4.known_issues) {
-      const f4 = c4.failures ?? [];
-      const key2 = f4.map((x2) => `${norm(x2.check)}|${x2.expected}|${x2.actual}`).join("\n") + (fieldOf(cases.get(c4.id)) ? `
-field:${fieldOf(cases.get(c4.id))}` : "");
-      const g3 = groups.get(key2) ?? {
-        title: f4.length === 1 ? `${f4[0].check}: expected ${f4[0].expected}, got ${f4[0].actual}` : `${f4.length} checks fail, first ${f4[0]?.check}: expected ${f4[0]?.expected}, got ${f4[0]?.actual}`,
-        ids: [],
-        expected: f4.map((x2) => `- \`${x2.check}\`: ${x2.expected}`).join("\n"),
-        actual: f4.map((x2) => `- \`${x2.check}\`: ${x2.actual}`).join("\n")
-      };
-      g3.ids.push(c4.id);
-      groups.set(key2, g3);
-    }
-    if (mode === "compare" && c4.result === "DIFFERENT") {
-      const open = (c4.differences ?? []).filter((d4) => !d4.drift);
-      const key2 = [...new Set(open.map((d4) => norm(d4.where)))].sort().join("\n");
-      const first = open[0];
-      const g3 = groups.get(key2) ?? {
-        title: open.length === 1 ? `${first.where} differs from the reference: ${first.reference} vs ${first.candidate}` : `${open.length} differences from the reference, first at ${first.where}`,
-        ids: [],
-        expected: open.map((d4) => `- \`${d4.where}\`: ${d4.reference} (as the reference answers)`).join("\n"),
-        actual: open.map((d4) => `- \`${d4.where}\`: ${d4.candidate}`).join("\n")
-      };
-      g3.ids.push(c4.id);
-      groups.set(key2, g3);
-    }
-  }
-  const answer = (id) => mode === "run" ? [`answers/${id}.json`] : [`answers/${id}.reference.json`, `answers/${id}.candidate.json`];
-  const named = (ids) => {
-    const names = ids.map((id) => cases.get(id)?.name?.trim());
-    if (names.every((n3) => n3 && n3 === names[0]))
-      return names[0];
-    const field = fieldOf(cases.get(ids[0]));
-    if (field && ids.every((id) => fieldOf(cases.get(id)) === field))
-      return `${field}: ${names.filter(Boolean).map((n3) => n3.replace(/^\$[^ ]* ?/, "")).join("; ")}`;
-    return void 0;
-  };
-  const drafts = [...groups.values()].map((g3, i8) => ({
-    id: `D-${String(i8 + 1).padStart(2, "0")}`,
-    title: clean2(named(g3.ids) ?? g3.title).slice(0, 200) + (g3.ids.length > 1 ? ` (${g3.ids.length} cases)` : ""),
-    requirements: [...new Set(g3.ids.flatMap((id) => report.cases.find((c4) => c4.id === id)?.requirement ?? []))],
-    cases: g3.ids,
-    steps: stepsFor(cases.get(g3.ids[0]), target2, clean2),
-    ...whyOf(cases.get(g3.ids[0])) ? { why: clean2(whyOf(cases.get(g3.ids[0]))) } : {},
-    expected: clean2(g3.expected),
-    actual: clean2(g3.actual),
-    evidence: g3.ids.flatMap(answer),
-    source: mode
-  }));
-  if (mode === "compare") {
-    for (const p4 of loadProposals(manifest).filter((x2) => x2.kind === "defect" && x2.status === "accepted")) {
-      drafts.push({
-        id: `D-${String(drafts.length + 1).padStart(2, "0")}`,
-        title: clean2(p4.title ?? p4.id),
-        requirements: [],
-        cases: p4.cases ?? [],
-        steps: stepsFor(cases.get(p4.cases?.[0] ?? ""), target2, clean2),
-        expected: "(see the summary)",
-        actual: clean2(p4.summary ?? p4.reason),
-        evidence: (p4.cases ?? []).flatMap(answer),
-        source: "triage"
-      });
-    }
-  }
-  const L2 = [
-    `# Draft defects: ${report.system}`,
-    "",
-    `From \`cmtk ${mode}\` on ${report.date} (verdict ${report.verdict}). Each draft groups the cases that fail the same way.`,
-    "A person checks each one and files it. Nothing here has been filed.",
-    ""
-  ];
-  for (const d4 of drafts) {
-    L2.push(`## ${d4.id}: ${d4.title}`, "", `- Requirements: ${d4.requirements.join(", ") || "(none named)"}`, `- Cases: ${d4.cases.join(", ")}`, `- Found by: ${d4.source === "triage" ? "triage of a comparison, accepted by a person" : `\`cmtk ${mode}\``} on ${report.date}`, "", "### Steps to reproduce", "", ...d4.steps.map((s4, i8) => `${i8 + 1}. ${s4}`), "", ...d4.why ? ["### Why it matters", "", d4.why, ""] : [], "### Expected", "", d4.expected, "", "### Actual", "", d4.actual, "", "### Evidence", "", ...d4.evidence.map((e6) => `- \`${path6.join(path6.relative(manifest.root, dir), e6).split(path6.sep).join("/")}\``), "");
-  }
-  if (!drafts.length)
-    L2.push("No defects: nothing failed.", "");
-  fs7.writeFileSync(path6.join(dir, "DEFECTS.md"), L2.join("\n"), "utf8");
-  fs7.writeFileSync(path6.join(dir, "DEFECTS.json"), JSON.stringify(drafts, null, 2) + "\n", "utf8");
-  return { file: path6.relative(manifest.root, path6.join(dir, "DEFECTS.md")), drafts };
-}
-
-// packages/core/dist/diff.js
-var import_xmldom = __toESM(require_lib(), 1);
-
-// packages/core/dist/journey.js
-var words = (c4) => !c4 ? "(missing)" : c4.passed ? "passed" : `failed${c4.expected !== void 0 || c4.actual !== void 0 ? `: expected ${c4.expected ?? "(not given)"}, got ${c4.actual ?? "(not given)"}` : ""}`;
-var count = (list) => {
-  const m4 = /* @__PURE__ */ new Map();
-  for (const x2 of list)
-    m4.set(x2, (m4.get(x2) ?? 0) + 1);
-  return m4;
-};
-function diffJourney(a4, b2, sc) {
-  if (!a4 || !b2)
-    return [{ where: "journey", reference: a4 ? "(reported)" : "(no journey reported)", candidate: b2 ? "(reported)" : "(no journey reported)" }];
-  const x2 = scrubJson(a4, sc), y2 = scrubJson(b2, sc);
-  const empty = (j2) => !j2.checks?.length && !Object.keys(j2.values ?? {}).length && !(j2.pages ?? []).some((p4) => p4.name);
-  if (empty(x2) || empty(y2))
-    return [{ where: "journey", reference: empty(x2) ? "(no checks, values or named pages)" : "(reported)", candidate: empty(y2) ? "(no checks, values or named pages)" : "(reported)" }];
-  const out = [];
-  if (x2.goal !== y2.goal)
-    out.push({ where: "journey:goal", reference: x2.goal, candidate: y2.goal });
-  const cx = new Map((x2.checks ?? []).map((c4) => [c4.name, c4])), cy = new Map((y2.checks ?? []).map((c4) => [c4.name, c4]));
-  for (const name of /* @__PURE__ */ new Set([...cx.keys(), ...cy.keys()])) {
-    const p4 = cx.get(name), q2 = cy.get(name);
-    if (p4?.passed !== q2?.passed)
-      out.push({ where: `journey:check:${name}`, reference: words(p4), candidate: words(q2) });
-  }
-  const vx = x2.values ?? {}, vy = y2.values ?? {};
-  for (const name of /* @__PURE__ */ new Set([...Object.keys(vx), ...Object.keys(vy)])) {
-    const p4 = vx[name], q2 = vy[name];
-    if ((p4 ?? null) !== (q2 ?? null) || name in vx !== name in vy)
-      out.push({ where: `journey:value:${name}`, reference: name in vx ? String(p4 ?? "(not shown)") : "(missing)", candidate: name in vy ? String(q2 ?? "(not shown)") : "(missing)" });
-  }
-  const px = (x2.pages ?? []).flatMap((p4) => p4.name ? [p4.name] : []), py = (y2.pages ?? []).flatMap((p4) => p4.name ? [p4.name] : []);
-  for (const name of /* @__PURE__ */ new Set([...px, ...py])) {
-    if (px.includes(name) !== py.includes(name))
-      out.push({ where: `journey:page:${name}`, reference: px.includes(name) ? "reached" : "(not reached)", candidate: py.includes(name) ? "reached" : "(not reached)" });
-  }
-  const common = (l4, other) => l4.filter((n3) => other.includes(n3));
-  if (common(px, py).join("\n") !== common(py, px).join("\n"))
-    out.push({ where: "journey:pages", reference: common(px, py).join(" > "), candidate: common(py, px).join(" > ") });
-  if (x2.api_compared || y2.api_compared) {
-    const ax = count(x2.api_compared ?? []), ay = count(y2.api_compared ?? []);
-    for (const call of /* @__PURE__ */ new Set([...ax.keys(), ...ay.keys()])) {
-      if ((ax.get(call) ?? 0) !== (ay.get(call) ?? 0))
-        out.push({ where: `journey:api:${call}`, reference: `${ax.get(call) ?? 0} time(s)`, candidate: `${ay.get(call) ?? 0} time(s)` });
-    }
-  }
-  return out;
-}
-
-// packages/core/dist/structure.js
-import zlib2 from "node:zlib";
-var line = (s4) => String(s4 ?? "").replace(/[\u0000-\u001f\u007f-\u009f]+/g, " ").replace(/\s+/g, " ").trim();
-var label = (e6) => `${line(e6.role)}${e6.name ? ` ${JSON.stringify(clip(line(e6.name)))}` : ""}`;
-function keyed(elements, sc) {
-  const seen = /* @__PURE__ */ new Map();
-  return elements.map((raw) => {
-    const e6 = { ...raw, name: scrubText(line(raw.name), sc), ...raw.value !== void 0 ? { value: scrubText(line(raw.value), sc) } : {} };
-    const base2 = label(e6);
-    const n3 = (seen.get(base2) ?? 0) + 1;
-    seen.set(base2, n3);
-    return { key: n3 === 1 ? base2 : `${base2} [${n3}]`, e: e6 };
-  });
-}
-function inOrder(a4, b2) {
-  if (a4.length * b2.length > 25e6)
-    return void 0;
-  const t3 = Array.from({ length: a4.length + 1 }, () => new Uint32Array(b2.length + 1));
-  for (let i9 = a4.length - 1; i9 >= 0; i9--) {
-    for (let j3 = b2.length - 1; j3 >= 0; j3--) {
-      t3[i9][j3] = a4[i9] === b2[j3] ? t3[i9 + 1][j3 + 1] + 1 : Math.max(t3[i9 + 1][j3], t3[i9][j3 + 1]);
-    }
-  }
-  const kept = /* @__PURE__ */ new Set();
-  let i8 = 0, j2 = 0;
-  while (i8 < a4.length && j2 < b2.length) {
-    if (a4[i8] === b2[j2]) {
-      kept.add(a4[i8]);
-      i8++;
-      j2++;
-    } else if (t3[i8 + 1][j2] >= t3[i8][j2 + 1])
-      i8++;
-    else
-      j2++;
-  }
-  return kept;
-}
-var FACTS = ["level", "value", "required", "disabled", "checked", "readonly"];
-function diffPage(page, a4, b2, sc, out) {
-  const where2 = (what) => `structure:${page} ${what}`;
-  const x2 = keyed(a4, sc), y2 = keyed(b2, sc);
-  const mx = new Map(x2.map((v2) => [v2.key, v2.e])), my = new Map(y2.map((v2) => [v2.key, v2.e]));
-  for (const { key: key2 } of x2)
-    if (!my.has(key2))
-      out.push({ where: where2(key2), reference: "(element)", candidate: "(missing)" });
-  for (const { key: key2 } of y2)
-    if (!mx.has(key2))
-      out.push({ where: where2(key2), reference: "(missing)", candidate: "(element)" });
-  for (const { key: key2, e: e6 } of x2) {
-    const other = my.get(key2);
-    if (!other)
-      continue;
-    for (const f4 of FACTS) {
-      if (String(e6[f4] ?? "") !== String(other[f4] ?? ""))
-        out.push({ where: where2(`${key2} ${f4}`), reference: String(e6[f4] ?? "(none)"), candidate: String(other[f4] ?? "(none)") });
-    }
-  }
-  const cx = x2.map((v2) => v2.key).filter((k2) => my.has(k2)), cy = y2.map((v2) => v2.key).filter((k2) => mx.has(k2));
-  if (cx.join("\n") === cy.join("\n"))
-    return;
-  const kept = inOrder(cx, cy);
-  if (!kept) {
-    out.push({ where: where2("order"), reference: `${cx.length} elements`, candidate: "in another order" });
-    return;
-  }
-  const before = (list, key2) => {
-    const i8 = list.indexOf(key2);
-    return i8 > 0 ? `after ${list[i8 - 1]}` : "first";
-  };
-  for (const key2 of cx)
-    if (!kept.has(key2))
-      out.push({ where: where2(`${key2} (moved)`), reference: before(cx, key2), candidate: before(cy, key2) });
-}
-function diffStructure(a4, b2, sc) {
-  const empty = (s4) => !s4?.pages?.length || s4.pages.every((p4) => !p4.elements?.length);
-  if (empty(a4) || empty(b2))
-    return [{ where: "structure", reference: empty(a4) ? "(no structure reported)" : "(reported)", candidate: empty(b2) ? "(no structure reported)" : "(reported)" }];
-  const out = [];
-  const byPage = (s4) => new Map(s4.map((p4) => [line(p4.page), p4.elements ?? []]));
-  const pa = byPage(a4.pages), pb = byPage(b2.pages);
-  for (const page of /* @__PURE__ */ new Set([...pa.keys(), ...pb.keys()])) {
-    const ea = pa.get(page), eb = pb.get(page);
-    if (!ea || !eb) {
-      out.push({ where: `structure:${page}`, reference: ea ? "(page)" : "(missing)", candidate: eb ? "(page)" : "(missing)" });
-      continue;
-    }
-    diffPage(page, ea, eb, sc, out);
-  }
-  return out;
-}
-function decodePng(png) {
-  if (png.length < 33 || png.subarray(1, 4).toString("latin1") !== "PNG")
-    throw new Error("not a PNG");
-  let at2 = 8, width = 0, height = 0, depth = 0, colour = 0, interlace = 0;
-  const idat = [];
-  while (at2 + 8 <= png.length) {
-    const size = png.readUInt32BE(at2);
-    const type = png.subarray(at2 + 4, at2 + 8).toString("latin1");
-    const data = png.subarray(at2 + 8, at2 + 8 + size);
-    if (type === "IHDR") {
-      width = data.readUInt32BE(0);
-      height = data.readUInt32BE(4);
-      depth = data[8];
-      colour = data[9];
-      interlace = data[12];
-    }
-    if (type === "IDAT")
-      idat.push(data);
-    if (type === "IEND")
-      break;
-    at2 += size + 12;
-  }
-  const channels = { 0: 1, 2: 3, 4: 2, 6: 4 }[colour];
-  if (depth !== 8 || !channels || interlace)
-    throw new Error(`a PNG this reader does not handle (depth ${depth}, colour type ${colour}, interlace ${interlace})`);
-  const raw = zlib2.inflateSync(Buffer.concat(idat));
-  const stride = width * channels;
-  if (raw.length < (stride + 1) * height)
-    throw new Error("a PNG with too little data");
-  const rgba = new Uint8Array(width * height * 4);
-  let prev = new Uint8Array(stride);
-  for (let y2 = 0; y2 < height; y2++) {
-    const filter = raw[y2 * (stride + 1)];
-    const row = Uint8Array.from(raw.subarray(y2 * (stride + 1) + 1, (y2 + 1) * (stride + 1)));
-    for (let i8 = 0; i8 < stride; i8++) {
-      const left = i8 >= channels ? row[i8 - channels] : 0, up = prev[i8], corner = i8 >= channels ? prev[i8 - channels] : 0;
-      let add = 0;
-      if (filter === 1)
-        add = left;
-      else if (filter === 2)
-        add = up;
-      else if (filter === 3)
-        add = left + up >> 1;
-      else if (filter === 4) {
-        const p4 = left + up - corner, pa = Math.abs(p4 - left), pb = Math.abs(p4 - up), pc = Math.abs(p4 - corner);
-        add = pa <= pb && pa <= pc ? left : pb <= pc ? up : corner;
-      }
-      row[i8] = row[i8] + add & 255;
-    }
-    for (let px = 0; px < width; px++) {
-      const o4 = (y2 * width + px) * 4, s4 = px * channels;
-      if (channels <= 2) {
-        rgba[o4] = rgba[o4 + 1] = rgba[o4 + 2] = row[s4];
-        rgba[o4 + 3] = channels === 2 ? row[s4 + 1] : 255;
-      } else {
-        rgba[o4] = row[s4];
-        rgba[o4 + 1] = row[s4 + 1];
-        rgba[o4 + 2] = row[s4 + 2];
-        rgba[o4 + 3] = channels === 4 ? row[s4 + 3] : 255;
-      }
-    }
-    prev = row;
-  }
-  return { width, height, rgba };
-}
-var CHANNEL_SLACK = 16;
-function diffPicture(a4, b2) {
-  let changed = 0, left = a4.width, top = a4.height, right = -1, bottom = -1;
-  for (let y2 = 0; y2 < a4.height; y2++) {
-    for (let x2 = 0; x2 < a4.width; x2++) {
-      const o4 = (y2 * a4.width + x2) * 4;
-      let same = true;
-      for (let c4 = 0; c4 < 4 && same; c4++)
-        same = Math.abs(a4.rgba[o4 + c4] - b2.rgba[o4 + c4]) <= CHANNEL_SLACK;
-      if (same)
-        continue;
-      changed++;
-      if (x2 < left)
-        left = x2;
-      if (x2 > right)
-        right = x2;
-      if (y2 < top)
-        top = y2;
-      if (y2 > bottom)
-        bottom = y2;
-    }
-  }
-  return { changed, box: `x ${left}, y ${top}, ${right - left + 1} by ${bottom - top + 1}` };
-}
-function diffScreens(a4, b2, tolerance = 0) {
-  if (!a4?.length || !b2?.length)
-    return [{ where: "visual", reference: a4?.length ? "(reported)" : "(no screenshot reported)", candidate: b2?.length ? "(reported)" : "(no screenshot reported)" }];
-  const out = [];
-  const pa = new Map(a4.map((s4) => [line(s4.page), s4])), pb = new Map(b2.map((s4) => [line(s4.page), s4]));
-  for (const page of /* @__PURE__ */ new Set([...pa.keys(), ...pb.keys()])) {
-    const sa = pa.get(page), sb = pb.get(page);
-    if (!sa || !sb) {
-      out.push({ where: `visual:${page}`, reference: sa ? "(screenshot)" : "(missing)", candidate: sb ? "(screenshot)" : "(missing)" });
-      continue;
-    }
-    if (sa.png_base64 === sb.png_base64)
-      continue;
-    let x2, y2;
-    try {
-      x2 = decodePng(Buffer.from(sa.png_base64, "base64"));
-      y2 = decodePng(Buffer.from(sb.png_base64, "base64"));
-    } catch (err) {
-      out.push({ where: `visual:${page}`, reference: "the screenshots differ", candidate: `and could not be read to say how: ${err.message}` });
-      continue;
-    }
-    if (x2.width !== y2.width || x2.height !== y2.height) {
-      out.push({ where: `visual:${page} size`, reference: `${x2.width} by ${x2.height}`, candidate: `${y2.width} by ${y2.height}` });
-      continue;
-    }
-    const { changed, box } = diffPicture(x2, y2);
-    const share2 = changed / Math.max(1, x2.width * x2.height);
-    if (changed > 0 && share2 > tolerance)
-      out.push({ where: `visual:${page}`, reference: `${x2.width} by ${x2.height}`, candidate: `${(share2 * 100).toFixed(2)}% of pixels changed, within ${box}` });
-  }
-  return out;
-}
-
-// packages/core/dist/diff.js
-var SCRUBBED = "<scrubbed>";
-var ConfigError = class extends Error {
-};
-function scrubberOf(manifest, hits) {
-  const s4 = manifest.scrub;
-  const regex2 = (s4.regex ?? []).map((r6) => {
-    try {
-      return { rx: new RegExp(r6.pattern, "g"), replace: r6.replace ?? SCRUBBED };
-    } catch (err) {
-      throw new ConfigError(`scrub.regex ${JSON.stringify(r6.pattern)} is not a valid regular expression: ${err.message}`);
-    }
-  });
-  return { jsonPaths: (s4.json_paths ?? []).map(parsePath), xmlIgnore: new Set(s4.xml_ignore ?? []), regex: regex2, ...hits ? { hits, jsonLabels: (s4.json_paths ?? []).map((p4) => `json_path ${p4}`) } : {} };
-}
-var hit = (sc, label2, by = 1) => {
-  if (sc.hits && by)
-    sc.hits.set(label2, (sc.hits.get(label2) ?? 0) + by);
-};
-var scrubText = (text2, sc) => sc.regex.reduce((t3, r6) => {
-  if (sc.hits)
-    hit(sc, `regex ${r6.rx.source}`, t3.match(r6.rx)?.length ?? 0);
-  return t3.replace(r6.rx, r6.replace);
-}, text2);
-function scrubJson(value, sc, at2 = []) {
-  if (at2.length > 0) {
-    const n3 = sc.jsonPaths.findIndex((p4) => matches(p4, at2));
-    if (n3 >= 0) {
-      if (sc.jsonLabels)
-        hit(sc, sc.jsonLabels[n3]);
-      return SCRUBBED;
-    }
-  }
-  if (value instanceof JsonNumber)
-    return value;
-  if (Array.isArray(value))
-    return value.map((v2, i8) => scrubJson(v2, sc, [...at2, i8]));
-  if (value instanceof JsonObject)
-    return new JsonObject(entriesOf(value).map(([k2, v2]) => [k2, scrubJson(v2, sc, [...at2, k2])]));
-  if (isJsonObject(value))
-    return Object.fromEntries(entriesOf(value).map(([k2, v2]) => [k2, scrubJson(v2, sc, [...at2, k2])]));
-  return typeof value === "string" ? scrubText(value, sc) : value;
-}
-function short(v2, limit = 80) {
-  return clip(v2 === void 0 ? "(missing)" : JSON.stringify(v2) ?? String(v2), limit);
-}
-var clip = (s4, limit = 80) => s4.length <= limit ? s4 : `${s4.slice(0, limit - 1)}\u2026`;
-function shortPair(a4, b2, limit = 80) {
-  if (a4.length <= limit && b2.length <= limit || a4 === b2)
-    return [clip(a4, limit), clip(b2, limit)];
-  let n3 = 0;
-  while (n3 < a4.length && n3 < b2.length && a4[n3] === b2[n3])
-    n3++;
-  if (n3 < limit - 20)
-    return [clip(a4, limit), clip(b2, limit)];
-  const from = n3 - 20;
-  const cut = (s4) => `\u2026${s4.slice(from, from + limit - 2)}${s4.length > from + limit - 2 ? "\u2026" : ""}`;
-  return [cut(a4), cut(b2)];
-}
-var show = (v2) => v2 === void 0 ? "(missing)" : v2 instanceof JsonNumber ? v2.source : JSON.stringify(v2) ?? String(v2);
-function diffJson(a4, b2, semantic, at2 = [], out = []) {
-  if (a4 instanceof JsonNumber && b2 instanceof JsonNumber) {
-    const same = semantic ? a4.canonical === b2.canonical : a4.source === b2.source;
-    if (!same)
-      out.push({ where: render(at2), reference: a4.source, candidate: b2.source });
-    return out;
-  }
-  if (isJsonObject(a4) && isJsonObject(b2)) {
-    const ea = entriesOf(a4), eb = entriesOf(b2);
-    const ma = new Map(ea), mb = new Map(eb);
-    for (const [k2, v2] of ea)
-      if (!mb.has(k2))
-        out.push({ where: render([...at2, k2]), reference: clip(show(v2)), candidate: "(missing)" });
-    for (const [k2, v2] of eb)
-      if (!ma.has(k2))
-        out.push({ where: render([...at2, k2]), reference: "(missing)", candidate: clip(show(v2)) });
-    for (const [k2, v2] of ea)
-      if (mb.has(k2))
-        diffJson(v2, mb.get(k2), semantic, [...at2, k2], out);
-    const ka = ea.map(([k2]) => k2), kb = eb.map(([k2]) => k2);
-    if (!semantic && ka.length === kb.length && ka.every((k2) => mb.has(k2)) && ka.some((k2, i8) => k2 !== kb[i8])) {
-      const [ra, rb] = shortPair(`key order ${ka.join(",")}`, `key order ${kb.join(",")}`);
-      out.push({ where: render(at2), reference: ra, candidate: rb });
-    }
-    return out;
-  }
-  if (Array.isArray(a4) && Array.isArray(b2)) {
-    for (let i8 = 0; i8 < Math.max(a4.length, b2.length); i8++) {
-      if (i8 >= a4.length)
-        out.push({ where: render([...at2, i8]), reference: "(missing)", candidate: clip(show(b2[i8])) });
-      else if (i8 >= b2.length)
-        out.push({ where: render([...at2, i8]), reference: clip(show(a4[i8])), candidate: "(missing)" });
-      else
-        diffJson(a4[i8], b2[i8], semantic, [...at2, i8], out);
-    }
-    return out;
-  }
-  const sa = show(a4), sb = show(b2);
-  if (kindOf(a4) !== kindOf(b2) || sa !== sb) {
-    const [ra, rb] = shortPair(sa, sb);
-    out.push({ where: render(at2), reference: ra, candidate: rb });
-  }
-  return out;
-}
-var kindOf = (v2) => v2 === null ? "null" : v2 instanceof JsonNumber ? "number" : Array.isArray(v2) ? "array" : isJsonObject(v2) ? "object" : typeof v2;
-function parseXml(text2) {
-  const errors = [];
-  const doc = new import_xmldom.DOMParser({ onError: (level2, msg) => {
-    if (level2 !== "warning")
-      errors.push(String(msg));
-  } }).parseFromString(text2, "text/xml");
-  const root = doc.documentElement;
-  if (!root || errors.length)
-    throw new Error(errors[0] ?? "no root element");
-  return toNode(root);
-}
-function toNode(el) {
-  const attrs = /* @__PURE__ */ new Map();
-  for (let i8 = 0; i8 < el.attributes.length; i8++) {
-    const a4 = el.attributes.item(i8);
-    if (!a4 || a4.name === "xmlns" || a4.name.startsWith("xmlns:"))
-      continue;
-    attrs.set(`${a4.namespaceURI ? `{${a4.namespaceURI}}` : ""}${a4.localName ?? a4.name}`, a4.value);
-  }
-  const children = [];
-  const texts = [""];
-  for (let n3 = el.firstChild; n3; n3 = n3.nextSibling) {
-    if (n3.nodeType === 1) {
-      children.push(toNode(n3));
-      texts.push("");
-    } else if (n3.nodeType === 3 || n3.nodeType === 4)
-      texts[texts.length - 1] += n3.nodeValue ?? "";
-  }
-  return { ns: el.namespaceURI ?? "", local: el.localName ?? el.nodeName, attrs, children, texts };
-}
-function diffXml(a4, b2, sc, exact = true, at2 = "", out = []) {
-  const here = `${at2}/${a4.local}`;
-  if (a4.ns !== b2.ns || a4.local !== b2.local) {
-    out.push({ where: here, reference: `{${a4.ns}}${a4.local}`, candidate: `{${b2.ns}}${b2.local}` });
-    return out;
-  }
-  if (sc.xmlIgnore.has(a4.local)) {
-    hit(sc, `xml_ignore ${a4.local}`);
-    return out;
-  }
-  for (const k2 of /* @__PURE__ */ new Set([...a4.attrs.keys(), ...b2.attrs.keys()])) {
-    const va = a4.attrs.has(k2) ? scrubText(a4.attrs.get(k2), sc) : "(missing)";
-    const vb = b2.attrs.has(k2) ? scrubText(b2.attrs.get(k2), sc) : "(missing)";
-    if (va !== vb)
-      out.push({ where: `${here}/@${k2.replace(/^\{[^}]*\}/, "")}`, reference: va, candidate: vb });
-  }
-  const leaf = a4.children.length === 0 && b2.children.length === 0;
-  const segments = Math.max(a4.texts.length, b2.texts.length);
-  for (let i8 = 0; i8 < segments; i8++) {
-    let ta = scrubText(a4.texts[i8] ?? "", sc), tb = scrubText(b2.texts[i8] ?? "", sc);
-    if (!leaf || !exact) {
-      ta = ta.trim();
-      tb = tb.trim();
-    }
-    if (ta !== tb) {
-      const [ra, rb] = shortPair(JSON.stringify(ta), JSON.stringify(tb));
-      out.push({ where: leaf ? `${here}/text()` : `${here}/text()[${i8 + 1}]`, reference: ra, candidate: rb });
-    }
-  }
-  for (let i8 = 0; i8 < Math.max(a4.children.length, b2.children.length); i8++) {
-    const ca = a4.children[i8], cb = b2.children[i8];
-    if (!ca && cb)
-      out.push({ where: `${here}/${cb.local}[${i8 + 1}]`, reference: "(missing)", candidate: "(element)" });
-    else if (ca && !cb)
-      out.push({ where: `${here}/${ca.local}[${i8 + 1}]`, reference: "(element)", candidate: "(missing)" });
-    else if (ca && cb)
-      diffXml(ca, cb, sc, exact, here, out);
-  }
-  return out;
-}
-function bodyKind(contentType, body) {
-  const ct2 = (contentType ?? "").toLowerCase();
-  const head = body.trimStart();
-  if (ct2.includes("json") || !ct2 && (head.startsWith("{") || head.startsWith("[")))
-    return "json";
-  if (ct2.includes("xml") || ct2.includes("soap") || !ct2 && head.startsWith("<?xml"))
-    return "xml";
-  return "text";
-}
-var mediaType = (v2) => (v2 ?? "").split(";")[0].trim().toLowerCase();
-function compareObservations(ref, cand, manifest, level2, hits) {
-  const out = [];
-  if (level2 === "journey")
-    return diffJourney(ref.journey, cand.journey, scrubberOf(manifest));
-  if (ref.status !== cand.status)
-    out.push({ where: "status", reference: String(ref.status ?? "(none)"), candidate: String(cand.status ?? "(none)") });
-  if (level2 === "contract")
-    return out;
-  if (level2 === "structure")
-    return out.concat(diffStructure(ref.structure, cand.structure, scrubberOf(manifest)));
-  if (level2 === "visual")
-    return out.concat(diffStructure(ref.structure, cand.structure, scrubberOf(manifest)), diffScreens(ref.screenshots, cand.screenshots, manifest.visual_tolerance));
-  const exact = level2 === "exact";
-  const sc = scrubberOf(manifest, hits);
-  for (const name of manifest.compare_headers ?? []) {
-    const h4 = name.toLowerCase();
-    let va = ref.headers?.[h4], vb = cand.headers?.[h4];
-    if (h4 === "content-type" && !exact) {
-      va = mediaType(va);
-      vb = mediaType(vb);
-    }
-    if ((va ?? "") !== (vb ?? ""))
-      out.push({ where: `header:${h4}`, reference: va || "(missing)", candidate: vb || "(missing)" });
-  }
-  if (ref.effects !== void 0 || cand.effects !== void 0) {
-    const ea = scrubJson(ref.effects ?? {}, sc), eb = scrubJson(cand.effects ?? {}, sc);
-    for (const d4 of diffJson(ea, eb, !exact))
-      out.push({ ...d4, where: d4.where.replace(/^\$/, "effects:$") });
-  }
-  if (exact && (ref.body_encoding ?? "utf-8") !== (cand.body_encoding ?? "utf-8") && ref.body !== void 0 && cand.body !== void 0) {
-    out.push({ where: "body encoding", reference: ref.body_encoding ?? "utf-8", candidate: cand.body_encoding ?? "utf-8" });
-  }
-  const ra = ref.body ?? "", rb = cand.body ?? "";
-  let kind = bodyKind(ref.headers?.["content-type"], ra);
-  if (kind === "json") {
-    try {
-      const ja = scrubJson(parseJsonExact(ra), sc), jb = scrubJson(parseJsonExact(rb), sc);
-      return out.concat(diffJson(ja, jb, !exact));
-    } catch {
-      kind = "text";
-    }
-  }
-  if (kind === "xml") {
-    try {
-      return out.concat(diffXml(parseXml(ra), parseXml(rb), sc, exact));
-    } catch {
-      kind = "text";
-    }
-  }
-  let ta = scrubText(ra, sc), tb = scrubText(rb, sc);
-  if (!exact) {
-    const norm2 = (t3) => t3.trim().split(/\r?\n/).map((l4) => l4.trimEnd()).join("\n");
-    ta = norm2(ta);
-    tb = norm2(tb);
-  }
-  if (ta !== tb) {
-    const la = ta.split("\n"), lb = tb.split("\n");
-    let n3 = 0;
-    while (n3 < Math.min(la.length, lb.length) && la[n3] === lb[n3])
-      n3++;
-    const line2 = (l4) => l4 === void 0 ? "(end)" : JSON.stringify(l4);
-    const [x2, y2] = shortPair(line2(la[n3]), line2(lb[n3]));
-    out.push({ where: `body line ${n3 + 1}`, reference: x2, candidate: y2 });
-  }
-  return out;
-}
-
-// packages/core/dist/drift.js
-function coveringDrift(ledger, caseId, where2) {
-  return ledger.find((d4) => (d4.case === "*" || d4.case === caseId) && covers2(d4.where, where2));
-}
-function covers2(pattern, where2) {
-  for (const prefix of ["", "effects:"]) {
-    if (pattern.startsWith(prefix + "$") && where2.startsWith(prefix + "$")) {
-      try {
-        return matches(parsePath(pattern.slice(prefix.length)), locationOf(where2.slice(prefix.length)));
-      } catch {
-        return false;
-      }
-    }
-  }
-  return starGlob(pattern).test(where2);
-}
-var starGlob = (pattern) => new RegExp(`^${pattern.split("*").map((p4) => p4.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`, "s");
-
-// packages/core/dist/engine.js
-import crypto3 from "node:crypto";
-import fs9 from "node:fs";
-import path8 from "node:path";
-
-// packages/core/dist/contracts.js
-var obj = (v2) => v2 && typeof v2 === "object" && !Array.isArray(v2) ? v2 : {};
-var METHODS = ["get", "put", "post", "delete", "patch", "head", "options"];
-function schemaProps(doc) {
-  const schemas = obj(obj(doc.components).schemas ?? doc.definitions);
-  const out = /* @__PURE__ */ new Map();
-  for (const [name, s4] of Object.entries(schemas)) {
-    const props = /* @__PURE__ */ new Map();
-    for (const [p4, v2] of Object.entries(obj(obj(s4).properties)))
-      props.set(p4, String(obj(v2).type ?? obj(v2).$ref ?? ""));
-    out.set(name, { props, required: new Set(obj(s4).required ?? []) });
-  }
-  return out;
-}
-function diffOpenApi(a4, b2) {
-  const f4 = [];
-  const ops = (d4) => {
-    const m4 = /* @__PURE__ */ new Map();
-    for (const [p4, item] of Object.entries(obj(d4.paths)))
-      for (const [verb, op] of Object.entries(obj(item)))
-        if (METHODS.includes(verb))
-          m4.set(`${verb.toUpperCase()} ${p4}`, obj(op));
-    return m4;
-  };
-  const oa = ops(a4), ob = ops(b2);
-  for (const k2 of [...oa.keys()].filter((k3) => !ob.has(k3)).sort())
-    f4.push({ breaking: true, what: `operation removed: ${k2}` });
-  for (const k2 of [...ob.keys()].filter((k3) => !oa.has(k3)).sort())
-    f4.push({ breaking: false, what: `operation added: ${k2}` });
-  for (const k2 of [...oa.keys()].filter((k3) => ob.has(k3)).sort()) {
-    const pa = /* @__PURE__ */ new Map(), pb = /* @__PURE__ */ new Map();
-    for (const p4 of oa.get(k2).parameters ?? [])
-      pa.set(`${p4.name} (${p4.in})`, p4);
-    for (const p4 of ob.get(k2).parameters ?? [])
-      pb.set(`${p4.name} (${p4.in})`, p4);
-    for (const [n3, p4] of pb)
-      if (!pa.has(n3) && p4.required)
-        f4.push({ breaking: true, what: `${k2}: new required parameter ${n3}` });
-    for (const n3 of pa.keys())
-      if (!pb.has(n3))
-        f4.push({ breaking: true, what: `${k2}: parameter removed ${n3}` });
-    const ra = Object.keys(obj(oa.get(k2).responses)), rb = new Set(Object.keys(obj(ob.get(k2).responses)));
-    for (const code of ra)
-      if (!rb.has(code))
-        f4.push({ breaking: true, what: `${k2}: response ${code} removed` });
-  }
-  const sa = schemaProps(a4), sb = schemaProps(b2);
-  for (const name of [...sa.keys()].sort()) {
-    const x2 = sa.get(name), y2 = sb.get(name);
-    if (!y2) {
-      f4.push({ breaking: true, what: `schema removed: ${name}` });
-      continue;
-    }
-    for (const [p4, t3] of x2.props) {
-      if (!y2.props.has(p4))
-        f4.push({ breaking: true, what: `schema ${name}: property removed ${p4}` });
-      else if (y2.props.get(p4) !== t3)
-        f4.push({ breaking: true, what: `schema ${name}: property ${p4} type ${t3 || "?"} \u2192 ${y2.props.get(p4) || "?"}` });
-    }
-    for (const p4 of y2.required)
-      if (!x2.required.has(p4))
-        f4.push({ breaking: true, what: `schema ${name}: ${p4} is now required` });
-    for (const p4 of y2.props.keys())
-      if (!x2.props.has(p4))
-        f4.push({ breaking: false, what: `schema ${name}: property added ${p4}` });
-  }
-  return f4;
-}
-function wsdlSummary(text2) {
-  const root = parseXml(text2);
-  const out = { tns: /* @__PURE__ */ new Set(), ops: /* @__PURE__ */ new Set(), types: /* @__PURE__ */ new Map() };
-  const walk = (n3) => {
-    const tns = n3.attrs.get("targetNamespace");
-    if (tns)
-      out.tns.add(`${n3.local}:${tns}`);
-    const name = n3.attrs.get("name");
-    if (n3.local === "operation" && name)
-      out.ops.add(name);
-    if ((n3.local === "element" || n3.local === "complexType") && name) {
-      const kids = /* @__PURE__ */ new Map();
-      const collect2 = (c4) => {
-        for (const k2 of c4.children) {
-          if (k2.local === "element" && k2.attrs.get("name"))
-            kids.set(k2.attrs.get("name"), { type: k2.attrs.get("type") ?? "", min: k2.attrs.get("minOccurs") ?? "1" });
-          else
-            collect2(k2);
-        }
-      };
-      collect2(n3);
-      const key2 = `${n3.local} ${name}`;
-      if (!out.types.has(key2))
-        out.types.set(key2, kids);
-    }
-    n3.children.forEach(walk);
-  };
-  walk(root);
-  return out;
-}
-function diffWsdl(a4, b2) {
-  const x2 = wsdlSummary(a4), y2 = wsdlSummary(b2);
-  const f4 = [];
-  const local = (t3) => t3.split(":").pop() ?? t3;
-  for (const t3 of [...x2.tns].filter((t4) => !y2.tns.has(t4)).sort()) {
-    const [where2, ...ns] = t3.split(":");
-    f4.push({ breaking: true, what: `target namespace no longer offered: ${ns.join(":")} (${where2})` });
-  }
-  for (const op of [...x2.ops].filter((o4) => !y2.ops.has(o4)).sort())
-    f4.push({ breaking: true, what: `operation removed: ${op}` });
-  for (const op of [...y2.ops].filter((o4) => !x2.ops.has(o4)).sort())
-    f4.push({ breaking: false, what: `operation added: ${op}` });
-  for (const [owner, ka] of [...x2.types].sort()) {
-    const kb = y2.types.get(owner);
-    if (!kb) {
-      f4.push({ breaking: true, what: `${owner} removed` });
-      continue;
-    }
-    for (const [c4, v2] of ka) {
-      if (!kb.has(c4))
-        f4.push({ breaking: true, what: `${owner}: element ${c4} removed` });
-      else if (local(kb.get(c4).type) !== local(v2.type))
-        f4.push({ breaking: true, what: `${owner}: element ${c4} type ${v2.type} \u2192 ${kb.get(c4).type}` });
-    }
-    for (const [c4, v2] of kb) {
-      if (!ka.has(c4)) {
-        const required = v2.min !== "0";
-        f4.push({ breaking: required, what: `${owner}: element ${c4} added${required ? " (required)" : ""}` });
-      }
-    }
-  }
-  return f4;
-}
-function checkContract(c4, ref, cand) {
-  const base2 = { name: c4.name, kind: c4.kind };
-  for (const [side, r6] of [["reference", ref], ["candidate", cand]]) {
-    if (r6.error)
-      return { ...base2, result: "ERROR", findings: [{ breaking: false, what: `${side}: ${r6.error}` }] };
-    if (r6.status !== 200)
-      return { ...base2, result: "ERROR", findings: [{ breaking: false, what: `${side} answered HTTP ${r6.status}` }] };
-  }
-  let findings = [];
-  try {
-    const kind = c4.kind.toLowerCase();
-    if (kind === "openapi")
-      findings = diffOpenApi(JSON.parse(ref.body ?? ""), JSON.parse(cand.body ?? ""));
-    else if (kind === "wsdl" || kind === "xsd")
-      findings = diffWsdl(ref.body ?? "", cand.body ?? "");
-    else if (ref.sha256 !== cand.sha256)
-      findings = [{ breaking: null, what: "the text differs; this kind is not analysed, so a person must review it" }];
-  } catch (err) {
-    return { ...base2, result: "ERROR", findings: [{ breaking: false, what: `could not parse: ${err.message}` }] };
-  }
-  for (const x2 of findings)
-    x2.where = `contract:${c4.name}: ${x2.what}`;
-  const result = findings.some((x2) => x2.breaking === true) ? "BREAKING" : findings.some((x2) => x2.breaking === null) ? "REVIEW" : findings.length ? "COMPATIBLE" : ref.sha256 === cand.sha256 ? "IDENTICAL" : "EQUIVALENT";
-  return { ...base2, result, findings };
-}
-
-// packages/core/dist/trend.js
-import fs8 from "node:fs";
-import path7 from "node:path";
-var position = (w2) => w2.replace(/\[\d+\]/g, "[*]");
-var RESULT = { PASS: "pass", MATCH: "pass", DRIFT: "pass", FAIL: "fail", DIFFERENT: "fail", ERROR: "error" };
-function scrubRules(s4) {
-  return [...(s4?.json_paths ?? []).map((p4) => `json_path ${p4}`), ...(s4?.xml_ignore ?? []).map((e6) => `xml_ignore ${e6}`), ...(s4?.regex ?? []).map((r6) => `regex ${r6.pattern}`)];
-}
-function fromReport(name, r6) {
-  const results = /* @__PURE__ */ new Map();
-  const places = [];
-  const used = /* @__PURE__ */ new Set();
-  for (const c4 of r6.cases ?? []) {
-    results.set(c4.id, RESULT[c4.result] ?? "other");
-    for (const d4 of c4.differences ?? []) {
-      places.push({ where: position(d4.where), case: c4.id, approved: !!d4.drift });
-      if (d4.drift)
-        used.add(d4.drift);
-    }
-    for (const f4 of c4.failures ?? [])
-      places.push({ where: position(f4.check), case: c4.id, approved: !!f4.known_issue });
-  }
-  for (const k2 of r6.contracts ?? []) {
-    for (const f4 of k2.findings ?? []) {
-      if (f4.drift)
-        used.add(f4.drift);
-      if (f4.where)
-        places.push({ where: f4.where, case: `contract-${k2.name}`, approved: !!f4.drift });
-    }
-  }
-  return { run: { run: name, verdict: r6.verdict, counts: r6.counts ?? {}, partial: !!r6.partial }, results, places, used, unused: r6.unused_drift ?? [], ...r6.scrub_fired ? { fired: r6.scrub_fired } : {}, scrubs: scrubRules(r6.settings?.scrub), ...r6.settings?.manifest_sha256 ? { sha: r6.settings.manifest_sha256 } : {} };
-}
-function fromShadow(name, r6) {
-  const results = /* @__PURE__ */ new Map();
-  const places = [];
-  const used = /* @__PURE__ */ new Set();
-  for (const e6 of r6.endpoints ?? []) {
-    results.set(e6.endpoint, e6.unexplained ? "fail" : e6.errors && !e6.matched && !e6.drift ? "error" : "pass");
-    for (const d4 of e6.differences ?? []) {
-      places.push({ where: d4.where, case: e6.endpoint, approved: !!d4.drift });
-      if (d4.drift)
-        used.add(d4.drift);
-    }
-  }
-  const p4 = r6.replay;
-  const counts = { SENT: p4?.sent ?? 0, MATCHED: p4?.matched ?? 0, DRIFT: p4?.drift ?? 0, UNEXPLAINED: p4?.different ?? 0, ERROR: p4?.errors ?? 0, "NOT SENT": p4?.not_sent ?? 0, DROPPED: r6.capture?.dropped_total ?? 0 };
-  return { run: { run: name, verdict: r6.verdict, counts, partial: false }, results, places, used, unused: r6.unused_drift ?? [], ...r6.scrub_fired ? { fired: r6.scrub_fired } : {}, scrubs: scrubRules(r6.settings?.scrub), ...r6.settings?.manifest_sha256 ? { sha: r6.settings.manifest_sha256 } : {} };
-}
-function trendOf(mode, system, rows, unreadable) {
-  const latest = rows[rows.length - 1];
-  const places = /* @__PURE__ */ new Map();
-  for (const row of rows) {
-    for (const p4 of row.places) {
-      const e6 = places.get(p4.where) ?? { runs: /* @__PURE__ */ new Set(), cases: /* @__PURE__ */ new Set(), first: row.run.run, last: row.run.run, approved: true };
-      e6.runs.add(row.run.run);
-      e6.cases.add(p4.case);
-      e6.last = row.run.run;
-      e6.approved &&= p4.approved;
-      places.set(p4.where, e6);
-    }
-  }
-  const STATE_ORDER = { new: 0, "keeps coming back": 1, "not checked": 2, gone: 3 };
-  const differences = [...places].map(([where2, e6]) => {
-    const inLatest = !!latest && e6.runs.has(latest.run.run);
-    const checkedInLatest = !!latest && [...e6.cases].some((c4) => ["pass", "fail"].includes(latest.results.get(c4) ?? "") || c4.startsWith("contract-"));
-    const state = inLatest ? e6.runs.size === 1 ? "new" : "keeps coming back" : checkedInLatest ? "gone" : "not checked";
-    return { where: where2, state, runs: e6.runs.size, first_seen: e6.first, last_seen: e6.last, cases: [...e6.cases].sort(), approved: e6.approved };
-  }).sort((a4, b2) => STATE_ORDER[a4.state] - STATE_ORDER[b2.state] || Number(a4.approved) - Number(b2.approved) || b2.runs - a4.runs || a4.where.localeCompare(b2.where));
-  const flaky = [];
-  const fixed = [], regressed = [];
-  const ids = new Set(rows.flatMap((r6) => [...r6.results.keys()]));
-  for (const id of [...ids].sort()) {
-    const seq = rows.map((r6) => r6.results.get(id)).filter((x2) => x2 === "pass" || x2 === "fail");
-    let flips = 0;
-    for (let i8 = 1; i8 < seq.length; i8++)
-      if (seq[i8] !== seq[i8 - 1])
-        flips++;
-    const errors = rows.filter((r6) => r6.results.get(id) === "error").length;
-    if (flips >= 2)
-      flaky.push({ case: id, passed: seq.filter((x2) => x2 === "pass").length, failed: seq.filter((x2) => x2 === "fail").length, flips, errors, latest: latest?.results.get(id) ?? "not in the latest run" });
-    else if (flips === 1)
-      (seq[seq.length - 1] === "pass" ? fixed : regressed).push(id);
-  }
-  flaky.sort((a4, b2) => b2.flips - a4.flips || a4.case.localeCompare(b2.case));
-  const everUsed = new Set(rows.flatMap((r6) => [...r6.used]));
-  const unused = latest?.unused ?? [];
-  const recorded = rows.filter((r6) => r6.fired);
-  const fired = new Set(recorded.flatMap((r6) => Object.entries(r6.fired).filter(([, n3]) => n3 > 0).map(([k2]) => k2)));
-  const settingsChanged = [];
-  for (let i8 = 1; i8 < rows.length; i8++)
-    if (rows[i8].sha && rows[i8 - 1].sha && rows[i8].sha !== rows[i8 - 1].sha)
-      settingsChanged.push(rows[i8].run.run);
-  const open = differences.filter((d4) => !d4.approved);
-  const count2 = (s4) => open.filter((d4) => d4.state === s4).length;
-  const summary = !rows.length ? "No readable dated runs." : `${rows.length} run${rows.length === 1 ? "" : "s"} from ${rows[0].run.run} to ${latest.run.run}. Latest verdict: ${latest.run.verdict}. Differences no person accepted: ${count2("new")} new, ${count2("keeps coming back")} keep coming back, ${count2("gone")} gone. ${flaky.length} flaky.`;
-  return {
-    tool: "cmtk",
-    mode,
-    system,
-    runs: rows.map((r6) => r6.run),
-    unreadable,
-    differences,
-    flaky,
-    fixed,
-    regressed,
-    drift_stopped_matching: unused.filter((d4) => everUsed.has(d4)).sort(),
-    drift_never_matched: unused.filter((d4) => !everUsed.has(d4)).sort(),
-    scrubs_never_fired: recorded.length ? (latest?.scrubs ?? []).filter((s4) => !fired.has(s4)) : [],
-    settings_changed: settingsChanged,
-    summary
-  };
-}
-var cell = (v2) => String(v2).replace(/\|/g, "\\|").replace(/\r?\n/g, " ").replace(/`/g, "'");
-function renderTrend(t3) {
-  const L2 = [`# Trend report: ${t3.system} (${t3.mode})`, "", t3.summary, "", "Read from the dated reports in the evidence folder. Nothing was sent. Run times are in UTC. Only a person signs a report: this one is not signed.", ""];
-  L2.push("## Verdict over time", "", "| Run | Verdict | Counts |", "| --- | --- | --- |");
-  for (const r6 of t3.runs)
-    L2.push(`| ${r6.run} | ${cell(r6.verdict)}${r6.partial ? " (partial run)" : ""} | ${cell(Object.entries(r6.counts).map(([k2, v2]) => `${v2} ${k2.toLowerCase()}`).join(", "))} |`);
-  if (t3.settings_changed.length)
-    L2.push("", `The settings file changed before: ${t3.settings_changed.join(", ")}. A verdict can change because a scrub or a drift entry did, so read what changed.`);
-  if (t3.unreadable.length)
-    L2.push("", `Could not be read, so not counted: ${t3.unreadable.join(", ")}.`);
-  L2.push("", "## Differences by where", "");
-  if (t3.differences.length) {
-    L2.push("| Where | State | Runs | First seen | Last seen | Accepted by a person | Cases |", "| --- | --- | --- | --- | --- | --- | --- |");
-    for (const d4 of t3.differences.slice(0, 500))
-      L2.push(`| \`${cell(d4.where)}\` | ${d4.state} | ${d4.runs} of ${t3.runs.length} | ${d4.first_seen} | ${d4.last_seen} | ${d4.approved ? "yes" : "no"} | ${cell(d4.cases.slice(0, 5).join(", "))}${d4.cases.length > 5 ? `, and ${d4.cases.length - 5} more` : ""} |`);
-    if (t3.differences.length > 500)
-      L2.push("", `${t3.differences.length - 500} more are in TREND.json.`);
-  } else
-    L2.push("None in these runs.");
-  L2.push("", "## Flaky cases", "", "A case whose result changed at least twice: it passes sometimes and fails sometimes.", "");
-  if (t3.flaky.length) {
-    L2.push(`| ${t3.mode === "shadow" ? "Endpoint" : "Case"} | Passed | Failed | Changes | Errors | Latest |`, "| --- | --- | --- | --- | --- | --- |");
-    for (const f4 of t3.flaky)
-      L2.push(`| ${cell(f4.case)} | ${f4.passed} | ${f4.failed} | ${f4.flips} | ${f4.errors} | ${f4.latest} |`);
-  } else
-    L2.push("None.");
-  if (t3.regressed.length)
-    L2.push("", `Started failing and stayed that way: ${cell(t3.regressed.join(", "))}.`);
-  if (t3.fixed.length)
-    L2.push("", `Started passing and stayed that way: ${cell(t3.fixed.join(", "))}.`);
-  L2.push("", "## Ledger and settings to check", "");
-  const lines = [
-    t3.drift_stopped_matching.length && `- Drift entries that stopped matching: ${cell(t3.drift_stopped_matching.join(", "))}. They matched earlier and match nothing now. A person checks whether they are still needed.`,
-    t3.drift_never_matched.length && `- Drift entries that have never matched in these runs: ${cell(t3.drift_never_matched.join(", "))}.`,
-    t3.scrubs_never_fired.length && `- Scrub rules that never fired in these runs: ${t3.scrubs_never_fired.map((s4) => `\`${cell(s4)}\``).join(", ")}. A rule that hides nothing may be mistyped, or no longer needed.`
-  ].filter(Boolean);
-  L2.push(...lines.length ? lines : ["Nothing to check."], "");
-  return L2.join("\n");
-}
-function newestMode(manifest) {
-  let best;
-  for (const mode of HISTORY_MODES) {
-    const runs = datedRuns(manifest, mode);
-    const last = runs[runs.length - 1];
-    if (last && (!best || last.time > best.time))
-      best = { mode, time: last.time };
-  }
-  return best?.mode;
-}
-function trend(manifest, o4 = {}) {
-  const mode = o4.mode ?? newestMode(manifest) ?? "compare";
-  let runs = datedRuns(manifest, mode);
-  if (o4.last !== void 0)
-    runs = runs.slice(-o4.last);
-  const rows = [];
-  const unreadable = [];
-  for (const r6 of runs) {
-    try {
-      const doc = JSON.parse(fs8.readFileSync(path7.join(r6.dir, "REPORT.json"), "utf8"));
-      if (typeof doc?.verdict !== "string")
-        throw new Error("no verdict");
-      rows.push(mode === "shadow" ? fromShadow(r6.name, doc) : fromReport(r6.name, doc));
-    } catch {
-      unreadable.push(r6.name);
-    }
-  }
-  const report = trendOf(mode, manifest.system, rows, unreadable);
-  if (!rows.length)
-    return { report };
-  const dir = ownedFolder(manifest, path7.join(manifest.evidence, "trend", mode));
-  fs8.mkdirSync(dir, { recursive: true });
-  fs8.writeFileSync(path7.join(dir, "TREND.json"), JSON.stringify(report, null, 2) + "\n", "utf8");
-  fs8.writeFileSync(path7.join(dir, "TREND.md"), renderTrend(report), "utf8");
-  return { report, file: path7.relative(manifest.root, path7.join(dir, "TREND.md")).split(path7.sep).join("/") };
-}
-
-// packages/core/dist/expect.js
-function regex(pattern, where2) {
-  try {
-    return new RegExp(pattern);
-  } catch (err) {
-    throw new ConfigError(`expect ${where2}: ${JSON.stringify(pattern)} is not a valid regular expression (${err.message}).`);
-  }
-}
-var typeOf2 = (v2) => v2 === null ? "null" : Array.isArray(v2) ? "array" : typeof v2;
-function checkJson(path19, check2, doc) {
-  const found = select(doc, parsePath(path19));
-  if ("exists" in check2) {
-    return found.length > 0 === check2.exists ? [] : [{ check: path19, expected: check2.exists ? "present" : "absent", actual: found.length ? short(found[0].value) : "(missing)" }];
-  }
-  if (found.length === 0)
-    return [{ check: path19, expected: describe(check2), actual: "(missing)" }];
-  const out = [];
-  for (const { at: at2, value } of found) {
-    let ok = true;
-    if ("equals" in check2)
-      ok = jsonEqual(value, check2.equals);
-    else if ("matches" in check2)
-      ok = typeof value === "string" && regex(check2.matches, path19).test(value);
-    else if ("type" in check2)
-      ok = typeOf2(value) === check2.type;
-    if (!ok)
-      out.push({ check: found.length > 1 ? render(at2) : path19, expected: describe(check2), actual: short(value) });
-  }
-  return out;
-}
-function describe(check2) {
-  if ("equals" in check2)
-    return short(check2.equals);
-  if ("matches" in check2)
-    return `matches /${check2.matches}/`;
-  if ("type" in check2)
-    return `a ${check2.type}`;
-  return check2.exists ? "present" : "absent";
-}
-function checkExpectation(exp, obs) {
-  const out = [];
-  if (exp.status !== void 0) {
-    const allowed = Array.isArray(exp.status) ? exp.status : [exp.status];
-    if (!allowed.includes(obs.status ?? -1))
-      out.push({ check: "status", expected: allowed.join(" or "), actual: String(obs.status ?? "(none)") });
-  }
-  for (const [name, want] of Object.entries(exp.headers ?? {})) {
-    const got = obs.headers?.[name.toLowerCase()];
-    const ok = typeof want === "string" ? got === want : got !== void 0 && regex(want.matches, `header ${name}`).test(got);
-    if (!ok)
-      out.push({ check: `header:${name.toLowerCase()}`, expected: typeof want === "string" ? want : `matches /${want.matches}/`, actual: got ?? "(missing)" });
-  }
-  if (exp.json) {
-    let doc;
-    try {
-      doc = JSON.parse(obs.body ?? "");
-    } catch {
-      return [...out, { check: "body", expected: "JSON", actual: short(obs.body ?? "", 60) }];
-    }
-    for (const [path19, check2] of Object.entries(exp.json))
-      out.push(...checkJson(path19, check2, doc));
-  }
-  for (const text2 of exp.body_contains ?? []) {
-    if (!(obs.body ?? "").includes(text2))
-      out.push({ check: "body", expected: `contains ${short(text2, 60)}`, actual: "not found" });
-  }
-  for (const text2 of exp.body_excludes ?? []) {
-    const at2 = (obs.body ?? "").indexOf(text2);
-    if (at2 >= 0)
-      out.push({ check: "body", expected: `never contains ${short(text2, 60)}`, actual: `found: ${short((obs.body ?? "").slice(Math.max(0, at2 - 20), at2 + text2.length + 40), 100)}` });
-  }
-  return out;
-}
-
-// packages/core/dist/report.js
-var NOISE = [
-  ["a GUID", /^"?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"?$/],
-  ["a timestamp", /^"?\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/],
-  ["a /Date()/ value", /^"?\\?\/Date\(\d+/]
-];
-var noiseKind = (value) => NOISE.find(([, rx]) => rx.test(value))?.[0];
-function noise(cases) {
-  const byWhere = /* @__PURE__ */ new Map();
-  for (const c4 of cases) {
-    for (const d4 of c4.differences ?? []) {
-      if (d4.drift)
-        continue;
-      const k2 = d4.where.replace(/\[\d+\]/g, "[*]");
-      const list = byWhere.get(k2);
-      if (list)
-        list.push(d4);
-      else
-        byWhere.set(k2, [d4]);
-    }
-  }
-  const out = [];
-  for (const [where2, ds] of [...byWhere].sort()) {
-    const hit2 = NOISE.find(([, rx]) => ds.every((d4) => rx.test(d4.reference) && rx.test(d4.candidate)));
-    if (hit2)
-      out.push({ where: where2, cases: ds.length, why: `both sides hold ${hit2[0]} that changes on every call` });
-  }
-  return out;
-}
-var RAN = /* @__PURE__ */ new Set(["MATCH", "DRIFT", "DIFFERENT"]);
-function scopeOf(cases, contracts, surfaces) {
-  const lists = Object.entries(surfaces);
-  if (!lists.some(([, l4]) => l4))
-    return void 0;
-  const listed = [...new Set(lists.flatMap(([, l4]) => l4 ?? []))].sort();
-  const lacks = (s4) => lists.filter(([, l4]) => l4 && !l4.includes(s4)).map(([n3]) => n3);
-  const words2 = (names, s4) => `${names.join(" and ")} ${names.length > 1 ? "have" : "has"} no ${s4} surface`;
-  const count2 = /* @__PURE__ */ new Map();
-  for (const c4 of cases)
-    if (RAN.has(c4.result))
-      count2.set(c4.surface, (count2.get(c4.surface) ?? 0) + 1);
-  const compared = [...count2].sort().map(([surface, n3]) => ({ surface, cases: n3 }));
-  const out = /* @__PURE__ */ new Map();
-  for (const c4 of cases)
-    if (c4.result === "NOT COMPARABLE")
-      out.set(c4.surface, (out.get(c4.surface) ?? 0) + 1);
-  for (const s4 of listed)
-    if (lacks(s4).length && !out.has(s4))
-      out.set(s4, 0);
-  const not_compared = [...out].sort().map(([surface, n3]) => ({ surface, cases: n3, why: words2(lacks(surface), surface) }));
-  const no_cases = listed.filter((s4) => !lacks(s4).length && !count2.has(s4));
-  const contracts_not_compared = contracts.filter((k2) => k2.result === "NOT COMPARABLE").map((k2) => k2.name);
-  const whole = !not_compared.length && !no_cases.length && !contracts_not_compared.length;
-  const statement = whole ? `Every surface the targets list was compared: ${compared.map((c4) => c4.surface).join(", ")}.` : `This comparison covers only ${compared.map((c4) => c4.surface).join(", ") || "no surface at all"}, not the whole system. Not compared: ${[
-    ...not_compared.map((n3) => `${n3.cases ? `${plural(n3.cases, "case")} on ${n3.surface}` : n3.surface} (${n3.why})`),
-    ...no_cases.map((s4) => `${s4} (no case compared it)`),
-    ...contracts_not_compared.map((k2) => `contract ${k2}`)
-  ].join("; ")}.`;
-  return { whole, statement, compared, not_compared, no_cases, contracts_not_compared };
-}
-function summarise(x2) {
-  const counts = {};
-  const keys = x2.mode === "run" ? ["PASS", "FAIL", "SKIPPED", "ERROR"] : ["MATCH", "DRIFT", "DIFFERENT", "SKIPPED", "ERROR"];
-  for (const k2 of keys)
-    counts[k2] = x2.cases.filter((c4) => c4.result === k2 && !c4.known_issues).length;
-  const knownFailing = x2.cases.filter((c4) => c4.known_issues).length;
-  if (knownFailing)
-    counts["KNOWN ISSUE"] = knownFailing;
-  const notComparable = x2.cases.filter((c4) => c4.result === "NOT COMPARABLE").length;
-  if (notComparable)
-    counts["NOT COMPARABLE"] = notComparable;
-  const scope = x2.mode === "compare" && x2.surfaces ? scopeOf(x2.cases, x2.contracts, x2.surfaces) : void 0;
-  const stale = (x2.known ?? []).filter((k2) => k2.state === "no longer fails").map((k2) => k2.id).sort();
-  const decided = decide({ ...x2, scope }, counts);
-  const { verdict, next } = decided;
-  const gaps = /* @__PURE__ */ new Map();
-  for (const c4 of x2.cases)
-    if (c4.no_adapter)
-      gaps.set(c4.surface, [...gaps.get(c4.surface) ?? [], c4.id]);
-  const noAdapter2 = [...gaps].sort().map(([surface, cases]) => ({ surface, cases }));
-  const gapCount = noAdapter2.reduce((n3, g3) => n3 + g3.cases.length, 0);
-  const reason = decided.reason + (gapCount ? ` ${plural(gapCount, "case")} on a surface with no adapter (${noAdapter2.map((g3) => g3.surface).join(", ")}): nothing was sent for ${gapCount === 1 ? "it" : "them"}.` : "") + (scope && !scope.whole ? ` ${scope.statement}` : "") + (x2.excludedCompareOnly ? ` ${plural(x2.excludedCompareOnly, "case")} on a compare-only surface (${x2.compareOnlySurfaces.join(", ")}) ${x2.excludedCompareOnly === 1 ? "was" : "were"} left out: \`cmtk compare\` covers ${x2.excludedCompareOnly === 1 ? "it" : "them"}.` : "") + (stale.length ? ` ${stale.length === 1 ? "A known issue no longer fails" : "Known issues no longer fail"} (${stale.join(", ")}): a person removes ${stale.length === 1 ? "it" : "them"} from the ledger.` : "") + (x2.excludedDrafts ? ` ${x2.excludedDrafts} draft case${x2.excludedDrafts === 1 ? " was" : "s were"} left out (--accepted-only).` : "");
-  const reqs = /* @__PURE__ */ new Map();
-  for (const c4 of x2.cases) {
-    for (const r6 of c4.requirement.length ? c4.requirement : ["(no requirement named)"]) {
-      const e6 = reqs.get(r6) ?? { cases: 0, passed: 0, failed: 0, other: 0 };
-      e6.cases++;
-      if (c4.result === "PASS" || c4.result === "MATCH" || c4.result === "DRIFT")
-        e6.passed++;
-      else if (c4.result === "FAIL" || c4.result === "DIFFERENT")
-        e6.failed++;
-      else
-        e6.other++;
-      reqs.set(r6, e6);
-    }
-  }
-  return {
-    tool: "cmtk",
-    mode: x2.mode,
-    system: x2.manifest.system,
-    date: x2.date,
-    verdict,
-    targets: x2.targets,
-    counts,
-    cases: x2.cases,
-    contracts: x2.contracts,
-    requirements: [...reqs].map(([requirement, v2]) => ({ requirement, ...v2 })).sort((a4, b2) => a4.requirement.localeCompare(b2.requirement)),
-    unused_drift: unusedDrift({ ...x2, partial: x2.partial || !!(scope && !scope.whole) }),
-    ...x2.known?.length ? { known_issues: x2.known, stale_known_issues: stale } : {},
-    suggested_scrubs: x2.mode === "compare" ? noise(x2.cases) : [],
-    partial: x2.partial,
-    ...x2.excludedDrafts ? { excluded_drafts: x2.excludedDrafts } : {},
-    ...x2.excludedCompareOnly ? { excluded_compare_only: x2.excludedCompareOnly } : {},
-    ...noAdapter2.length ? { no_adapter: noAdapter2 } : {},
-    ...scope ? { scope } : {},
-    ...x2.settings ? { settings: x2.settings } : {},
-    ...x2.scrubFired ? { scrub_fired: x2.scrubFired } : {},
-    ...x2.modelCalls ? { model_calls: x2.modelCalls } : {},
-    reason,
-    next
-  };
-}
-function unusedDrift(x2) {
-  const ran = new Set(x2.cases.filter((c4) => c4.result !== "NOT COMPARABLE").map((c4) => c4.id));
-  return x2.drift.filter((d4) => !x2.usedDrift.has(d4.id) && (!x2.partial || ran.has(d4.case))).map((d4) => d4.id).sort();
-}
-var plural = (n3, one, many = `${one}s`) => `${n3} ${n3 === 1 ? one : many}`;
-function decide(x2, counts) {
-  const ran = x2.cases.filter((c4) => c4.result !== "SKIPPED" && c4.result !== "ERROR" && c4.result !== "NOT COMPARABLE").length;
-  const errored = x2.cases.filter((c4) => c4.result === "ERROR");
-  const skipped = x2.cases.filter((c4) => c4.result === "SKIPPED");
-  const again = `\`cmtk ${x2.mode}\` again`;
-  const cut = x2.cases.filter((c4) => c4.truncated).length;
-  const cutWords = `${plural(cut, "answer")} ${cut === 1 ? "was" : "were"} over 5 MB, and only the first 5 MB ${x2.mode === "run" ? "were checked" : "were compared"}.`;
-  const why = () => {
-    const first = errored[0] ?? skipped[0];
-    if (!first)
-      return "";
-    const refused = errored.some((c4) => /ECONNREFUSED|ENOTFOUND|EHOSTUNREACH|ETIMEDOUT/.test(c4.why ?? ""));
-    return refused ? `a system did not answer (${first.why}). Start it, or correct its base_url in cmtk.yaml, then run ${again}.` : `${first.id}: ${first.why}. Fix that, then run ${again}.`;
-  };
-  const notRun = () => [errored.length && `${plural(errored.length, "case")} could not run`, skipped.length && `${plural(skipped.length, "case")} were skipped`].filter(Boolean).join(" and ");
-  if (x2.mode === "run") {
-    const stillFailing = (x2.known ?? []).filter((k2) => x2.cases.some((c4) => c4.known_issues?.includes(k2.id)));
-    const known = counts["KNOWN ISSUE"] ?? 0;
-    const knownWords = known ? ` ${plural(known, "case")} failed only as known issues (${stillFailing.map((k2) => `${k2.id}, accepted by ${k2.accepted_by}`).join("; ")}).` : "";
-    if (x2.cases.length === 0)
-      return { verdict: "NO EVIDENCE", reason: "There are no cases.", next: "add cases (cmtk/cases/*.yaml, or `cmtk import-har`), then `cmtk run`." };
-    if (counts.FAIL)
-      return { verdict: "FAIL", reason: `${plural(counts.FAIL, "case")} failed.${knownWords}`, next: "fix what failed (or correct an expectation with the person who owns the requirement), then `cmtk run` again." };
-    if (ran === 0)
-      return { verdict: "NO EVIDENCE", reason: `No case ran: ${notRun()}.`, next: why() };
-    if (errored.length || skipped.length)
-      return { verdict: "INCOMPLETE", reason: `${notRun()}.${knownWords}`, next: why() };
-    if (x2.partial)
-      return { verdict: "INCOMPLETE", reason: `Only the ${plural(ran, "case")} named with --only ran, ${known ? "with no new failures" : "and all passed"}.${knownWords}`, next: "run every case with `cmtk run` before anyone signs." };
-    if (cut)
-      return { verdict: "INCOMPLETE", reason: `Nothing failed, but ${cutWords}${knownWords}`, next: "a person checks those cases another way, such as a smaller answer, before anyone signs." };
-    if (known)
-      return { verdict: "PASS WITH KNOWN ISSUES", reason: `${plural(ran - known, "case")} passed.${knownWords} These still fail: they are accepted, not fixed.`, next: "a person reviews the report, known issues included, and signs it with `cmtk signoff run`." };
-    return { verdict: "PASS", reason: `All ${plural(ran, "case")} passed.`, next: "a person reviews the report and signs it with `cmtk signoff run`." };
-  }
-  const openFindings = x2.contracts.flatMap((k2) => k2.findings.filter((f4) => f4.where && !f4.drift));
-  const approvedFindings = x2.contracts.flatMap((k2) => k2.findings.filter((f4) => f4.drift));
-  const contractErrors = x2.contracts.filter((k2) => k2.result === "ERROR");
-  if (counts.DIFFERENT || openFindings.length) {
-    const parts = [counts.DIFFERENT && `${plural(counts.DIFFERENT, "case")} answered differently`, openFindings.length && `${plural(openFindings.length, "contract change")} not approved`].filter(Boolean);
-    return { verdict: "NO PARITY", reason: `${parts.join(" and ")}.`, next: "for each difference: scrub it if it is noise, approve it as drift in the drift ledger (a named person), or fix the candidate. Then `cmtk compare` again." };
-  }
-  if (x2.cases.length === 0) {
-    return { verdict: "NO EVIDENCE", reason: x2.contracts.length ? "Only the contracts were checked; there are no cases to compare behaviour." : "There are no cases and no contracts.", next: "add cases (cmtk/cases/*.yaml, or `cmtk import-har`), then `cmtk compare`." };
-  }
-  const notComparable = counts["NOT COMPARABLE"] ?? 0;
-  if (ran === 0)
-    return { verdict: "NO EVIDENCE", reason: `No case ran: ${[notRun(), notComparable && `${plural(notComparable, "case")} not comparable`].filter(Boolean).join(" and ")}.`, next: why() || "add cases on a surface both targets offer, then `cmtk compare`." };
-  if (errored.length || skipped.length || contractErrors.length) {
-    const parts = [notRun(), contractErrors.length && `${plural(contractErrors.length, "contract")} could not be checked`].filter(Boolean);
-    return { verdict: "INCOMPLETE", reason: `${parts.join(" and ")}.`, next: why() || `see the contracts table (${contractErrors[0]?.findings[0]?.what ?? ""}), fix that, then \`cmtk compare\` again.` };
-  }
-  const drifted = counts.DRIFT || approvedFindings.length;
-  if (x2.partial)
-    return { verdict: "INCOMPLETE", reason: `Only the ${plural(ran, "case")} named with --only ran, with no unapproved differences.`, next: "compare every case with `cmtk compare` before anyone signs." };
-  if (cut)
-    return { verdict: "PARTIAL COMPARISON", reason: `No difference in what was compared, but ${cutWords}`, next: "a person reads which cases those were, and signs for what was compared. The rest of those answers still has to be compared another way." };
-  if (x2.scope && !x2.scope.whole)
-    return { verdict: "PARTIAL COMPARISON", reason: drifted ? "On what was compared, every difference is approved drift." : "On what was compared, there are no differences.", next: "a person reads the scope and signs with `cmtk signoff compare` for what was compared. The rest of the system still has to be compared." };
-  return drifted ? { verdict: "DRIFT ONLY", reason: "Every difference is approved drift.", next: "a person reviews the report and signs it with `cmtk signoff compare`." } : { verdict: "PARITY", reason: "No differences at all.", next: "a person reviews the report and signs it with `cmtk signoff compare`." };
-}
-var cell2 = (v2) => String(v2).replace(/\|/g, "\\|").replace(/\r?\n/g, " ").replace(/`/g, "'");
-function renderReport(r6) {
-  const L2 = [];
-  const title = r6.mode === "run" ? "Test report" : "Comparison report";
-  L2.push(`# ${title}: ${r6.system}`, "", `**Verdict: ${r6.verdict}**${r6.partial ? " (partial run: only some cases)" : ""}${r6.scope && !r6.scope.whole ? " (only part of the system: see Scope)" : ""}`, "", r6.reason, "", `Next: ${r6.next}`, "");
-  L2.push(`- Date: ${r6.date}`);
-  for (const [name, url] of Object.entries(r6.targets))
-    L2.push(`- ${name}: \`${url}\``);
-  L2.push(`- Cases: ${Object.entries(r6.counts).map(([k2, v2]) => `${v2} ${k2.toLowerCase()}`).join(", ")}`);
-  if (r6.model_calls)
-    L2.push(`- Model calls: ${r6.model_calls.total}${r6.model_calls.cases_not_counted ? ` counted, and ${plural(r6.model_calls.cases_not_counted, "answer")} from an adapter that does not count them` : ""}`);
-  L2.push("");
-  L2.push("Written by `cmtk " + r6.mode + "` from the files in this folder. Do not edit the numbers: run it again.", "");
-  if (r6.settings) {
-    const s4 = r6.settings;
-    const scrubs = [...s4.scrub.json_paths.map((p4) => `\`${p4}\``), ...s4.scrub.xml_ignore.map((e6) => `XML \`${e6}\``), ...s4.scrub.regex.map((x2) => `regex \`${x2.pattern}\``)];
-    L2.push("## Settings", "", "What produced this report. Check what is hidden or approved before you sign.", "", `- Settings file: \`${s4.manifest}\` (sha256 ${s4.manifest_sha256.slice(0, 16)}\u2026)`, ...r6.mode === "compare" ? [
-      `- Match level: ${s4.match}${s4.overrides.length ? `; overrides: ${s4.overrides.map((o4) => `\`${o4.path}\` ${o4.match}`).join(", ")}` : ""}`,
-      `- Scrubbed (hidden from every comparison): ${scrubs.length ? scrubs.join(", ") : "nothing"}`,
-      ...s4.visual_tolerance ? [`- Screenshots: up to ${(s4.visual_tolerance * 100).toFixed(2)}% of pixels may change (visual_tolerance)`] : [],
-      `- Approved drift: ${s4.drift_entries} entr${s4.drift_entries === 1 ? "y" : "ies"} in \`${s4.drift_file}\``
-    ] : [], ...s4.known_issues_file && s4.known_issues_entries ? [`- Known issues: ${s4.known_issues_entries} entr${s4.known_issues_entries === 1 ? "y" : "ies"} for this target in \`${s4.known_issues_file}\``] : [], "");
-  }
-  if (r6.scope) {
-    L2.push("## Scope", "", r6.scope.statement, "");
-    for (const c4 of r6.scope.compared)
-      L2.push(`- Compared: ${c4.surface}, ${c4.cases} case${c4.cases === 1 ? "" : "s"}`);
-    for (const n3 of r6.scope.not_compared)
-      L2.push(`- Not compared: ${n3.surface}, ${n3.cases} case${n3.cases === 1 ? "" : "s"}: ${cell2(n3.why)}`);
-    for (const s4 of r6.scope.no_cases)
-      L2.push(`- Not compared: ${s4}: both targets offer it, and no case compared it`);
-    for (const k2 of r6.scope.contracts_not_compared)
-      L2.push(`- Not compared: contract ${cell2(k2)}`);
-    L2.push("");
-  }
-  if (r6.no_adapter?.length) {
-    L2.push("## Cases with no adapter", "", "Nothing was sent for these cases, because no adapter drives their surface. They count as errors, so this report can't pass until each has an adapter.", "");
-    for (const n3 of r6.no_adapter)
-      L2.push(`- ${cell2(n3.surface)}: ${n3.cases.map(cell2).join(", ")}`);
-    L2.push("");
-  }
-  L2.push("## Requirements", "", "| Requirement | Cases | Passed | Failed | Not run |", "| --- | --- | --- | --- | --- |");
-  for (const q2 of r6.requirements)
-    L2.push(`| ${cell2(q2.requirement)} | ${q2.cases} | ${q2.passed} | ${q2.failed} | ${q2.other} |`);
-  if (r6.requirements.length === 0)
-    L2.push("| (no cases) | 0 | 0 | 0 | 0 |");
-  if (r6.mode === "compare") {
-    L2.push("", "## Contracts", "");
-    if (r6.contracts.length) {
-      L2.push("| Contract | Kind | Result | Findings |", "| --- | --- | --- | --- |");
-      for (const k2 of r6.contracts)
-        L2.push(`| ${cell2(k2.name)} | ${cell2(k2.kind)} | ${k2.result} | ${cell2(k2.findings.map((f4) => `${f4.what}${f4.drift ? ` (approved: ${f4.drift})` : ""}`).join("; ") || "none")} |`);
-    } else
-      L2.push("No contracts are listed in cmtk.yaml, so none were checked.");
-  }
-  L2.push("", "## Cases", "", r6.mode === "compare" ? "| Case | Request | Level | Result |" : "| Case | Request | Requirement | Result |", "| --- | --- | --- | --- |");
-  for (const c4 of r6.cases) {
-    const mid = r6.mode === "compare" ? c4.match ?? "" : c4.requirement.join(", ") || "\u2014";
-    const shown2 = c4.known_issues ? `FAIL (known issue ${c4.known_issues.join(", ")})` : c4.result;
-    L2.push(`| ${c4.id} | ${cell2(c4.name)} | ${cell2(mid)} | ${c4.result === "NOT COMPARABLE" ? cell2(c4.why) : `${shown2}${c4.why ? ` \u2014 ${cell2(c4.why)}` : ""}${c4.note ? ` \u2014 ${cell2(c4.note)}` : ""}`} |`);
-  }
-  const sent = r6.cases.filter((c4) => c4.inputs?.length);
-  if (sent.length) {
-    L2.push("", "## Input files", "", "The files cases sent, fingerprinted. A different file gives a different SHA-256.", "", "| Case | File | SHA-256 | Bytes | Sent as |", "| --- | --- | --- | --- | --- |");
-    for (const c4 of sent)
-      for (const f4 of c4.inputs)
-        L2.push(`| ${c4.id} | ${cell2(f4.path)} | ${f4.sha256.slice(0, 16)}\u2026 | ${f4.bytes} | ${f4.field ? `field ${cell2(f4.field)}, ${cell2(f4.filename ?? "")} (${cell2(f4.content_type ?? "")})` : f4.as === "form" ? "the form fields" : "the body"} |`);
-  }
-  const prepared = r6.cases.filter((c4) => c4.before);
-  if (prepared.length) {
-    L2.push("", "## Pages read first", "", "A page read before the request, for the values it carries and the cookies it sets. The evidence holds their names, never their values.", "", "| Case | Page | Status | Values taken | Cookies |", "| --- | --- | --- | --- | --- |");
-    for (const c4 of prepared)
-      L2.push(`| ${c4.id} | ${cell2(c4.before.request)} | ${c4.before.status ?? ""} | ${cell2(c4.before.took.join(", ")) || "\u2014"} | ${cell2(c4.before.cookies.join(", ")) || "\u2014"} |`);
-  }
-  const fails = r6.cases.flatMap((c4) => (c4.failures ?? []).map((f4) => [c4.id, f4]));
-  if (fails.length) {
-    const anyKnown = fails.some(([, f4]) => f4.known_issue);
-    L2.push("", "## Failures", "", `| Case | Check | Expected | Actual |${anyKnown ? " Known issue |" : ""}`, `| --- | --- | --- | --- |${anyKnown ? " --- |" : ""}`);
-    for (const [id, f4] of fails.slice(0, 500))
-      L2.push(`| ${id} | \`${cell2(f4.check)}\` | ${cell2(f4.expected)} | ${cell2(f4.actual)} |${anyKnown ? ` ${f4.known_issue ?? "\u2014"} |` : ""}`);
-  }
-  if (r6.known_issues?.length) {
-    L2.push("", "## Known issues", "", "Failures a named person accepted. Each still fails: it is accepted, not fixed. Anything an entry does not describe is an ordinary failure.", "", "| Id | Case | What fails | Reason | Accepted by | Date | This run |", "| --- | --- | --- | --- | --- | --- | --- |");
-    for (const k2 of r6.known_issues) {
-      const what = k2.fails.map((f4) => [f4.check, f4.expected !== void 0 && `expected ${f4.expected}`, f4.actual !== void 0 && `actual ${f4.actual}`].filter(Boolean).join(", ")).join("; ");
-      L2.push(`| ${k2.id} | ${cell2(k2.case)} | ${cell2(what)} | ${cell2(k2.reason)} | ${cell2(k2.accepted_by)} | ${cell2(k2.date ?? "")} | ${k2.state} |`);
-    }
-    if (r6.stale_known_issues?.length)
-      L2.push("", `No longer failing: ${r6.stale_known_issues.join(", ")}. A person checks each one and removes it from the ledger, so a later return of the failure is reported as new.`);
-  }
-  const diffs = r6.cases.flatMap((c4) => (c4.differences ?? []).map((d4) => [c4.id, d4]));
-  if (diffs.length) {
-    const [a4, b2] = Object.keys(r6.targets);
-    L2.push("", "## Differences", "", `| Case | Where | ${a4} | ${b2} | Approved drift |`, "| --- | --- | --- | --- | --- |");
-    for (const [id, d4] of diffs.slice(0, 500))
-      L2.push(`| ${id} | \`${cell2(d4.where)}\` | ${cell2(d4.reference)} | ${cell2(d4.candidate)} | ${d4.drift ?? "\u2014"} |`);
-    if (diffs.length > 500)
-      L2.push("", `${diffs.length - 500} more are in REPORT.json.`);
-  }
-  if (r6.suggested_scrubs.length) {
-    L2.push("", "## Probably noise", "", "These look like values that change on every call. A person decides whether to scrub them: a scrub hides them from every later run.", "", "| Where | Cases | Why |", "| --- | --- | --- |");
-    for (const s4 of r6.suggested_scrubs)
-      L2.push(`| \`${cell2(s4.where)}\` | ${s4.cases} | ${s4.why} |`);
-  }
-  if (r6.unused_drift.length)
-    L2.push("", "## Drift that matched nothing", "", `These approved differences no longer occur; check whether they are still needed: ${r6.unused_drift.join(", ")}.`);
-  L2.push("", "## Sign-off", "", "A person fills this in with `cmtk signoff`; an agent never does. The evidence fingerprint ties the signature to the files in this folder, and running again clears it, because the evidence has changed.", "", "| | |", "|---|---|", "| Name | ________________ |", "| Role | ________________ |", "| Date | __________ |", "| Decision | accept / accept with conditions / reject |", "| Evidence | (fingerprint written at sign-off) |", "");
-  return L2.join("\n");
-}
-
-// packages/core/dist/engine.js
-var SAFE_METHODS = /* @__PURE__ */ new Set(["GET", "HEAD", "OPTIONS"]);
-var today = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-function envHeaders(manifest) {
-  const out = {};
-  for (const [header, variable] of Object.entries(manifest.headers_from_env)) {
-    const value = process.env[variable];
-    if (value === void 0)
-      throw new ManifestError(`headers_from_env: the environment variable ${variable} for ${header} is not set.`);
-    if (/[\0-\x08\x0a-\x1f\x7f]/.test(value))
-      throw new ManifestError(`headers_from_env: the environment variable ${variable} holds a line break or another control character; set it again without one.`);
-    out[header] = value;
-  }
-  return out;
-}
-function matchFor(c4, manifest) {
-  let level2 = manifest.match;
-  const p4 = c4.request.path.split("?")[0];
-  for (const o4 of manifest.overrides)
-    if (path8.posix.matchesGlob(p4, o4.path))
-      level2 = o4.match;
-  return c4.match ?? level2;
-}
-function adaptersFor(manifest) {
-  const cache = /* @__PURE__ */ new Map();
-  return {
-    get(surface) {
-      const s4 = surface || "http";
-      if (!cache.has(s4)) {
-        if (s4 === "http")
-          cache.set(s4, httpAdapter({ timeoutS: manifest.timeout_s, insecureTls: manifest.insecure_tls, root: manifest.root }));
-        else if (manifest.adapters[s4])
-          cache.set(s4, processAdapter(s4, manifest.adapters[s4], manifest.root));
-        else
-          throw new ManifestError(`No adapter for surface "${s4}". Add it under \`adapters:\` in cmtk.yaml, or run \`cmtk adapter new ${s4}\`.`);
-      }
-      return cache.get(s4);
-    },
-    async closeAll() {
-      for (const a4 of cache.values())
-        await a4.close?.();
-    }
-  };
-}
-function selectCases(manifest, mode, only, acceptedOnly = false) {
-  const picked = pick(manifest, only);
-  if (!acceptedOnly)
-    return Object.assign(picked, { excluded: 0 });
-  const held = (c4) => c4.draft || mode === "run" && c4.expect_draft;
-  return Object.assign(picked.filter((c4) => !held(c4)), { excluded: picked.filter(held).length });
-}
-function pick(manifest, only) {
-  const all = loadCases(manifest);
-  if (!only?.length)
-    return all;
-  const ids = new Set(all.map((c4) => c4.id));
-  const unknown = only.filter((i8) => !ids.has(i8));
-  if (unknown.length)
-    throw new ManifestError(`Unknown case ids: ${unknown.join(", ")}.`);
-  return all.filter((c4) => only.includes(c4.id));
-}
-function noAdapter(c4, manifest) {
-  const s4 = c4.surface ?? "http";
-  if (s4 === "http" || Object.hasOwn(manifest.adapters, s4))
-    return void 0;
-  return { result: "ERROR", no_adapter: true, why: `surface "${s4}" has no adapter, so nothing was sent. Add it under \`adapters:\` in cmtk.yaml: \`cmtk adapter new ${s4}\` writes one, and \`cmtk adapter add ${s4}\` lets a person install one` };
-}
-var requirementsOf = (c4) => c4.requirement === void 0 ? [] : Array.isArray(c4.requirement) ? c4.requirement.map(String) : [String(c4.requirement)];
-function base(c4) {
-  return { id: c4.id, name: c4.name ?? `${c4.request.method} ${c4.request.path}`, request: `${c4.request.method} ${c4.request.path}`, requirement: requirementsOf(c4), surface: c4.surface ?? "http" };
-}
-function unsafe(c4, manifest, opts) {
-  const safe = SAFE_METHODS.has(c4.request.method) || c4.safe === true;
-  return !safe && !(manifest.allow_unsafe_methods && opts.allowUnsafe);
-}
-var lacking = (surface, ...targets) => targets.filter((t3) => t3.surfaces && !t3.surfaces.includes(surface)).map((t3) => t3.name);
-var hasNo = (names, surface) => `${names.join(" and ")} ${names.length > 1 ? "have" : "has"} no ${surface} surface`;
-var DRAFT_WHY = "a draft: a person accepts it with `cmtk review` before it counts";
-var EXPECT_DRAFT_WHY = "draft expectation: review it with `cmtk review`. It records what the system answered, which a person confirms before it counts";
-var UNSAFE_WHY = "changes data: needs allow_unsafe_methods in cmtk.yaml and --allow-unsafe on this run";
-var NO_ANSWER = /^(ETIMEDOUT|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENETUNREACH|ENOTFOUND|EAI_AGAIN)\b/;
-var STOP_AFTER_NO_ANSWER = 3;
-var STOPPED_WHY = `not run: ${STOP_AFTER_NO_ANSWER} requests in a row got no answer, so the run stopped early. Check the system is up, then run again`;
-var noAnswer = (o4) => !!o4.error && NO_ANSWER.test(o4.error);
-var LOCK_STALE_MS = 3 * 60 * 6e4;
-function alive(pid) {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (err) {
-    return err.code === "EPERM";
-  }
-}
-function evidenceDir(manifest, mode, opts = {}) {
-  ownedFolder(manifest, manifest.evidence);
-  const final = ownedFolder(manifest, path8.join(manifest.evidence, mode));
-  const work = ownedFolder(manifest, path8.join(manifest.evidence, `.${mode}.partial`));
-  const lock = ownedFolder(manifest, path8.join(manifest.evidence, `.${mode}.lock`));
-  fs9.mkdirSync(path8.dirname(lock), { recursive: true });
-  const mine = JSON.stringify({ pid: process.pid, started: (/* @__PURE__ */ new Date()).toISOString() });
-  try {
-    fs9.writeFileSync(lock, mine, { flag: "wx" });
-  } catch {
-    let held = {};
-    try {
-      held = JSON.parse(fs9.readFileSync(lock, "utf8"));
-    } catch {
-    }
-    const age = held.started ? Date.now() - Date.parse(held.started) : Infinity;
-    if (typeof held.pid === "number" && alive(held.pid) && age < LOCK_STALE_MS) {
-      throw new ManifestError(`Another \`cmtk ${mode}\` is writing ${path8.relative(manifest.root, final)} (process ${held.pid}, started ${held.started}). Wait for it to finish, then run again.`);
-    }
-    fs9.writeFileSync(lock, mine);
-  }
-  const release = () => {
-    try {
-      if (fs9.readFileSync(lock, "utf8") === mine)
-        fs9.rmSync(lock, { force: true });
-    } catch {
-    }
-  };
-  try {
-    fs9.rmSync(work, { recursive: true, force: true });
-    fs9.mkdirSync(path8.join(work, "answers"), { recursive: true });
-  } catch (err) {
-    release();
-    throw err;
-  }
-  return {
-    dir: work,
-    commit() {
-      fs9.rmSync(final, { recursive: true, force: true });
-      fs9.renameSync(work, final);
-      if (opts.dated || manifest.evidence_history.dated) {
-        const note = opts.note ?? ((line2) => {
-          process.stderr.write(`${line2}
-`);
-        });
-        try {
-          const kept = keepDated(manifest, mode, final);
-          note(`Kept a dated copy: ${path8.join(manifest.evidence, "history", mode, kept.name).split(path8.sep).join("/")}.`);
-          if (kept.removed.length)
-            note(`Removed old dated runs by the clean-up rule: ${kept.removed.join(", ")}.`);
-          for (const w2 of kept.warnings)
-            note(`Warning: ${w2}`);
-        } catch (err) {
-          note(`Warning: no dated copy was kept: ${err.message}`);
-        }
-      }
-      return final;
-    },
-    release
-  };
-}
-var failed = (err) => err instanceof Error ? err.message : String(err);
-function settingsOf(manifest, drift, known) {
-  return {
-    manifest: path8.relative(manifest.root, manifest.file).split(path8.sep).join("/"),
-    manifest_sha256: crypto3.createHash("sha256").update(fs9.readFileSync(manifest.file)).digest("hex"),
-    match: manifest.match,
-    overrides: manifest.overrides,
-    scrub: manifest.scrub,
-    ...manifest.visual_tolerance ? { visual_tolerance: manifest.visual_tolerance } : {},
-    drift_file: manifest.drift,
-    drift_entries: drift.length,
-    ...known ? { known_issues_file: manifest.known_issues, known_issues_entries: known.length } : {}
-  };
-}
-var where = (t3) => (t3.base_url ? cleanUrl(t3.base_url) : void 0) ?? Object.entries(t3).filter(([k2]) => k2 !== "name" && k2 !== "surfaces").map(([k2, v2]) => `${k2}=${v2}`).join(", ");
-var writeJson = (file, data) => fs9.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8");
-function evidenceOf(obs, dir, stem) {
-  const { screenshots, ...rest } = obs;
-  if (!screenshots?.length)
-    return rest;
-  if (!dir || !stem)
-    return rest;
-  return {
-    ...rest,
-    screenshots: screenshots.map((s4, i8) => {
-      const bytes = Buffer.from(String(s4.png_base64), "base64");
-      const file = `${stem}.screen-${String(i8 + 1).padStart(2, "0")}.png`;
-      fs9.writeFileSync(path8.join(dir, file), bytes);
-      return { page: String(s4.page), file, sha256: crypto3.createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length };
-    })
-  };
-}
-function modelCalls() {
-  const tally = { total: 0, cases_not_counted: 0 };
-  return {
-    tally,
-    add(surface, obs) {
-      if (surface === "http")
-        return;
-      if (typeof obs.model_calls === "number" && Number.isInteger(obs.model_calls) && obs.model_calls >= 0)
-        tally.total += obs.model_calls;
-      else
-        tally.cases_not_counted++;
-    }
-  };
-}
-function target(manifest, name, role) {
-  if (!name)
-    throw new ManifestError(`cmtk.yaml names no ${role} target. Set \`${role}:\` to one of: ${Object.keys(manifest.targets).join(", ")}.`);
-  const t3 = manifest.targets[name];
-  if (!t3)
-    throw new ManifestError(`No target called ${name}. Targets: ${Object.keys(manifest.targets).join(", ")}.`);
-  return t3;
-}
-async function run(manifest, opts = {}) {
-  const t3 = target(manifest, opts.target ?? manifest.default_target, "default_target");
-  const selected = selectCases(manifest, "run", opts.only, opts.acceptedOnly);
-  const compareOnly = (c4) => manifest.compare_only_surfaces.includes(c4.surface ?? "http");
-  const cases = selected.filter((c4) => !compareOnly(c4));
-  const leftOut = selected.length - cases.length;
-  const known = loadKnownIssues(manifest).filter((k2) => !k2.target || k2.target === t3.name);
-  const extra = envHeaders(manifest);
-  const adapters = adaptersFor(manifest);
-  const ev = evidenceDir(manifest, "run", opts);
-  try {
-    const dir = ev.dir;
-    const out = [];
-    const models = modelCalls();
-    let silent = 0;
-    try {
-      for (const c4 of cases) {
-        const b2 = base(c4);
-        const gap = noAdapter(c4, manifest);
-        if (gap) {
-          out.push({ ...b2, ...gap });
-          continue;
-        }
-        const missing = lacking(b2.surface, t3);
-        if (missing.length) {
-          out.push({ ...b2, result: "SKIPPED", why: `not run: ${hasNo(missing, b2.surface)}` });
-          continue;
-        }
-        if (c4.expect_draft) {
-          out.push({ ...b2, result: "SKIPPED", why: EXPECT_DRAFT_WHY });
-          continue;
-        }
-        if (c4.draft) {
-          out.push({ ...b2, result: "SKIPPED", why: DRAFT_WHY });
-          continue;
-        }
-        if (!c4.expect) {
-          out.push({ ...b2, result: "SKIPPED", why: "no `expect:` block, so there is nothing to check on one system" });
-          continue;
-        }
-        if (unsafe(c4, manifest, opts)) {
-          out.push({ ...b2, result: "SKIPPED", why: UNSAFE_WHY });
-          continue;
-        }
-        if (silent >= STOP_AFTER_NO_ANSWER) {
-          out.push({ ...b2, result: "SKIPPED", why: STOPPED_WHY });
-          continue;
-        }
-        try {
-          const obs = await adapters.get(b2.surface).run(c4, t3, extra);
-          writeJson(path8.join(dir, "answers", `${c4.id}.json`), evidenceOf(obs, path8.join(dir, "answers"), c4.id));
-          models.add(b2.surface, obs);
-          silent = noAnswer(obs) ? silent + 1 : 0;
-          const sent = { ...obs.inputs?.length ? { inputs: obs.inputs } : {}, ...obs.before ? { before: obs.before } : {} };
-          if (obs.error) {
-            out.push({ ...b2, ...sent, result: "ERROR", why: obs.error });
-            continue;
-          }
-          const failures = checkExpectation(c4.expect, obs);
-          const accepted = markKnown(c4.id, failures, known);
-          out.push({ ...b2, ...sent, result: failures.length ? "FAIL" : "PASS", ...failures.length ? { failures } : {}, ...accepted ? { known_issues: accepted } : {}, ...obs.truncated ? { truncated: true, note: "the answer was over 5 MB; only the first 5 MB were checked" } : {} });
-        } catch (err) {
-          out.push({ ...b2, result: "ERROR", why: failed(err) });
-        }
-      }
-    } finally {
-      await adapters.closeAll();
-    }
-    const report = summarise({ mode: "run", manifest, targets: { [t3.name]: where(t3) }, cases: out, contracts: [], drift: [], usedDrift: /* @__PURE__ */ new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, [], known), modelCalls: models.tally, excludedDrafts: selected.excluded, excludedCompareOnly: leftOut, compareOnlySurfaces: manifest.compare_only_surfaces, known: knownInReport(known, out, new Set(loadCases(manifest).map((c4) => c4.id))) });
-    writeJson(path8.join(dir, "REPORT.json"), report);
-    fs9.writeFileSync(path8.join(dir, "REPORT.md"), renderReport(report), "utf8");
-    ev.commit();
-    return report;
-  } finally {
-    ev.release();
-  }
-}
-async function compare(manifest, opts = {}) {
-  const ref = target(manifest, manifest.reference, "reference");
-  const cand = target(manifest, manifest.candidate, "candidate");
-  if (ref.name === cand.name)
-    throw new ManifestError("The reference and the candidate are the same target; comparing needs two systems.");
-  const cases = selectCases(manifest, "compare", opts.only, opts.acceptedOnly);
-  const drift = loadDrift(manifest);
-  scrubberOf(manifest);
-  const extra = envHeaders(manifest);
-  const adapters = adaptersFor(manifest);
-  const ev = evidenceDir(manifest, "compare", opts);
-  try {
-    const dir = ev.dir;
-    const used = /* @__PURE__ */ new Set();
-    const fired = new Map(scrubRules(manifest.scrub).map((rule) => [rule, 0]));
-    const contracts = [];
-    const out = [];
-    const models = modelCalls();
-    let silent = 0;
-    try {
-      const http2 = adapters.get("http");
-      for (const k2 of manifest.contracts) {
-        const missing = lacking("http", ref, cand);
-        if (missing.length) {
-          contracts.push({ name: k2.name, kind: k2.kind, result: "NOT COMPARABLE", findings: [{ breaking: null, what: `not comparable: ${hasNo(missing, "http")}` }] });
-          continue;
-        }
-        const probe2 = { id: `contract-${k2.name}`, request: { method: "GET", path: k2.path } };
-        const [a4, b2] = [await http2.run(probe2, ref, extra), await http2.run(probe2, cand, extra)];
-        const slug2 = k2.name.replace(/[^A-Za-z0-9_.-]/g, "_").slice(0, 64);
-        if (a4.body !== void 0)
-          fs9.writeFileSync(path8.join(dir, "answers", `contract-${slug2}.reference.txt`), a4.body, "utf8");
-        if (b2.body !== void 0)
-          fs9.writeFileSync(path8.join(dir, "answers", `contract-${slug2}.candidate.txt`), b2.body, "utf8");
-        const outcome = checkContract(k2, a4, b2);
-        for (const f4 of outcome.findings) {
-          const hit2 = f4.where ? coveringDrift(drift, `contract-${k2.name}`, f4.where) : void 0;
-          if (hit2) {
-            f4.drift = hit2.id;
-            used.add(hit2.id);
-          }
-        }
-        contracts.push(outcome);
-      }
-      for (const c4 of cases) {
-        const b2 = { ...base(c4), match: matchFor(c4, manifest) };
-        const gap = noAdapter(c4, manifest);
-        if (gap) {
-          out.push({ ...b2, ...gap });
-          continue;
-        }
-        if (c4.draft) {
-          out.push({ ...b2, result: "SKIPPED", why: DRAFT_WHY });
-          continue;
-        }
-        const missing = lacking(b2.surface, ref, cand);
-        if (missing.length) {
-          out.push({ ...b2, result: "NOT COMPARABLE", why: `not comparable: ${hasNo(missing, b2.surface)}` });
-          continue;
-        }
-        if (unsafe(c4, manifest, opts)) {
-          out.push({ ...b2, result: "SKIPPED", why: UNSAFE_WHY });
-          continue;
-        }
-        if (silent >= STOP_AFTER_NO_ANSWER) {
-          out.push({ ...b2, result: "SKIPPED", why: STOPPED_WHY });
-          continue;
-        }
-        try {
-          const adapter = adapters.get(b2.surface);
-          if (adapter.reset) {
-            await adapter.reset(ref);
-            await adapter.reset(cand);
-          }
-          const ra = await adapter.run(c4, ref, extra);
-          const rb = await adapter.run(c4, cand, extra);
-          writeJson(path8.join(dir, "answers", `${c4.id}.reference.json`), evidenceOf(ra, path8.join(dir, "answers"), `${c4.id}.reference`));
-          writeJson(path8.join(dir, "answers", `${c4.id}.candidate.json`), evidenceOf(rb, path8.join(dir, "answers"), `${c4.id}.candidate`));
-          models.add(b2.surface, ra);
-          models.add(b2.surface, rb);
-          silent = noAnswer(ra) || noAnswer(rb) ? silent + 1 : 0;
-          if (ra.inputs?.length)
-            b2.inputs = ra.inputs;
-          if (ra.before)
-            b2.before = ra.before;
-          if (ra.error || rb.error) {
-            out.push({ ...b2, result: "ERROR", why: [ra.error && `reference: ${ra.error}`, rb.error && `candidate: ${rb.error}`].filter(Boolean).join("; ") });
-            continue;
-          }
-          const diffs = compareObservations(ra, rb, manifest, b2.match, fired);
-          for (const d4 of diffs) {
-            const hit2 = coveringDrift(drift, c4.id, d4.where);
-            if (hit2) {
-              d4.drift = hit2.id;
-              used.add(hit2.id);
-            }
-          }
-          const open = diffs.filter((d4) => !d4.drift);
-          out.push({
-            ...b2,
-            result: open.length ? "DIFFERENT" : diffs.length ? "DRIFT" : "MATCH",
-            ...diffs.length ? { differences: diffs } : {},
-            ...ra.truncated || rb.truncated ? { truncated: true, note: "an answer was over 5 MB; only the first 5 MB were compared" } : {}
-          });
-        } catch (err) {
-          out.push({ ...b2, result: "ERROR", why: failed(err) });
-        }
-      }
-    } finally {
-      await adapters.closeAll();
-    }
-    const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), modelCalls: models.tally, excludedDrafts: cases.excluded, surfaces: { [ref.name]: ref.surfaces, [cand.name]: cand.surfaces }, ...fired.size ? { scrubFired: Object.fromEntries(fired) } : {} });
-    writeJson(path8.join(dir, "REPORT.json"), report);
-    fs9.writeFileSync(path8.join(dir, "REPORT.md"), renderReport(report), "utf8");
-    ev.commit();
-    return report;
-  } finally {
-    ev.release();
-  }
-}
-
-// packages/core/dist/shadow.js
-var SHADOW_FORMATS = ["auto", "clf", "w3c", "jsonl"];
-var DEFAULT_HEADERS = /* @__PURE__ */ new Set(["accept", "accept-language"]);
-var OVERRIDE_HEADERS = /* @__PURE__ */ new Set(["x-http-method-override", "x-http-method", "x-method-override"]);
-var OVERRIDE_QUERY = /^(_method|\$method|x-http-method(-override)?|x-method-override)$/i;
-var NO_ANSWER2 = /^(ETIMEDOUT|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENETUNREACH|ENOTFOUND|EAI_AGAIN)\b/;
-var MAX_PATH = 8e3;
-var MAX_PLACES = 200;
-function looksPersonal(name) {
-  const n3 = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-  return /^(name|forename|givenname|familyname|displayname|username|user|login|mail|telephone|tel|msisdn|address|addressline\d?|street|postalcode|zip|zipcode|dob|birthdate|birthday|ssn|nino|licencenumber|licensenumber|iban|sortcode|accountnumber|cardholder|ip|ipaddress|clientip|contact)$/.test(n3) || /(email|phone|mobile|surname|lastname|firstname|fullname|postcode|dateofbirth|passport|nationalinsurance)/.test(n3);
-}
-var luhn = (digits) => {
-  let sum = 0;
-  for (let i8 = 0; i8 < digits.length; i8++) {
-    let d4 = Number(digits[digits.length - 1 - i8]);
-    if (i8 % 2 === 1) {
-      d4 *= 2;
-      if (d4 > 9)
-        d4 -= 9;
-    }
-    sum += d4;
-  }
-  return sum % 10 === 0;
-};
-var SHAPES = [
-  ["email", /[^\s@/?&=;,"'<>]+@[^\s@/?&=;,"'<>]+\.[A-Za-z]{2,}/g],
-  ["token", /\beyJ[\w-]{4,}\.[\w-]{4,}\.[\w-]*/g],
-  ["token", /\b(?:sk|pk|rk)_(?:live|test)_\w+/g],
-  ["token", /\b[A-Fa-f0-9]{32,}\b/g],
-  ["token", /[A-Za-z0-9+_-]{40,}={0,2}/g],
-  ["card number", /\b\d(?:[ -]?\d){12,18}\b/g, (m4) => luhn(m4.replace(/\D/g, ""))],
-  ["national number", /\b[A-CEGHJ-PR-TW-Z]{2}\s?\d{2}\s?\d{2}\s?\d{2}\s?[A-D]\b/gi],
-  ["national number", /\b\d{3}-\d{2}-\d{4}\b/g],
-  ["bank account", /\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b/g],
-  ["postcode", /\b[A-PR-UWYZ][A-HK-Y]?\d[A-Z\d]?[ +]?\d[ABD-HJLNP-UW-Z]{2}\b/gi],
-  ["phone number", /(?:\+|\b00)\d[\d ()-]{7,16}\d\b/g],
-  ["phone number", /\b0\d{9,10}\b/g],
-  ["IP address", /\b\d{1,3}(?:\.\d{1,3}){3}\b/g]
-];
-function redactText(text2, own = []) {
-  const kinds = [];
-  let out = text2;
-  for (const rx of own)
-    out = out.replace(rx, () => {
-      kinds.push("your --redact rule");
-      return REDACTED;
-    });
-  for (const [kind, rx, keep2] of SHAPES) {
-    out = out.replace(rx, (m4) => {
-      if (keep2 && !keep2(m4))
-        return m4;
-      kinds.push(kind);
-      return REDACTED;
-    });
-  }
-  return { text: out, kinds };
-}
-var decoded = (s4) => {
-  try {
-    return decodeURIComponent(s4.replace(/\+/g, " "));
-  } catch {
-    return s4;
-  }
-};
-function cleanValue(raw, name, own, kinds) {
-  if (looksSecret(name)) {
-    kinds.push("credential");
-    return REDACTED;
-  }
-  if (looksPersonal(name)) {
-    kinds.push("personal field");
-    return REDACTED;
-  }
-  const r6 = redactText(decoded(raw), own);
-  if (!r6.kinds.length)
-    return raw;
-  kinds.push(...r6.kinds);
-  return REDACTED;
-}
-function cleanTarget(target2, own = []) {
-  let t3 = target2.trim();
-  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(t3)) {
-    const slash = t3.indexOf("/", t3.indexOf("://") + 3);
-    t3 = slash < 0 ? "/" : t3.slice(slash);
-  }
-  t3 = t3.split("#")[0];
-  if (!t3.startsWith("/") || t3.startsWith("//") || t3.length > MAX_PATH || /[\s\u0000-\u001f\u007f]/.test(t3))
-    return void 0;
-  const q2 = t3.indexOf("?");
-  const pathPart = q2 < 0 ? t3 : t3.slice(0, q2);
-  const query = q2 < 0 ? void 0 : t3.slice(q2 + 1);
-  const kinds = [];
-  const segments = pathPart.split("/").map((seg) => {
-    const [head, ...params] = seg.split(";");
-    const r6 = redactText(decoded(head), own);
-    kinds.push(...r6.kinds);
-    const cleanParams = params.map((p4) => {
-      const eq = p4.indexOf("=");
-      return eq < 0 ? p4 : `${p4.slice(0, eq)}=${cleanValue(p4.slice(eq + 1), p4.slice(0, eq), own, kinds)}`;
-    });
-    return [r6.kinds.length ? REDACTED : head, ...cleanParams].join(";");
-  });
-  let out = segments.join("/");
-  if (query !== void 0) {
-    out += `?${query.split("&").map((pair) => {
-      const eq = pair.indexOf("=");
-      if (eq < 0) {
-        const r6 = redactText(decoded(pair), own);
-        kinds.push(...r6.kinds);
-        return r6.kinds.length ? REDACTED : pair;
-      }
-      const name = decoded(pair.slice(0, eq));
-      return `${pair.slice(0, eq)}=${cleanValue(pair.slice(eq + 1), name, own, kinds)}`;
-    }).join("&")}`;
-  }
-  return { path: out, kinds };
-}
-var CLF = /"([A-Za-z]+) (\S+)(?: HTTP\/[\d.]+)?"/;
-function fromJson(line2) {
-  let o4;
-  try {
-    o4 = JSON.parse(line2);
-  } catch {
-    return void 0;
-  }
-  if (!o4 || typeof o4 !== "object" || Array.isArray(o4))
-    return void 0;
-  const text2 = (...keys) => {
-    for (const k2 of keys)
-      if (typeof o4[k2] === "string" && o4[k2])
-        return o4[k2];
-    return void 0;
-  };
-  let method = text2("method", "request_method", "verb", "httpMethod", "cs-method");
-  let target2 = text2("uri", "url", "request_uri", "requestUri", "target", "path", "cs-uri-stem");
-  const line1 = text2("request");
-  if ((!method || !target2) && line1) {
-    const m4 = /^([A-Za-z]+) (\S+)/.exec(line1);
-    if (m4) {
-      method ??= m4[1];
-      target2 ??= m4[2];
-    }
-  }
-  if (!method || !target2)
-    return void 0;
-  const query = text2("query", "query_string", "args", "cs-uri-query");
-  if (query && query !== "-" && !target2.includes("?"))
-    target2 += `?${query.replace(/^\?/, "")}`;
-  const headers = {};
-  if (o4.headers && typeof o4.headers === "object" && !Array.isArray(o4.headers)) {
-    for (const [k2, v2] of Object.entries(o4.headers))
-      headers[k2] = Array.isArray(v2) ? v2.join(", ") : String(v2);
-  }
-  const body = o4.body ?? o4.request_body ?? o4.postData;
-  return { method, target: target2, headers, hasBody: body !== void 0 && body !== null && body !== "" && body !== "-" };
-}
-function lineReader(format) {
-  let fields;
-  return (line2) => {
-    if (!line2.trim())
-      return "skip";
-    if (line2.startsWith("#")) {
-      if (line2.startsWith("#Fields:"))
-        fields = line2.slice(8).trim().split(/\s+/);
-      return "skip";
-    }
-    const kind = format !== "auto" ? format : fields ? "w3c" : line2.trimStart().startsWith("{") ? "jsonl" : "clf";
-    if (kind === "jsonl")
-      return fromJson(line2);
-    if (kind === "w3c") {
-      const cols = line2.trim().split(/\s+/);
-      const at2 = (name) => {
-        const i8 = fields?.indexOf(name) ?? -1;
-        return i8 >= 0 ? cols[i8] : void 0;
-      };
-      const method = at2("cs-method"), stem = at2("cs-uri-stem"), query = at2("cs-uri-query");
-      if (!method || !stem)
-        return void 0;
-      return { method, target: query && query !== "-" ? `${stem}?${query}` : stem, headers: {}, hasBody: false };
-    }
-    const m4 = CLF.exec(line2);
-    return m4 ? { method: m4[1], target: m4[2], headers: {}, hasBody: false } : void 0;
-  };
-}
-function unsafeWhy(method, raw) {
-  if (!SAFE_METHODS.has(method))
-    return method;
-  if (raw.hasBody)
-    return `${method} with a body`;
-  for (const [k2, v2] of Object.entries(raw.headers)) {
-    if (OVERRIDE_HEADERS.has(k2.toLowerCase()) && !SAFE_METHODS.has(v2.trim().toUpperCase()))
-      return `${method} that overrides its method`;
-  }
-  const q2 = raw.target.indexOf("?");
-  if (q2 >= 0) {
-    for (const pair of raw.target.slice(q2 + 1).split("&")) {
-      const eq = pair.indexOf("=");
-      if (eq > 0 && OVERRIDE_QUERY.test(decoded(pair.slice(0, eq))) && !SAFE_METHODS.has(decoded(pair.slice(eq + 1)).trim().toUpperCase()))
-        return `${method} that overrides its method`;
-    }
-  }
-  return void 0;
-}
-function endpointOf(method, p4) {
-  const clean2 = p4.split("?")[0].split("/").map((s4) => /^\d+$/.test(s4) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s4) || /^[0-9a-f]{16,}$/i.test(s4) || s4 === REDACTED ? "{id}" : s4).join("/");
-  return `${method} ${clean2}`;
-}
-function regexOf(pattern, flag, flags = "") {
-  try {
-    return new RegExp(pattern, flags);
-  } catch (err) {
-    throw new ManifestError(`${flag}: ${JSON.stringify(pattern)} is not a valid regular expression: ${err.message}`);
-  }
-}
-function numberOption(v2, fallback, flag, ok, want) {
-  if (v2 === void 0)
-    return fallback;
-  if (!Number.isFinite(v2) || !ok(v2))
-    throw new ManifestError(`${flag} must be ${want}.`);
-  return v2;
-}
-async function captureRequests(sources, o4) {
-  const inc = o4.include ? regexOf(o4.include, "--include") : void 0;
-  const exc = o4.exclude ? regexOf(o4.exclude, "--exclude") : void 0;
-  const own = (o4.redact ?? []).map((r6) => regexOf(r6, "--redact", "g"));
-  const keep2 = new Set(DEFAULT_HEADERS);
-  for (const h4 of o4.keepHeaders ?? []) {
-    const n3 = h4.trim().toLowerCase();
-    if (!n3 || DROPPED_HEADERS.has(n3) || looksSecret(n3, "header") || OVERRIDE_HEADERS.has(n3))
-      throw new ManifestError(`--keep-header ${h4}: that header is never kept, because it can hold a credential or change the method. Credentials for a replay come from headers_from_env.`);
-    keep2.add(n3);
-  }
-  const stats = { lines: 0, unreadable: 0, dropped: {}, dropped_total: 0, filtered: 0, sampled_out: 0, over_limit: 0, kept: 0, redacted_requests: 0, redactions: {}, credential_headers_stripped: 0, sample: o4.sample, seed: o4.seed, max: o4.max, rate_per_second: 0 };
-  const requests = [];
-  let eligible = 0;
-  for (const file of sources) {
-    if (!fs10.existsSync(file) || !fs10.statSync(file).isFile())
-      throw new ManifestError(`${path9.basename(file)} does not exist or is not a file.`);
-    const read = lineReader(o4.format ?? "auto");
-    const lines = readline2.createInterface({ input: fs10.createReadStream(file, "utf8"), crlfDelay: Infinity });
-    for await (const line2 of lines) {
-      const raw = read(line2);
-      if (raw === "skip")
-        continue;
-      stats.lines++;
-      if (!raw) {
-        stats.unreadable++;
-        continue;
-      }
-      const method = raw.method.toUpperCase();
-      if (!/^[A-Z]{1,20}$/.test(method)) {
-        stats.unreadable++;
-        continue;
-      }
-      const unsafe2 = unsafeWhy(method, raw);
-      if (unsafe2) {
-        stats.dropped[unsafe2] = (stats.dropped[unsafe2] ?? 0) + 1;
-        stats.dropped_total++;
-        continue;
-      }
-      const clean2 = cleanTarget(raw.target, own);
-      if (!clean2) {
-        stats.unreadable++;
-        continue;
-      }
-      if (inc && !inc.test(clean2.path) || exc && exc.test(clean2.path)) {
-        stats.filtered++;
-        continue;
-      }
-      const ordinal = eligible++;
-      if (o4.sample < 1 && crypto4.createHash("sha256").update(`${o4.seed}:${ordinal}`).digest().readUInt32BE(0) / 2 ** 32 >= o4.sample) {
-        stats.sampled_out++;
-        continue;
-      }
-      if (requests.length >= o4.max) {
-        stats.over_limit++;
-        continue;
-      }
-      const headers = {};
-      for (const [k2, v2] of Object.entries(raw.headers)) {
-        const n3 = k2.toLowerCase();
-        if (looksSecret(k2, "header") || n3 === "cookie" || n3 === "authorization")
-          stats.credential_headers_stripped++;
-        else if (keep2.has(n3) && !/[\r\n]/.test(v2)) {
-          const r6 = redactText(v2, own);
-          headers[n3] = r6.text;
-          clean2.kinds.push(...r6.kinds);
-        }
-      }
-      const kinds = [...new Set(clean2.kinds)].sort();
-      for (const k2 of clean2.kinds)
-        stats.redactions[k2] = (stats.redactions[k2] ?? 0) + 1;
-      if (kinds.length)
-        stats.redacted_requests++;
-      requests.push({ n: requests.length + 1, method, path: clean2.path, ...Object.keys(headers).length ? { headers } : {}, ...kinds.length ? { redacted: kinds } : {} });
-    }
-  }
-  stats.kept = requests.length;
-  return { requests, stats };
-}
-var OPEN_WHERE = /^(status|header:content-type|body encoding)$/;
-function shownValue(v2, where2, keepValues) {
-  if (v2 === "(missing)" || OPEN_WHERE.test(where2))
-    return v2;
-  if (!keepValues)
-    return `(withheld: ${noiseKind(v2) ?? `${v2.length} characters`})`;
-  const last = where2.split(/[.:/[\]]+/).filter(Boolean).pop() ?? "";
-  if (looksSecret(where2) || looksSecret(last) || looksPersonal(last))
-    return REDACTED;
-  return redactText(v2).text;
-}
-var say = (n3, one, many = `${one}s`) => `${n3} ${n3 === 1 ? one : many}`;
-function decide2(c4, r6, captureOnly) {
-  const limit = `This covers only the ${say(r6.sent, "read-only request")} replayed, never the whole system.` + (c4.dropped_total ? ` ${say(c4.dropped_total, "request")} that could change data ${c4.dropped_total === 1 ? "was" : "were"} dropped and never sent.` : "") + (c4.sampled_out ? ` ${c4.sampled_out} left out by sampling.` : "") + (c4.over_limit ? ` ${c4.over_limit} left out by the limit of ${c4.max}.` : "");
-  const unexplainedNext = "for each one: scrub it if it is noise, approve it as drift (a named person, in the drift ledger), or fix the candidate. Then replay again.";
-  if (captureOnly)
-    return { verdict: "NO EVIDENCE", reason: `Capture only: ${say(c4.kept, "clean request")} written, and nothing sent.`, next: "read capture.jsonl for anything personal the shapes missed. Use --redact for a value of your own, then run again without --capture-only." };
-  if (!c4.kept)
-    return { verdict: "NO EVIDENCE", reason: `No request could be replayed: of ${say(c4.lines, "line")}, ${c4.dropped_total} could change data, ${c4.unreadable} could not be read and ${c4.filtered + c4.sampled_out} were left out.`, next: "check the file holds GET, HEAD or OPTIONS requests in a format cmtk reads, then run again." };
-  if (r6.different)
-    return { verdict: "UNEXPLAINED DIFFERENCES", reason: `${say(r6.different, "request")} answered differently, with no approved drift to explain ${r6.different === 1 ? "it" : "them"}. ${limit}`, next: unexplainedNext };
-  if (!r6.sent)
-    return { verdict: "NO EVIDENCE", reason: `No request got an answer from both systems: ${say(r6.errors, "error")}, ${r6.not_sent} not sent.`, next: "check both systems are up, then run again." };
-  if (r6.errors || r6.not_sent)
-    return { verdict: "INCOMPLETE", reason: `${say(r6.errors, "request")} could not be compared and ${r6.not_sent} ${r6.not_sent === 1 ? "was" : "were"} not sent. ${limit}`, next: "check both systems are up, then run again." };
-  if (r6.truncated)
-    return { verdict: "INCOMPLETE", reason: `${say(r6.truncated, "request")} had an answer over 5 MB, and only the first 5 MB were compared. ${limit}`, next: "a person checks those endpoints another way. The report's endpoints say which." };
-  return { verdict: "NO UNEXPLAINED DIFFERENCES", reason: `No unexplained difference. ${limit}`, next: "keep replaying for the agreed period. This is one kind of evidence, and it says nothing about requests that change data, which `cmtk compare` covers." };
-}
-var cell3 = (v2) => String(v2).replace(/\|/g, "\\|").replace(/\r?\n/g, " ").replace(/`/g, "'");
-function renderShadow(r6) {
-  const c4 = r6.capture, p4 = r6.replay;
-  const L2 = [`# Shadow traffic report: ${r6.system}`, "", `**Verdict: ${r6.verdict}**`, "", r6.reason, "", `Next: ${r6.next}`, "", `- Date: ${r6.date}`];
-  for (const [name, url] of Object.entries(r6.targets))
-    L2.push(`- ${name}: \`${url}\``);
-  L2.push(`- Read from: ${r6.sources.map(cell3).join(", ")}`, `- Values: ${r6.values === "withheld" ? "differing values are not stored (`--keep-values` stores them redacted, for test data only)" : "stored, with personal data redacted where its name or shape shows it"}`, "");
-  L2.push("## What was read", "", "| | Count |", "| --- | --- |", `| Lines read | ${c4.lines} |`, `| Could not be read (counted, never shown) | ${c4.unreadable} |`, `| Dropped and never sent, because they could change data | ${c4.dropped_total} |`, ...Object.entries(c4.dropped).sort().map(([m4, n3]) => `| - ${cell3(m4)} | ${n3} |`), `| Left out by --include or --exclude | ${c4.filtered} |`, `| Left out by sampling (${c4.sample}, seed ${c4.seed}) | ${c4.sampled_out} |`, `| Left out by the limit of ${c4.max} | ${c4.over_limit} |`, `| Kept for replay, at ${c4.rate_per_second} a second | ${c4.kept} |`, `| With something redacted | ${c4.redacted_requests} |`, `| Credential headers stripped | ${c4.credential_headers_stripped} |`, "");
-  const kinds = Object.entries(c4.redactions).sort();
-  if (kinds.length)
-    L2.push(`Redacted: ${kinds.map(([k2, n3]) => `${cell3(k2)} (${n3})`).join(", ")}. The values are gone, so these requests sent REDACTED to both systems.`, "");
-  L2.push("## Replay", "", "| Sent | Matched | Approved drift | Unexplained | Errors | Not sent | Over 5 MB |", "| --- | --- | --- | --- | --- | --- | --- |", `| ${p4.sent} | ${p4.matched} | ${p4.drift} | ${p4.different} | ${p4.errors} | ${p4.not_sent} | ${p4.truncated} |`, "");
-  L2.push("## Endpoints", "", "| Endpoint | Requests | Matched | Drift | Unexplained | Errors |", "| --- | --- | --- | --- | --- | --- |");
-  for (const e6 of r6.endpoints)
-    L2.push(`| \`${cell3(e6.endpoint)}\` | ${e6.requests} | ${e6.matched} | ${e6.drift} | ${e6.unexplained} | ${e6.errors} |`);
-  if (!r6.endpoints.length)
-    L2.push("| (none) | 0 | 0 | 0 | 0 | 0 |");
-  const open = r6.endpoints.flatMap((e6) => e6.differences.map((d4) => [e6, d4]));
-  if (open.length) {
-    const [a4, b2] = Object.keys(r6.targets);
-    L2.push("", "## Differences", "", `| Endpoint | Where | Requests | First request | ${a4} | ${b2} | Approved drift |`, "| --- | --- | --- | --- | --- | --- | --- |");
-    for (const [e6, d4] of open.slice(0, 500))
-      L2.push(`| \`${cell3(e6.endpoint)}\` | \`${cell3(d4.where)}\` | ${d4.requests} | ${d4.first_request} | ${cell3(d4.reference)} | ${cell3(d4.candidate)} | ${d4.drift ?? "\u2014"} |`);
-    if (open.length > 500)
-      L2.push("", `${open.length - 500} more are in REPORT.json.`);
-  }
-  if (r6.suggested_scrubs.length) {
-    L2.push("", "## Probably noise", "", "A person decides whether to scrub these: a scrub hides them from every later run.", "", "| Where | Requests | Why |", "| --- | --- | --- |");
-    for (const s4 of r6.suggested_scrubs)
-      L2.push(`| \`${cell3(s4.where)}\` | ${s4.cases} | ${s4.why} |`);
-  }
-  if (r6.unused_drift.length)
-    L2.push("", "## Drift that matched nothing", "", `No request needed these approved differences: ${r6.unused_drift.join(", ")}.`);
-  L2.push("", "The request file is `capture.jsonl` in this folder. It holds only cleaned requests, and it is all that was sent. Answers are not kept. This report and the capture stay in the client's environment.", "");
-  return L2.join("\n");
-}
-async function shadow(manifest, o4) {
-  if (!o4.from.length)
-    throw new ManifestError("`cmtk shadow` needs --from <file>: an access log or a mirror file.");
-  const ref = manifest.reference ? manifest.targets[manifest.reference] : void 0;
-  const cand = manifest.candidate ? manifest.targets[manifest.candidate] : void 0;
-  if (!ref || !cand)
-    throw new ManifestError("`cmtk shadow` needs a reference and a candidate in cmtk.yaml.");
-  if (ref.name === cand.name)
-    throw new ManifestError("The reference and the candidate are the same target; comparing needs two systems.");
-  for (const t3 of [ref, cand]) {
-    if (!t3.base_url)
-      throw new ManifestError(`Target ${t3.name} has no base_url. Shadow traffic is HTTP only.`);
-    if (t3.surfaces && !t3.surfaces.includes("http"))
-      throw new ManifestError(`Target ${t3.name} does not list the http surface. Shadow traffic is HTTP only.`);
-  }
-  const sample = numberOption(o4.sample, 1, "--sample", (n3) => n3 > 0 && n3 <= 1, "above 0 and up to 1, such as 0.1");
-  const seed = numberOption(o4.seed, 1, "--seed", Number.isInteger, "a whole number");
-  const rate = numberOption(o4.rate, 5, "--rate", (n3) => n3 > 0 && n3 <= 1e3, "above 0 and up to 1000 requests a second");
-  const max = numberOption(o4.max, 1e3, "--max", (n3) => Number.isInteger(n3) && n3 > 0, "a whole number above 0");
-  const drift = loadDrift(manifest);
-  scrubberOf(manifest);
-  const extra = envHeaders(manifest);
-  const { requests, stats } = await captureRequests(o4.from, { format: o4.format, sample, seed, max, include: o4.include, exclude: o4.exclude, keepHeaders: o4.keepHeaders, redact: o4.redact });
-  stats.rate_per_second = rate;
-  const ev = evidenceDir(manifest, "shadow", { dated: o4.dated, note: o4.note });
-  try {
-    const dir = ev.dir;
-    fs10.rmSync(path9.join(dir, "answers"), { recursive: true, force: true });
-    const captureFile = path9.join(dir, "capture.jsonl");
-    fs10.writeFileSync(captureFile, requests.map((q2) => JSON.stringify(q2)).join("\n") + (requests.length ? "\n" : ""), "utf8");
-    const replay = { sent: 0, matched: 0, drift: 0, different: 0, errors: 0, not_sent: 0, truncated: 0 };
-    const endpoints = /* @__PURE__ */ new Map();
-    const noise2 = /* @__PURE__ */ new Map();
-    const used = /* @__PURE__ */ new Set();
-    const fired = new Map(scrubRules(manifest.scrub).map((rule) => [rule, 0]));
-    const sleep = o4.sleep ?? ((ms) => new Promise((res) => setTimeout(res, ms)));
-    const now = o4.now ?? (() => performance.now());
-    if (!o4.captureOnly) {
-      const toSend = fs10.readFileSync(captureFile, "utf8").split("\n").filter(Boolean).map((l4) => JSON.parse(l4));
-      const http2 = httpAdapter({ timeoutS: manifest.timeout_s, insecureTls: manifest.insecure_tls, root: manifest.root });
-      const gap = 1e3 / rate;
-      let next2 = now();
-      let silent = 0;
-      for (const q2 of toSend) {
-        if (silent >= STOP_AFTER_NO_ANSWER) {
-          replay.not_sent++;
-          continue;
-        }
-        const wait = next2 - now();
-        if (wait > 0)
-          await sleep(wait);
-        next2 = Math.max(next2, now()) + gap;
-        const name = endpointOf(q2.method, q2.path);
-        const e6 = endpoints.get(name) ?? { endpoint: name, requests: 0, matched: 0, drift: 0, unexplained: 0, errors: 0, differences: [], places: /* @__PURE__ */ new Map() };
-        endpoints.set(name, e6);
-        e6.requests++;
-        const c4 = { id: `shadow-${q2.n}`, request: { method: q2.method, path: q2.path, headers: q2.headers ?? {}, body: null }, surface: "http" };
-        const ra = await http2.run(c4, ref, extra);
-        const rb = await http2.run(c4, cand, extra);
-        silent = [ra, rb].some((a4) => a4.error && NO_ANSWER2.test(a4.error)) ? silent + 1 : 0;
-        if (ra.error || rb.error) {
-          e6.errors++;
-          replay.errors++;
-          e6.first_error ??= [ra.error && `reference: ${ra.error}`, rb.error && `candidate: ${rb.error}`].filter(Boolean).join("; ");
-          continue;
-        }
-        replay.sent++;
-        if (ra.truncated || rb.truncated) {
-          e6.truncated = (e6.truncated ?? 0) + 1;
-          replay.truncated++;
-        }
-        const diffs = compareObservations(ra, rb, manifest, matchFor(c4, manifest), fired);
-        for (const d4 of diffs) {
-          const hit2 = coveringDrift(drift, `shadow:${name}`, d4.where);
-          if (hit2) {
-            d4.drift = hit2.id;
-            used.add(hit2.id);
-          }
-        }
-        if (diffs.some((d4) => !d4.drift)) {
-          e6.unexplained++;
-          replay.different++;
-        } else if (diffs.length) {
-          e6.drift++;
-          replay.drift++;
-        } else {
-          e6.matched++;
-          replay.matched++;
-        }
-        for (const d4 of diffs) {
-          const where2 = d4.where.replace(/\[\d+\]/g, "[*]");
-          const placeKey = `${where2}\0${d4.drift ?? ""}`;
-          const kept = e6.places.get(placeKey);
-          if (kept)
-            kept.requests++;
-          else if (e6.places.size >= MAX_PLACES)
-            e6.more_differences = (e6.more_differences ?? 0) + 1;
-          else
-            e6.places.set(placeKey, { where: where2, requests: 1, ...d4.drift ? { drift: d4.drift } : {}, first_request: q2.n, reference: shownValue(d4.reference, d4.where, !!o4.keepValues), candidate: shownValue(d4.candidate, d4.where, !!o4.keepValues) });
-          if (!d4.drift) {
-            const a4 = noiseKind(d4.reference), b2 = noiseKind(d4.candidate);
-            const seen = noise2.get(where2);
-            noise2.set(where2, { kind: a4 && a4 === b2 && (!seen || seen.kind === a4) ? a4 : void 0, count: (seen?.count ?? 0) + 1 });
-          }
-        }
-      }
-    }
-    const list = [...endpoints.values()].sort((a4, b2) => b2.unexplained - a4.unexplained || a4.endpoint.localeCompare(b2.endpoint)).map(({ places, ...e6 }) => ({ ...e6, differences: [...places.values()] }));
-    const { verdict, reason, next } = decide2(stats, replay, !!o4.captureOnly);
-    const relevant = drift.filter((d4) => d4.case === "*" || d4.case.startsWith("shadow:"));
-    const report = {
-      tool: "cmtk",
-      mode: "shadow",
-      system: manifest.system,
-      date: o4.date ?? (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
-      verdict,
-      targets: { [ref.name]: cleanUrl(ref.base_url), [cand.name]: cleanUrl(cand.base_url) },
-      sources: o4.from.map((f4) => path9.basename(f4)),
-      // the file name only: a full path can name a person's folders
-      capture: stats,
-      replay,
-      endpoints: list,
-      values: o4.keepValues ? "redacted" : "withheld",
-      capture_only: !!o4.captureOnly,
-      unused_drift: o4.captureOnly ? [] : relevant.filter((d4) => !used.has(d4.id)).map((d4) => d4.id).sort(),
-      suggested_scrubs: [...noise2].filter(([, n3]) => n3.kind).map(([where2, n3]) => ({ where: where2, cases: n3.count, why: `both sides hold ${n3.kind} that changes on every call` })).sort((a4, b2) => a4.where.localeCompare(b2.where)),
-      settings: settingsOf(manifest, drift),
-      ...fired.size && !o4.captureOnly ? { scrub_fired: Object.fromEntries(fired) } : {},
-      reason,
-      next
-    };
-    fs10.writeFileSync(path9.join(dir, "REPORT.json"), JSON.stringify(report, null, 2) + "\n", "utf8");
-    fs10.writeFileSync(path9.join(dir, "REPORT.md"), renderShadow(report), "utf8");
-    ev.commit();
-    return report;
-  } finally {
-    ev.release();
-  }
-}
-
-// packages/core/dist/signoff.js
-import crypto5 from "node:crypto";
+// packages/core/dist/data/model.js
+var import_yaml4 = __toESM(require_dist(), 1);
 import fs11 from "node:fs";
 import path10 from "node:path";
-var DECISIONS = ["accept", "accept with conditions", "reject"];
-var SignoffError = class extends Error {
-};
-var SKIP = /* @__PURE__ */ new Set(["SIGNOFF.json", "DEFECTS.md", "DEFECTS.json"]);
-function evidenceFingerprint(dir) {
-  const files = [];
-  const walk = (d4) => {
-    for (const e6 of fs11.readdirSync(d4, { withFileTypes: true })) {
-      const full = path10.join(d4, e6.name);
-      if (e6.isDirectory())
-        walk(full);
-      else if (e6.isFile() && !(d4 === dir && SKIP.has(e6.name)))
-        files.push(full);
-    }
-  };
-  walk(dir);
-  const h4 = crypto5.createHash("sha256");
-  for (const f4 of files.map((f5) => path10.relative(dir, f5).split(path10.sep).join("/")).sort()) {
-    let bytes = fs11.readFileSync(path10.join(dir, f4));
-    if (f4 === "REPORT.md")
-      bytes = Buffer.from(bytes.toString("utf8").split(/\r?\n## Sign-off\r?\n/)[0], "utf8");
-    h4.update(f4).update("\0").update(crypto5.createHash("sha256").update(bytes).digest("hex")).update("\n");
-  }
-  return h4.digest("hex");
-}
-function signoffState(dir) {
-  const file = path10.join(dir, "SIGNOFF.json");
-  if (!fs11.existsSync(file))
-    return { state: "none" };
-  let s4;
-  try {
-    s4 = JSON.parse(fs11.readFileSync(file, "utf8"));
-  } catch {
-    return { state: "none" };
-  }
-  return s4.evidence_sha256 === evidenceFingerprint(dir) ? { state: "signed", signoff: s4 } : { state: "stale", signoff: s4 };
-}
-function describeSignoff(st2) {
-  if (st2.state === "none")
-    return "not signed";
-  const s4 = st2.signoff;
-  const covers3 = s4.known_issues?.length ? `; known issues still failing: ${s4.known_issues.join(", ")}` : "";
-  return st2.state === "signed" ? `signed by ${s4.name} (${s4.role}): ${s4.decision}, ${s4.date}${covers3}${s4.scope ? `; for what was compared only. ${s4.scope}` : ""}` : `the signature by ${s4.name} is for different evidence, so it no longer counts`;
-}
-function recordSignoff(dir, who, date, manifest) {
-  const json = path10.join(dir, "REPORT.json"), md = path10.join(dir, "REPORT.md");
-  if (!fs11.existsSync(json) || !fs11.existsSync(md))
-    throw new SignoffError("There is no report in this folder yet.");
-  const report = JSON.parse(fs11.readFileSync(json, "utf8"));
-  if (report.verdict === "NO EVIDENCE")
-    throw new SignoffError("This report holds no evidence, so there is nothing to sign. Add cases and run again.");
-  if (manifest && report.settings) {
-    const named = path10.relative(manifest.root, manifest.file).split(path10.sep).join("/");
-    if (named !== report.settings.manifest) {
-      throw new SignoffError(`This report was produced from ${report.settings.manifest}, not ${named}. Read ${report.settings.manifest}, then sign with --manifest ${report.settings.manifest}, or run again with ${named}.`);
-    }
-  }
-  const name = who.name.trim(), role = who.role.trim(), decision = who.decision.trim().toLowerCase();
-  if (!name || !role || !DECISIONS.includes(decision))
-    throw new SignoffError(`Name, role and one of ${DECISIONS.join(" / ")} are all needed. Nothing was signed.`);
-  if (/[\u0000-\u001f\u007f-\u009f]/.test(name + role))
-    throw new SignoffError("Name and role must be plain text. Nothing was signed.");
-  const known = (report.known_issues ?? []).filter((k2) => k2.state === "still fails").map((k2) => `${k2.id} (accepted by ${k2.accepted_by})`);
-  const s4 = {
-    name,
-    role,
-    decision,
-    date,
-    verdict: report.verdict,
-    evidence_sha256: evidenceFingerprint(dir),
-    ...known.length ? { known_issues: known } : {},
-    ...report.scope && !report.scope.whole ? { scope: report.scope.statement } : {},
-    ...report.settings ? { manifest: report.settings.manifest, manifest_sha256: report.settings.manifest_sha256 } : {}
-  };
-  const cell6 = (v2) => v2.replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
-  const row = (label2, value) => (t3) => t3.replace(new RegExp(`^\\| ${label2} \\|.*\\|$`, "m"), () => `| ${label2} | ${value} |`);
-  const text2 = [row("Name", cell6(name)), row("Role", cell6(role)), row("Date", date), row("Decision", decision), row("Evidence", `sha256 ${s4.evidence_sha256}`)].reduce((t3, f4) => f4(t3), fs11.readFileSync(md, "utf8"));
-  fs11.writeFileSync(path10.join(dir, "SIGNOFF.json"), JSON.stringify(s4, null, 2) + "\n", "utf8");
-  fs11.writeFileSync(md, text2, "utf8");
-  return s4;
-}
-
-// packages/core/dist/check.js
-import fs13 from "node:fs";
-
-// packages/core/dist/discover.js
-import { spawnSync } from "node:child_process";
-import fs12 from "node:fs";
-import path11 from "node:path";
-var CONTROL2 = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f​-‏‪-‮⁦-⁩]/;
-var clean = (v2, what, max = 500) => {
-  if (typeof v2 !== "string" || !v2.trim())
-    throw new ManifestError(`${what} is required.`);
-  if (CONTROL2.test(v2))
-    throw new ManifestError(`${what} holds control characters; write plain text.`);
-  return v2.trim().slice(0, max);
-};
-var slug = (s4) => s4.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "unnamed";
-var rel = (m4, f4) => path11.relative(m4.root, f4).split(path11.sep).join("/");
-var CALL_RULES = [
-  [/^System\.ServiceModel\.(ServiceHost|ServiceHostBase)$/, "soap", "in"],
-  [/^System\.ServiceModel\.(ClientBase`1|ChannelFactory`1)$/, "soap", "out"],
-  [/^System\.Net\.Http\.HttpClient$|^System\.Net\.(WebClient|HttpWebRequest|WebRequest)$|^RestSharp\.|^Flurl\./, "outbound-http", "out"],
-  [/^System\.Data\.(Entity|SqlClient|OleDb|Odbc)\.|^Microsoft\.Data\.(SqlClient|Sqlite)\.|^Microsoft\.EntityFrameworkCore\.?|^(Npgsql|MySql|MySqlConnector|Oracle|Dapper|MongoDB|StackExchange\.Redis)\b/, "database", "out"],
-  [/^System\.IO\.(File|FileInfo|FileStream|Directory|DirectoryInfo|FileSystemWatcher)$|^System\.IO\.Compression\.ZipFile$/, "files", "out"],
-  [/^System\.Net\.Mail\.|^(MailKit|MimeKit|SendGrid)\./, "email", "out"],
-  [/^System\.Messaging\.|^(RabbitMQ|Confluent\.Kafka|Amazon\.SQS|MassTransit|NServiceBus)\b|^Azure\.Messaging\.|^Microsoft\.Azure\.ServiceBus/, "queue", "out"],
-  [/^Twilio\./, "sms", "out"],
-  [/^(Stripe|Braintree|PayPal|Adyen|Square)\./, "payments", "out"],
-  [/^System\.ServiceProcess\.ServiceBase$|^Microsoft\.Extensions\.Hosting\.BackgroundService$|^(Quartz|Hangfire)\./, "worker", "in"],
-  [/^(log4net|NLog|Serilog)\./, "logs", "out"]
-];
-var MVC = /^System\.Web\.Mvc\.(Controller|ControllerBase)$|^Microsoft\.AspNetCore\.Mvc\.(Controller|ControllerBase)$/;
-var WEB_API = /^System\.Web\.Http\.ApiController$/;
-function readReaMembers(raw, what) {
-  const j2 = raw;
-  const n3 = j2?.normalized_result ?? j2;
-  if (!Array.isArray(n3?.methods) || !Array.isArray(n3?.call_edges)) {
-    throw new ManifestError(`${what} is not the output of \`rea inspect-managed-members <dll> --json\`: it has no methods and call_edges.`);
-  }
-  const assembly = path11.basename(String(j2?.subject?.name ?? n3?.artifact?.path ?? what));
-  return { assembly, members: n3 };
-}
-function fromReaMembers(assembly, n3, source) {
-  const typeOf4 = new Map(n3.methods.map((m4) => [m4.token, m4.declaring_type ?? ""]));
-  const callerType = (e6) => {
-    const t3 = e6.caller_token && typeOf4.get(e6.caller_token) || "";
-    return t3.startsWith("<") ? "" : t3;
-  };
-  const out = [];
-  const controllers = /* @__PURE__ */ new Map();
-  const byKind = /* @__PURE__ */ new Map();
-  for (const e6 of n3.call_edges) {
-    const target2 = e6.target_declaring_type ?? "";
-    const caller = callerType(e6);
-    if (!target2 || !caller)
-      continue;
-    if (MVC.test(target2)) {
-      if (!controllers.has(caller))
-        controllers.set(caller, "mvc");
-      continue;
-    }
-    if (WEB_API.test(target2)) {
-      controllers.set(caller, "api");
-      continue;
-    }
-    const rule = CALL_RULES.find(([re2]) => re2.test(target2));
-    if (!rule)
-      continue;
-    const key2 = `${rule[1]}|${rule[2]}`;
-    const k2 = byKind.get(key2) ?? { kind: rule[1], direction: rule[2], uses: /* @__PURE__ */ new Map() };
-    k2.uses.set(caller, (k2.uses.get(caller) ?? /* @__PURE__ */ new Set()).add(target2));
-    byKind.set(key2, k2);
-  }
-  for (const [type, style] of [...controllers].sort()) {
-    const short2 = type.split(".").pop().replace(/Controller\d*$/, (m4) => m4.replace("Controller", ""));
-    const route = style === "api" ? `/api/${short2.toLowerCase()}` : `/${short2}`;
-    out.push({
-      kind: "http",
-      direction: "in",
-      name: type,
-      where: `${route} (by naming convention; check the real route)`,
-      found_in: [{ source, detail: `${type} is ${style === "api" ? "a Web API" : "an MVC"} controller` }]
-    });
-  }
-  for (const k2 of byKind.values()) {
-    const users = [...k2.uses].sort(([a4], [b2]) => a4.localeCompare(b2));
-    const short2 = (t3) => t3.replace(/`\d+$/, "").split(".").pop();
-    const listed = users.slice(0, 6).map(([t3, targets]) => {
-      const ts = [...targets].sort();
-      return `${t3} (${ts.slice(0, 3).map(short2).join(", ")}${ts.length > 3 ? ", \u2026" : ""})`;
-    });
-    out.push({
-      kind: k2.kind,
-      direction: k2.direction,
-      name: `${assembly}: ${k2.kind}`,
-      users: users.map(([t3]) => t3),
-      found_in: [{ source, detail: `used by ${listed.join("; ")}${users.length > 6 ? `; and ${users.length - 6} more types` : ""}` }]
-    });
-  }
-  return out;
-}
-function runRea(file) {
-  const set = process.env.CMTK_REA?.trim();
-  const [cmd, pre] = set ? /\.(m?js|cjs)$/i.test(set) ? [process.execPath, [set]] : [set, []] : [process.platform === "win32" ? "rea.cmd" : "rea", []];
-  const shell = process.platform === "win32" && /\.(cmd|bat)$/i.test(cmd);
-  if (shell && /["%^&|<>!\r\n]/.test(file))
-    throw new ManifestError(`${file}: the path holds a character the Windows shell would read; rename the file or folder.`);
-  const args = [...pre, "inspect-managed-members", shell ? `"${file}"` : file, "--json"];
-  const r6 = spawnSync(cmd, args, { encoding: "utf8", maxBuffer: 512 * 1024 * 1024, timeout: 3e5, shell, windowsHide: true });
-  if (r6.error && r6.error.code === "ENOENT" || shell && r6.status !== 0 && /not recognized/i.test(r6.stderr ?? "")) {
-    throw new ManifestError("REA is not installed. Install it with `npm install --global rea-agents` (it needs Node.js 22.19 or later), or set CMTK_REA to its command. Or run `rea inspect-managed-members <dll> --json` elsewhere and pass the saved output with --rea-json.");
-  }
-  if (r6.error)
-    throw new ManifestError(`REA failed on ${path11.basename(file)}: ${r6.error.message}`);
-  if (r6.status !== 0)
-    throw new ManifestError(`REA failed on ${path11.basename(file)}: ${(r6.stderr || r6.stdout || "").trim().split("\n")[0]?.slice(0, 300) ?? `exit ${r6.status}`}`);
-  try {
-    return JSON.parse(r6.stdout);
-  } catch {
-    throw new ManifestError(`REA's output for ${path11.basename(file)} is not JSON.`);
-  }
-}
-function describeConnection(cs) {
-  const parts = /* @__PURE__ */ new Map();
-  for (const p4 of cs.split(";")) {
-    const i8 = p4.indexOf("=");
-    if (i8 > 0)
-      parts.set(p4.slice(0, i8).trim().toLowerCase(), p4.slice(i8 + 1).trim());
-  }
-  const server = parts.get("data source") ?? parts.get("server") ?? parts.get("host") ?? parts.get("address") ?? parts.get("addr") ?? parts.get("network address");
-  const db = parts.get("initial catalog") ?? parts.get("database");
-  if (!server && !db)
-    return /^[a-z]+:\/\//i.test(cs) ? cleanUrl(cs).replace(/\?.*$/, "") : "(not recognised)";
-  return [server && `server ${server}`, db && `database ${db}`].filter(Boolean).join(", ");
-}
-var URL_RE = /^https?:\/\/[^\s"'<>]+$/i;
-var origin = (u4) => {
-  try {
-    const x2 = new URL(u4);
-    x2.username = "";
-    x2.password = "";
-    return `${x2.protocol}//${x2.host}`;
-  } catch {
-    return u4;
-  }
-};
-function walkXml(n3, visit, at2 = []) {
-  const here = [...at2, n3.local];
-  visit(n3, here);
-  for (const c4 of n3.children)
-    walkXml(c4, visit, here);
-}
-function fromXmlConfig(text2, source) {
-  const out = [];
-  walkXml(parseXml(text2), (n3, at2) => {
-    const parent = at2[at2.length - 2];
-    const a4 = (k2) => n3.attrs.get(k2);
-    if (parent === "connectionStrings" && n3.local === "add" && a4("name")) {
-      out.push({ kind: "database", direction: "out", name: a4("name"), where: describeConnection(a4("connectionString") ?? ""), found_in: [{ source, detail: `connection string "${a4("name")}"${a4("providerName") ? ` (${a4("providerName")})` : ""}` }] });
-    } else if (parent === "appSettings" && n3.local === "add" && a4("key") && a4("value")) {
-      const v2 = a4("value").trim();
-      if (URL_RE.test(v2))
-        out.push({ kind: "outbound-http", direction: "out", name: a4("key"), where: origin(v2), found_in: [{ source, detail: `appSettings "${a4("key")}"` }] });
-      else if (/^formatname:|\\private\$\\/i.test(v2))
-        out.push({ kind: "queue", direction: "out", name: a4("key"), where: v2, found_in: [{ source, detail: `appSettings "${a4("key")}" names a message queue` }] });
-      else if (/^\\\\[^\\]+\\[^\\]+/.test(v2))
-        out.push({ kind: "files", direction: "out", name: a4("key"), where: v2, found_in: [{ source, detail: `appSettings "${a4("key")}" names a file share` }] });
-    } else if (n3.local === "smtp" && at2.includes("mailSettings")) {
-      const host = n3.children.find((c4) => c4.local === "network")?.attrs.get("host");
-      out.push({ kind: "email", direction: "out", name: "smtp", where: host ?? a4("pickupDirectoryLocation") ?? a4("deliveryMethod") ?? "(not set)", found_in: [{ source, detail: "system.net/mailSettings/smtp" }] });
-    } else if (n3.local === "endpoint" && parent === "client" && at2.includes("system.serviceModel")) {
-      out.push({ kind: "soap", direction: "out", name: a4("name") ?? a4("contract") ?? "client endpoint", where: a4("address") ? origin(a4("address")) : void 0, found_in: [{ source, detail: `WCF client endpoint for ${a4("contract") ?? "a contract"}` }] });
-    } else if (n3.local === "service" && parent === "services" && at2.includes("system.serviceModel")) {
-      out.push({ kind: "soap", direction: "in", name: a4("name") ?? "service", found_in: [{ source, detail: "WCF service" }] });
-    }
-  });
-  return out;
-}
-function fromJsonConfig(value, source) {
-  const out = [];
-  const walk = (v2, at2) => {
-    if (v2 && typeof v2 === "object" && !Array.isArray(v2)) {
-      for (const [k2, x2] of Object.entries(v2))
-        walk(x2, [...at2, k2]);
-      return;
-    }
-    if (Array.isArray(v2)) {
-      v2.forEach((x2, i8) => walk(x2, [...at2, String(i8)]));
-      return;
-    }
-    if (typeof v2 !== "string")
-      return;
-    const key2 = at2.join(":");
-    if (at2.length === 2 && at2[0].toLowerCase() === "connectionstrings") {
-      out.push({ kind: "database", direction: "out", name: at2[1], where: describeConnection(v2), found_in: [{ source, detail: `ConnectionStrings:${at2[1]}` }] });
-    } else if (URL_RE.test(v2.trim())) {
-      out.push({ kind: "outbound-http", direction: "out", name: key2, where: origin(v2.trim()), found_in: [{ source, detail: key2 }] });
-    } else if (/smtp/i.test(key2) && /host|server/i.test(at2[at2.length - 1] ?? "")) {
-      out.push({ kind: "email", direction: "out", name: key2, where: v2, found_in: [{ source, detail: key2 }] });
-    }
-  };
-  walk(value, []);
-  return out;
-}
-function fromHar(raw, source, ownHosts) {
-  const entries = raw?.log?.entries;
-  if (!Array.isArray(entries))
-    throw new ManifestError(`${source} is not a HAR file: it has no log.entries.`);
-  const byOrigin = /* @__PURE__ */ new Map();
-  for (const e6 of entries) {
-    try {
-      const u4 = new URL(String(e6?.request?.url));
-      const o4 = `${u4.protocol}//${u4.host}`;
-      byOrigin.set(o4, (byOrigin.get(o4) ?? /* @__PURE__ */ new Set()).add(`${String(e6.request.method ?? "GET").toUpperCase()} ${u4.pathname}`));
-    } catch {
-    }
-  }
-  return [...byOrigin].map(([o4, paths]) => {
-    const own = ownHosts.has(new URL(o4).host);
-    return {
-      kind: own ? "http" : "outbound-http",
-      direction: own ? "in" : "out",
-      name: o4,
-      where: o4,
-      found_in: [{ source, detail: `${paths.size} distinct request${paths.size === 1 ? "" : "s"}${own ? "" : ", made by the browser"}` }]
-    };
-  });
-}
-function fromTopology(raw, source) {
-  const out = [];
-  if (!raw?.root)
-    throw new ManifestError(`${source} is not modernize's topology.json: it has no root.`);
-  const walk = (n3) => {
-    if (!n3 || typeof n3 !== "object")
-      return;
-    const name = String(n3.name ?? n3.id ?? "");
-    if (n3.kind === "datastore")
-      out.push({ kind: /file|folder|share|csv|vsam|dataset/i.test(name) ? "files" : "database", direction: "out", name, found_in: [{ source, detail: `data store ${n3.id ?? name}` }] });
-    if (n3.kind === "job")
-      out.push({ kind: "worker", direction: "in", name, found_in: [{ source, detail: `job ${n3.id ?? name}` }] });
-    if (n3.kind === "screen")
-      out.push({ kind: "ui", direction: "in", name, found_in: [{ source, detail: `screen ${n3.id ?? name}` }] });
-    for (const c4 of Array.isArray(n3.children) ? n3.children : [])
-      walk(c4);
-  };
-  walk(raw.root);
-  return out;
-}
-function coveredBy(b2, m4) {
-  if (b2.direction === "in" && (b2.kind === "http" || b2.kind === "soap"))
-    return "http (built in)";
-  for (const [name, a4] of Object.entries(m4.adapters))
-    if (name === b2.kind || (a4.covers ?? []).includes(b2.kind))
-      return name;
-  return void 0;
-}
-function discoveryFolder(m4) {
-  return inside(m4, path11.join(path11.dirname(m4.proposals), "discovery"));
-}
-function loadDiscovery(m4) {
-  const f4 = path11.join(discoveryFolder(m4), "boundaries.json");
-  if (!fs12.existsSync(f4))
-    return void 0;
-  const d4 = JSON.parse(fs12.readFileSync(f4, "utf8"));
-  for (const b2 of d4.boundaries)
-    b2.covered_by = coveredBy(b2, m4);
-  return d4;
-}
-function discover(m4, input, date = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)) {
-  const found = [];
-  const sources = [];
-  const file = (f4, what) => {
-    const full = inside(m4, f4);
-    if (!fs12.existsSync(full) || !fs12.statSync(full).isFile())
-      throw new ManifestError(`${what} ${f4} does not exist.`);
-    return full;
-  };
-  for (const f4 of input.assemblies ?? []) {
-    const full = file(f4, "The assembly");
-    const { assembly, members } = readReaMembers(runRea(full), rel(m4, full));
-    found.push(...fromReaMembers(assembly, members, `REA: ${rel(m4, full)}`));
-    sources.push(`REA on ${rel(m4, full)}`);
-  }
-  for (const f4 of input.reaJson ?? []) {
-    const full = file(f4, "REA's output");
-    const { assembly, members } = readReaMembers(JSON.parse(fs12.readFileSync(full, "utf8")), rel(m4, full));
-    found.push(...fromReaMembers(assembly, members, `REA: ${rel(m4, full)}`));
-    sources.push(`REA's saved output ${rel(m4, full)}`);
-  }
-  for (const f4 of input.configs ?? []) {
-    const full = file(f4, "The settings file");
-    const text2 = fs12.readFileSync(full, "utf8").replace(/^﻿/, "");
-    found.push(.../\.json$/i.test(full) ? fromJsonConfig(JSON.parse(text2), rel(m4, full)) : fromXmlConfig(text2, rel(m4, full)));
-    sources.push(rel(m4, full));
-  }
-  const ownHosts = new Set(Object.values(m4.targets).flatMap((t3) => {
-    try {
-      return t3.base_url ? [new URL(t3.base_url).host] : [];
-    } catch {
-      return [];
-    }
-  }));
-  for (const f4 of input.har ?? []) {
-    const full = file(f4, "The HAR file");
-    found.push(...fromHar(JSON.parse(fs12.readFileSync(full, "utf8")), rel(m4, full), ownHosts));
-    sources.push(rel(m4, full));
-  }
-  for (const f4 of input.topology ?? []) {
-    const full = file(f4, "The topology file");
-    found.push(...fromTopology(JSON.parse(fs12.readFileSync(full, "utf8")), rel(m4, full)));
-    sources.push(rel(m4, full));
-  }
-  if (input.found?.length) {
-    const who = clean(input.agent, "The agent's name", 100);
-    for (const [i8, x2] of input.found.entries()) {
-      const kind = clean(x2.kind, `found[${i8}].kind`, 40);
-      if (!BOUNDARY_KINDS.includes(kind))
-        throw new ManifestError(`found[${i8}].kind must be one of: ${BOUNDARY_KINDS.join(", ")}.`);
-      found.push({
-        kind,
-        direction: x2.direction === "in" ? "in" : x2.direction === "out" ? "out" : kind === "http" || kind === "soap" || kind === "worker" || kind === "ui" ? "in" : "out",
-        name: clean(x2.name, `found[${i8}].name`, 200),
-        ...x2.where ? { where: cleanUrl(clean(x2.where, `found[${i8}].where`, 300)) } : {},
-        found_in: [{ source: `agent: ${who.replace(/^agent:\s*/i, "")}`, detail: clean(x2.evidence, `found[${i8}].evidence`, 500) }]
-      });
-    }
-    sources.push(`findings from agent ${who.replace(/^agent:\s*/i, "")}`);
-  }
-  if (!sources.length)
-    throw new ManifestError("Give discover something to read: --assembly, --rea-json, --config, --har or --topology (or findings, from an agent).");
-  for (const db of found.filter((f4) => f4.kind === "database" && f4.users)) {
-    const named = found.find((f4) => f4.kind === "database" && !f4.users && db.users.some((u4) => u4.split(".").pop() === f4.name));
-    if (named) {
-      named.found_in.push(...db.found_in);
-      found.splice(found.indexOf(db), 1);
-    }
-  }
-  const previous = input.fresh ? void 0 : loadDiscovery(m4);
-  const byId = new Map((previous?.boundaries ?? []).map((b2) => [b2.id, b2]));
-  for (const f4 of found) {
-    const id = `${f4.kind}:${slug(f4.name)}`;
-    const b2 = byId.get(id) ?? { id, kind: f4.kind, direction: f4.direction, name: f4.name, found_in: [] };
-    if (!b2.where && f4.where)
-      b2.where = f4.where;
-    for (const e6 of f4.found_in)
-      if (!b2.found_in.some((x2) => x2.source === e6.source && x2.detail === e6.detail))
-        b2.found_in.push(e6);
-    byId.set(id, b2);
-  }
-  const boundaries = [...byId.values()].map((b2) => ({ ...b2, covered_by: coveredBy(b2, m4) })).sort((a4, b2) => Number(!!a4.covered_by) - Number(!!b2.covered_by) || BOUNDARY_KINDS.indexOf(a4.kind) - BOUNDARY_KINDS.indexOf(b2.kind) || a4.name.localeCompare(b2.name));
-  const discovery = { system: m4.system, date, sources: [.../* @__PURE__ */ new Set([...previous?.sources ?? [], ...sources])], boundaries };
-  const dir = discoveryFolder(m4);
-  fs12.mkdirSync(dir, { recursive: true });
-  fs12.writeFileSync(path11.join(dir, "boundaries.json"), JSON.stringify(discovery, null, 2) + "\n", "utf8");
-  fs12.writeFileSync(path11.join(dir, "BOUNDARIES.md"), renderDiscovery(discovery), "utf8");
-  return { file: rel(m4, path11.join(dir, "BOUNDARIES.md")), discovery };
-}
-var cell4 = (s4) => (s4 ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
-function describeDiscovery(d4) {
-  const open = d4.boundaries.filter((b2) => !b2.covered_by);
-  return `${d4.boundaries.length} boundar${d4.boundaries.length === 1 ? "y" : "ies"}: ${d4.boundaries.length - open.length} covered by an adapter, ${open.length} uncovered.`;
-}
-function renderDiscovery(d4) {
-  const open = d4.boundaries.filter((b2) => !b2.covered_by);
-  const L2 = [
-    `# Boundaries: ${d4.system}`,
-    "",
-    `Written by \`cmtk discover\` on ${d4.date}. ${describeDiscovery(d4)}`,
-    "",
-    "A boundary is anything the system serves, or calls, stores, sends or reads through. Each one needs cases, and an adapter to run them, before parity can be claimed for it. Run `cmtk discover` again after adding a source or an adapter.",
-    "",
-    `Sources: ${d4.sources.join("; ")}.`,
-    "",
-    "| Boundary | Kind | Direction | Where | Covered by | Found in |",
-    "|---|---|---|---|---|---|"
-  ];
-  for (const b2 of d4.boundaries) {
-    L2.push(`| ${cell4(b2.name)} | ${b2.kind} | ${b2.direction} | ${cell4(b2.where)} | ${b2.covered_by ? cell4(b2.covered_by) : "**uncovered**"} | ${cell4(b2.found_in.map((f4) => `${f4.source}: ${f4.detail}`).join("; "))} |`);
-  }
-  L2.push("");
-  if (open.length) {
-    L2.push("## Uncovered", "", "No adapter covers these, so no case can check them yet. For each kind, either:", "- write an adapter with `cmtk adapter new <name>` and list the kind under its `covers` in `cmtk.yaml`; or", "- have a person record why it is out of scope.", "");
-    for (const k2 of [...new Set(open.map((b2) => b2.kind))])
-      L2.push(`- **${k2}**: ${open.filter((b2) => b2.kind === k2).map((b2) => cell4(b2.name)).join(", ")}`);
-    L2.push("");
-  }
-  L2.push("## Limits", "", "- Assemblies are read by REA, never run. Calls made through reflection, dependency injection resolved at run time, or configuration may be missed.", "- A controller's route is guessed from its name. Check it against the real routes.", "- Discovery lists what its sources show. It never proves that nothing else exists: add sources (configuration, recordings, the map) until the list stops growing.", "");
-  return L2.join("\n");
-}
-
-// packages/core/dist/check.js
-function check(manifest) {
-  const cases = loadCases(manifest);
-  loadDrift(manifest);
-  const known = loadKnownIssues(manifest);
-  scrubberOf(manifest);
-  const proposals = loadProposals(manifest);
-  const warnings = [];
-  for (const c4 of cases) {
-    const s4 = c4.surface ?? "http";
-    if (s4 !== "http" && !manifest.adapters[s4])
-      warnings.push(`${c4.id}: surface "${s4}" has no adapter in cmtk.yaml.`);
-    if (s4 === "http" && ["journey", "structure", "visual"].includes(c4.match ?? ""))
-      warnings.push(`${c4.id}: match \`${c4.match}\` needs an adapter that reports it, and http does not, so \`cmtk compare\` reports a difference.`);
-    if (c4.requirement === void 0)
-      warnings.push(`${c4.id}: names no requirement, so its result is not traced to a story.`);
-    if (!c4.expect && Object.keys(manifest.targets).length === 1)
-      warnings.push(`${c4.id}: has no \`expect:\` block, so \`cmtk run\` skips it.`);
-    if (typeof c4.journey?.script === "string" && !fs13.existsSync(inside(manifest, c4.journey.script)))
-      warnings.push(`${c4.id}: the script ${c4.journey.script} does not exist, so the case will error.`);
-    for (const f4 of [c4.request.body_file, typeof c4.request.body_form === "string" ? c4.request.body_form : void 0, ...(c4.request.files ?? []).map((x2) => x2.path)].filter((x2) => !!x2)) {
-      if (!fs13.existsSync(inside(manifest, f4)))
-        warnings.push(`${c4.id}: the input file ${f4} does not exist, so the case will error.`);
-    }
-  }
-  const pair = [manifest.targets[manifest.reference], manifest.targets[manifest.candidate]].filter((t3) => t3?.surfaces);
-  const counted = /* @__PURE__ */ new Map();
-  for (const c4 of cases)
-    counted.set(c4.surface ?? "http", (counted.get(c4.surface ?? "http") ?? 0) + 1);
-  for (const [s4, n3] of [...counted].sort()) {
-    const missing = pair.filter((t3) => !t3.surfaces.includes(s4)).map((t3) => t3.name);
-    if (missing.length)
-      warnings.push(`${n3} case${n3 === 1 ? "" : "s"} on ${s4}: ${missing.join(" and ")} ${missing.length > 1 ? "have" : "has"} no ${s4} surface, so \`cmtk compare\` reports ${n3 === 1 ? "it" : "them"} as not comparable.`);
-  }
-  const ids = new Set(cases.map((c4) => c4.id));
-  for (const k2 of known) {
-    if (!ids.has(k2.case))
-      warnings.push(`known issue ${k2.id}: there is no case ${k2.case}.`);
-    if (k2.fails.some((f4) => f4.actual === void 0 && f4.expected === void 0))
-      warnings.push(`known issue ${k2.id}: one of its failures accepts any answer at that check, so a new way of failing there would be hidden. Copy \`expected\` or \`actual\` from the report.`);
-  }
-  if (!cases.length)
-    warnings.push(`No case files match ${manifest.cases.join(", ")}.`);
-  if (!fs13.existsSync(inside(manifest, manifest.evidence)))
-    warnings.push(`${manifest.evidence} does not exist yet: the first run creates it.`);
-  const d4 = loadDiscovery(manifest);
-  for (const b2 of d4?.boundaries.filter((x2) => !x2.covered_by) ?? [])
-    warnings.push(`boundary ${b2.name} (${b2.kind}) is uncovered: no adapter covers ${b2.kind}.`);
-  return {
-    cases: cases.length,
-    drafts: cases.filter((c4) => c4.draft).map((c4) => c4.id),
-    draftExpectations: cases.filter((c4) => c4.expect_draft).map((c4) => c4.id),
-    requirements: new Set(cases.flatMap((c4) => c4.requirement === void 0 ? [] : [c4.requirement].flat().map(String))).size,
-    pendingProposals: proposals.filter((p4) => p4.status === "pending").map((p4) => p4.id),
-    ...d4 ? { discovery: `Boundaries (cmtk discover, ${d4.date}): ${describeDiscovery(d4)}` } : {},
-    warnings
-  };
-}
-function describeCheck(r6) {
-  const lines = [
-    `Settings and case files are valid: ${r6.cases} cases for ${r6.requirements} requirements.`,
-    r6.drafts.length ? `${r6.drafts.length} draft cases wait for a person (\`cmtk review\`): ${r6.drafts.slice(0, 20).join(", ")}${r6.drafts.length > 20 ? ", \u2026" : ""}` : "No draft cases.",
-    ...r6.draftExpectations.length ? [`${r6.draftExpectations.length} drafted expectations wait for a person (\`cmtk review\`), and \`cmtk run\` skips those cases until then: ${r6.draftExpectations.slice(0, 20).join(", ")}${r6.draftExpectations.length > 20 ? ", \u2026" : ""}`] : [],
-    r6.pendingProposals.length ? `${r6.pendingProposals.length} proposals wait for a person (\`cmtk review\`): ${r6.pendingProposals.join(", ")}` : "No proposals waiting.",
-    ...r6.discovery ? [r6.discovery] : []
-  ];
-  for (const w2 of r6.warnings)
-    lines.push(`Warning: ${w2}`);
-  return lines.join("\n");
-}
-
-// packages/core/dist/init.js
-import fs14 from "node:fs";
-import path12 from "node:path";
-var EXAMPLE_CASES = `# Cases for \`cmtk run\` (one system, checked against expectations) and \`cmtk compare\`
-# (the same request to the reference and the candidate). Each case says which requirement it answers for.
-cases:
-  - id: EXAMPLE-001
-    name: the home page answers
-    requirement: REQ-1
-    request: GET /
-    expect:
-      status: 200
-`;
-var DRIFT_HEADER = `# Approved drift: differences between the reference and the candidate that a named person accepted.
-# Only a person adds an entry. Each needs id, where (from a report), reason and approved_by.
-#  - id: DRIFT-001
-#    case: "*"                      # or one case id
-#    where: "header:content-type"   # a where value from REPORT.md; JSON paths may use [*]
-#    reason: charset added to every JSON answer; consumers ignore it
-#    approved_by: Jane Smith
-#    date: 2026-10-16
-drift: []
-`;
-function initProject(manifestFile, o4) {
-  if (fs14.existsSync(manifestFile))
-    throw new ManifestError(`${path12.basename(manifestFile)} already exists; edit it instead.`);
-  if (!/\.ya?ml$/i.test(manifestFile))
-    throw new ManifestError("The settings file must be a .yaml file, such as cmtk.yaml.");
-  const root = path12.dirname(manifestFile);
-  if (!fs14.existsSync(root))
-    throw new ManifestError(`${root} does not exist. cmtk init only writes into an existing project folder.`);
-  for (const [k2, v2] of Object.entries({ candidate: o4.candidate, legacy: o4.legacy })) {
-    if (v2 !== void 0 && !isBaseUrl(v2))
-      throw new ManifestError(`--${k2} must be an http:// or https:// URL, such as http://localhost:5002.`);
-  }
-  const system = (o4.system ?? path12.basename(root)).replace(/[^A-Za-z0-9_.-]/g, "-").replace(/^[^A-Za-z0-9]+/, "") || "system";
-  fs14.mkdirSync(path12.join(root, "cmtk", "cases"), { recursive: true });
-  fs14.writeFileSync(manifestFile, STARTER_MANIFEST(system, o4.legacy, o4.candidate), "utf8");
-  const written = [manifestFile];
-  try {
-    loadManifest(manifestFile);
-  } catch (err) {
-    fs14.rmSync(manifestFile);
-    throw err;
-  }
-  const example = path12.join(root, "cmtk", "cases", "example.yaml");
-  if (!fs14.existsSync(example)) {
-    fs14.writeFileSync(example, EXAMPLE_CASES, "utf8");
-    written.push(example);
-  }
-  const drift = path12.join(root, "cmtk", "drift.yaml");
-  if (o4.legacy && !fs14.existsSync(drift)) {
-    fs14.writeFileSync(drift, DRIFT_HEADER, "utf8");
-    written.push(drift);
-  }
-  return written;
-}
-
-// packages/core/dist/data/schema.js
-import crypto6 from "node:crypto";
-import fs15 from "node:fs";
-import path13 from "node:path";
-var SUPPORTED = /* @__PURE__ */ new Set([
-  "type",
-  "properties",
-  "required",
-  "additionalProperties",
-  "enum",
-  "const",
-  "minimum",
-  "maximum",
-  "exclusiveMinimum",
-  "exclusiveMaximum",
-  "multipleOf",
-  "minLength",
-  "maxLength",
-  "pattern",
-  "format",
-  "items",
-  "minItems",
-  "maxItems",
-  "uniqueItems",
-  "nullable",
-  "examples",
-  "example",
-  "default",
-  "description",
-  "title",
-  "$ref",
-  "$schema",
-  "$id",
-  "$comment",
-  "readOnly",
-  "writeOnly",
-  "deprecated",
-  "xml"
-]);
-function resolve(node, doc, seen = []) {
-  if (Array.isArray(node))
-    return node.map((n3) => resolve(n3, doc, seen));
-  if (!node || typeof node !== "object")
-    return node;
-  const s4 = node;
-  if (typeof s4.$ref === "string") {
-    if (!s4.$ref.startsWith("#/"))
-      throw new ManifestError(`$ref ${s4.$ref}: only references inside the same file ("#/\u2026") are supported.`);
-    if (seen.includes(s4.$ref))
-      throw new ManifestError(`$ref ${s4.$ref} refers to itself: recursive schemas are not supported.`);
-    let target2 = doc;
-    for (const part of s4.$ref.slice(2).split("/"))
-      target2 = target2?.[part.replace(/~1/g, "/").replace(/~0/g, "~")];
-    if (target2 === void 0)
-      throw new ManifestError(`$ref ${s4.$ref} points at nothing.`);
-    const { $ref: _r, ...rest } = s4;
-    return { ...resolve(target2, doc, [...seen, s4.$ref]), ...resolve(rest, doc, seen) };
-  }
-  const out = {};
-  for (const [k2, v2] of Object.entries(s4))
-    out[k2] = k2 === "enum" || k2 === "examples" || k2 === "const" || k2 === "default" || k2 === "example" ? v2 : resolve(v2, doc, seen);
-  return out;
-}
-function typeOf3(s4, where2) {
-  let t3 = s4.type;
-  let nullable = s4.nullable === true;
-  if (Array.isArray(t3)) {
-    const rest = t3.filter((x2) => x2 !== "null");
-    nullable = nullable || rest.length < t3.length;
-    if (rest.length !== 1)
-      throw new ManifestError(`${where2}: a type list may hold one type plus "null", not ${JSON.stringify(t3)}.`);
-    t3 = rest[0];
-  }
-  if (t3 === void 0) {
-    if (s4.properties)
-      t3 = "object";
-    else if (s4.items)
-      t3 = "array";
-    else if (Array.isArray(s4.enum) && s4.enum.length)
-      t3 = typeof s4.enum[0] === "number" ? "number" : typeof s4.enum[0] === "boolean" ? "boolean" : "string";
-    else if (s4.const !== void 0)
-      t3 = typeof s4.const === "number" ? "number" : typeof s4.const === "boolean" ? "boolean" : "string";
-    else
-      throw new ManifestError(`${where2}: no type. Give the field a type.`);
-  }
-  if (!["string", "integer", "number", "boolean", "object", "array", "null"].includes(t3))
-    throw new ManifestError(`${where2}: unknown type ${JSON.stringify(t3)}.`);
-  return { type: t3, nullable };
-}
-function collect(s4, at2, source, required, fields) {
-  const { type, nullable } = typeOf3(s4, source);
-  const unsupported = Object.keys(s4).filter((k2) => !SUPPORTED.has(k2));
-  const f4 = { path: at2, type, nullable, required, source, ...unsupported.length ? { unsupported } : {} };
-  for (const k2 of ["description", "enum", "const", "minimum", "maximum", "multipleOf", "minLength", "maxLength", "pattern", "format", "minItems", "maxItems", "uniqueItems", "default"]) {
-    if (s4[k2] !== void 0)
-      f4[k2] = s4[k2];
-  }
-  if (typeof s4.exclusiveMinimum === "number") {
-    f4.minimum = s4.exclusiveMinimum;
-    f4.exclusiveMinimum = true;
-  } else if (s4.exclusiveMinimum === true)
-    f4.exclusiveMinimum = true;
-  if (typeof s4.exclusiveMaximum === "number") {
-    f4.maximum = s4.exclusiveMaximum;
-    f4.exclusiveMaximum = true;
-  } else if (s4.exclusiveMaximum === true)
-    f4.exclusiveMaximum = true;
-  if (Array.isArray(s4.examples))
-    f4.examples = s4.examples;
-  else if (s4.example !== void 0)
-    f4.examples = [s4.example];
-  fields.push(f4);
-  if (type === "object" && s4.properties) {
-    const req = new Set(Array.isArray(s4.required) ? s4.required : []);
-    for (const [name, child] of Object.entries(s4.properties))
-      collect(child, `${at2}.${name}`, `${source}/properties/${name}`, req.has(name), fields);
-  }
-  if (type === "array" && s4.items && typeof s4.items === "object" && !Array.isArray(s4.items))
-    collect(s4.items, `${at2}[*]`, `${source}/items`, true, fields);
-}
-function modelFromSchema(file, raw, doc) {
-  const schema = resolve(raw, doc ?? raw);
-  const fields = [];
-  collect(schema, "$", `${path13.basename(file)}#`, true, fields);
-  return { source: { file, sha256: fileSha(file) }, schema, fields };
-}
-var fileSha = (file) => fs15.existsSync(file) ? crypto6.createHash("sha256").update(fs15.readFileSync(file)).digest("hex") : "";
-function modelFromOpenApi(file, raw, operation) {
-  const doc = raw;
-  if (!doc?.openapi && !doc?.swagger)
-    throw new ManifestError(`${file} is not an OpenAPI document: it has no "openapi" field.`);
-  const m4 = /^([A-Za-z]+)\s+(\/\S*)$/.exec(operation.trim());
-  if (!m4)
-    throw new ManifestError(`Name the operation as "POST /path", not ${JSON.stringify(operation)}.`);
-  const [, method, p4] = m4;
-  const op = doc.paths?.[p4]?.[method.toLowerCase()];
-  if (!op)
-    throw new ManifestError(`${file} has no operation ${method.toUpperCase()} ${p4}. Paths: ${Object.keys(doc.paths ?? {}).join(", ") || "none"}.`);
-  const content = op.requestBody?.content ?? {};
-  const json = content["application/json"] ?? content[Object.keys(content).find((k2) => /json/i.test(k2)) ?? ""];
-  const bodySchema = json?.schema ? resolve(json.schema, doc) : void 0;
-  const fields = [];
-  if (bodySchema)
-    collect(bodySchema, "$", `${path13.basename(file)}#${method.toUpperCase()} ${p4}/requestBody`, op.requestBody?.required !== false, fields);
-  const parameters = [...doc.paths?.[p4]?.parameters ?? [], ...op.parameters ?? []].map((x2) => resolve(x2, doc)).filter((x2) => x2.in === "query" || x2.in === "path").map((x2) => ({ name: String(x2.name), in: String(x2.in), required: x2.required === true || x2.in === "path", schema: x2.schema ?? { type: "string" } }));
-  for (const q2 of parameters)
-    collect(q2.schema, `?${q2.name}`, `${path13.basename(file)}#${method.toUpperCase()} ${p4}/parameters/${q2.name}`, q2.required, fields);
-  const responses = {};
-  for (const [code, r6] of Object.entries(op.responses ?? {}))
-    responses[code] = String(r6?.description ?? "");
-  if (!bodySchema && !parameters.length)
-    throw new ManifestError(`${method.toUpperCase()} ${p4} has no JSON request body and no query or path parameters, so there is nothing to generate.`);
-  return { source: { file, sha256: fileSha(file), operation: `${method.toUpperCase()} ${p4}` }, schema: bodySchema ?? { type: "object", properties: {} }, fields, responses, parameters };
-}
-function loadModel(file, operation) {
-  const raw = readStructured(file);
-  if (raw?.openapi || raw?.swagger) {
-    if (!operation)
-      throw new ManifestError(`${path13.basename(file)} is an OpenAPI document: name the operation, such as --operation "POST /api/items". Operations: ${listOperations(raw).join(", ")}.`);
-    return modelFromOpenApi(file, raw, operation);
-  }
-  if (operation)
-    throw new ManifestError(`${path13.basename(file)} is a JSON Schema, not an OpenAPI document, so there is no operation to pick.`);
-  return modelFromSchema(file, raw);
-}
-function listOperations(doc) {
-  const out = [];
-  for (const [p4, item] of Object.entries(doc.paths ?? {}))
-    for (const m4 of Object.keys(item))
-      if (/^(get|post|put|patch|delete|head|options)$/i.test(m4))
-        out.push(`${m4.toUpperCase()} ${p4}`);
-  return out;
-}
-var FORMATS = {
-  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-  uuid: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-  date: /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/,
-  "date-time": /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/,
-  uri: /^[a-z][a-z0-9+.-]*:\/\/\S+$/i,
-  ipv4: /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/
-};
-function validate(schema, value, at2 = "$") {
-  const out = [];
-  const bad = (keyword, message) => out.push({ path: at2, keyword, message });
-  const { type, nullable } = typeOf3(schema, at2);
-  if (value === null) {
-    if (!nullable && type !== "null")
-      bad("type", "null where a value is required");
-    return out;
-  }
-  if (schema.const !== void 0 && JSON.stringify(value) !== JSON.stringify(schema.const))
-    bad("const", `must be ${JSON.stringify(schema.const)}`);
-  if (Array.isArray(schema.enum) && !schema.enum.some((e6) => JSON.stringify(e6) === JSON.stringify(value)))
-    bad("enum", `must be one of ${JSON.stringify(schema.enum)}`);
-  const actual = Array.isArray(value) ? "array" : typeof value === "number" ? Number.isInteger(value) ? "integer" : "number" : typeof value;
-  const okType = type === "number" ? actual === "number" || actual === "integer" : actual === type;
-  if (!okType) {
-    bad("type", `must be ${type}, not ${actual}`);
-    return out;
-  }
-  if (type === "string") {
-    const s4 = value;
-    const len = [...s4].length;
-    if (schema.minLength !== void 0 && len < schema.minLength)
-      bad("minLength", `shorter than ${schema.minLength}`);
-    if (schema.maxLength !== void 0 && len > schema.maxLength)
-      bad("maxLength", `longer than ${schema.maxLength}`);
-    if (schema.pattern !== void 0 && !new RegExp(schema.pattern, "u").test(s4))
-      bad("pattern", `does not match ${schema.pattern}`);
-    if (schema.format && FORMATS[schema.format] && !FORMATS[schema.format].test(s4))
-      bad("format", `not a ${schema.format}`);
-  }
-  if (type === "number" || type === "integer") {
-    const n3 = value;
-    const min = typeof schema.exclusiveMinimum === "number" ? schema.exclusiveMinimum : schema.minimum;
-    const max = typeof schema.exclusiveMaximum === "number" ? schema.exclusiveMaximum : schema.maximum;
-    const exMin = schema.exclusiveMinimum === true || typeof schema.exclusiveMinimum === "number";
-    const exMax = schema.exclusiveMaximum === true || typeof schema.exclusiveMaximum === "number";
-    if (min !== void 0 && (exMin ? n3 <= min : n3 < min))
-      bad(exMin ? "exclusiveMinimum" : "minimum", `${exMin ? "not above" : "below"} ${min}`);
-    if (max !== void 0 && (exMax ? n3 >= max : n3 > max))
-      bad(exMax ? "exclusiveMaximum" : "maximum", `${exMax ? "not below" : "above"} ${max}`);
-    if (schema.multipleOf !== void 0 && Math.abs(Math.round(n3 / schema.multipleOf) * schema.multipleOf - n3) > 1e-9)
-      bad("multipleOf", `not a multiple of ${schema.multipleOf}`);
-  }
-  if (type === "array") {
-    const a4 = value;
-    if (schema.minItems !== void 0 && a4.length < schema.minItems)
-      bad("minItems", `fewer than ${schema.minItems} items`);
-    if (schema.maxItems !== void 0 && a4.length > schema.maxItems)
-      bad("maxItems", `more than ${schema.maxItems} items`);
-    if (schema.uniqueItems && new Set(a4.map((x2) => JSON.stringify(x2))).size !== a4.length)
-      bad("uniqueItems", "repeated items");
-    if (schema.items && typeof schema.items === "object")
-      a4.forEach((x2, i8) => out.push(...validate(schema.items, x2, `${at2}[${i8}]`)));
-  }
-  if (type === "object") {
-    const o4 = value;
-    const props = schema.properties ?? {};
-    for (const r6 of schema.required ?? [])
-      if (!(r6 in o4))
-        out.push({ path: `${at2}.${r6}`, keyword: "required", message: "missing" });
-    for (const [k2, v2] of Object.entries(o4)) {
-      if (props[k2])
-        out.push(...validate(props[k2], v2, `${at2}.${k2}`));
-      else if (schema.additionalProperties === false)
-        out.push({ path: `${at2}.${k2}`, keyword: "additionalProperties", message: "not allowed" });
-    }
-  }
-  return out;
-}
-
-// packages/core/dist/data/regex.js
-var PRINTABLE = Array.from({ length: 95 }, (_2, i8) => String.fromCharCode(32 + i8));
-var DIGITS = "0123456789".split("");
-var WORD = [..."abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"];
-var SPACE = [" ", "	"];
-var UNBOUNDED = 8;
-var Parser = class {
-  src;
-  i = 0;
-  constructor(src) {
-    this.src = src;
-  }
-  parse() {
-    const n3 = this.alt();
-    if (this.i < this.src.length)
-      throw new ManifestError(`pattern ${this.src}: unexpected "${this.src[this.i]}" at ${this.i}.`);
-    return n3;
-  }
-  peek() {
-    return this.src[this.i];
-  }
-  take() {
-    return this.src[this.i++];
-  }
-  alt() {
-    const options = [this.seq()];
-    while (this.peek() === "|") {
-      this.take();
-      options.push(this.seq());
-    }
-    return options.length === 1 ? options[0] : { kind: "alt", options };
-  }
-  seq() {
-    const items = [];
-    while (this.i < this.src.length && this.peek() !== "|" && this.peek() !== ")") {
-      const atom = this.atom();
-      if (atom)
-        items.push(this.quant(atom));
-    }
-    return { kind: "seq", items };
-  }
-  atom() {
-    const c4 = this.take();
-    if (c4 === "^" || c4 === "$")
-      return void 0;
-    if (c4 === ".")
-      return { kind: "any" };
-    if (c4 === "(") {
-      if (this.src.startsWith("?:", this.i))
-        this.i += 2;
-      else if (this.peek() === "?")
-        throw new ManifestError(`pattern ${this.src}: lookaround and named groups are not supported.`);
-      const node = this.alt();
-      if (this.take() !== ")")
-        throw new ManifestError(`pattern ${this.src}: missing ")".`);
-      return { kind: "group", node };
-    }
-    if (c4 === "[")
-      return this.cls();
-    if (c4 === "\\")
-      return this.escape(this.take());
-    return { kind: "lit", char: c4 };
-  }
-  escape(c4) {
-    switch (c4) {
-      case "d":
-        return { kind: "class", chars: DIGITS, negate: false };
-      case "D":
-        return { kind: "class", chars: DIGITS, negate: true };
-      case "w":
-        return { kind: "class", chars: WORD, negate: false };
-      case "W":
-        return { kind: "class", chars: WORD, negate: true };
-      case "s":
-        return { kind: "class", chars: SPACE, negate: false };
-      case "S":
-        return { kind: "class", chars: SPACE, negate: true };
-      case "n":
-        return { kind: "lit", char: "\n" };
-      case "t":
-        return { kind: "lit", char: "	" };
-      case "b":
-      case "B":
-        throw new ManifestError(`pattern ${this.src}: word boundaries are not supported.`);
-      case "p":
-      case "P":
-        throw new ManifestError(`pattern ${this.src}: Unicode property classes are not supported.`);
-      default:
-        if (/\d/.test(c4))
-          throw new ManifestError(`pattern ${this.src}: backreferences are not supported.`);
-        return { kind: "lit", char: c4 };
-    }
-  }
-  cls() {
-    let negate = false;
-    if (this.peek() === "^") {
-      this.take();
-      negate = true;
-    }
-    const chars = [];
-    let first = true;
-    while (this.peek() !== "]" || first) {
-      if (this.i >= this.src.length)
-        throw new ManifestError(`pattern ${this.src}: missing "]".`);
-      first = false;
-      let c4 = this.take();
-      let lo;
-      if (c4 === "\\") {
-        const e6 = this.escape(this.take());
-        if (e6.kind === "class") {
-          chars.push(...e6.negate ? PRINTABLE.filter((x2) => !e6.chars.includes(x2)) : e6.chars);
-          continue;
-        }
-        lo = e6.char;
-      } else
-        lo = c4;
-      if (this.peek() === "-" && this.src[this.i + 1] !== "]" && this.i + 1 < this.src.length) {
-        this.take();
-        let hi = this.take();
-        if (hi === "\\")
-          hi = this.escape(this.take()).char;
-        for (let x2 = lo.charCodeAt(0); x2 <= hi.charCodeAt(0); x2++)
-          chars.push(String.fromCharCode(x2));
-      } else
-        chars.push(lo);
-    }
-    this.take();
-    return { kind: "class", chars, negate };
-  }
-  quant(node) {
-    const c4 = this.peek();
-    let min, max;
-    if (c4 === "*") {
-      this.take();
-      min = 0;
-      max = UNBOUNDED;
-    } else if (c4 === "+") {
-      this.take();
-      min = 1;
-      max = UNBOUNDED;
-    } else if (c4 === "?") {
-      this.take();
-      min = 0;
-      max = 1;
-    } else if (c4 === "{") {
-      const m4 = /^\{(\d+)(,(\d*))?\}/.exec(this.src.slice(this.i));
-      if (!m4)
-        return node;
-      this.i += m4[0].length;
-      min = Number(m4[1]);
-      max = m4[2] === void 0 ? min : m4[3] === "" ? Math.max(min, UNBOUNDED) : Number(m4[3]);
-    } else
-      return node;
-    if (this.peek() === "?" || this.peek() === "+")
-      this.take();
-    return { kind: "repeat", node, min, max };
-  }
-};
-function patternLimits(pattern) {
-  try {
-    new Parser(pattern).parse();
-    return void 0;
-  } catch (err) {
-    return err.message;
-  }
-}
-function stringFromPattern(pattern, rng2, shortest = false) {
-  const walk = (n3) => {
-    switch (n3.kind) {
-      case "seq":
-        return n3.items.map(walk).join("");
-      case "alt":
-        return walk(n3.options[shortest ? 0 : Math.floor(rng2() * n3.options.length)]);
-      case "group":
-        return walk(n3.node);
-      case "lit":
-        return n3.char;
-      case "any":
-        return PRINTABLE[Math.floor(rng2() * PRINTABLE.length)];
-      case "class": {
-        const pool = n3.negate ? PRINTABLE.filter((c4) => !n3.chars.includes(c4)) : n3.chars;
-        if (!pool.length)
-          throw new ManifestError(`pattern ${pattern}: a character class matches nothing.`);
-        return pool[Math.floor(rng2() * pool.length)];
-      }
-      case "repeat": {
-        const count2 = shortest ? n3.min : n3.min + Math.floor(rng2() * (n3.max - n3.min + 1));
-        return Array.from({ length: count2 }, () => walk(n3.node)).join("");
-      }
-    }
-  };
-  const out = walk(new Parser(pattern).parse());
-  if (!new RegExp(pattern, "u").test(out))
-    throw new ManifestError(`pattern ${pattern}: the generated string ${JSON.stringify(out)} does not match it; write the valid value by hand in the recipe.`);
-  return out;
-}
-
-// packages/core/dist/data/recipe.js
-var import_yaml4 = __toESM(require_dist(), 1);
-import crypto7 from "node:crypto";
-import fs16 from "node:fs";
-import path14 from "node:path";
-var isHappy = (r6) => r6.expect_valid && (r6.technique === "EP" || r6.technique === "pairwise");
-var DEFAULT_QUOTAS = { max_happy_share: 0.5, boundaries_on_every_ordered_field: true, negative_for_every_field: true };
-var slugOf = (p4) => p4.replace(/^\$\.?/, "").replace(/\[\*\]/g, "_each").replace(/^\?/, "q_").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "") || "body";
-var HOSTILE = [
-  { name: "empty", value: "", why: "an empty string where text is expected" },
-  { name: "spaces_only", value: "   ", why: "whitespace that trims to nothing" },
-  { name: "padded", value: "  padded  ", why: "leading and trailing spaces, which some systems keep and some drop" },
-  { name: "sql_quote", value: "O'Brien' OR '1'='1", why: "a quote that breaks string concatenation into SQL" },
-  { name: "html", value: "<script>alert(1)</script>", why: "markup that a page may render" },
-  { name: "csv_formula", value: "=1+1", why: "a leading = that a spreadsheet runs as a formula (OWASP CSV injection)" },
-  { name: "rtl_override", value: "abc\u202Edef", why: "a right-to-left override that hides what the text really says" },
-  { name: "accents", value: "\xD1and\xFA caf\xE9", why: "letters outside ASCII" },
-  { name: "emoji", value: "\u{1F600}\u{1F680}", why: "characters outside the Basic Multilingual Plane; a length of 2 or 4 depending on the system" },
-  { name: "long", value: "x".repeat(4096), why: "4,096 characters: past most column widths" }
-];
-function recipeFolder(m4) {
-  return inside(m4, path14.join(path14.dirname(m4.proposals), "data"));
-}
-var recipeFile = (m4, id) => path14.join(recipeFolder(m4), `${id}.yaml`);
-var dataFolder = (m4, id) => path14.join(recipeFolder(m4), id);
-var ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
-function planRecipe(m4, o4) {
-  const schemaFile = inside(m4, o4.schema);
-  if (!fs16.existsSync(schemaFile))
-    throw new ManifestError(`${o4.schema} does not exist.`);
-  const model = loadModel(schemaFile, o4.operation);
-  const id = o4.id ?? (model.source.operation ? model.source.operation.replace(/^[A-Z]+\s+\/?/, "").replace(/[^A-Za-z0-9.-]+/g, "-").replace(/^-|-$/g, "") : path14.basename(o4.schema).replace(/\.[^.]+$/, "")).slice(0, 64);
-  if (!ID.test(id))
-    throw new ManifestError(`The recipe id ${JSON.stringify(id)} must be letters, digits, '.', '-' and '_'.`);
-  const clock = o4.clock ?? "2026-01-15T09:30:00Z";
-  if (Number.isNaN(Date.parse(clock)))
-    throw new ManifestError(`The clock ${JSON.stringify(clock)} is not a date and time.`);
-  const seed = o4.seed ?? 20260115;
-  if (!Number.isInteger(seed) || seed < 0 || seed > 2 ** 31)
-    throw new ManifestError("The seed must be a whole number from 0 to 2147483648.");
-  const quotas = { ...DEFAULT_QUOTAS, ...o4.quotas ?? {} };
-  const notes = [];
-  const fields = model.fields.map((f4) => {
-    const constraints = {};
-    for (const k2 of ["enum", "const", "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf", "minLength", "maxLength", "pattern", "format", "minItems", "maxItems", "uniqueItems"])
-      if (f4[k2] !== void 0)
-        constraints[k2] = f4[k2];
-    let valid_from = f4.const !== void 0 ? "const" : f4.enum ? "enum" : f4.examples?.length ? "examples" : f4.pattern ? "pattern" : f4.format ? `format:${f4.format}` : f4.type;
-    let note;
-    if (f4.pattern) {
-      const limit = patternLimits(f4.pattern);
-      if (limit) {
-        valid_from = f4.examples?.length ? "examples" : "type";
-        note = `The pattern can't be generated (${limit}); set a valid value in a row by hand.`;
-      }
-    }
-    if (f4.unsupported?.length)
-      note = `${note ? `${note} ` : ""}Keywords not understood and not honoured: ${f4.unsupported.join(", ")}.`;
-    if (f4.description)
-      note = `${f4.description}${note ? ` ${note}` : ""}`;
-    return { path: f4.path, type: f4.type, required: f4.required, nullable: f4.nullable, constraints, source: f4.source, valid_from, ...note ? { note } : {} };
-  });
-  const rows = planRows(model.fields, notes);
-  const recipe = {
-    id,
-    ...o4.draft ? { draft: true } : {},
-    seed,
-    clock,
-    locale: o4.locale ?? "en_GB",
-    source: { ...model.source, file: path14.relative(m4.root, schemaFile).split(path14.sep).join("/") },
-    generators: { ...o4.generators ?? {} },
-    quotas,
-    fields,
-    rows,
-    ...model.responses ? { responses: model.responses } : {},
-    ...notes.length ? { notes } : {}
-  };
-  const problems = checkQuotas(recipe);
-  if (problems.length)
-    throw new ManifestError(`The plan breaks its own quotas: ${problems.join("; ")}`);
-  const file = recipeFile(m4, id);
-  if (fs16.existsSync(file))
-    throw new ManifestError(`${path14.relative(m4.root, file)} already exists. Choose another --id, or delete it.`);
-  fs16.mkdirSync(path14.dirname(file), { recursive: true });
-  fs16.writeFileSync(file, renderRecipe(recipe), "utf8");
-  return { file: path14.relative(m4.root, file).split(path14.sep).join("/"), recipe };
-}
-var HEADER2 = `# A test-data recipe, written by \`cmtk data plan\`. Review this file, not the rows: \`cmtk data make\`
-# regenerates the rows from it, the same ones every time, from the seed and the clock below.
-# Each row is named by the condition it exercises and says which technique chose it.
-`;
-function renderRecipe(r6) {
-  return HEADER2 + import_yaml4.default.stringify({ recipe: r6 }, { lineWidth: 0 });
-}
-function loadRecipe(m4, id) {
-  if (!ID.test(id))
-    throw new ManifestError(`The recipe id ${JSON.stringify(id)} must be letters, digits, '.', '-' and '_'.`);
-  const file = recipeFile(m4, id);
-  if (!fs16.existsSync(file))
-    throw new ManifestError(`There is no recipe ${id}: ${path14.relative(m4.root, file)} does not exist. Make one with \`cmtk data plan\`.`);
-  const text2 = fs16.readFileSync(file, "utf8");
-  const doc = import_yaml4.default.parse(text2);
-  const r6 = doc?.recipe;
-  if (!r6 || r6.id !== id || !Array.isArray(r6.rows) || !Array.isArray(r6.fields))
-    throw new ManifestError(`${path14.relative(m4.root, file)} is not a recipe for ${id}.`);
-  const names = /* @__PURE__ */ new Set();
-  for (const row of r6.rows) {
-    if (typeof row.name !== "string" || !/^[A-Za-z0-9_.-]+$/.test(row.name))
-      throw new ManifestError(`${id}: a row name must be letters, digits, '.', '-' and '_': ${JSON.stringify(row.name)}.`);
-    if (names.has(row.name))
-      throw new ManifestError(`${id}: the row name ${row.name} is used twice.`);
-    names.add(row.name);
-    if (typeof row.expect_valid !== "boolean")
-      throw new ManifestError(`${id}: row ${row.name} needs expect_valid: true or false.`);
-    if (!row.expect_valid && !row.invalid_because?.path)
-      throw new ManifestError(`${id}: row ${row.name} is invalid but does not say why (invalid_because: { path, keyword }).`);
-  }
-  return { file: path14.relative(m4.root, file).split(path14.sep).join("/"), recipe: r6, sha256: crypto7.createHash("sha256").update(text2).digest("hex") };
-}
-function checkQuotas(r6) {
-  const out = [];
-  const q2 = r6.quotas ?? DEFAULT_QUOTAS;
-  const happy = r6.rows.filter(isHappy).length;
-  if (r6.rows.length && happy / r6.rows.length > q2.max_happy_share)
-    out.push(`${happy} of ${r6.rows.length} rows are happy paths, above the quota of ${Math.round(q2.max_happy_share * 100)}%: add boundaries and negatives, not more happy paths`);
-  const leaves = r6.fields.filter((f4) => f4.type !== "object" && f4.path !== "$");
-  if (q2.boundaries_on_every_ordered_field) {
-    for (const f4 of r6.fields) {
-      const c4 = f4.constraints;
-      if (![c4.minimum, c4.maximum, c4.minLength, c4.maxLength, c4.minItems, c4.maxItems].some((x2) => x2 !== void 0))
-        continue;
-      if (!r6.rows.some((x2) => x2.technique === "BVA-3" && x2.coverage_item.startsWith(`${f4.path} `)))
-        out.push(`${f4.path} has a boundary but no BVA-3 rows`);
-    }
-  }
-  if (q2.negative_for_every_field) {
-    const general = (p4) => p4.replace(/\[\d+\]/g, "[*]");
-    for (const f4 of leaves)
-      if (!r6.rows.some((x2) => !x2.expect_valid && x2.invalid_because && general(x2.invalid_because.path) === f4.path))
-        out.push(`${f4.path} has no row that breaks it`);
-  }
-  return out;
-}
-function planRows(fields, notes) {
-  const rows = [];
-  const add = (row) => {
-    if (!rows.some((x2) => x2.name === row.name))
-      rows.push(row);
-  };
-  const leaves = fields.filter((f4) => f4.path !== "$" && f4.type !== "object");
-  add({ name: "baseline_valid", technique: "EP", coverage_item: "every field: a valid representative", expect_valid: true, oracle: "specified" });
-  if (fields[0]?.type === "object")
-    add({ name: "body_not_an_object", technique: "EP", coverage_item: "$ is a list, not an object", expect_valid: false, invalid_because: { path: "$", keyword: "type" }, oracle: "specified", replace_body: [] });
-  for (const f4 of leaves) {
-    const slug2 = slugOf(f4.path);
-    const p4 = f4.path;
-    if (f4.path.includes("[*]"))
-      continue;
-    const num = f4.type === "integer" || f4.type === "number";
-    const step = f4.multipleOf ?? (f4.type === "integer" ? 1 : 0.01);
-    if (num && f4.minimum !== void 0) {
-      const at2 = f4.exclusiveMinimum ? round(f4.minimum + step, step) : f4.minimum;
-      add(bva(slug2, "minimum", "below", p4, f4.exclusiveMinimum ? f4.minimum : round(f4.minimum - step, step), false, f4.exclusiveMinimum ? "exclusiveMinimum" : "minimum", `${p4} ${f4.exclusiveMinimum ? "at" : "below"} its minimum (${f4.minimum})`));
-      add(bva(slug2, "minimum", "at", p4, at2, true, void 0, `${p4} at its lowest valid value (${at2})`));
-      add(bva(slug2, "minimum", "above", p4, round(at2 + step, step), true, void 0, `${p4} one step above its lowest valid value`));
-    }
-    if (num && f4.maximum !== void 0) {
-      const at2 = f4.exclusiveMaximum ? round(f4.maximum - step, step) : f4.maximum;
-      add(bva(slug2, "maximum", "below", p4, round(at2 - step, step), true, void 0, `${p4} one step below its highest valid value`));
-      add(bva(slug2, "maximum", "at", p4, at2, true, void 0, `${p4} at its highest valid value (${at2})`));
-      add(bva(slug2, "maximum", "above", p4, f4.exclusiveMaximum ? f4.maximum : round(f4.maximum + step, step), false, f4.exclusiveMaximum ? "exclusiveMaximum" : "maximum", `${p4} ${f4.exclusiveMaximum ? "at" : "above"} its maximum (${f4.maximum})`));
-    }
-    if (f4.type === "string" && f4.minLength !== void 0 && f4.minLength > 0 && !f4.pattern && !f4.enum) {
-      add(bva(slug2, "minLength", "below", p4, "a".repeat(f4.minLength - 1), false, "minLength", `${p4} one character shorter than ${f4.minLength}`));
-      add(bva(slug2, "minLength", "at", p4, "a".repeat(f4.minLength), true, void 0, `${p4} exactly ${f4.minLength} characters`));
-      add(bva(slug2, "minLength", "above", p4, "a".repeat(f4.minLength + 1), true, void 0, `${p4} ${f4.minLength + 1} characters`));
-    }
-    if (f4.type === "string" && f4.maxLength !== void 0 && !f4.pattern && !f4.enum) {
-      add(bva(slug2, "maxLength", "below", p4, "b".repeat(Math.max(f4.maxLength - 1, f4.minLength ?? 0)), true, void 0, `${p4} one character shorter than ${f4.maxLength}`));
-      add(bva(slug2, "maxLength", "at", p4, "b".repeat(f4.maxLength), true, void 0, `${p4} exactly ${f4.maxLength} characters`));
-      add(bva(slug2, "maxLength", "above", p4, "b".repeat(f4.maxLength + 1), false, "maxLength", `${p4} one character longer than ${f4.maxLength}`));
-    }
-    if (f4.required)
-      add({ name: `${slug2}_missing`, technique: "EP", coverage_item: `${p4} missing though required`, expect_valid: false, invalid_because: { path: p4, keyword: "required" }, oracle: "specified", unset: [p4] });
-    if (!f4.nullable)
-      add({ name: `${slug2}_null`, technique: "EP", coverage_item: `${p4} null though not nullable`, expect_valid: false, invalid_because: { path: p4, keyword: "type" }, oracle: "specified", set: { [p4]: null } });
-    add({ name: `${slug2}_wrong_type`, technique: "EP", coverage_item: `${p4} of the wrong type`, expect_valid: false, invalid_because: { path: p4, keyword: f4.const !== void 0 ? "const" : f4.enum ? "enum" : "type" }, oracle: "specified", set: { [p4]: wrongType(f4) } });
-    if (f4.enum)
-      add({ name: `${slug2}_not_in_enum`, technique: "EP", coverage_item: `${p4} outside ${JSON.stringify(f4.enum)}`, expect_valid: false, invalid_because: { path: p4, keyword: "enum" }, oracle: "specified", set: { [p4]: typeof f4.enum[0] === "number" ? 999999 : "not-a-valid-choice" } });
-    if (f4.type === "string" && f4.format && ["email", "uuid", "date", "date-time", "uri", "ipv4"].includes(f4.format))
-      add({ name: `${slug2}_bad_${f4.format.replace("-", "_")}`, technique: "EP", coverage_item: `${p4} is not a ${f4.format}`, expect_valid: false, invalid_because: { path: p4, keyword: "format" }, oracle: "specified", set: { [p4]: "not-a-" + f4.format } });
-    if (f4.type === "string" && f4.pattern) {
-      const breaker = ["!!! not a match", "no", "\n", "", "\0"].find((s4) => {
-        try {
-          return !new RegExp(f4.pattern, "u").test(s4);
-        } catch {
-          return false;
-        }
-      });
-      if (breaker !== void 0)
-        add({ name: `${slug2}_breaks_pattern`, technique: "EP", coverage_item: `${p4} does not match ${f4.pattern}`, expect_valid: false, invalid_because: { path: p4, keyword: "pattern" }, oracle: "specified", set: { [p4]: breaker } });
-    }
-    if (f4.enum && typeof f4.enum[0] === "string") {
-      const v2 = f4.enum[0];
-      const other = v2 === v2.toLowerCase() ? v2.toUpperCase() : v2.toLowerCase();
-      if (other !== v2 && !f4.enum.includes(other))
-        add({ name: `${slug2}_enum_other_case`, technique: "EP", coverage_item: `${p4} as ${JSON.stringify(other)}: a listed value in another case`, expect_valid: false, invalid_because: { path: p4, keyword: "enum" }, oracle: "specified", set: { [p4]: other } });
-    }
-    if (num && f4.multipleOf !== void 0)
-      add({ name: `${slug2}_not_a_multiple`, technique: "EP", coverage_item: `${p4} not a multiple of ${f4.multipleOf}`, expect_valid: false, invalid_because: { path: p4, keyword: "multipleOf" }, oracle: "specified", set: { [p4]: round((f4.minimum ?? 0) + f4.multipleOf / 3, f4.multipleOf / 1e3) } });
-    if (f4.type === "integer")
-      add({ name: `${slug2}_fraction`, technique: "EP", coverage_item: `${p4} with a fraction though an integer`, expect_valid: false, invalid_because: { path: p4, keyword: "type" }, oracle: "specified", set: { [p4]: (f4.minimum ?? 0) + 0.5 } });
-    if (f4.type === "array") {
-      if (f4.minItems !== void 0 && f4.minItems > 0) {
-        add(bva(slug2, "minItems", "below", p4, { $items: f4.minItems - 1 }, false, "minItems", `${p4} with ${f4.minItems - 1} items, one fewer than allowed`));
-        add(bva(slug2, "minItems", "at", p4, { $items: f4.minItems }, true, void 0, `${p4} with exactly ${f4.minItems} items`));
-      } else
-        add({ name: `${slug2}_empty`, technique: "EP", coverage_item: `${p4} empty`, expect_valid: true, oracle: "specified", set: { [p4]: { $items: 0 } } });
-      if (f4.maxItems !== void 0) {
-        add(bva(slug2, "maxItems", "at", p4, { $items: f4.maxItems }, true, void 0, `${p4} with exactly ${f4.maxItems} items`));
-        add(bva(slug2, "maxItems", "above", p4, { $items: f4.maxItems + 1 }, false, "maxItems", `${p4} with ${f4.maxItems + 1} items, one more than allowed`));
-      }
-    }
-    if (f4.type === "string" && !f4.enum && !f4.pattern && !f4.format && f4.const === void 0) {
-      for (const h4 of HOSTILE) {
-        const tooLong = f4.maxLength !== void 0 && [...h4.value].length > f4.maxLength;
-        const tooShort = f4.minLength !== void 0 && [...h4.value].length < f4.minLength;
-        const valid = !tooLong && !tooShort;
-        add({ name: `${slug2}_hostile_${h4.name}`, technique: "hostile", coverage_item: `${p4}: ${h4.why}`, expect_valid: valid, ...valid ? {} : { invalid_because: { path: p4, keyword: tooLong ? "maxLength" : "minLength" } }, oracle: valid ? "implicit" : "specified", set: { [p4]: h4.value } });
-      }
-    }
-  }
-  for (const f4 of leaves.filter((x2) => x2.path.includes("[*]") && x2.type !== "array")) {
-    const p4 = f4.path.replace("[*]", "[0]");
-    add({ name: `${slugOf(f4.path)}_element_wrong_type`, technique: "EP", coverage_item: `${f4.path}: the first element of the wrong type`, expect_valid: false, invalid_because: { path: p4, keyword: f4.enum ? "enum" : "type" }, oracle: "specified", set: { [p4]: wrongType(f4) } });
-  }
-  const discrete = leaves.filter((f4) => !f4.path.includes("[*]")).map((f4) => {
-    const values = [];
-    if (f4.enum)
-      for (const v2 of f4.enum)
-        values.push({ label: `${f4.path}=${JSON.stringify(v2)}`, apply: (r6) => {
-          (r6.set ??= {})[f4.path] = v2;
-        } });
-    else if (f4.type === "boolean")
-      for (const v2 of [true, false])
-        values.push({ label: `${f4.path}=${v2}`, apply: (r6) => {
-          (r6.set ??= {})[f4.path] = v2;
-        } });
-    if (f4.nullable)
-      values.push({ label: `${f4.path}=null`, apply: (r6) => {
-        (r6.set ??= {})[f4.path] = null;
-      } });
-    if (!f4.required)
-      values.push({ label: `${f4.path} absent`, apply: (r6) => {
-        (r6.unset ??= []).push(f4.path);
-      } });
-    if (values.length && !f4.enum && f4.type !== "boolean")
-      values.unshift({ label: `${f4.path} present`, apply: () => {
-      } });
-    return { field: f4, values };
-  }).filter((d4) => d4.values.length >= 2);
-  if (discrete.length >= 2) {
-    const pairs = /* @__PURE__ */ new Set();
-    for (let i8 = 0; i8 < discrete.length; i8++)
-      for (let j2 = i8 + 1; j2 < discrete.length; j2++)
-        for (const a4 of discrete[i8].values)
-          for (const b2 of discrete[j2].values)
-            pairs.add(`${a4.label} & ${b2.label}`);
-    let n3 = 0;
-    while (pairs.size && n3 < 60) {
-      const choice = discrete.map(() => 0);
-      for (let i8 = 0; i8 < discrete.length; i8++) {
-        let best = 0, bestScore = -1;
-        for (let k2 = 0; k2 < discrete[i8].values.length; k2++) {
-          let score = 0;
-          for (let j2 = 0; j2 < i8; j2++)
-            if (pairs.has(`${discrete[j2].values[choice[j2]].label} & ${discrete[i8].values[k2].label}`))
-              score++;
-          if (score > bestScore) {
-            bestScore = score;
-            best = k2;
-          }
-        }
-        choice[i8] = best;
-      }
-      const covered = [];
-      for (let i8 = 0; i8 < discrete.length; i8++)
-        for (let j2 = i8 + 1; j2 < discrete.length; j2++) {
-          const key2 = `${discrete[i8].values[choice[i8]].label} & ${discrete[j2].values[choice[j2]].label}`;
-          if (pairs.delete(key2))
-            covered.push(key2);
-        }
-      if (!covered.length)
-        break;
-      const row = { name: `pairwise_${String(++n3).padStart(2, "0")}`, technique: "pairwise", coverage_item: covered.slice(0, 3).join("; ") + (covered.length > 3 ? `; and ${covered.length - 3} more pairs` : ""), expect_valid: true, oracle: "specified" };
-      discrete.forEach((d4, i8) => d4.values[choice[i8]].apply(row));
-      add(row);
-    }
-    notes.push(`Pairwise rows cover every pair of values of ${discrete.map((d4) => d4.field.path).join(", ")} (${n3} rows).`);
-  }
-  return rows;
-}
-var round = (n3, step) => {
-  const d4 = Math.max(0, Math.min(10, Math.ceil(-Math.log10(step))));
-  return Number(n3.toFixed(d4));
-};
-function bva(slug2, edge, side, path19, value, valid, keyword, item) {
-  return { name: `${slug2}_${edge}_${side}_3bva`, technique: "BVA-3", coverage_item: item, expect_valid: valid, ...valid ? {} : { invalid_because: { path: path19, keyword } }, oracle: "specified", set: { [path19]: value } };
-}
-function wrongType(f4) {
-  switch (f4.type) {
-    case "string":
-      return 12345;
-    case "integer":
-    case "number":
-      return "twelve";
-    case "boolean":
-      return "yes";
-    case "array":
-      return "not-a-list";
-    default:
-      return "wrong";
-  }
-}
-
-// packages/core/dist/data/xlsx.js
-import zlib3 from "node:zlib";
-var esc = (s4) => s4.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-var xmlSafe = (s4) => s4.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f￾￿]/g, (c4) => `_x${c4.charCodeAt(0).toString(16).padStart(4, "0")}_`);
-function column(i8) {
-  let s4 = "";
-  for (let n3 = i8 + 1; n3 > 0; n3 = Math.floor((n3 - 1) / 26))
-    s4 = String.fromCharCode(65 + (n3 - 1) % 26) + s4;
-  return s4;
-}
-function sheetXml(sheet) {
-  const rows = sheet.rows.map((r6, ri) => {
-    const cells = r6.map((c4, ci) => {
-      if (c4 === null || c4 === void 0)
-        return "";
-      const ref = `${column(ci)}${ri + 1}`;
-      if (typeof c4 === "number" && Number.isFinite(c4))
-        return `<c r="${ref}"><v>${c4}</v></c>`;
-      if (typeof c4 === "boolean")
-        return `<c r="${ref}" t="b"><v>${c4 ? 1 : 0}</v></c>`;
-      const text2 = typeof c4 === "string" ? c4 : String(c4);
-      const space = /^\s|\s$/.test(text2) ? ' xml:space="preserve"' : "";
-      return `<c r="${ref}" t="inlineStr"><is><t${space}>${esc(xmlSafe(text2))}</t></is></c>`;
-    }).join("");
-    return `<row r="${ri + 1}">${cells}</row>`;
-  }).join("");
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${rows}</sheetData></worksheet>`;
-}
-function writeXlsx(sheets, o4 = {}) {
-  if (!sheets.length)
-    throw new Error("a workbook needs at least one sheet");
-  const creator = o4.creator ?? "cmtk";
-  const created = o4.created ?? "2026-01-15T09:30:00Z";
-  const names = sheets.map((s4, i8) => (s4.name || `Sheet${i8 + 1}`).replace(/[\\/?*[\]:]/g, "_").slice(0, 31));
-  const parts = [
-    ["[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${sheets.map((_2, i8) => `<Override PartName="/xl/worksheets/sheet${i8 + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("")}<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`],
-    ["_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`],
-    ["docProps/core.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:creator>${esc(creator)}</dc:creator><cp:lastModifiedBy>${esc(creator)}</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${esc(created)}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${esc(created)}</dcterms:modified></cp:coreProperties>`],
-    ["docProps/app.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>cmtk</Application></Properties>`],
-    ["xl/workbook.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${names.map((n3, i8) => `<sheet name="${esc(n3)}" sheetId="${i8 + 1}" r:id="rId${i8 + 1}"/>`).join("")}</sheets></workbook>`],
-    ["xl/_rels/workbook.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((_2, i8) => `<Relationship Id="rId${i8 + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i8 + 1}.xml"/>`).join("")}</Relationships>`],
-    ...sheets.map((s4, i8) => [`xl/worksheets/sheet${i8 + 1}.xml`, sheetXml(s4)])
-  ];
-  return zip(parts, new Date(created));
-}
-var crcTable = (() => {
-  const t3 = new Uint32Array(256);
-  for (let n3 = 0; n3 < 256; n3++) {
-    let c4 = n3;
-    for (let k2 = 0; k2 < 8; k2++)
-      c4 = c4 & 1 ? 3988292384 ^ c4 >>> 1 : c4 >>> 1;
-    t3[n3] = c4 >>> 0;
-  }
-  return t3;
-})();
-function crc32(b2) {
-  let c4 = 4294967295;
-  for (const x2 of b2)
-    c4 = crcTable[(c4 ^ x2) & 255] ^ c4 >>> 8;
-  return (c4 ^ 4294967295) >>> 0;
-}
-function dosTime(d4) {
-  const y2 = Math.max(1980, d4.getUTCFullYear());
-  return { time: d4.getUTCHours() << 11 | d4.getUTCMinutes() << 5 | d4.getUTCSeconds() >> 1, date: y2 - 1980 << 9 | d4.getUTCMonth() + 1 << 5 | d4.getUTCDate() };
-}
-function zip(parts, when) {
-  const { time, date } = dosTime(when);
-  const locals = [], centrals = [];
-  let offset = 0;
-  for (const [name, text2] of parts) {
-    const raw = Buffer.from(text2, "utf8");
-    const data = zlib3.deflateRawSync(raw, { level: 9 });
-    const nameB = Buffer.from(name, "utf8");
-    const crc = crc32(raw);
-    const local = Buffer.alloc(30);
-    local.writeUInt32LE(67324752, 0);
-    local.writeUInt16LE(20, 4);
-    local.writeUInt16LE(2048, 6);
-    local.writeUInt16LE(8, 8);
-    local.writeUInt16LE(time, 10);
-    local.writeUInt16LE(date, 12);
-    local.writeUInt32LE(crc, 14);
-    local.writeUInt32LE(data.length, 18);
-    local.writeUInt32LE(raw.length, 22);
-    local.writeUInt16LE(nameB.length, 26);
-    local.writeUInt16LE(0, 28);
-    const central = Buffer.alloc(46);
-    central.writeUInt32LE(33639248, 0);
-    central.writeUInt16LE(20, 4);
-    central.writeUInt16LE(20, 6);
-    central.writeUInt16LE(2048, 8);
-    central.writeUInt16LE(8, 10);
-    central.writeUInt16LE(time, 12);
-    central.writeUInt16LE(date, 14);
-    central.writeUInt32LE(crc, 16);
-    central.writeUInt32LE(data.length, 20);
-    central.writeUInt32LE(raw.length, 24);
-    central.writeUInt16LE(nameB.length, 28);
-    central.writeUInt16LE(0, 30);
-    central.writeUInt16LE(0, 32);
-    central.writeUInt16LE(0, 34);
-    central.writeUInt16LE(0, 36);
-    central.writeUInt32LE(0, 38);
-    central.writeUInt32LE(offset, 42);
-    locals.push(local, nameB, data);
-    centrals.push(central, nameB);
-    offset += local.length + nameB.length + data.length;
-  }
-  const centralSize = centrals.reduce((n3, b2) => n3 + b2.length, 0);
-  const end = Buffer.alloc(22);
-  end.writeUInt32LE(101010256, 0);
-  end.writeUInt16LE(0, 4);
-  end.writeUInt16LE(0, 6);
-  end.writeUInt16LE(parts.length, 8);
-  end.writeUInt16LE(parts.length, 10);
-  end.writeUInt32LE(centralSize, 12);
-  end.writeUInt32LE(offset, 16);
-  end.writeUInt16LE(0, 20);
-  return Buffer.concat([...locals, ...centrals, end]);
-}
 
 // packages/core/dist/data/make.js
-import crypto8 from "node:crypto";
-import fs17 from "node:fs";
-import path15 from "node:path";
+import crypto7 from "node:crypto";
+import fs10 from "node:fs";
+import path9 from "node:path";
 
 // node_modules/@faker-js/faker/dist/base-BpJm8uRb.js
 var e = class extends Error {
@@ -21454,6 +17379,1182 @@ var e5 = { cell_phone: { formats: [`6##-###-###`, `6##.###.###`, `6## ### ###`, 
 // node_modules/@faker-js/faker/dist/locale/es.js
 var i7 = new Ct({ locale: [e5, e2, Dt] });
 
+// packages/core/dist/data/xlsx.js
+import zlib3 from "node:zlib";
+
+// packages/core/dist/diff.js
+var import_xmldom = __toESM(require_lib(), 1);
+
+// packages/core/dist/journey.js
+var words = (c4) => !c4 ? "(missing)" : c4.passed ? "passed" : `failed${c4.expected !== void 0 || c4.actual !== void 0 ? `: expected ${c4.expected ?? "(not given)"}, got ${c4.actual ?? "(not given)"}` : ""}`;
+var count = (list) => {
+  const m4 = /* @__PURE__ */ new Map();
+  for (const x2 of list)
+    m4.set(x2, (m4.get(x2) ?? 0) + 1);
+  return m4;
+};
+function diffJourney(a4, b2, sc) {
+  if (!a4 || !b2)
+    return [{ where: "journey", reference: a4 ? "(reported)" : "(no journey reported)", candidate: b2 ? "(reported)" : "(no journey reported)" }];
+  const x2 = scrubJson(a4, sc), y2 = scrubJson(b2, sc);
+  const empty = (j2) => !j2.checks?.length && !Object.keys(j2.values ?? {}).length && !(j2.pages ?? []).some((p4) => p4.name);
+  if (empty(x2) || empty(y2))
+    return [{ where: "journey", reference: empty(x2) ? "(no checks, values or named pages)" : "(reported)", candidate: empty(y2) ? "(no checks, values or named pages)" : "(reported)" }];
+  const out = [];
+  if (x2.goal !== y2.goal)
+    out.push({ where: "journey:goal", reference: x2.goal, candidate: y2.goal });
+  const cx = new Map((x2.checks ?? []).map((c4) => [c4.name, c4])), cy = new Map((y2.checks ?? []).map((c4) => [c4.name, c4]));
+  for (const name of /* @__PURE__ */ new Set([...cx.keys(), ...cy.keys()])) {
+    const p4 = cx.get(name), q2 = cy.get(name);
+    if (p4?.passed !== q2?.passed)
+      out.push({ where: `journey:check:${name}`, reference: words(p4), candidate: words(q2) });
+  }
+  const vx = x2.values ?? {}, vy = y2.values ?? {};
+  for (const name of /* @__PURE__ */ new Set([...Object.keys(vx), ...Object.keys(vy)])) {
+    const p4 = vx[name], q2 = vy[name];
+    if ((p4 ?? null) !== (q2 ?? null) || name in vx !== name in vy)
+      out.push({ where: `journey:value:${name}`, reference: name in vx ? String(p4 ?? "(not shown)") : "(missing)", candidate: name in vy ? String(q2 ?? "(not shown)") : "(missing)" });
+  }
+  const px = (x2.pages ?? []).flatMap((p4) => p4.name ? [p4.name] : []), py = (y2.pages ?? []).flatMap((p4) => p4.name ? [p4.name] : []);
+  for (const name of /* @__PURE__ */ new Set([...px, ...py])) {
+    if (px.includes(name) !== py.includes(name))
+      out.push({ where: `journey:page:${name}`, reference: px.includes(name) ? "reached" : "(not reached)", candidate: py.includes(name) ? "reached" : "(not reached)" });
+  }
+  const common = (l4, other) => l4.filter((n3) => other.includes(n3));
+  if (common(px, py).join("\n") !== common(py, px).join("\n"))
+    out.push({ where: "journey:pages", reference: common(px, py).join(" > "), candidate: common(py, px).join(" > ") });
+  if (x2.api_compared || y2.api_compared) {
+    const ax = count(x2.api_compared ?? []), ay = count(y2.api_compared ?? []);
+    for (const call of /* @__PURE__ */ new Set([...ax.keys(), ...ay.keys()])) {
+      if ((ax.get(call) ?? 0) !== (ay.get(call) ?? 0))
+        out.push({ where: `journey:api:${call}`, reference: `${ax.get(call) ?? 0} time(s)`, candidate: `${ay.get(call) ?? 0} time(s)` });
+    }
+  }
+  return out;
+}
+
+// packages/core/dist/structure.js
+import zlib2 from "node:zlib";
+var line = (s4) => String(s4 ?? "").replace(/[\u0000-\u001f\u007f-\u009f]+/g, " ").replace(/\s+/g, " ").trim();
+var label = (e6) => `${line(e6.role)}${e6.name ? ` ${JSON.stringify(clip(line(e6.name)))}` : ""}`;
+function keyed(elements, sc) {
+  const seen = /* @__PURE__ */ new Map();
+  return elements.map((raw) => {
+    const e6 = { ...raw, name: scrubText(line(raw.name), sc), ...raw.value !== void 0 ? { value: scrubText(line(raw.value), sc) } : {} };
+    const base2 = label(e6);
+    const n3 = (seen.get(base2) ?? 0) + 1;
+    seen.set(base2, n3);
+    return { key: n3 === 1 ? base2 : `${base2} [${n3}]`, e: e6 };
+  });
+}
+function inOrder(a4, b2) {
+  if (a4.length * b2.length > 25e6)
+    return void 0;
+  const t3 = Array.from({ length: a4.length + 1 }, () => new Uint32Array(b2.length + 1));
+  for (let i9 = a4.length - 1; i9 >= 0; i9--) {
+    for (let j3 = b2.length - 1; j3 >= 0; j3--) {
+      t3[i9][j3] = a4[i9] === b2[j3] ? t3[i9 + 1][j3 + 1] + 1 : Math.max(t3[i9 + 1][j3], t3[i9][j3 + 1]);
+    }
+  }
+  const kept = /* @__PURE__ */ new Set();
+  let i8 = 0, j2 = 0;
+  while (i8 < a4.length && j2 < b2.length) {
+    if (a4[i8] === b2[j2]) {
+      kept.add(a4[i8]);
+      i8++;
+      j2++;
+    } else if (t3[i8 + 1][j2] >= t3[i8][j2 + 1])
+      i8++;
+    else
+      j2++;
+  }
+  return kept;
+}
+var FACTS = ["level", "value", "required", "disabled", "checked", "readonly"];
+function diffPage(page, a4, b2, sc, out) {
+  const where2 = (what) => `structure:${page} ${what}`;
+  const x2 = keyed(a4, sc), y2 = keyed(b2, sc);
+  const mx = new Map(x2.map((v2) => [v2.key, v2.e])), my = new Map(y2.map((v2) => [v2.key, v2.e]));
+  for (const { key: key2 } of x2)
+    if (!my.has(key2))
+      out.push({ where: where2(key2), reference: "(element)", candidate: "(missing)" });
+  for (const { key: key2 } of y2)
+    if (!mx.has(key2))
+      out.push({ where: where2(key2), reference: "(missing)", candidate: "(element)" });
+  for (const { key: key2, e: e6 } of x2) {
+    const other = my.get(key2);
+    if (!other)
+      continue;
+    for (const f4 of FACTS) {
+      if (String(e6[f4] ?? "") !== String(other[f4] ?? ""))
+        out.push({ where: where2(`${key2} ${f4}`), reference: String(e6[f4] ?? "(none)"), candidate: String(other[f4] ?? "(none)") });
+    }
+  }
+  const cx = x2.map((v2) => v2.key).filter((k2) => my.has(k2)), cy = y2.map((v2) => v2.key).filter((k2) => mx.has(k2));
+  if (cx.join("\n") === cy.join("\n"))
+    return;
+  const kept = inOrder(cx, cy);
+  if (!kept) {
+    out.push({ where: where2("order"), reference: `${cx.length} elements`, candidate: "in another order" });
+    return;
+  }
+  const before = (list, key2) => {
+    const i8 = list.indexOf(key2);
+    return i8 > 0 ? `after ${list[i8 - 1]}` : "first";
+  };
+  for (const key2 of cx)
+    if (!kept.has(key2))
+      out.push({ where: where2(`${key2} (moved)`), reference: before(cx, key2), candidate: before(cy, key2) });
+}
+function diffStructure(a4, b2, sc) {
+  const empty = (s4) => !s4?.pages?.length || s4.pages.every((p4) => !p4.elements?.length);
+  if (empty(a4) || empty(b2))
+    return [{ where: "structure", reference: empty(a4) ? "(no structure reported)" : "(reported)", candidate: empty(b2) ? "(no structure reported)" : "(reported)" }];
+  const out = [];
+  const byPage = (s4) => new Map(s4.map((p4) => [line(p4.page), p4.elements ?? []]));
+  const pa = byPage(a4.pages), pb = byPage(b2.pages);
+  for (const page of /* @__PURE__ */ new Set([...pa.keys(), ...pb.keys()])) {
+    const ea = pa.get(page), eb = pb.get(page);
+    if (!ea || !eb) {
+      out.push({ where: `structure:${page}`, reference: ea ? "(page)" : "(missing)", candidate: eb ? "(page)" : "(missing)" });
+      continue;
+    }
+    diffPage(page, ea, eb, sc, out);
+  }
+  return out;
+}
+function decodePng(png) {
+  if (png.length < 33 || png.subarray(1, 4).toString("latin1") !== "PNG")
+    throw new Error("not a PNG");
+  let at2 = 8, width = 0, height = 0, depth = 0, colour = 0, interlace = 0;
+  const idat = [];
+  while (at2 + 8 <= png.length) {
+    const size = png.readUInt32BE(at2);
+    const type = png.subarray(at2 + 4, at2 + 8).toString("latin1");
+    const data = png.subarray(at2 + 8, at2 + 8 + size);
+    if (type === "IHDR") {
+      width = data.readUInt32BE(0);
+      height = data.readUInt32BE(4);
+      depth = data[8];
+      colour = data[9];
+      interlace = data[12];
+    }
+    if (type === "IDAT")
+      idat.push(data);
+    if (type === "IEND")
+      break;
+    at2 += size + 12;
+  }
+  const channels = { 0: 1, 2: 3, 4: 2, 6: 4 }[colour];
+  if (depth !== 8 || !channels || interlace)
+    throw new Error(`a PNG this reader does not handle (depth ${depth}, colour type ${colour}, interlace ${interlace})`);
+  const raw = zlib2.inflateSync(Buffer.concat(idat));
+  const stride = width * channels;
+  if (raw.length < (stride + 1) * height)
+    throw new Error("a PNG with too little data");
+  const rgba = new Uint8Array(width * height * 4);
+  let prev = new Uint8Array(stride);
+  for (let y2 = 0; y2 < height; y2++) {
+    const filter = raw[y2 * (stride + 1)];
+    const row = Uint8Array.from(raw.subarray(y2 * (stride + 1) + 1, (y2 + 1) * (stride + 1)));
+    for (let i8 = 0; i8 < stride; i8++) {
+      const left = i8 >= channels ? row[i8 - channels] : 0, up = prev[i8], corner = i8 >= channels ? prev[i8 - channels] : 0;
+      let add = 0;
+      if (filter === 1)
+        add = left;
+      else if (filter === 2)
+        add = up;
+      else if (filter === 3)
+        add = left + up >> 1;
+      else if (filter === 4) {
+        const p4 = left + up - corner, pa = Math.abs(p4 - left), pb = Math.abs(p4 - up), pc = Math.abs(p4 - corner);
+        add = pa <= pb && pa <= pc ? left : pb <= pc ? up : corner;
+      }
+      row[i8] = row[i8] + add & 255;
+    }
+    for (let px = 0; px < width; px++) {
+      const o4 = (y2 * width + px) * 4, s4 = px * channels;
+      if (channels <= 2) {
+        rgba[o4] = rgba[o4 + 1] = rgba[o4 + 2] = row[s4];
+        rgba[o4 + 3] = channels === 2 ? row[s4 + 1] : 255;
+      } else {
+        rgba[o4] = row[s4];
+        rgba[o4 + 1] = row[s4 + 1];
+        rgba[o4 + 2] = row[s4 + 2];
+        rgba[o4 + 3] = channels === 4 ? row[s4 + 3] : 255;
+      }
+    }
+    prev = row;
+  }
+  return { width, height, rgba };
+}
+var CHANNEL_SLACK = 16;
+function diffPicture(a4, b2) {
+  let changed = 0, left = a4.width, top = a4.height, right = -1, bottom = -1;
+  for (let y2 = 0; y2 < a4.height; y2++) {
+    for (let x2 = 0; x2 < a4.width; x2++) {
+      const o4 = (y2 * a4.width + x2) * 4;
+      let same = true;
+      for (let c4 = 0; c4 < 4 && same; c4++)
+        same = Math.abs(a4.rgba[o4 + c4] - b2.rgba[o4 + c4]) <= CHANNEL_SLACK;
+      if (same)
+        continue;
+      changed++;
+      if (x2 < left)
+        left = x2;
+      if (x2 > right)
+        right = x2;
+      if (y2 < top)
+        top = y2;
+      if (y2 > bottom)
+        bottom = y2;
+    }
+  }
+  return { changed, box: `x ${left}, y ${top}, ${right - left + 1} by ${bottom - top + 1}` };
+}
+function diffScreens(a4, b2, tolerance = 0) {
+  if (!a4?.length || !b2?.length)
+    return [{ where: "visual", reference: a4?.length ? "(reported)" : "(no screenshot reported)", candidate: b2?.length ? "(reported)" : "(no screenshot reported)" }];
+  const out = [];
+  const pa = new Map(a4.map((s4) => [line(s4.page), s4])), pb = new Map(b2.map((s4) => [line(s4.page), s4]));
+  for (const page of /* @__PURE__ */ new Set([...pa.keys(), ...pb.keys()])) {
+    const sa = pa.get(page), sb = pb.get(page);
+    if (!sa || !sb) {
+      out.push({ where: `visual:${page}`, reference: sa ? "(screenshot)" : "(missing)", candidate: sb ? "(screenshot)" : "(missing)" });
+      continue;
+    }
+    if (sa.png_base64 === sb.png_base64)
+      continue;
+    let x2, y2;
+    try {
+      x2 = decodePng(Buffer.from(sa.png_base64, "base64"));
+      y2 = decodePng(Buffer.from(sb.png_base64, "base64"));
+    } catch (err) {
+      out.push({ where: `visual:${page}`, reference: "the screenshots differ", candidate: `and could not be read to say how: ${err.message}` });
+      continue;
+    }
+    if (x2.width !== y2.width || x2.height !== y2.height) {
+      out.push({ where: `visual:${page} size`, reference: `${x2.width} by ${x2.height}`, candidate: `${y2.width} by ${y2.height}` });
+      continue;
+    }
+    const { changed, box } = diffPicture(x2, y2);
+    const share2 = changed / Math.max(1, x2.width * x2.height);
+    if (changed > 0 && share2 > tolerance)
+      out.push({ where: `visual:${page}`, reference: `${x2.width} by ${x2.height}`, candidate: `${(share2 * 100).toFixed(2)}% of pixels changed, within ${box}` });
+  }
+  return out;
+}
+
+// packages/core/dist/diff.js
+var SCRUBBED = "<scrubbed>";
+var ConfigError = class extends Error {
+};
+function scrubberOf(manifest, hits) {
+  const s4 = manifest.scrub;
+  const regex2 = (s4.regex ?? []).map((r6) => {
+    try {
+      return { rx: new RegExp(r6.pattern, "g"), replace: r6.replace ?? SCRUBBED };
+    } catch (err) {
+      throw new ConfigError(`scrub.regex ${JSON.stringify(r6.pattern)} is not a valid regular expression: ${err.message}`);
+    }
+  });
+  return { jsonPaths: (s4.json_paths ?? []).map(parsePath), xmlIgnore: new Set(s4.xml_ignore ?? []), regex: regex2, ...hits ? { hits, jsonLabels: (s4.json_paths ?? []).map((p4) => `json_path ${p4}`) } : {} };
+}
+var hit = (sc, label2, by = 1) => {
+  if (sc.hits && by)
+    sc.hits.set(label2, (sc.hits.get(label2) ?? 0) + by);
+};
+var scrubText = (text2, sc) => sc.regex.reduce((t3, r6) => {
+  if (sc.hits)
+    hit(sc, `regex ${r6.rx.source}`, t3.match(r6.rx)?.length ?? 0);
+  return t3.replace(r6.rx, r6.replace);
+}, text2);
+function scrubJson(value, sc, at2 = []) {
+  if (at2.length > 0) {
+    const n3 = sc.jsonPaths.findIndex((p4) => matches(p4, at2));
+    if (n3 >= 0) {
+      if (sc.jsonLabels)
+        hit(sc, sc.jsonLabels[n3]);
+      return SCRUBBED;
+    }
+  }
+  if (value instanceof JsonNumber)
+    return value;
+  if (Array.isArray(value))
+    return value.map((v2, i8) => scrubJson(v2, sc, [...at2, i8]));
+  if (value instanceof JsonObject)
+    return new JsonObject(entriesOf(value).map(([k2, v2]) => [k2, scrubJson(v2, sc, [...at2, k2])]));
+  if (isJsonObject(value))
+    return Object.fromEntries(entriesOf(value).map(([k2, v2]) => [k2, scrubJson(v2, sc, [...at2, k2])]));
+  return typeof value === "string" ? scrubText(value, sc) : value;
+}
+function short(v2, limit = 80) {
+  return clip(v2 === void 0 ? "(missing)" : JSON.stringify(v2) ?? String(v2), limit);
+}
+var clip = (s4, limit = 80) => s4.length <= limit ? s4 : `${s4.slice(0, limit - 1)}\u2026`;
+function shortPair(a4, b2, limit = 80) {
+  if (a4.length <= limit && b2.length <= limit || a4 === b2)
+    return [clip(a4, limit), clip(b2, limit)];
+  let n3 = 0;
+  while (n3 < a4.length && n3 < b2.length && a4[n3] === b2[n3])
+    n3++;
+  if (n3 < limit - 20)
+    return [clip(a4, limit), clip(b2, limit)];
+  const from = n3 - 20;
+  const cut = (s4) => `\u2026${s4.slice(from, from + limit - 2)}${s4.length > from + limit - 2 ? "\u2026" : ""}`;
+  return [cut(a4), cut(b2)];
+}
+var show = (v2) => v2 === void 0 ? "(missing)" : v2 instanceof JsonNumber ? v2.source : JSON.stringify(v2) ?? String(v2);
+function diffJson(a4, b2, semantic, at2 = [], out = []) {
+  if (a4 instanceof JsonNumber && b2 instanceof JsonNumber) {
+    const same = semantic ? a4.canonical === b2.canonical : a4.source === b2.source;
+    if (!same)
+      out.push({ where: render(at2), reference: a4.source, candidate: b2.source });
+    return out;
+  }
+  if (isJsonObject(a4) && isJsonObject(b2)) {
+    const ea = entriesOf(a4), eb = entriesOf(b2);
+    const ma = new Map(ea), mb = new Map(eb);
+    for (const [k2, v2] of ea)
+      if (!mb.has(k2))
+        out.push({ where: render([...at2, k2]), reference: clip(show(v2)), candidate: "(missing)" });
+    for (const [k2, v2] of eb)
+      if (!ma.has(k2))
+        out.push({ where: render([...at2, k2]), reference: "(missing)", candidate: clip(show(v2)) });
+    for (const [k2, v2] of ea)
+      if (mb.has(k2))
+        diffJson(v2, mb.get(k2), semantic, [...at2, k2], out);
+    const ka = ea.map(([k2]) => k2), kb = eb.map(([k2]) => k2);
+    if (!semantic && ka.length === kb.length && ka.every((k2) => mb.has(k2)) && ka.some((k2, i8) => k2 !== kb[i8])) {
+      const [ra, rb] = shortPair(`key order ${ka.join(",")}`, `key order ${kb.join(",")}`);
+      out.push({ where: render(at2), reference: ra, candidate: rb });
+    }
+    return out;
+  }
+  if (Array.isArray(a4) && Array.isArray(b2)) {
+    for (let i8 = 0; i8 < Math.max(a4.length, b2.length); i8++) {
+      if (i8 >= a4.length)
+        out.push({ where: render([...at2, i8]), reference: "(missing)", candidate: clip(show(b2[i8])) });
+      else if (i8 >= b2.length)
+        out.push({ where: render([...at2, i8]), reference: clip(show(a4[i8])), candidate: "(missing)" });
+      else
+        diffJson(a4[i8], b2[i8], semantic, [...at2, i8], out);
+    }
+    return out;
+  }
+  const sa = show(a4), sb = show(b2);
+  if (kindOf(a4) !== kindOf(b2) || sa !== sb) {
+    const [ra, rb] = shortPair(sa, sb);
+    out.push({ where: render(at2), reference: ra, candidate: rb });
+  }
+  return out;
+}
+var kindOf = (v2) => v2 === null ? "null" : v2 instanceof JsonNumber ? "number" : Array.isArray(v2) ? "array" : isJsonObject(v2) ? "object" : typeof v2;
+function parseXml(text2) {
+  const errors = [];
+  const doc = new import_xmldom.DOMParser({ onError: (level2, msg) => {
+    if (level2 !== "warning")
+      errors.push(String(msg));
+  } }).parseFromString(text2, "text/xml");
+  const root = doc.documentElement;
+  if (!root || errors.length)
+    throw new Error(errors[0] ?? "no root element");
+  return toNode(root);
+}
+function toNode(el) {
+  const attrs = /* @__PURE__ */ new Map();
+  for (let i8 = 0; i8 < el.attributes.length; i8++) {
+    const a4 = el.attributes.item(i8);
+    if (!a4 || a4.name === "xmlns" || a4.name.startsWith("xmlns:"))
+      continue;
+    attrs.set(`${a4.namespaceURI ? `{${a4.namespaceURI}}` : ""}${a4.localName ?? a4.name}`, a4.value);
+  }
+  const children = [];
+  const texts = [""];
+  for (let n3 = el.firstChild; n3; n3 = n3.nextSibling) {
+    if (n3.nodeType === 1) {
+      children.push(toNode(n3));
+      texts.push("");
+    } else if (n3.nodeType === 3 || n3.nodeType === 4)
+      texts[texts.length - 1] += n3.nodeValue ?? "";
+  }
+  return { ns: el.namespaceURI ?? "", local: el.localName ?? el.nodeName, attrs, children, texts };
+}
+function diffXml(a4, b2, sc, exact = true, at2 = "", out = []) {
+  const here = `${at2}/${a4.local}`;
+  if (a4.ns !== b2.ns || a4.local !== b2.local) {
+    out.push({ where: here, reference: `{${a4.ns}}${a4.local}`, candidate: `{${b2.ns}}${b2.local}` });
+    return out;
+  }
+  if (sc.xmlIgnore.has(a4.local)) {
+    hit(sc, `xml_ignore ${a4.local}`);
+    return out;
+  }
+  for (const k2 of /* @__PURE__ */ new Set([...a4.attrs.keys(), ...b2.attrs.keys()])) {
+    const va = a4.attrs.has(k2) ? scrubText(a4.attrs.get(k2), sc) : "(missing)";
+    const vb = b2.attrs.has(k2) ? scrubText(b2.attrs.get(k2), sc) : "(missing)";
+    if (va !== vb)
+      out.push({ where: `${here}/@${k2.replace(/^\{[^}]*\}/, "")}`, reference: va, candidate: vb });
+  }
+  const leaf = a4.children.length === 0 && b2.children.length === 0;
+  const segments = Math.max(a4.texts.length, b2.texts.length);
+  for (let i8 = 0; i8 < segments; i8++) {
+    let ta = scrubText(a4.texts[i8] ?? "", sc), tb = scrubText(b2.texts[i8] ?? "", sc);
+    if (!leaf || !exact) {
+      ta = ta.trim();
+      tb = tb.trim();
+    }
+    if (ta !== tb) {
+      const [ra, rb] = shortPair(JSON.stringify(ta), JSON.stringify(tb));
+      out.push({ where: leaf ? `${here}/text()` : `${here}/text()[${i8 + 1}]`, reference: ra, candidate: rb });
+    }
+  }
+  for (let i8 = 0; i8 < Math.max(a4.children.length, b2.children.length); i8++) {
+    const ca = a4.children[i8], cb = b2.children[i8];
+    if (!ca && cb)
+      out.push({ where: `${here}/${cb.local}[${i8 + 1}]`, reference: "(missing)", candidate: "(element)" });
+    else if (ca && !cb)
+      out.push({ where: `${here}/${ca.local}[${i8 + 1}]`, reference: "(element)", candidate: "(missing)" });
+    else if (ca && cb)
+      diffXml(ca, cb, sc, exact, here, out);
+  }
+  return out;
+}
+function bodyKind(contentType, body) {
+  const ct2 = (contentType ?? "").toLowerCase();
+  const head = body.trimStart();
+  if (ct2.includes("json") || !ct2 && (head.startsWith("{") || head.startsWith("[")))
+    return "json";
+  if (ct2.includes("xml") || ct2.includes("soap") || !ct2 && head.startsWith("<?xml"))
+    return "xml";
+  return "text";
+}
+var mediaType = (v2) => (v2 ?? "").split(";")[0].trim().toLowerCase();
+function compareObservations(ref, cand, manifest, level2, hits) {
+  const out = [];
+  if (level2 === "journey")
+    return diffJourney(ref.journey, cand.journey, scrubberOf(manifest));
+  if (ref.status !== cand.status)
+    out.push({ where: "status", reference: String(ref.status ?? "(none)"), candidate: String(cand.status ?? "(none)") });
+  if (level2 === "contract")
+    return out;
+  if (level2 === "structure")
+    return out.concat(diffStructure(ref.structure, cand.structure, scrubberOf(manifest)));
+  if (level2 === "visual")
+    return out.concat(diffStructure(ref.structure, cand.structure, scrubberOf(manifest)), diffScreens(ref.screenshots, cand.screenshots, manifest.visual_tolerance));
+  const exact = level2 === "exact";
+  const sc = scrubberOf(manifest, hits);
+  for (const name of manifest.compare_headers ?? []) {
+    const h4 = name.toLowerCase();
+    let va = ref.headers?.[h4], vb = cand.headers?.[h4];
+    if (h4 === "content-type" && !exact) {
+      va = mediaType(va);
+      vb = mediaType(vb);
+    }
+    if ((va ?? "") !== (vb ?? ""))
+      out.push({ where: `header:${h4}`, reference: va || "(missing)", candidate: vb || "(missing)" });
+  }
+  if (ref.effects !== void 0 || cand.effects !== void 0) {
+    const ea = scrubJson(ref.effects ?? {}, sc), eb = scrubJson(cand.effects ?? {}, sc);
+    for (const d4 of diffJson(ea, eb, !exact))
+      out.push({ ...d4, where: d4.where.replace(/^\$/, "effects:$") });
+  }
+  if (exact && (ref.body_encoding ?? "utf-8") !== (cand.body_encoding ?? "utf-8") && ref.body !== void 0 && cand.body !== void 0) {
+    out.push({ where: "body encoding", reference: ref.body_encoding ?? "utf-8", candidate: cand.body_encoding ?? "utf-8" });
+  }
+  const ra = ref.body ?? "", rb = cand.body ?? "";
+  let kind = bodyKind(ref.headers?.["content-type"], ra);
+  if (kind === "json") {
+    try {
+      const ja = scrubJson(parseJsonExact(ra), sc), jb = scrubJson(parseJsonExact(rb), sc);
+      return out.concat(diffJson(ja, jb, !exact));
+    } catch {
+      kind = "text";
+    }
+  }
+  if (kind === "xml") {
+    try {
+      return out.concat(diffXml(parseXml(ra), parseXml(rb), sc, exact));
+    } catch {
+      kind = "text";
+    }
+  }
+  let ta = scrubText(ra, sc), tb = scrubText(rb, sc);
+  if (!exact) {
+    const norm2 = (t3) => t3.trim().split(/\r?\n/).map((l4) => l4.trimEnd()).join("\n");
+    ta = norm2(ta);
+    tb = norm2(tb);
+  }
+  if (ta !== tb) {
+    const la = ta.split("\n"), lb = tb.split("\n");
+    let n3 = 0;
+    while (n3 < Math.min(la.length, lb.length) && la[n3] === lb[n3])
+      n3++;
+    const line2 = (l4) => l4 === void 0 ? "(end)" : JSON.stringify(l4);
+    const [x2, y2] = shortPair(line2(la[n3]), line2(lb[n3]));
+    out.push({ where: `body line ${n3 + 1}`, reference: x2, candidate: y2 });
+  }
+  return out;
+}
+
+// packages/core/dist/data/xlsx.js
+var esc = (s4) => s4.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+var xmlSafe = (s4) => s4.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f￾￿]/g, (c4) => `_x${c4.charCodeAt(0).toString(16).padStart(4, "0")}_`);
+function column(i8) {
+  let s4 = "";
+  for (let n3 = i8 + 1; n3 > 0; n3 = Math.floor((n3 - 1) / 26))
+    s4 = String.fromCharCode(65 + (n3 - 1) % 26) + s4;
+  return s4;
+}
+function sheetXml(sheet, o4) {
+  const rows = sheet.rows.map((r6, ri) => {
+    const cells = r6.map((c4, ci) => {
+      if (c4 === null || c4 === void 0)
+        return "";
+      const ref = `${column(ci)}${ri + 1}`;
+      if (typeof c4 === "string" && c4.startsWith("=") && o4.formulas === "formula")
+        return `<c r="${ref}"><f>${esc(xmlSafe(c4.slice(1)))}</f></c>`;
+      if (typeof c4 === "object") {
+        const f4 = `<f>${esc(xmlSafe(c4.formula))}</f>`;
+        if (c4.value === void 0)
+          return `<c r="${ref}">${f4}</c>`;
+        if (typeof c4.value === "number")
+          return `<c r="${ref}">${f4}<v>${c4.value}</v></c>`;
+        if (typeof c4.value === "boolean")
+          return `<c r="${ref}" t="b">${f4}<v>${c4.value ? 1 : 0}</v></c>`;
+        return `<c r="${ref}" t="str">${f4}<v>${esc(xmlSafe(c4.value))}</v></c>`;
+      }
+      if (typeof c4 === "number" && Number.isFinite(c4))
+        return `<c r="${ref}"><v>${c4}</v></c>`;
+      if (typeof c4 === "boolean")
+        return `<c r="${ref}" t="b"><v>${c4 ? 1 : 0}</v></c>`;
+      const text2 = typeof c4 === "string" ? c4 : String(c4);
+      const space = /^\s|\s$/.test(text2) ? ' xml:space="preserve"' : "";
+      return `<c r="${ref}" t="inlineStr"><is><t${space}>${esc(xmlSafe(text2))}</t></is></c>`;
+    }).join("");
+    return `<row r="${ri + 1}">${cells}</row>`;
+  }).join("");
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${rows}</sheetData>${sheet.merges?.length ? `<mergeCells count="${sheet.merges.length}">${sheet.merges.map((m4) => `<mergeCell ref="${esc(m4)}"/>`).join("")}</mergeCells>` : ""}</worksheet>`;
+}
+function writeXlsx(sheets, o4 = {}) {
+  if (!sheets.length)
+    throw new Error("a workbook needs at least one sheet");
+  const creator = o4.creator ?? "cmtk";
+  const created = o4.created ?? "2026-01-15T09:30:00Z";
+  const names = sheets.map((s4, i8) => (s4.name || `Sheet${i8 + 1}`).replace(/[\\/?*[\]:]/g, "_").slice(0, 31));
+  const parts = [
+    ["[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${sheets.map((_2, i8) => `<Override PartName="/xl/worksheets/sheet${i8 + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("")}<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`],
+    ["_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`],
+    ["docProps/core.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:creator>${esc(creator)}</dc:creator><cp:lastModifiedBy>${esc(creator)}</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${esc(created)}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${esc(created)}</dcterms:modified></cp:coreProperties>`],
+    ["docProps/app.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>cmtk</Application></Properties>`],
+    ["xl/workbook.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><workbookPr date1904="0"/><sheets>${names.map((n3, i8) => `<sheet name="${esc(n3)}" sheetId="${i8 + 1}" r:id="rId${i8 + 1}"/>`).join("")}</sheets></workbook>`],
+    ["xl/_rels/workbook.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((_2, i8) => `<Relationship Id="rId${i8 + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i8 + 1}.xml"/>`).join("")}</Relationships>`],
+    ...sheets.map((s4, i8) => [`xl/worksheets/sheet${i8 + 1}.xml`, sheetXml(s4, o4)])
+  ];
+  return zip(parts, new Date(created));
+}
+var crcTable = (() => {
+  const t3 = new Uint32Array(256);
+  for (let n3 = 0; n3 < 256; n3++) {
+    let c4 = n3;
+    for (let k2 = 0; k2 < 8; k2++)
+      c4 = c4 & 1 ? 3988292384 ^ c4 >>> 1 : c4 >>> 1;
+    t3[n3] = c4 >>> 0;
+  }
+  return t3;
+})();
+function crc32(b2) {
+  let c4 = 4294967295;
+  for (const x2 of b2)
+    c4 = crcTable[(c4 ^ x2) & 255] ^ c4 >>> 8;
+  return (c4 ^ 4294967295) >>> 0;
+}
+function dosTime(d4) {
+  const y2 = Math.max(1980, d4.getUTCFullYear());
+  return { time: d4.getUTCHours() << 11 | d4.getUTCMinutes() << 5 | d4.getUTCSeconds() >> 1, date: y2 - 1980 << 9 | d4.getUTCMonth() + 1 << 5 | d4.getUTCDate() };
+}
+function zip(parts, when) {
+  const { time, date } = dosTime(when);
+  const locals = [], centrals = [];
+  let offset = 0;
+  for (const [name, text2] of parts) {
+    const raw = Buffer.from(text2, "utf8");
+    const data = zlib3.deflateRawSync(raw, { level: 9 });
+    const nameB = Buffer.from(name, "utf8");
+    const crc = crc32(raw);
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(67324752, 0);
+    local.writeUInt16LE(20, 4);
+    local.writeUInt16LE(2048, 6);
+    local.writeUInt16LE(8, 8);
+    local.writeUInt16LE(time, 10);
+    local.writeUInt16LE(date, 12);
+    local.writeUInt32LE(crc, 14);
+    local.writeUInt32LE(data.length, 18);
+    local.writeUInt32LE(raw.length, 22);
+    local.writeUInt16LE(nameB.length, 26);
+    local.writeUInt16LE(0, 28);
+    const central = Buffer.alloc(46);
+    central.writeUInt32LE(33639248, 0);
+    central.writeUInt16LE(20, 4);
+    central.writeUInt16LE(20, 6);
+    central.writeUInt16LE(2048, 8);
+    central.writeUInt16LE(8, 10);
+    central.writeUInt16LE(time, 12);
+    central.writeUInt16LE(date, 14);
+    central.writeUInt32LE(crc, 16);
+    central.writeUInt32LE(data.length, 20);
+    central.writeUInt32LE(raw.length, 24);
+    central.writeUInt16LE(nameB.length, 28);
+    central.writeUInt16LE(0, 30);
+    central.writeUInt16LE(0, 32);
+    central.writeUInt16LE(0, 34);
+    central.writeUInt16LE(0, 36);
+    central.writeUInt32LE(0, 38);
+    central.writeUInt32LE(offset, 42);
+    locals.push(local, nameB, data);
+    centrals.push(central, nameB);
+    offset += local.length + nameB.length + data.length;
+  }
+  const centralSize = centrals.reduce((n3, b2) => n3 + b2.length, 0);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(101010256, 0);
+  end.writeUInt16LE(0, 4);
+  end.writeUInt16LE(0, 6);
+  end.writeUInt16LE(parts.length, 8);
+  end.writeUInt16LE(parts.length, 10);
+  end.writeUInt32LE(centralSize, 12);
+  end.writeUInt32LE(offset, 16);
+  end.writeUInt16LE(0, 20);
+  return Buffer.concat([...locals, ...centrals, end]);
+}
+function unzip(b2) {
+  const out = /* @__PURE__ */ new Map();
+  let p4 = b2.length - 22;
+  while (p4 >= 0 && b2.readUInt32LE(p4) !== 101010256)
+    p4--;
+  if (p4 < 0)
+    throw new Error("not a zip file");
+  const count2 = b2.readUInt16LE(p4 + 10);
+  let c4 = b2.readUInt32LE(p4 + 16);
+  for (let i8 = 0; i8 < count2; i8++) {
+    if (b2.readUInt32LE(c4) !== 33639248)
+      throw new Error("bad zip central directory");
+    const method = b2.readUInt16LE(c4 + 10), size = b2.readUInt32LE(c4 + 20), rawSize = b2.readUInt32LE(c4 + 24), nameLen = b2.readUInt16LE(c4 + 28), extra = b2.readUInt16LE(c4 + 30), comment = b2.readUInt16LE(c4 + 32), local = b2.readUInt32LE(c4 + 42);
+    const name = b2.subarray(c4 + 46, c4 + 46 + nameLen).toString("utf8");
+    const dataAt = local + 30 + b2.readUInt16LE(local + 26) + b2.readUInt16LE(local + 28);
+    const data = b2.subarray(dataAt, dataAt + size);
+    out.set(name, method === 8 ? zlib3.inflateRawSync(data) : method === 0 ? Buffer.from(data) : (() => {
+      throw new Error(`zip method ${method} not supported`);
+    })());
+    if (method === 0 && data.length !== rawSize)
+      throw new Error("bad zip entry");
+    c4 += 46 + nameLen + extra + comment;
+  }
+  return out;
+}
+var unescapeXml = (s4) => s4.replace(/_x([0-9A-Fa-f]{4})_/g, (_2, h4) => String.fromCharCode(parseInt(h4, 16)));
+var textOf = (n3) => unescapeXml(n3.texts.map((t3, i8) => t3 + (n3.children[i8] ? textOf(n3.children[i8]) : "")).join(""));
+var find = (n3, local) => n3.children.flatMap((c4) => c4.local === local ? [c4] : find(c4, local));
+function readXlsx(b2, o4 = {}) {
+  const files = unzip(b2);
+  const text2 = (name) => files.get(name)?.toString("utf8");
+  const shared = [];
+  const ss = text2("xl/sharedStrings.xml");
+  if (ss)
+    for (const si of find(parseXml(ss), "si"))
+      shared.push(find(si, "t").map(textOf).join(""));
+  const wb = parseXml(text2("xl/workbook.xml") ?? "<workbook/>");
+  const rels = parseXml(text2("xl/_rels/workbook.xml.rels") ?? "<Relationships/>");
+  const target2 = new Map(find(rels, "Relationship").map((r6) => [r6.attrs.get("Id") ?? "", r6.attrs.get("Target") ?? ""]));
+  const sheets = [];
+  const pr = find(wb, "workbookPr")[0]?.attrs.get("date1904");
+  for (const s4 of find(wb, "sheet")) {
+    const rid = [...s4.attrs].find(([k2]) => k2.endsWith("}id") || k2 === "id")?.[1] ?? "";
+    const file = `xl/${(target2.get(rid) ?? "").replace(/^\/?xl\//, "")}`;
+    const xml = text2(file);
+    if (!xml)
+      continue;
+    const rows = [];
+    for (const row of find(parseXml(xml), "row")) {
+      const cells = [];
+      for (const c4 of find(row, "c")) {
+        const ref = c4.attrs.get("r") ?? "";
+        const col = ref.replace(/\d+$/, "").split("").reduce((n3, ch) => n3 * 26 + (ch.charCodeAt(0) - 64), 0) - 1;
+        const t3 = c4.attrs.get("t");
+        const v2 = find(c4, "v")[0];
+        const f4 = find(c4, "f")[0];
+        let value;
+        if (t3 === "inlineStr")
+          value = find(c4, "t").map(textOf).join("");
+        else if (t3 === "s")
+          value = shared[Number(v2 ? textOf(v2) : -1)];
+        else if (t3 === "b")
+          value = v2 ? textOf(v2) === "1" : void 0;
+        else if (t3 === "str")
+          value = v2 ? textOf(v2) : "";
+        else
+          value = v2 ? Number(textOf(v2)) : void 0;
+        if (f4 && o4.formulas === "formula")
+          value = `=${textOf(f4)}`;
+        cells[col] = value;
+      }
+      rows.push(cells);
+    }
+    const merges = find(parseXml(xml), "mergeCell").map((m4) => m4.attrs.get("ref") ?? "").filter(Boolean);
+    sheets.push({ name: s4.attrs.get("name") ?? "", rows, ...merges.length ? { merges } : {} });
+  }
+  const core = text2("docProps/core.xml");
+  const coreNode = core ? parseXml(core) : void 0;
+  return { ...coreNode ? { creator: find(coreNode, "creator").map(textOf)[0], modifiedBy: find(coreNode, "lastModifiedBy").map(textOf)[0], created: find(coreNode, "created").map(textOf)[0], modified: find(coreNode, "modified").map(textOf)[0] } : {}, date1904: pr === "1" || pr === "true", sheets };
+}
+
+// packages/core/dist/data/copybook.js
+import crypto3 from "node:crypto";
+import fs6 from "node:fs";
+import path5 from "node:path";
+function statements(text2) {
+  const lines = text2.replace(/\r\n?/g, "\n").split("\n").map((l4) => {
+    const fixed = /^[ \d]{6}[ *\/-]/.test(l4) || /^.{6}[*\/]/.test(l4);
+    if (fixed)
+      return l4[6] === "*" || l4[6] === "/" ? "" : l4.slice(7, 72);
+    return l4.trimStart().startsWith("*") ? "" : l4;
+  });
+  return lines.join(" ").split(/\.(?=\s|$)/).map((s4) => s4.trim().replace(/\s+/g, " ")).filter(Boolean);
+}
+function parsePic(raw, where2) {
+  const s4 = raw.toUpperCase().replace(/([9XAVSP])\((\d+)\)/g, (_2, c4, n3) => c4.repeat(Number(n3)));
+  if (/^[XA]+$/.test(s4))
+    return { kind: "alnum", length: s4.length, digits: 0, scale: 0, signed: false };
+  const m4 = /^(S?)(9*)(?:V(9*))?$/.exec(s4);
+  if (!m4 || !m4[2] && !m4[3])
+    throw new ManifestError(`${where2}: PIC ${raw} is not supported. Supported: X, A, 9, S and V, with (n) repeats.`);
+  const digits = (m4[2]?.length ?? 0) + (m4[3]?.length ?? 0);
+  return { kind: "numeric", length: digits, digits, scale: m4[3]?.length ?? 0, signed: m4[1] === "S" };
+}
+function binarySize(digits) {
+  return digits <= 4 ? 2 : digits <= 9 ? 4 : 8;
+}
+function itemSize(i8) {
+  if (i8.children.length)
+    return i8.children.reduce((n3, c4) => n3 + c4.size * (c4.occurs?.max ?? 1), 0);
+  const p4 = i8.pic;
+  if (p4.kind === "alnum" || i8.usage === "display")
+    return p4.length + (i8.sign ? 1 : 0);
+  if (i8.usage === "comp3")
+    return Math.floor(p4.digits / 2) + 1;
+  return binarySize(p4.digits);
+}
+function parseCopybook(text2, file = "copybook") {
+  const notes = [];
+  const roots = [];
+  const stack = [];
+  const counters = [];
+  let filler = 0;
+  let skipping;
+  for (const st2 of statements(text2)) {
+    const m4 = /^(\d{1,2})\s+([A-Za-z0-9-]+)\b\s*(.*)$/.exec(st2);
+    if (!m4) {
+      if (/^(\d{1,2})$/.test(st2))
+        continue;
+      throw new ManifestError(`${file}: this line is not a data description: ${st2.slice(0, 80)}`);
+    }
+    const level2 = Number(m4[1]);
+    const name = m4[2].toUpperCase();
+    const rest = m4[3].toUpperCase();
+    if (level2 === 88 || level2 === 66)
+      continue;
+    if (skipping !== void 0) {
+      if (level2 > skipping)
+        continue;
+      skipping = void 0;
+    }
+    const redefines = /\bREDEFINES\s+([A-Z0-9-]+)/.exec(rest);
+    if (redefines) {
+      notes.push(`${name} REDEFINES ${redefines[1]}: a second view of the same bytes. Rows follow ${redefines[1]}; a person decides if ${name} needs its own recipe.`);
+      skipping = level2;
+      continue;
+    }
+    const pic = /\bPIC(?:TURE)?\s+(?:IS\s+)?([^\s]+)/.exec(rest);
+    const usageWord = /\b(COMP-3|COMPUTATIONAL-3|PACKED-DECIMAL|COMP-5|COMP-4|COMPUTATIONAL-[45]|COMPUTATIONAL|COMP-[12]|COMP|BINARY)\b/.exec(rest)?.[1];
+    if (usageWord && /-[12]$/.test(usageWord))
+      throw new ManifestError(`${file}: ${name} is ${usageWord}, a floating-point number, which is not supported.`);
+    const usage = !usageWord ? "display" : /3|PACKED/.test(usageWord) ? "comp3" : "binary";
+    const occurs = /\bOCCURS\s+(?:(\d+)\s+TO\s+)?(\d+)(?:\s+TIMES)?(?:\s+DEPENDING\s+(?:ON\s+)?([A-Z0-9-]+))?/.exec(rest);
+    const signClause = /\bSIGN\s+(?:IS\s+)?(LEADING|TRAILING)\s+SEPARATE/.exec(rest) ?? /\b(LEADING|TRAILING)\s+SEPARATE/.exec(rest);
+    const item = {
+      level: level2,
+      name: name === "FILLER" ? `FILLER-${++filler}` : name,
+      usage,
+      children: [],
+      size: 0,
+      ...pic ? { pic: parsePic(pic[1], `${file}: ${name}`) } : {},
+      ...signClause ? { sign: signClause[1].toLowerCase() } : {},
+      ...occurs ? { occurs: { min: occurs[1] ? Number(occurs[1]) : Number(occurs[2]), max: Number(occurs[2]), ...occurs[3] ? { depending: occurs[3] } : {} } } : {}
+    };
+    if (occurs?.[3])
+      counters.push(occurs[3]);
+    while (stack.length && stack[stack.length - 1].level >= level2)
+      stack.pop();
+    (stack.length ? stack[stack.length - 1].children : roots).push(item);
+    stack.push(item);
+  }
+  if (!roots.length)
+    throw new ManifestError(`${file}: no data descriptions found.`);
+  const size = (i8) => {
+    i8.children.forEach(size);
+    i8.size = itemSize(i8);
+  };
+  roots.forEach(size);
+  const single = roots.length === 1 && roots[0].children.length > 0;
+  const items = single ? roots[0].children : roots;
+  return { name: single ? roots[0].name : path5.basename(file), items, record_size: items.reduce((n3, c4) => n3 + c4.size * (c4.occurs?.max ?? 1), 0), counters, notes };
+}
+var isFiller = (i8) => /^FILLER-\d+$/.test(i8.name);
+var money = (digits) => digits > 15;
+function schemaOf(i8) {
+  if (i8.children.length) {
+    const kept = i8.children.filter((c4) => !isFiller(c4));
+    return { type: "object", additionalProperties: false, required: kept.map((c4) => c4.name).filter((n3) => !countersIn(i8).has(n3)), properties: Object.fromEntries(kept.filter((c4) => !countersIn(i8).has(c4.name)).map((c4) => [c4.name, wrap(c4)])) };
+  }
+  const p4 = i8.pic;
+  if (p4.kind === "alnum")
+    return { type: "string", maxLength: p4.length };
+  const int = "9".repeat(p4.digits - p4.scale) || "0";
+  const whole = Number(`${int}${p4.scale ? `.${"9".repeat(p4.scale)}` : ""}`);
+  if (money(p4.digits))
+    return { type: "string", pattern: `^${p4.signed ? "-?" : ""}\\d{1,${p4.digits - p4.scale}}${p4.scale ? `\\.\\d{${p4.scale}}` : ""}$`, description: `PIC ${p4.signed ? "S" : ""}9(${p4.digits - p4.scale})${p4.scale ? `V9(${p4.scale})` : ""}: kept as text, because a number can't hold it exactly` };
+  return { type: p4.scale ? "number" : "integer", minimum: p4.signed ? -whole : 0, maximum: whole, ...p4.scale ? { multipleOf: Number((10 ** -p4.scale).toFixed(p4.scale)) } : {} };
+}
+var countersIn = (i8) => new Set(i8.children.flatMap((c4) => c4.occurs?.depending ? [c4.occurs.depending] : []));
+function wrap(i8) {
+  const s4 = schemaOf(i8);
+  if (!i8.occurs)
+    return s4;
+  return { type: "array", minItems: i8.occurs.min, maxItems: i8.occurs.max, items: s4 };
+}
+function schemaOfLayout(l4) {
+  const top = new Set(l4.counters);
+  const kept = l4.items.filter((c4) => !isFiller(c4) && !top.has(c4.name));
+  return { type: "object", additionalProperties: false, required: kept.map((c4) => c4.name), properties: Object.fromEntries(kept.map((c4) => [c4.name, wrap(c4)])) };
+}
+var isCopybook = (file) => /\.(cpy|cbl|cob|copy)$/i.test(file);
+function modelFromCopybook(file, collect2) {
+  const bytes = fs6.readFileSync(file);
+  const layout = parseCopybook(bytes.toString("utf8"), path5.basename(file));
+  const schema = schemaOfLayout(layout);
+  return { source: { file, sha256: crypto3.createHash("sha256").update(bytes).digest("hex") }, schema, fields: collect2(schema, `${path5.basename(file)}#`), layout };
+}
+var CP037 = "0000000100020003009c00090086007f0097008d008e000b000c000d000e000f0010001100120013009d008500080087001800190092008f001c001d001e001f00800081008200830084000a0017001b00880089008a008b008c0005000600070090009100160093009400950096000400980099009a009b00140015009e001a002000a000e200e400e000e100e300e500e700f100a2002e003c0028002b007c002600e900ea00eb00e800ed00ee00ef00ec00df00210024002a0029003b00ac002d002f00c200c400c000c100c300c500c700d100a6002c0025005f003e003f00f800c900ca00cb00c800cd00ce00cf00cc0060003a002300400027003d002200d800610062006300640065006600670068006900ab00bb00f000fd00fe00b100b0006a006b006c006d006e006f00700071007200aa00ba00e600b800c600a400b5007e0073007400750076007700780079007a00a100bf00d000dd00de00ae005e00a300a500b700a900a700b600bc00bd00be005b005d00af00a800b400d7007b00410042004300440045004600470048004900ad00f400f600f200f300f5007d004a004b004c004d004e004f00500051005200b900fb00fc00f900fa00ff005c00f70053005400550056005700580059005a00b200d400d600d200d300d5003000310032003300340035003600370038003900b300db00dc00d900da009f";
+var TO_UNI = Array.from({ length: 256 }, (_2, i8) => String.fromCharCode(parseInt(CP037.slice(i8 * 4, i8 * 4 + 4), 16)));
+var TO_EBC = new Map(TO_UNI.map((c4, i8) => [c4, i8]));
+function encodeText(s4, enc) {
+  const out = [];
+  for (const c4 of s4) {
+    if (enc === "ascii") {
+      const code = c4.codePointAt(0);
+      if (code > 126 || code < 32 && code !== 9)
+        throw new EncodeError(`the character ${JSON.stringify(c4)} is not in ASCII`);
+      out.push(code);
+    } else {
+      const b2 = TO_EBC.get(c4);
+      if (b2 === void 0)
+        throw new EncodeError(`the character ${JSON.stringify(c4)} is not in code page 037`);
+      out.push(b2);
+    }
+  }
+  return Buffer.from(out);
+}
+var decodeText = (b2, enc) => enc === "ascii" ? b2.toString("latin1") : [...b2].map((x2) => TO_UNI[x2]).join("");
+var EncodeError = class extends Error {
+};
+function scaled(v2, p4, name) {
+  const text2 = typeof v2 === "number" && String(v2).includes("e") ? v2.toFixed(p4.scale) : String(v2 ?? "0");
+  const m4 = /^(-?)(\d*)(?:\.(\d*))?$/.exec(text2.trim());
+  if (!m4 || !m4[2] && !m4[3])
+    throw new EncodeError(`${name}: ${JSON.stringify(v2)} is not a number`);
+  const frac = m4[3] ?? "";
+  if (frac.replace(/0+$/, "").length > p4.scale)
+    throw new EncodeError(`${name}: ${text2} has more than ${p4.scale} decimal places`);
+  const n3 = BigInt(`${m4[2] || "0"}${frac.padEnd(p4.scale, "0").slice(0, p4.scale)}`);
+  if (m4[1] && !p4.signed && n3 !== 0n)
+    throw new EncodeError(`${name}: ${text2} is negative but the field has no sign`);
+  if (n3.toString().length > p4.digits)
+    throw new EncodeError(`${name}: ${text2} does not fit in ${p4.digits} digits`);
+  return m4[1] ? -n3 : n3;
+}
+function unscaled(n3, p4) {
+  const neg = n3 < 0n;
+  const d4 = (neg ? -n3 : n3).toString().padStart(p4.scale + 1, "0");
+  return `${neg ? "-" : ""}${p4.scale ? `${d4.slice(0, -p4.scale)}.${d4.slice(-p4.scale)}` : d4}`;
+}
+var OVER_POS = "{ABCDEFGHI";
+var OVER_NEG = "}JKLMNOPQR";
+function encodeDisplay(n3, i8, enc) {
+  const p4 = i8.pic;
+  const digits = (n3 < 0n ? -n3 : n3).toString().padStart(p4.digits, "0");
+  if (i8.sign) {
+    const body = encodeText(digits, enc), mark = encodeText(n3 < 0n ? "-" : "+", enc);
+    return i8.sign === "leading" ? Buffer.concat([mark, body]) : Buffer.concat([body, mark]);
+  }
+  const out = encodeText(digits, enc);
+  if (p4.signed) {
+    const last = Number(digits[digits.length - 1]);
+    if (enc === "ascii")
+      out[out.length - 1] = (n3 < 0n ? OVER_NEG : OVER_POS).charCodeAt(last);
+    else
+      out[out.length - 1] = (n3 < 0n ? 13 : 12) << 4 | last;
+  }
+  return out;
+}
+function decodeDisplay(b2, i8, enc) {
+  const p4 = i8.pic;
+  let body = b2;
+  let neg = false;
+  if (i8.sign) {
+    const mark = decodeText(i8.sign === "leading" ? b2.subarray(0, 1) : b2.subarray(b2.length - 1), enc);
+    if (mark !== "+" && mark !== "-")
+      return { problem: `sign byte ${JSON.stringify(mark)}` };
+    neg = mark === "-";
+    body = i8.sign === "leading" ? b2.subarray(1) : b2.subarray(0, b2.length - 1);
+  }
+  let text2 = decodeText(body, enc);
+  if (p4.signed && !i8.sign) {
+    const raw = body[body.length - 1];
+    let d4;
+    if (enc === "ascii") {
+      const c4 = String.fromCharCode(raw);
+      const a4 = OVER_POS.indexOf(c4), o4 = OVER_NEG.indexOf(c4);
+      if (a4 >= 0)
+        d4 = a4;
+      else if (o4 >= 0) {
+        d4 = o4;
+        neg = true;
+      } else if (/\d/.test(c4))
+        d4 = Number(c4);
+      else
+        return { problem: `sign byte ${JSON.stringify(c4)}` };
+    } else {
+      const zone = raw >> 4;
+      d4 = raw & 15;
+      if (d4 > 9 || ![12, 13, 15].includes(zone))
+        return { problem: `sign byte 0x${raw.toString(16)}` };
+      neg = zone === 13;
+    }
+    text2 = text2.slice(0, -1) + d4;
+  }
+  if (!/^\d+$/.test(text2))
+    return { problem: `not digits: ${JSON.stringify(text2)}` };
+  return { value: neg ? -BigInt(text2) : BigInt(text2) };
+}
+function encodePacked(n3, digits, signed, signNibble) {
+  const size = Math.floor(digits / 2) + 1;
+  const text2 = (n3 < 0n ? -n3 : n3).toString().padStart(size * 2 - 1, "0");
+  const nibbles = [...text2].map(Number);
+  nibbles.push(signNibble ?? (signed ? n3 < 0n ? 13 : 12 : 15));
+  return Buffer.from(Array.from({ length: size }, (_2, i8) => nibbles[i8 * 2] << 4 | nibbles[i8 * 2 + 1]));
+}
+function decodePacked(b2) {
+  let digits = "";
+  for (const x2 of b2)
+    digits += (x2 >> 4).toString(16) + (x2 & 15).toString(16);
+  const sign = parseInt(digits[digits.length - 1], 16);
+  const body = digits.slice(0, -1);
+  if (!/^\d+$/.test(body))
+    return { problem: `packed digits ${digits}` };
+  if (![12, 13, 15, 10, 14, 11].includes(sign))
+    return { problem: `sign nibble 0x${sign.toString(16)}` };
+  return { value: sign === 13 || sign === 11 ? -BigInt(body) : BigInt(body) };
+}
+function encodeBinary(n3, size) {
+  const out = Buffer.alloc(size);
+  let v2 = BigInt.asUintN(size * 8, n3);
+  for (let i8 = size - 1; i8 >= 0; i8--) {
+    out[i8] = Number(v2 & 0xffn);
+    v2 >>= 8n;
+  }
+  return out;
+}
+function decodeBinary(b2, signed) {
+  let v2 = 0n;
+  for (const x2 of b2)
+    v2 = v2 << 8n | BigInt(x2);
+  return signed ? BigInt.asIntN(b2.length * 8, v2) : v2;
+}
+function encodeLeaf(i8, v2, enc) {
+  const p4 = i8.pic;
+  if (p4.kind === "alnum") {
+    const s4 = v2 === void 0 || v2 === null ? "" : String(v2);
+    if ([...s4].length > p4.length)
+      throw new EncodeError(`${i8.name}: ${[...s4].length} characters do not fit in ${p4.length}`);
+    return encodeText(s4.padEnd(p4.length, " "), enc);
+  }
+  const n3 = scaled(v2 ?? 0, p4, i8.name);
+  if (i8.usage === "comp3")
+    return encodePacked(n3, p4.digits, p4.signed);
+  if (i8.usage === "binary")
+    return encodeBinary(n3, binarySize(p4.digits));
+  return encodeDisplay(n3, i8, enc);
+}
+var pad = (size, enc) => Buffer.alloc(size, enc === "ascii" ? 32 : 64);
+function encodeItems(items, value, enc, parts) {
+  const counted = new Map(items.filter((c4) => c4.occurs?.depending).map((c4) => [c4.occurs.depending, Array.isArray(value[c4.name]) ? value[c4.name].length : c4.occurs.min]));
+  for (const i8 of items) {
+    if (isFiller(i8)) {
+      parts.push(pad(i8.size * (i8.occurs?.max ?? 1), enc));
+      continue;
+    }
+    const one = (v2) => {
+      if (i8.children.length)
+        encodeItems(i8.children, v2 ?? {}, enc, parts);
+      else
+        parts.push(encodeLeaf(i8, counted.has(i8.name) ? counted.get(i8.name) : v2, enc));
+    };
+    if (!i8.occurs) {
+      one(value[i8.name]);
+      continue;
+    }
+    const list = Array.isArray(value[i8.name]) ? value[i8.name] : [];
+    if (list.length > i8.occurs.max)
+      throw new EncodeError(`${i8.name}: ${list.length} items do not fit in OCCURS ${i8.occurs.max}`);
+    if (list.length < i8.occurs.min)
+      throw new EncodeError(`${i8.name}: ${list.length} items is fewer than OCCURS ${i8.occurs.min}`);
+    list.forEach(one);
+    if (list.length < i8.occurs.max)
+      parts.push(pad(i8.size * (i8.occurs.max - list.length), enc));
+  }
+}
+function encodeRecord(l4, value, enc) {
+  const parts = [];
+  encodeItems(l4.items, value, enc, parts);
+  const out = Buffer.concat(parts);
+  if (out.length !== l4.record_size)
+    throw new EncodeError(`the record came out ${out.length} bytes, not ${l4.record_size}`);
+  return out;
+}
+function decodeRecord(l4, b2, enc) {
+  const problems = [];
+  let at2 = 0;
+  const leaf = (i8, where2) => {
+    const p4 = i8.pic;
+    const bytes = b2.subarray(at2, at2 + i8.size);
+    at2 += i8.size;
+    if (p4.kind === "alnum")
+      return decodeText(bytes, enc).replace(/ +$/, "");
+    if (i8.usage === "binary")
+      return unscaled(decodeBinary(bytes, p4.signed), p4);
+    const r6 = i8.usage === "comp3" ? decodePacked(bytes) : decodeDisplay(bytes, i8, enc);
+    if (r6.problem) {
+      problems.push(`${where2}: ${r6.problem}`);
+      return null;
+    }
+    return unscaled(r6.value, p4);
+  };
+  const walk = (items, prefix) => {
+    const o4 = {};
+    for (const i8 of items) {
+      const where2 = prefix ? `${prefix}.${i8.name}` : i8.name;
+      const one = (w2) => i8.children.length ? walk(i8.children, w2) : leaf(i8, w2);
+      if (isFiller(i8)) {
+        at2 += i8.size * (i8.occurs?.max ?? 1);
+        continue;
+      }
+      if (!i8.occurs) {
+        o4[i8.name] = one(where2);
+        continue;
+      }
+      let count2 = i8.occurs.max;
+      if (i8.occurs.depending) {
+        const n3 = Number(o4[i8.occurs.depending]);
+        if (!Number.isInteger(n3) || n3 < i8.occurs.min || n3 > i8.occurs.max) {
+          problems.push(`${where2}: OCCURS DEPENDING ON ${i8.occurs.depending} is ${o4[i8.occurs.depending]}, outside ${i8.occurs.min} to ${i8.occurs.max}`);
+          count2 = Number.isInteger(n3) ? Math.max(0, Math.min(n3, i8.occurs.max)) : 0;
+        } else
+          count2 = n3;
+      }
+      o4[i8.name] = Array.from({ length: count2 }, (_2, k2) => one(`${where2}[${k2}]`));
+      at2 += i8.size * (i8.occurs.max - count2);
+    }
+    return o4;
+  };
+  return { value: walk(l4.items, ""), problems };
+}
+function decodeFile(l4, b2, enc) {
+  if (b2.length % l4.record_size !== 0)
+    return { records: [], problems: [`the file is ${b2.length} bytes, not a multiple of the record size ${l4.record_size}`] };
+  const records = [];
+  const problems = [];
+  for (let i8 = 0; i8 < b2.length; i8 += l4.record_size) {
+    const r6 = decodeRecord(l4, b2.subarray(i8, i8 + l4.record_size), enc);
+    records.push(r6.value);
+    problems.push(...r6.problems.map((p4) => `record ${i8 / l4.record_size + 1}: ${p4}`));
+  }
+  return { records, problems };
+}
+var walkLeaves = (items, at2 = 0, out = []) => {
+  for (const i8 of items) {
+    if (i8.children.length)
+      walkLeaves(i8.children, at2, out);
+    else
+      out.push({ item: i8, offset: at2 });
+    at2 += i8.size * (i8.occurs?.max ?? 1);
+  }
+  return out;
+};
+function fixedEdges(l4, value, enc) {
+  const base2 = encodeRecord(l4, value, enc);
+  const out = [
+    { file: "empty.dat", kind: "file", expect_valid: true, why: "no records at all: the length is a multiple of the record size", bytes: Buffer.alloc(0) },
+    { file: "one_record.dat", kind: "file", expect_valid: true, why: "one record", bytes: base2 },
+    { file: "truncated.dat", kind: "file", expect_valid: false, why: "the file length is not a multiple of the record size", bytes: base2.subarray(0, Math.max(1, base2.length - 1)) }
+  ];
+  const leaves = walkLeaves(l4.items);
+  const packed = leaves.find((x2) => x2.item.usage === "comp3" && x2.item.pic?.kind === "numeric");
+  if (packed) {
+    const end = packed.offset + packed.item.size - 1;
+    const nibble = (n3, valid, name, why) => {
+      const b2 = Buffer.from(base2);
+      b2[end] = b2[end] & 240 | n3;
+      out.push({ file: `${packed.item.name}_sign_${name}.dat`, kind: "sign-nibble", expect_valid: valid, why: `${packed.item.name}: sign nibble 0x${n3.toString(16)}, ${why}`, bytes: b2 });
+    };
+    nibble(12, true, "c", "positive");
+    nibble(13, true, "d", "negative");
+    nibble(15, true, "f", "unsigned");
+    nibble(10, true, "a", "an alternate plus: legal, and often mishandled");
+    const bad = Buffer.from(base2);
+    bad[end] = bad[end] & 240 | 5;
+    out.push({ file: `${packed.item.name}_sign_invalid.dat`, kind: "sign-nibble", expect_valid: false, why: `${packed.item.name}: 0x5 is a digit, not a sign`, bytes: bad });
+  }
+  const zoned = leaves.find((x2) => x2.item.usage === "display" && x2.item.pic?.kind === "numeric" && x2.item.pic.signed && !x2.item.sign);
+  if (zoned) {
+    const b2 = Buffer.from(base2);
+    b2[zoned.offset + zoned.item.size - 1] = enc === "ascii" ? 33 : 90;
+    out.push({ file: `${zoned.item.name}_sign_invalid.dat`, kind: "sign-nibble", expect_valid: false, why: `${zoned.item.name}: the last byte holds no sign and no digit`, bytes: b2 });
+  }
+  const odo = l4.items.find((i8) => i8.occurs?.depending);
+  if (odo) {
+    const counter = leaves.find((x2) => x2.item.name === odo.occurs.depending);
+    if (counter) {
+      const setTo = (n3) => {
+        const b2 = Buffer.from(base2);
+        encodeLeaf(counter.item, n3, enc).copy(b2, counter.offset);
+        return b2;
+      };
+      out.push({ file: `${odo.name}_depending_above_max.dat`, kind: "occurs-depending-on", expect_valid: false, why: `${counter.item.name} says ${odo.occurs.max + 1}, above OCCURS ${odo.occurs.max}`, bytes: setTo(odo.occurs.max + 1) });
+      if (odo.occurs.min > 0)
+        out.push({ file: `${odo.name}_depending_below_min.dat`, kind: "occurs-depending-on", expect_valid: false, why: `${counter.item.name} says ${odo.occurs.min - 1}, below OCCURS ${odo.occurs.min}`, bytes: setTo(odo.occurs.min - 1) });
+    }
+  }
+  return out;
+}
+
 // node_modules/csv-stringify/lib/utils/get.js
 var charCodeOfDot = ".".charCodeAt(0);
 var reEscapeChar = /\\(\\)?/g;
@@ -21509,12 +18610,12 @@ var toKey = function(value) {
   const result = `${value}`;
   return result == "0" && 1 / value == -Infinity ? "-0" : result;
 };
-var get = function(object, path19) {
-  path19 = castPath(path19, object);
+var get = function(object, path25) {
+  path25 = castPath(path25, object);
   let index = 0;
-  const length = path19.length;
+  const length = path25.length;
   while (object != null && index < length) {
-    object = object[toKey(path19[index++])];
+    object = object[toKey(path25[index++])];
   }
   return index && index === length ? object : void 0;
 };
@@ -22107,6 +19208,1664 @@ var stringify = function(records, opts = {}) {
   return data.join("");
 };
 
+// packages/core/dist/data/files.js
+function csvBytes(columns, records, o4 = {}) {
+  const text2 = stringify(records, {
+    header: o4.header !== false,
+    columns,
+    bom: false,
+    delimiter: o4.delimiter ?? ",",
+    quote: o4.quote ?? '"',
+    quoted: o4.quoted ?? false,
+    quoted_match: /[\r\n]/,
+    record_delimiter: o4.line_ending === "lf" ? "\n" : "\r\n",
+    cast: { boolean: (b2) => b2 ? "true" : "false" }
+  });
+  return Buffer.from((o4.bom === false ? "" : "\uFEFF") + text2, "utf8");
+}
+var FORMULA_LEADS = [
+  { name: "equals", value: "=1+1" },
+  { name: "plus", value: "+1+1" },
+  { name: "minus", value: "-1+1" },
+  { name: "at", value: "@SUM(1,1)" },
+  { name: "tab", value: "	=1+1" },
+  { name: "cr", value: "\r=1+1" },
+  { name: "lf", value: "\n=1+1" }
+];
+var textColumn = (columns, rows) => columns.find((c4) => rows.some((r6) => typeof r6[c4] === "string")) ?? columns[0];
+function csvEdges(columns, rows, o4 = {}) {
+  const opts = { ...o4, bom: o4.bom ?? true };
+  const first = rows[0] ?? {};
+  const max = o4.max_rows ?? 1e3;
+  const text2 = textColumn(columns, rows);
+  const out = [
+    { file: "empty.csv", kind: "size", expect_valid: false, why: "no bytes at all, not even a header", bytes: Buffer.alloc(0) },
+    { file: "header_only.csv", kind: "size", expect_valid: true, why: "a header and no rows", bytes: csvBytes(columns, [], { ...opts, header: true }) },
+    { file: "one_row.csv", kind: "size", expect_valid: true, why: "one row", bytes: csvBytes(columns, [first], opts) },
+    { file: "max_rows.csv", kind: "size", expect_valid: true, why: `${max} rows, the most the recipe says the import takes (csv.max_rows); the valid rows repeat`, bytes: csvBytes(columns, Array.from({ length: max }, (_2, i8) => rows[i8 % Math.max(1, rows.length)] ?? first), opts) },
+    { file: "max_rows_plus_one.csv", kind: "size", expect_valid: false, why: `${max + 1} rows, one above the most (csv.max_rows)`, bytes: csvBytes(columns, Array.from({ length: max + 1 }, (_2, i8) => rows[i8 % Math.max(1, rows.length)] ?? first), opts) },
+    { file: "crlf.csv", kind: "line-ending", expect_valid: true, why: "lines end in CRLF", bytes: csvBytes(columns, rows, { ...opts, line_ending: "crlf" }) },
+    { file: "lf.csv", kind: "line-ending", expect_valid: true, why: "lines end in LF", bytes: csvBytes(columns, rows, { ...opts, line_ending: "lf" }) },
+    { file: "utf8_bom.csv", kind: "encoding", expect_valid: true, why: "UTF-8 with a byte order mark", bytes: csvBytes(columns, [{ ...first, [text2]: "\xD1and\xFA caf\xE9" }], { ...opts, bom: true }) },
+    { file: "utf8_no_bom.csv", kind: "encoding", expect_valid: true, why: "UTF-8 without a byte order mark", bytes: csvBytes(columns, [{ ...first, [text2]: "\xD1and\xFA caf\xE9" }], { ...opts, bom: false }) },
+    { file: "latin1.csv", kind: "encoding", expect_valid: false, why: "not UTF-8: Latin-1 bytes, which a UTF-8 reader either refuses or turns into replacement characters", bytes: Buffer.from(csvBytes(columns, [{ ...first, [text2]: "\xD1and\xFA caf\xE9" }], { ...opts, bom: false }).toString("utf8"), "latin1") },
+    { file: "semicolons.csv", kind: "delimiter", expect_valid: false, why: "semicolons, as Excel writes in most European locales, where the recipe says commas", bytes: csvBytes(columns, rows, { ...opts, delimiter: o4.delimiter === ";" ? "," : ";" }) },
+    { file: "quoted_line_break.csv", kind: "quoting", expect_valid: true, why: "a line break inside a quoted cell", bytes: csvBytes(columns, [{ ...first, [text2]: "two\nlines" }], opts) }
+  ];
+  for (const f4 of FORMULA_LEADS) {
+    out.push({ file: `injection_${f4.name}.csv`, kind: "csv-injection", expect_valid: false, why: `OWASP CSV injection: a cell in ${text2} starts with ${JSON.stringify(f4.value[0])}, which a spreadsheet may run`, bytes: csvBytes(columns, [{ ...first, [text2]: f4.value }], opts) });
+  }
+  return out;
+}
+function dataSheet(columns, records, name = "data") {
+  const cell6 = (v2) => v2 === void 0 || v2 === null ? null : typeof v2 === "object" ? JSON.stringify(v2) : v2;
+  return { name, rows: [columns, ...records.map((r6) => columns.map((c4) => cell6(r6[c4])))] };
+}
+function xlsxEdges(columns, rows, w2) {
+  const sheet = dataSheet(columns, rows);
+  const good = writeXlsx([sheet], w2);
+  const n3 = columns.length;
+  const lastColumn = String.fromCharCode(64 + Math.min(n3, 26));
+  const numeric = columns.findIndex((c4) => rows.some((r6) => typeof r6[c4] === "number"));
+  const out = [
+    { file: "values.xlsx", kind: "plain", expect_valid: true, why: "plain values, the 1900 date system stated in the workbook", bytes: good },
+    { file: "merged_cells.xlsx", kind: "merged", expect_valid: true, why: `the header row's cells merged across ${n3} columns; the value stays in the first cell`, bytes: writeXlsx([{ name: "data", rows: [[`${columns[0]}`], ...sheet.rows], merges: [`A1:${lastColumn}1`] }], w2) },
+    { file: "wrong_extension.csv", kind: "extension", expect_valid: false, why: "a workbook named .csv", bytes: good },
+    { file: "not_a_workbook.xlsx", kind: "extension", expect_valid: false, why: "CSV bytes named .xlsx", bytes: csvBytes(columns, rows, { bom: false }) },
+    { file: "corrupted.xlsx", kind: "corrupted", expect_valid: false, why: "a workbook cut short: its zip directory is gone", bytes: good.subarray(0, Math.floor(good.length / 2)) }
+  ];
+  if (numeric >= 0) {
+    const col = String.fromCharCode(65 + numeric);
+    const withFormula = sheet.rows.map((r6, i8) => i8 === 1 ? r6.map((c4, k2) => k2 === numeric ? { formula: `${col}3`, value: sheet.rows[2]?.[numeric] ?? 0 } : c4) : r6);
+    out.push({ file: "formulas.xlsx", kind: "formula", expect_valid: true, why: `a formula in ${columns[numeric]}, with its worked-out value stored: a reader must choose formula or value`, bytes: writeXlsx([{ name: "data", rows: withFormula }], w2) });
+    out.push({ file: "formula_no_value.xlsx", kind: "formula", expect_valid: false, why: `a formula in ${columns[numeric]} with no stored value, as a generator writes it: nothing has worked it out`, bytes: writeXlsx([{ name: "data", rows: sheet.rows.map((r6, i8) => i8 === 1 ? r6.map((c4, k2) => k2 === numeric ? { formula: `${col}3` } : c4) : r6) }], w2) });
+  }
+  return out;
+}
+
+// packages/core/dist/data/recipe.js
+var import_yaml3 = __toESM(require_dist(), 1);
+import crypto6 from "node:crypto";
+import fs9 from "node:fs";
+import path8 from "node:path";
+
+// packages/core/dist/data/regex.js
+var PRINTABLE = Array.from({ length: 95 }, (_2, i8) => String.fromCharCode(32 + i8));
+var DIGITS = "0123456789".split("");
+var WORD = [..."abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"];
+var SPACE = [" ", "	"];
+var UNBOUNDED = 8;
+var Parser = class {
+  src;
+  i = 0;
+  constructor(src) {
+    this.src = src;
+  }
+  parse() {
+    const n3 = this.alt();
+    if (this.i < this.src.length)
+      throw new ManifestError(`pattern ${this.src}: unexpected "${this.src[this.i]}" at ${this.i}.`);
+    return n3;
+  }
+  peek() {
+    return this.src[this.i];
+  }
+  take() {
+    return this.src[this.i++];
+  }
+  alt() {
+    const options = [this.seq()];
+    while (this.peek() === "|") {
+      this.take();
+      options.push(this.seq());
+    }
+    return options.length === 1 ? options[0] : { kind: "alt", options };
+  }
+  seq() {
+    const items = [];
+    while (this.i < this.src.length && this.peek() !== "|" && this.peek() !== ")") {
+      const atom = this.atom();
+      if (atom)
+        items.push(this.quant(atom));
+    }
+    return { kind: "seq", items };
+  }
+  atom() {
+    const c4 = this.take();
+    if (c4 === "^" || c4 === "$")
+      return void 0;
+    if (c4 === ".")
+      return { kind: "any" };
+    if (c4 === "(") {
+      if (this.src.startsWith("?:", this.i))
+        this.i += 2;
+      else if (this.peek() === "?")
+        throw new ManifestError(`pattern ${this.src}: lookaround and named groups are not supported.`);
+      const node = this.alt();
+      if (this.take() !== ")")
+        throw new ManifestError(`pattern ${this.src}: missing ")".`);
+      return { kind: "group", node };
+    }
+    if (c4 === "[")
+      return this.cls();
+    if (c4 === "\\")
+      return this.escape(this.take());
+    return { kind: "lit", char: c4 };
+  }
+  escape(c4) {
+    switch (c4) {
+      case "d":
+        return { kind: "class", chars: DIGITS, negate: false };
+      case "D":
+        return { kind: "class", chars: DIGITS, negate: true };
+      case "w":
+        return { kind: "class", chars: WORD, negate: false };
+      case "W":
+        return { kind: "class", chars: WORD, negate: true };
+      case "s":
+        return { kind: "class", chars: SPACE, negate: false };
+      case "S":
+        return { kind: "class", chars: SPACE, negate: true };
+      case "n":
+        return { kind: "lit", char: "\n" };
+      case "t":
+        return { kind: "lit", char: "	" };
+      case "b":
+      case "B":
+        throw new ManifestError(`pattern ${this.src}: word boundaries are not supported.`);
+      case "p":
+      case "P":
+        throw new ManifestError(`pattern ${this.src}: Unicode property classes are not supported.`);
+      default:
+        if (/\d/.test(c4))
+          throw new ManifestError(`pattern ${this.src}: backreferences are not supported.`);
+        return { kind: "lit", char: c4 };
+    }
+  }
+  cls() {
+    let negate = false;
+    if (this.peek() === "^") {
+      this.take();
+      negate = true;
+    }
+    const chars = [];
+    let first = true;
+    while (this.peek() !== "]" || first) {
+      if (this.i >= this.src.length)
+        throw new ManifestError(`pattern ${this.src}: missing "]".`);
+      first = false;
+      let c4 = this.take();
+      let lo;
+      if (c4 === "\\") {
+        const e6 = this.escape(this.take());
+        if (e6.kind === "class") {
+          chars.push(...e6.negate ? PRINTABLE.filter((x2) => !e6.chars.includes(x2)) : e6.chars);
+          continue;
+        }
+        lo = e6.char;
+      } else
+        lo = c4;
+      if (this.peek() === "-" && this.src[this.i + 1] !== "]" && this.i + 1 < this.src.length) {
+        this.take();
+        let hi = this.take();
+        if (hi === "\\")
+          hi = this.escape(this.take()).char;
+        for (let x2 = lo.charCodeAt(0); x2 <= hi.charCodeAt(0); x2++)
+          chars.push(String.fromCharCode(x2));
+      } else
+        chars.push(lo);
+    }
+    this.take();
+    return { kind: "class", chars, negate };
+  }
+  quant(node) {
+    const c4 = this.peek();
+    let min, max;
+    if (c4 === "*") {
+      this.take();
+      min = 0;
+      max = UNBOUNDED;
+    } else if (c4 === "+") {
+      this.take();
+      min = 1;
+      max = UNBOUNDED;
+    } else if (c4 === "?") {
+      this.take();
+      min = 0;
+      max = 1;
+    } else if (c4 === "{") {
+      const m4 = /^\{(\d+)(,(\d*))?\}/.exec(this.src.slice(this.i));
+      if (!m4)
+        return node;
+      this.i += m4[0].length;
+      min = Number(m4[1]);
+      max = m4[2] === void 0 ? min : m4[3] === "" ? Math.max(min, UNBOUNDED) : Number(m4[3]);
+    } else
+      return node;
+    if (this.peek() === "?" || this.peek() === "+")
+      this.take();
+    return { kind: "repeat", node, min, max };
+  }
+};
+function patternLimits(pattern) {
+  try {
+    new Parser(pattern).parse();
+    return void 0;
+  } catch (err) {
+    return err.message;
+  }
+}
+function stringFromPattern(pattern, rng2, shortest = false) {
+  const walk = (n3) => {
+    switch (n3.kind) {
+      case "seq":
+        return n3.items.map(walk).join("");
+      case "alt":
+        return walk(n3.options[shortest ? 0 : Math.floor(rng2() * n3.options.length)]);
+      case "group":
+        return walk(n3.node);
+      case "lit":
+        return n3.char;
+      case "any":
+        return PRINTABLE[Math.floor(rng2() * PRINTABLE.length)];
+      case "class": {
+        const pool = n3.negate ? PRINTABLE.filter((c4) => !n3.chars.includes(c4)) : n3.chars;
+        if (!pool.length)
+          throw new ManifestError(`pattern ${pattern}: a character class matches nothing.`);
+        return pool[Math.floor(rng2() * pool.length)];
+      }
+      case "repeat": {
+        const count2 = shortest ? n3.min : n3.min + Math.floor(rng2() * (n3.max - n3.min + 1));
+        return Array.from({ length: count2 }, () => walk(n3.node)).join("");
+      }
+    }
+  };
+  const out = walk(new Parser(pattern).parse());
+  if (!new RegExp(pattern, "u").test(out))
+    throw new ManifestError(`pattern ${pattern}: the generated string ${JSON.stringify(out)} does not match it; write the valid value by hand in the recipe.`);
+  return out;
+}
+
+// packages/core/dist/data/xsd.js
+import crypto4 from "node:crypto";
+import fs7 from "node:fs";
+import path6 from "node:path";
+var BUILTIN_PREFIX = /^(xs|xsd|s|xsi|ser)$/i;
+var INT_RANGES = {
+  int: [-2147483648, 2147483647],
+  short: [-32768, 32767],
+  byte: [-128, 127],
+  long: [Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER],
+  integer: [Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER],
+  unsignedint: [0, 4294967295],
+  unsignedshort: [0, 65535],
+  unsignedbyte: [0, 255],
+  unsignedlong: [0, Number.MAX_SAFE_INTEGER],
+  nonnegativeinteger: [0, Number.MAX_SAFE_INTEGER],
+  positiveinteger: [1, Number.MAX_SAFE_INTEGER],
+  negativeinteger: [Number.MIN_SAFE_INTEGER, -1],
+  nonpositiveinteger: [Number.MIN_SAFE_INTEGER, 0]
+};
+function builtin(local) {
+  const k2 = local.toLowerCase();
+  if (INT_RANGES[k2]) {
+    const [minimum, maximum] = INT_RANGES[k2];
+    return { type: "integer", minimum, maximum, ...k2 === "long" || k2 === "integer" || k2 === "unsignedlong" ? { narrowed: true } : {} };
+  }
+  switch (k2) {
+    case "string":
+    case "normalizedstring":
+    case "token":
+    case "name":
+    case "ncname":
+    case "nmtoken":
+    case "language":
+    case "id":
+    case "idref":
+    case "qname":
+    case "base64binary":
+    case "hexbinary":
+    case "duration":
+    case "time":
+    case "anytype":
+    case "anysimpletype":
+      return { type: "string" };
+    case "decimal":
+    case "double":
+    case "float":
+      return { type: "number" };
+    case "boolean":
+      return { type: "boolean" };
+    case "date":
+      return { type: "string", format: "date" };
+    case "datetime":
+      return { type: "string", format: "date-time" };
+    case "anyuri":
+      return { type: "string", format: "uri" };
+    case "guid":
+      return { type: "string", format: "uuid" };
+    case "char":
+      return { type: "integer", minimum: 0, maximum: 65535 };
+    default:
+      return void 0;
+  }
+}
+function xsdPattern(p4) {
+  const js = p4.replace(/\\i/g, "[A-Za-z_:]").replace(/\\I/g, "[^A-Za-z_:]").replace(/\\c/g, "[-A-Za-z0-9._:]").replace(/\\C/g, "[^-A-Za-z0-9._:]").replace(/\\-/g, "\\x2d");
+  return `^(?:${js})$`;
+}
+var CHILD = (n3, local) => n3.children.filter((c4) => c4.local === local);
+var FIRST = (n3, local) => n3.children.find((c4) => c4.local === local);
+var localOf = (qname) => qname.split(":").pop();
+var prefixOf = (qname) => qname.includes(":") ? qname.split(":")[0] : "";
+var Reader = class {
+  notes = [];
+  schemas = [];
+  groups = 0;
+  noted = /* @__PURE__ */ new Set();
+  add(node, file, seen = /* @__PURE__ */ new Set()) {
+    this.schemas.push({ node, tns: node.attrs.get("targetNamespace") ?? "", qualified: node.attrs.get("elementFormDefault") === "qualified", attrQualified: node.attrs.get("attributeFormDefault") === "qualified", file });
+    for (const inc of [...CHILD(node, "include"), ...CHILD(node, "import")]) {
+      const loc = inc.attrs.get("schemaLocation");
+      if (!loc)
+        continue;
+      const full = path6.resolve(path6.dirname(file), loc);
+      if (/^[a-z]+:\/\//i.test(loc) || !fs7.existsSync(full)) {
+        this.note(`${path6.basename(file)} refers to ${loc}, which was not read: only local files are followed, and nothing is fetched.`);
+        continue;
+      }
+      if (seen.has(full))
+        continue;
+      seen.add(full);
+      this.add(parseXml(fs7.readFileSync(full, "utf8").replace(/^﻿/, "")), full, seen);
+    }
+  }
+  note(s4) {
+    if (!this.noted.has(s4)) {
+      this.noted.add(s4);
+      this.notes.push(s4);
+    }
+  }
+  global(kind, local) {
+    for (const schema of this.schemas) {
+      const node = schema.node.children.find((c4) => c4.local === kind && c4.attrs.get("name") === local);
+      if (node)
+        return { node, schema };
+    }
+    return void 0;
+  }
+  topElements() {
+    return this.schemas.flatMap((s4) => CHILD(s4.node, "element").map((e6) => e6.attrs.get("name") ?? "").filter(Boolean));
+  }
+  simpleOf(qname, where2) {
+    const local = localOf(qname);
+    const user = BUILTIN_PREFIX.test(prefixOf(qname)) && builtin(local) ? void 0 : this.global("simpleType", local);
+    if (user)
+      return this.readSimple(user.node, where2);
+    const b2 = builtin(local);
+    if (b2)
+      return b2;
+    throw new ManifestError(`${where2}: the type ${qname} was not found. Is it in a schema that is not local?`);
+  }
+  readSimple(n3, where2) {
+    const r6 = FIRST(n3, "restriction");
+    if (!r6) {
+      this.note(`${where2}: xs:union and xs:list are not understood, so it is treated as plain text, and its limits aren't honoured.`);
+      return { type: "string" };
+    }
+    const base2 = r6.attrs.get("base");
+    const nested = FIRST(r6, "simpleType");
+    const s4 = { ...base2 ? this.simpleOf(base2, where2) : nested ? this.readSimple(nested, where2) : { type: "string" } };
+    const num = s4.type === "integer" || s4.type === "number";
+    const typed = (v2) => num ? Number(v2) : s4.type === "boolean" ? v2 === "true" || v2 === "1" : v2;
+    const values = CHILD(r6, "enumeration").map((e6) => typed(e6.attrs.get("value") ?? ""));
+    if (values.length)
+      s4.enum = values;
+    const patterns = CHILD(r6, "pattern").map((e6) => e6.attrs.get("value") ?? "");
+    if (patterns.length) {
+      if (s4.pattern)
+        this.note(`${where2}: a pattern on a type that already has one: only the narrower one is checked.`);
+      s4.pattern = xsdPattern(patterns.join("|"));
+    }
+    const facet = (k2) => {
+      const v2 = FIRST(r6, k2)?.attrs.get("value");
+      return v2 === void 0 ? void 0 : Number(v2);
+    };
+    const len = facet("length");
+    if (len !== void 0) {
+      s4.minLength = len;
+      s4.maxLength = len;
+    }
+    if (facet("minLength") !== void 0)
+      s4.minLength = facet("minLength");
+    if (facet("maxLength") !== void 0)
+      s4.maxLength = facet("maxLength");
+    if (facet("minInclusive") !== void 0) {
+      s4.minimum = facet("minInclusive");
+      s4.exclusiveMinimum = false;
+    }
+    if (facet("minExclusive") !== void 0) {
+      s4.minimum = facet("minExclusive");
+      s4.exclusiveMinimum = true;
+    }
+    if (facet("maxInclusive") !== void 0) {
+      s4.maximum = facet("maxInclusive");
+      s4.exclusiveMaximum = false;
+    }
+    if (facet("maxExclusive") !== void 0) {
+      s4.maximum = facet("maxExclusive");
+      s4.exclusiveMaximum = true;
+    }
+    const td = facet("totalDigits"), fd = facet("fractionDigits");
+    if (fd !== void 0) {
+      s4.fractionDigits = fd;
+      if (s4.type === "number")
+        s4.multipleOf = Number((10 ** -fd).toFixed(fd));
+    }
+    if (td !== void 0) {
+      s4.totalDigits = td;
+      const scale = fd ?? 0;
+      const top = Number(`${"9".repeat(Math.max(td - scale, 0)) || "0"}${scale ? `.${"9".repeat(scale)}` : ""}`);
+      if (Number.isFinite(top) && Math.abs(top) <= Number.MAX_SAFE_INTEGER) {
+        if (s4.maximum === void 0 || s4.maximum > top) {
+          s4.maximum = top;
+          s4.exclusiveMaximum = false;
+        }
+        if (s4.minimum === void 0 || s4.minimum < -top) {
+          s4.minimum = -top;
+          s4.exclusiveMinimum = false;
+        }
+      }
+    }
+    return s4;
+  }
+  complexOf(n3, schema, where2, stack) {
+    const out = { order: "sequence", particles: [], attrs: [], open: false };
+    const simple = FIRST(n3, "simpleContent");
+    if (simple) {
+      const ext2 = FIRST(simple, "extension") ?? FIRST(simple, "restriction");
+      if (ext2?.attrs.get("base"))
+        out.text = this.simpleOf(ext2.attrs.get("base"), where2);
+      if (ext2)
+        this.attrs(ext2, schema, where2, out);
+      return out;
+    }
+    const cc = FIRST(n3, "complexContent");
+    const ext = cc ? FIRST(cc, "extension") ?? FIRST(cc, "restriction") : void 0;
+    if (ext?.attrs.get("base")) {
+      const base2 = this.global("complexType", localOf(ext.attrs.get("base")));
+      if (!base2)
+        throw new ManifestError(`${where2}: the base type ${ext.attrs.get("base")} was not found.`);
+      const b2 = this.complexOf(base2.node, base2.schema, where2, stack);
+      out.particles.push(...b2.particles);
+      out.attrs.push(...b2.attrs);
+      out.open = b2.open;
+      out.order = b2.order;
+    }
+    const body = ext ?? n3;
+    this.particles(body, schema, where2, stack, out);
+    this.attrs(body, schema, where2, out);
+    return out;
+  }
+  attrs(n3, _schema, where2, out) {
+    for (const a4 of CHILD(n3, "attribute")) {
+      const name = a4.attrs.get("name") ?? (a4.attrs.get("ref") ? localOf(a4.attrs.get("ref")) : "");
+      if (!name || a4.attrs.get("use") === "prohibited")
+        continue;
+      const inline = FIRST(a4, "simpleType");
+      const source = `${where2}/@${name}`;
+      const simple = inline ? this.readSimple(inline, source) : a4.attrs.get("type") ? this.simpleOf(a4.attrs.get("type"), source) : { type: "string" };
+      out.attrs.push({ name, required: a4.attrs.get("use") === "required", simple, source });
+    }
+  }
+  particles(n3, schema, where2, stack, out) {
+    for (const c4 of n3.children) {
+      if (c4.local === "sequence")
+        this.particles(c4, schema, where2, stack, out);
+      else if (c4.local === "all") {
+        out.order = "all";
+        this.particles(c4, schema, where2, stack, out);
+      } else if (c4.local === "element") {
+        const e6 = this.element(c4, schema, where2, stack);
+        if (e6)
+          out.particles.push(e6);
+      } else if (c4.local === "choice") {
+        const group2 = `choice${++this.groups}`;
+        const options = [];
+        for (const o4 of c4.children) {
+          if (o4.local === "element") {
+            const e6 = this.element(o4, schema, where2, stack);
+            if (e6)
+              options.push([e6]);
+          } else if (o4.local === "sequence")
+            options.push(o4.children.filter((x2) => x2.local === "element").map((x2) => this.element(x2, schema, where2, stack)).filter((x2) => !!x2));
+        }
+        options.forEach((list, index) => list.forEach((e6) => {
+          e6.choice = { group: group2, index };
+        }));
+        out.particles.push({ kind: "choice", group: group2, min: Number(c4.attrs.get("minOccurs") ?? 1), options });
+      } else if (c4.local === "any")
+        out.open = true;
+      else if (c4.local === "group")
+        throw new ManifestError(`${where2}: xs:group is not supported. Write the elements out in the schema, or use a JSON Schema for this one.`);
+    }
+  }
+  element(n3, schema, parent, stack) {
+    let node = n3;
+    let home = schema;
+    const min = Number(n3.attrs.get("minOccurs") ?? 1);
+    const maxRaw = n3.attrs.get("maxOccurs") ?? "1";
+    const max = maxRaw === "unbounded" ? Infinity : Number(maxRaw);
+    const ref = n3.attrs.get("ref");
+    let top = schema.node.children.includes(n3);
+    if (ref) {
+      const g3 = this.global("element", localOf(ref));
+      if (!g3)
+        throw new ManifestError(`${parent}: the element ${ref} was not found.`);
+      node = g3.node;
+      home = g3.schema;
+      top = true;
+    }
+    const name = node.attrs.get("name");
+    if (!name)
+      throw new ManifestError(`${parent}: an element has no name.`);
+    if (name.includes("."))
+      throw new ManifestError(`${parent}: the element name ${name} holds a dot, which the recipe's paths can't carry.`);
+    const where2 = `${parent}/${name}`;
+    const typeName = node.attrs.get("type");
+    const inlineSimple = FIRST(node, "simpleType");
+    const inlineComplex = FIRST(node, "complexType");
+    const base2 = { kind: "element", name, ns: top || home.qualified ? home.tns : "", min, max, nillable: node.attrs.get("nillable") === "true", source: where2 };
+    if (inlineSimple)
+      return { ...base2, simple: this.readSimple(inlineSimple, where2) };
+    if (inlineComplex)
+      return { ...base2, complex: this.complexOf(inlineComplex, home, where2, stack) };
+    if (!typeName)
+      return { ...base2, simple: { type: "string" } };
+    const local = localOf(typeName);
+    const userComplex = BUILTIN_PREFIX.test(prefixOf(typeName)) && builtin(local) ? void 0 : this.global("complexType", local);
+    if (userComplex) {
+      if (stack.includes(local)) {
+        if (min === 0) {
+          this.note(`${where2}: the type ${local} contains itself. The optional inner one is left out, so recursion is not exercised.`);
+          return void 0;
+        }
+        throw new ManifestError(`${where2}: the type ${local} requires itself, so no finite document exists.`);
+      }
+      return { ...base2, complex: this.complexOf(userComplex.node, userComplex.schema, where2, [...stack, local]) };
+    }
+    return { ...base2, simple: this.simpleOf(typeName, where2) };
+  }
+  root(name, file) {
+    const g3 = this.global("element", name);
+    if (!g3)
+      throw new ManifestError(`${path6.basename(file)} has no top-level element ${name}. It has: ${this.topElements().join(", ") || "none"}.`);
+    const e6 = this.element(g3.node, g3.schema, path6.basename(file) + "#", []);
+    return { ...e6, min: 1, max: 1 };
+  }
+};
+var isXsd = (file) => /\.(xsd|wsdl)$/i.test(file);
+function readXsd(file, name) {
+  const text2 = fs7.readFileSync(file, "utf8").replace(/^﻿/, "");
+  let doc;
+  try {
+    doc = parseXml(text2);
+  } catch (err) {
+    throw new ManifestError(`${path6.basename(file)} is not XML: ${err.message}`);
+  }
+  const r6 = new Reader();
+  let rootName = name;
+  let soap;
+  if (doc.local === "definitions" || doc.local === "description") {
+    for (const types of CHILD(doc, "types"))
+      for (const s4 of CHILD(types, "schema"))
+        r6.add(s4, file);
+    if (!r6.schemas.length)
+      throw new ManifestError(`${path6.basename(file)} holds no schema in its types. Give the XSD, or a single-file WSDL (?singleWsdl).`);
+    const portOps = CHILD(doc, "portType").flatMap((p4) => CHILD(p4, "operation"));
+    const opNames = portOps.map((o4) => o4.attrs.get("name") ?? "");
+    if (!name)
+      throw new ManifestError(`${path6.basename(file)} is a WSDL: name the operation with --operation. Operations: ${opNames.join(", ") || "none"}.`);
+    const op = portOps.find((o4) => o4.attrs.get("name") === name);
+    if (!op)
+      throw new ManifestError(`${path6.basename(file)} has no operation ${name}. Operations: ${opNames.join(", ") || "none"}.`);
+    const msgName = localOf(FIRST(op, "input")?.attrs.get("message") ?? "");
+    const msg = CHILD(doc, "message").find((m4) => m4.attrs.get("name") === msgName);
+    const part = msg ? FIRST(msg, "part") : void 0;
+    const element = part?.attrs.get("element");
+    if (!element)
+      throw new ManifestError(`${name}: the input message ${msgName} names no element. Only document-style operations are supported.`);
+    rootName = localOf(element);
+    const bindOp = CHILD(doc, "binding").flatMap((b2) => CHILD(b2, "operation")).find((o4) => o4.attrs.get("name") === name);
+    const soapOp = bindOp ? FIRST(bindOp, "operation") : void 0;
+    const isV12 = soapOp?.ns === "http://schemas.xmlsoap.org/wsdl/soap12/";
+    soap = { version: isV12 ? "1.2" : "1.1", operation: name, ...soapOp?.attrs.get("soapAction") ? { action: soapOp.attrs.get("soapAction") } : {} };
+  } else {
+    if (doc.local !== "schema")
+      throw new ManifestError(`${path6.basename(file)} is neither an XSD nor a WSDL: its root is ${doc.local}.`);
+    r6.add(doc, file);
+    if (!rootName) {
+      const tops = r6.topElements();
+      if (tops.length !== 1)
+        throw new ManifestError(`${path6.basename(file)} has ${tops.length} top-level elements: name one with --operation. They are: ${tops.join(", ") || "none"}.`);
+      rootName = tops[0];
+    }
+  }
+  return { root: r6.root(rootName, file), notes: r6.notes, ...soap ? { soap } : {} };
+}
+var xsdSha = (file) => crypto4.createHash("sha256").update(fs7.readFileSync(file)).digest("hex");
+var esc2 = (s4) => s4.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+var escAttr = (s4) => esc2(s4).replace(/"/g, "&quot;").replace(/\n/g, "&#10;").replace(/\r/g, "&#13;").replace(/\t/g, "&#9;");
+var NOT_XML = /[\u0000-\u0008\u000b\u000c\u000e-\u001f￾￿]/;
+var wire = (v2) => v2 === null || v2 === void 0 ? "" : typeof v2 === "object" ? JSON.stringify(v2) : String(v2);
+function allElements(c4) {
+  return c4.particles.flatMap((p4) => p4.kind === "element" ? [p4] : p4.options.flat());
+}
+function toTree(e6, value) {
+  const t3 = { name: e6.name, ns: e6.ns, attrs: [], children: [] };
+  if (value === null && e6.nillable) {
+    t3.nil = true;
+    return t3;
+  }
+  if (e6.simple) {
+    t3.text = wire(value);
+    return t3;
+  }
+  const c4 = e6.complex;
+  const o4 = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  if (value !== null && typeof value !== "object" && value !== void 0) {
+    t3.text = wire(value);
+    return t3;
+  }
+  for (const a4 of c4.attrs)
+    if (`@${a4.name}` in o4)
+      t3.attrs.push([a4.name, wire(o4[`@${a4.name}`])]);
+  if (c4.text)
+    t3.text = wire(o4["#text"]);
+  for (const child of allElements(c4)) {
+    if (!(child.name in o4))
+      continue;
+    const v2 = o4[child.name];
+    if (Array.isArray(v2) && child.max !== 1)
+      for (const x2 of v2)
+        t3.children.push(toTree(child, x2));
+    else
+      t3.children.push(toTree(child, v2));
+  }
+  return t3;
+}
+function findTree(root, p4) {
+  const parts = p4.replace(/^\$\.?/, "").split(".").filter(Boolean);
+  let cur = void 0;
+  for (const [i8, part] of parts.entries()) {
+    const name = part.replace(/\[\d+\]$/, "");
+    const idx = Number(/\[(\d+)\]$/.exec(part)?.[1] ?? 0);
+    if (i8 === 0) {
+      cur = root.name === name ? root : void 0;
+      continue;
+    }
+    cur = cur?.children.filter((c4) => c4.name === name)[idx];
+  }
+  return cur;
+}
+function applyOp(root, op) {
+  if (op.kind === "wrong_namespace") {
+    root.ns = "urn:cmtk:not-this-namespace";
+    return;
+  }
+  const t3 = findTree(root, op.path);
+  if (!t3)
+    throw new ManifestError(`The row's XML edit names ${op.path}, which the row does not have.`);
+  if (op.kind === "swap") {
+    const i8 = t3.children.findIndex((c4) => c4.name === op.a), j2 = t3.children.findIndex((c4) => c4.name === op.b);
+    if (i8 < 0 || j2 < 0)
+      throw new ManifestError(`The row's XML edit swaps ${op.a} and ${op.b} in ${op.path}, which does not have both.`);
+    [t3.children[i8], t3.children[j2]] = [t3.children[j2], t3.children[i8]];
+  } else if (op.kind === "extra") {
+    t3.children.push({ name: op.name, ns: t3.ns, attrs: [], children: [], text: "not in the schema" });
+  } else if (op.kind === "duplicate") {
+    const parent = findTree(root, op.path.replace(/\.[^.]+$/, ""));
+    if (!parent)
+      throw new ManifestError(`The row's XML edit names ${op.path}, whose parent the row does not have.`);
+    parent.children.splice(parent.children.indexOf(t3) + 1, 0, structuredClone(t3));
+  }
+}
+function render2(t3, inScope) {
+  const decl = t3.ns !== inScope ? ` xmlns="${escAttr(t3.ns)}"` : "";
+  const nil = t3.nil ? ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"' : "";
+  const attrs = t3.attrs.map(([k2, v2]) => ` ${k2}="${escAttr(v2)}"`).join("");
+  if (t3.nil)
+    return `<${t3.name}${decl}${nil}${attrs}/>`;
+  const inner = (t3.text !== void 0 ? esc2(t3.text) : "") + t3.children.map((c4) => render2(c4, t3.ns)).join("");
+  return inner === "" ? `<${t3.name}${decl}${attrs}/>` : `<${t3.name}${decl}${attrs}>${inner}</${t3.name}>`;
+}
+function toXml(model, value, op) {
+  const root = model.root.name;
+  const v2 = (value && typeof value === "object" ? value : {})[root];
+  const tree = toTree(model.root, v2);
+  if (op)
+    applyOp(tree, op);
+  const out = render2(tree, "");
+  if (NOT_XML.test(out))
+    throw new ManifestError("The row holds a control character, which XML 1.0 can't carry.");
+  return out;
+}
+var XML_DECLARATION = '<?xml version="1.0" encoding="utf-8"?>\n';
+function soapEnvelope(body, version = "1.1") {
+  const ns = version === "1.2" ? "http://www.w3.org/2003/05/soap-envelope" : "http://schemas.xmlsoap.org/soap/envelope/";
+  return `${XML_DECLARATION}<soap:Envelope xmlns:soap="${ns}"><soap:Body>${body}</soap:Body></soap:Envelope>
+`;
+}
+function soapHeaders(s4) {
+  if (s4.version === "1.2")
+    return { "Content-Type": `application/soap+xml; charset=utf-8${s4.action ? `; action="${s4.action}"` : ""}` };
+  return { "Content-Type": "text/xml; charset=utf-8", SOAPAction: `"${s4.action ?? ""}"` };
+}
+var FORMATS = {
+  date: /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])(Z|[+-]\d{2}:\d{2})?$/,
+  "date-time": /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$/,
+  uuid: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+  uri: /^\S+$/
+};
+function checkSimple(s4, text2, at2) {
+  const out = [];
+  const bad = (keyword, message) => out.push({ path: at2, keyword, message });
+  if (s4.type === "integer" && !/^[+-]?\d+$/.test(text2.trim())) {
+    bad("type", `"${text2.slice(0, 40)}" is not a whole number`);
+    return out;
+  }
+  if (s4.type === "number" && !/^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(text2.trim())) {
+    bad("type", `"${text2.slice(0, 40)}" is not a number`);
+    return out;
+  }
+  if (s4.type === "boolean" && !/^(true|false|1|0)$/.test(text2.trim())) {
+    bad("type", `"${text2.slice(0, 40)}" is not a boolean`);
+    return out;
+  }
+  const num = s4.type === "integer" || s4.type === "number";
+  const value = num ? Number(text2) : s4.type === "boolean" ? text2.trim() === "true" || text2.trim() === "1" : text2;
+  if (s4.enum && !s4.enum.some((e6) => e6 === value))
+    bad("enum", `must be one of ${JSON.stringify(s4.enum)}`);
+  if (s4.type === "string") {
+    const len = [...text2].length;
+    if (s4.minLength !== void 0 && len < s4.minLength)
+      bad("minLength", `shorter than ${s4.minLength}`);
+    if (s4.maxLength !== void 0 && len > s4.maxLength)
+      bad("maxLength", `longer than ${s4.maxLength}`);
+    if (s4.pattern && !new RegExp(s4.pattern, "u").test(text2))
+      bad("pattern", `does not match ${s4.pattern}`);
+    if (s4.format && FORMATS[s4.format] && !FORMATS[s4.format].test(text2))
+      bad("format", `not a ${s4.format}`);
+  }
+  if (num) {
+    const n3 = value;
+    if (s4.minimum !== void 0 && (s4.exclusiveMinimum ? n3 <= s4.minimum : n3 < s4.minimum))
+      bad(s4.exclusiveMinimum ? "exclusiveMinimum" : "minimum", `below ${s4.minimum}`);
+    if (s4.maximum !== void 0 && (s4.exclusiveMaximum ? n3 >= s4.maximum : n3 > s4.maximum))
+      bad(s4.exclusiveMaximum ? "exclusiveMaximum" : "maximum", `above ${s4.maximum}`);
+    const digits = text2.trim().replace(/^[+-]/, "").replace(/[eE].*$/, "");
+    const [whole = "", frac = ""] = digits.split(".");
+    if (s4.fractionDigits !== void 0 && frac.replace(/0+$/, "").length > s4.fractionDigits)
+      bad("fractionDigits", `more than ${s4.fractionDigits} decimal places`);
+    if (s4.totalDigits !== void 0 && (whole.replace(/^0+/, "") + frac.replace(/0+$/, "")).length > s4.totalDigits)
+      bad("totalDigits", `more than ${s4.totalDigits} digits`);
+    if (s4.multipleOf !== void 0 && s4.fractionDigits === void 0 && Math.abs(Math.round(n3 / s4.multipleOf) * s4.multipleOf - n3) > Math.max(1e-9, Math.abs(n3) * Number.EPSILON * 4))
+      bad("multipleOf", `not a multiple of ${s4.multipleOf}`);
+  }
+  return out;
+}
+var textOf2 = (n3) => n3.texts.join("");
+var XSI = "http://www.w3.org/2001/XMLSchema-instance";
+function checkElement(e6, n3, at2, out) {
+  if ((n3.ns ?? "") !== e6.ns)
+    out.push({ path: at2, keyword: "namespace", message: `in namespace "${n3.ns ?? ""}", not "${e6.ns}"` });
+  if (n3.attrs.get(`{${XSI}}nil`) === "true") {
+    if (!e6.nillable)
+      out.push({ path: at2, keyword: "type", message: "nil where the schema does not allow it" });
+    return;
+  }
+  if (e6.simple) {
+    if (n3.children.length)
+      out.push({ path: at2, keyword: "type", message: "holds elements where the schema says text" });
+    else
+      out.push(...checkSimple(e6.simple, textOf2(n3), at2));
+    return;
+  }
+  const c4 = e6.complex;
+  for (const a4 of c4.attrs) {
+    const v2 = n3.attrs.get(a4.name);
+    if (v2 === void 0) {
+      if (a4.required)
+        out.push({ path: `${at2}.@${a4.name}`, keyword: "required", message: "missing" });
+      continue;
+    }
+    out.push(...checkSimple(a4.simple, v2, `${at2}.@${a4.name}`));
+  }
+  for (const k2 of n3.attrs.keys())
+    if (!k2.startsWith("{") && !c4.attrs.some((a4) => a4.name === k2))
+      out.push({ path: `${at2}.@${k2}`, keyword: "additional", message: "not allowed" });
+  if (c4.text) {
+    out.push(...checkSimple(c4.text, textOf2(n3), `${at2}.#text`));
+    return;
+  }
+  if (textOf2(n3).trim() && !c4.open)
+    out.push({ path: at2, keyword: "type", message: "holds text where the schema says elements" });
+  const kids = n3.children;
+  let i8 = 0;
+  const consume = (el, multi) => {
+    let count2 = 0;
+    while (i8 < kids.length && kids[i8].local === el.name) {
+      const here = `${at2}.${el.name}`;
+      checkElement(el, kids[i8], el.max !== 1 ? `${here}[${count2}]` : count2 === 0 ? here : `${here}[${count2}]`, out);
+      i8++;
+      count2++;
+    }
+    void multi;
+    return count2;
+  };
+  const counts = (el, n22) => {
+    const here = `${at2}.${el.name}`;
+    if (el.max === 1 && el.min === 1 && n22 === 0)
+      out.push({ path: here, keyword: "required", message: "missing" });
+    else if (el.max === 1 && el.min === 0 && n22 > 1)
+      out.push({ path: here, keyword: "maxOccurs", message: `${n22} of them; at most 1` });
+    else if (el.max === 1 && n22 > 1)
+      out.push({ path: here, keyword: "maxOccurs", message: `${n22} of them; at most 1` });
+    else if (el.max !== 1 && n22 < el.min)
+      out.push({ path: here, keyword: n22 === 0 && el.min === 1 ? "required" : "minItems", message: `${n22} of them; at least ${el.min}` });
+    else if (el.max !== 1 && n22 > el.max)
+      out.push({ path: here, keyword: "maxItems", message: `${n22} of them; at most ${el.max}` });
+  };
+  if (c4.order === "all") {
+    for (const p4 of c4.particles) {
+      if (p4.kind !== "element")
+        continue;
+      const mine = kids.filter((k2) => k2.local === p4.name);
+      mine.forEach((k2, idx) => checkElement(p4, k2, p4.max !== 1 ? `${at2}.${p4.name}[${idx}]` : `${at2}.${p4.name}`, out));
+      counts(p4, mine.length);
+    }
+    for (const k2 of kids)
+      if (!c4.particles.some((p4) => p4.kind === "element" && p4.name === k2.local) && !c4.open)
+        out.push({ path: `${at2}.${k2.local}`, keyword: "additional", message: "not in the schema" });
+    return;
+  }
+  for (const p4 of c4.particles) {
+    if (p4.kind === "element") {
+      counts(p4, consume(p4, p4.max !== 1));
+      continue;
+    }
+    const startsBranch = (idx) => p4.options.findIndex((o4) => o4[0]?.name === kids[idx]?.local);
+    const branch = i8 < kids.length ? startsBranch(i8) : -1;
+    if (branch < 0) {
+      if (p4.min > 0)
+        out.push({ path: at2, keyword: "choice", message: `none of the branches: ${p4.options.map((o4) => o4[0]?.name).join(", ")}` });
+      continue;
+    }
+    for (const el of p4.options[branch])
+      counts(el, consume(el, el.max !== 1));
+    if (i8 < kids.length && startsBranch(i8) >= 0) {
+      out.push({ path: at2, keyword: "choice", message: `more than one branch: ${p4.options[branch][0]?.name} and ${kids[i8].local}` });
+      while (i8 < kids.length && startsBranch(i8) >= 0)
+        i8++;
+    }
+  }
+  if (i8 < kids.length && !c4.open) {
+    const known = new Set(allElements(c4).map((x2) => x2.name));
+    const k2 = kids[i8];
+    if (known.has(k2.local))
+      out.push({ path: at2, keyword: "order", message: `${k2.local} is out of order` });
+    else
+      out.push({ path: `${at2}.${k2.local}`, keyword: "additional", message: "not in the schema" });
+  }
+}
+function validateXml(model, xml) {
+  let doc;
+  try {
+    doc = parseXml(xml);
+  } catch (err) {
+    return [{ path: "$", keyword: "well-formed", message: err.message }];
+  }
+  const out = [];
+  if (doc.local !== model.root.name) {
+    out.push({ path: "$", keyword: "root", message: `the root is ${doc.local}, not ${model.root.name}` });
+    return out;
+  }
+  checkElement(model.root, doc, `$.${model.root.name}`, out);
+  return out;
+}
+function xsdFields(model) {
+  const out = [{ path: "$", type: "object", nullable: false, required: true, source: `${model.root.source}` }];
+  const walk = (e6, parent, required, choice) => {
+    const at2 = `${parent}.${e6.name}`;
+    let inner = at2;
+    const ch = choice ? { ...choice, parent } : void 0;
+    if (e6.max !== 1) {
+      out.push({ path: at2, type: "array", nullable: false, required: required && e6.min > 0, source: e6.source, minItems: e6.min, ...Number.isFinite(e6.max) ? { maxItems: e6.max } : {}, ...ch ? { choice: ch } : {} });
+      inner = `${at2}[*]`;
+    }
+    const isRequired = e6.max !== 1 ? true : required && e6.min > 0;
+    if (e6.simple) {
+      out.push({ path: inner, type: e6.simple.type, nullable: e6.nillable, required: isRequired, source: e6.source, simple: e6.simple, ...e6.max === 1 && ch ? { choice: ch } : {} });
+      return;
+    }
+    const c4 = e6.complex;
+    out.push({ path: inner, type: "object", nullable: e6.nillable, required: isRequired, source: e6.source, ...e6.max === 1 && ch ? { choice: ch } : {} });
+    for (const a4 of c4.attrs)
+      out.push({ path: `${inner}.@${a4.name}`, type: a4.simple.type, nullable: false, required: a4.required, source: a4.source, simple: a4.simple });
+    if (c4.text)
+      out.push({ path: `${inner}.#text`, type: c4.text.type, nullable: false, required: true, source: `${e6.source}/text()`, simple: c4.text });
+    for (const p4 of c4.particles) {
+      if (p4.kind === "element")
+        walk(p4, inner, p4.min > 0 && !p4.choice, p4.choice);
+      else
+        for (const o4 of p4.options)
+          for (const el of o4)
+            walk(el, inner, false, el.choice);
+    }
+  };
+  walk(model.root, "$", true);
+  return out;
+}
+
+// packages/core/dist/data/schema.js
+import crypto5 from "node:crypto";
+import fs8 from "node:fs";
+import path7 from "node:path";
+var SUPPORTED = /* @__PURE__ */ new Set([
+  "type",
+  "properties",
+  "required",
+  "additionalProperties",
+  "enum",
+  "const",
+  "minimum",
+  "maximum",
+  "exclusiveMinimum",
+  "exclusiveMaximum",
+  "multipleOf",
+  "minLength",
+  "maxLength",
+  "pattern",
+  "format",
+  "items",
+  "minItems",
+  "maxItems",
+  "uniqueItems",
+  "nullable",
+  "examples",
+  "example",
+  "default",
+  "description",
+  "title",
+  "$ref",
+  "$schema",
+  "$id",
+  "$comment",
+  "readOnly",
+  "writeOnly",
+  "deprecated",
+  "xml"
+]);
+function resolve(node, doc, seen = []) {
+  if (Array.isArray(node))
+    return node.map((n3) => resolve(n3, doc, seen));
+  if (!node || typeof node !== "object")
+    return node;
+  const s4 = node;
+  if (typeof s4.$ref === "string") {
+    if (!s4.$ref.startsWith("#/"))
+      throw new ManifestError(`$ref ${s4.$ref}: only references inside the same file ("#/\u2026") are supported.`);
+    if (seen.includes(s4.$ref))
+      throw new ManifestError(`$ref ${s4.$ref} refers to itself: recursive schemas are not supported.`);
+    let target2 = doc;
+    for (const part of s4.$ref.slice(2).split("/"))
+      target2 = target2?.[part.replace(/~1/g, "/").replace(/~0/g, "~")];
+    if (target2 === void 0)
+      throw new ManifestError(`$ref ${s4.$ref} points at nothing.`);
+    const { $ref: _r, ...rest } = s4;
+    return { ...resolve(target2, doc, [...seen, s4.$ref]), ...resolve(rest, doc, seen) };
+  }
+  const out = {};
+  for (const [k2, v2] of Object.entries(s4))
+    out[k2] = k2 === "enum" || k2 === "examples" || k2 === "const" || k2 === "default" || k2 === "example" ? v2 : resolve(v2, doc, seen);
+  return out;
+}
+function typeOf2(s4, where2) {
+  let t3 = s4.type;
+  let nullable = s4.nullable === true;
+  if (Array.isArray(t3)) {
+    const rest = t3.filter((x2) => x2 !== "null");
+    nullable = nullable || rest.length < t3.length;
+    if (rest.length !== 1)
+      throw new ManifestError(`${where2}: a type list may hold one type plus "null", not ${JSON.stringify(t3)}.`);
+    t3 = rest[0];
+  }
+  if (t3 === void 0) {
+    if (s4.properties)
+      t3 = "object";
+    else if (s4.items)
+      t3 = "array";
+    else if (Array.isArray(s4.enum) && s4.enum.length)
+      t3 = typeof s4.enum[0] === "number" ? "number" : typeof s4.enum[0] === "boolean" ? "boolean" : "string";
+    else if (s4.const !== void 0)
+      t3 = typeof s4.const === "number" ? "number" : typeof s4.const === "boolean" ? "boolean" : "string";
+    else
+      throw new ManifestError(`${where2}: no type. Give the field a type.`);
+  }
+  if (!["string", "integer", "number", "boolean", "object", "array", "null"].includes(t3))
+    throw new ManifestError(`${where2}: unknown type ${JSON.stringify(t3)}.`);
+  return { type: t3, nullable };
+}
+function collect(s4, at2, source, required, fields) {
+  const { type, nullable } = typeOf2(s4, source);
+  const unsupported = Object.keys(s4).filter((k2) => !SUPPORTED.has(k2));
+  const f4 = { path: at2, type, nullable, required, source, ...unsupported.length ? { unsupported } : {} };
+  for (const k2 of ["description", "enum", "const", "minimum", "maximum", "multipleOf", "minLength", "maxLength", "pattern", "format", "minItems", "maxItems", "uniqueItems", "default"]) {
+    if (s4[k2] !== void 0)
+      f4[k2] = s4[k2];
+  }
+  if (typeof s4.exclusiveMinimum === "number") {
+    f4.minimum = s4.exclusiveMinimum;
+    f4.exclusiveMinimum = true;
+  } else if (s4.exclusiveMinimum === true)
+    f4.exclusiveMinimum = true;
+  if (typeof s4.exclusiveMaximum === "number") {
+    f4.maximum = s4.exclusiveMaximum;
+    f4.exclusiveMaximum = true;
+  } else if (s4.exclusiveMaximum === true)
+    f4.exclusiveMaximum = true;
+  if (Array.isArray(s4.examples))
+    f4.examples = s4.examples;
+  else if (s4.example !== void 0)
+    f4.examples = [s4.example];
+  fields.push(f4);
+  if (type === "object" && s4.properties) {
+    const req = new Set(Array.isArray(s4.required) ? s4.required : []);
+    for (const [name, child] of Object.entries(s4.properties))
+      collect(child, `${at2}.${name}`, `${source}/properties/${name}`, req.has(name), fields);
+  }
+  if (type === "array" && s4.items && typeof s4.items === "object" && !Array.isArray(s4.items))
+    collect(s4.items, `${at2}[*]`, `${source}/items`, true, fields);
+}
+function modelFromSchema(file, raw, doc) {
+  const schema = resolve(raw, doc ?? raw);
+  const fields = [];
+  collect(schema, "$", `${path7.basename(file)}#`, true, fields);
+  return { source: { file, sha256: fileSha(file) }, schema, fields };
+}
+var fileSha = (file) => fs8.existsSync(file) ? crypto5.createHash("sha256").update(fs8.readFileSync(file)).digest("hex") : "";
+function modelFromOpenApi(file, raw, operation) {
+  const doc = raw;
+  if (!doc?.openapi && !doc?.swagger)
+    throw new ManifestError(`${file} is not an OpenAPI document: it has no "openapi" field.`);
+  const m4 = /^([A-Za-z]+)\s+(\/\S*)$/.exec(operation.trim());
+  if (!m4)
+    throw new ManifestError(`Name the operation as "POST /path", not ${JSON.stringify(operation)}.`);
+  const [, method, p4] = m4;
+  const op = doc.paths?.[p4]?.[method.toLowerCase()];
+  if (!op)
+    throw new ManifestError(`${file} has no operation ${method.toUpperCase()} ${p4}. Paths: ${Object.keys(doc.paths ?? {}).join(", ") || "none"}.`);
+  const content = op.requestBody?.content ?? {};
+  const json = content["application/json"] ?? content[Object.keys(content).find((k2) => /json/i.test(k2)) ?? ""];
+  const bodySchema = json?.schema ? resolve(json.schema, doc) : void 0;
+  const fields = [];
+  if (bodySchema)
+    collect(bodySchema, "$", `${path7.basename(file)}#${method.toUpperCase()} ${p4}/requestBody`, op.requestBody?.required !== false, fields);
+  const parameters = [...doc.paths?.[p4]?.parameters ?? [], ...op.parameters ?? []].map((x2) => resolve(x2, doc)).filter((x2) => x2.in === "query" || x2.in === "path").map((x2) => ({ name: String(x2.name), in: String(x2.in), required: x2.required === true || x2.in === "path", schema: x2.schema ?? { type: "string" } }));
+  for (const q2 of parameters)
+    collect(q2.schema, `?${q2.name}`, `${path7.basename(file)}#${method.toUpperCase()} ${p4}/parameters/${q2.name}`, q2.required, fields);
+  const responses = {};
+  for (const [code, r6] of Object.entries(op.responses ?? {}))
+    responses[code] = String(r6?.description ?? "");
+  if (!bodySchema && !parameters.length)
+    throw new ManifestError(`${method.toUpperCase()} ${p4} has no JSON request body and no query or path parameters, so there is nothing to generate.`);
+  return { source: { file, sha256: fileSha(file), operation: `${method.toUpperCase()} ${p4}` }, schema: bodySchema ?? { type: "object", properties: {} }, fields, responses, parameters };
+}
+function loadModel(file, operation) {
+  if (isXsd(file)) {
+    const xsd = readXsd(file, operation);
+    const fields = xsdFields(xsd).map((x2) => {
+      const { simple, minItems, maxItems, choice, ...rest } = x2;
+      return { ...rest, ...simple ?? {}, ...minItems !== void 0 ? { minItems } : {}, ...maxItems !== void 0 ? { maxItems } : {}, ...choice ? { choice } : {} };
+    });
+    return { source: { file, sha256: xsdSha(file), operation: operation ?? xsd.root.name, format: "xsd" }, schema: {}, fields, xsd };
+  }
+  if (isCopybook(file)) {
+    if (operation)
+      throw new ManifestError(`${path7.basename(file)} is a copybook, so there is no operation to pick.`);
+    return modelFromCopybook(file, (schema, source) => {
+      const fields = [];
+      collect(schema, "$", source, true, fields);
+      return fields;
+    });
+  }
+  const raw = readStructured(file);
+  if (raw?.openapi || raw?.swagger) {
+    if (!operation)
+      throw new ManifestError(`${path7.basename(file)} is an OpenAPI document: name the operation, such as --operation "POST /api/items". Operations: ${listOperations(raw).join(", ")}.`);
+    return modelFromOpenApi(file, raw, operation);
+  }
+  if (operation)
+    throw new ManifestError(`${path7.basename(file)} is a JSON Schema, not an OpenAPI document, so there is no operation to pick.`);
+  return modelFromSchema(file, raw);
+}
+function listOperations(doc) {
+  const out = [];
+  for (const [p4, item] of Object.entries(doc.paths ?? {}))
+    for (const m4 of Object.keys(item))
+      if (/^(get|post|put|patch|delete|head|options)$/i.test(m4))
+        out.push(`${m4.toUpperCase()} ${p4}`);
+  return out;
+}
+var FORMATS2 = {
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  uuid: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+  date: /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/,
+  "date-time": /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/,
+  uri: /^[a-z][a-z0-9+.-]*:\/\/\S+$/i,
+  ipv4: /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/
+};
+function validate(schema, value, at2 = "$") {
+  const out = [];
+  const bad = (keyword, message) => out.push({ path: at2, keyword, message });
+  const { type, nullable } = typeOf2(schema, at2);
+  if (value === null) {
+    if (!nullable && type !== "null")
+      bad("type", "null where a value is required");
+    return out;
+  }
+  if (schema.const !== void 0 && JSON.stringify(value) !== JSON.stringify(schema.const))
+    bad("const", `must be ${JSON.stringify(schema.const)}`);
+  if (Array.isArray(schema.enum) && !schema.enum.some((e6) => JSON.stringify(e6) === JSON.stringify(value)))
+    bad("enum", `must be one of ${JSON.stringify(schema.enum)}`);
+  const actual = Array.isArray(value) ? "array" : typeof value === "number" ? Number.isInteger(value) ? "integer" : "number" : typeof value;
+  const okType = type === "number" ? actual === "number" || actual === "integer" : actual === type;
+  if (!okType) {
+    bad("type", `must be ${type}, not ${actual}`);
+    return out;
+  }
+  if (type === "string") {
+    const s4 = value;
+    const len = [...s4].length;
+    if (schema.minLength !== void 0 && len < schema.minLength)
+      bad("minLength", `shorter than ${schema.minLength}`);
+    if (schema.maxLength !== void 0 && len > schema.maxLength)
+      bad("maxLength", `longer than ${schema.maxLength}`);
+    if (schema.pattern !== void 0 && !new RegExp(schema.pattern, "u").test(s4))
+      bad("pattern", `does not match ${schema.pattern}`);
+    if (schema.format && FORMATS2[schema.format] && !FORMATS2[schema.format].test(s4))
+      bad("format", `not a ${schema.format}`);
+  }
+  if (type === "number" || type === "integer") {
+    const n3 = value;
+    const min = typeof schema.exclusiveMinimum === "number" ? schema.exclusiveMinimum : schema.minimum;
+    const max = typeof schema.exclusiveMaximum === "number" ? schema.exclusiveMaximum : schema.maximum;
+    const exMin = schema.exclusiveMinimum === true || typeof schema.exclusiveMinimum === "number";
+    const exMax = schema.exclusiveMaximum === true || typeof schema.exclusiveMaximum === "number";
+    if (min !== void 0 && (exMin ? n3 <= min : n3 < min))
+      bad(exMin ? "exclusiveMinimum" : "minimum", `${exMin ? "not above" : "below"} ${min}`);
+    if (max !== void 0 && (exMax ? n3 >= max : n3 > max))
+      bad(exMax ? "exclusiveMaximum" : "maximum", `${exMax ? "not below" : "above"} ${max}`);
+    if (schema.multipleOf !== void 0 && Math.abs(Math.round(n3 / schema.multipleOf) * schema.multipleOf - n3) > Math.max(1e-9, Math.abs(n3) * Number.EPSILON * 4))
+      bad("multipleOf", `not a multiple of ${schema.multipleOf}`);
+  }
+  if (type === "array") {
+    const a4 = value;
+    if (schema.minItems !== void 0 && a4.length < schema.minItems)
+      bad("minItems", `fewer than ${schema.minItems} items`);
+    if (schema.maxItems !== void 0 && a4.length > schema.maxItems)
+      bad("maxItems", `more than ${schema.maxItems} items`);
+    if (schema.uniqueItems && new Set(a4.map((x2) => JSON.stringify(x2))).size !== a4.length)
+      bad("uniqueItems", "repeated items");
+    if (schema.items && typeof schema.items === "object")
+      a4.forEach((x2, i8) => out.push(...validate(schema.items, x2, `${at2}[${i8}]`)));
+  }
+  if (type === "object") {
+    const o4 = value;
+    const props = schema.properties ?? {};
+    for (const r6 of schema.required ?? [])
+      if (!(r6 in o4))
+        out.push({ path: `${at2}.${r6}`, keyword: "required", message: "missing" });
+    for (const [k2, v2] of Object.entries(o4)) {
+      if (props[k2])
+        out.push(...validate(props[k2], v2, `${at2}.${k2}`));
+      else if (schema.additionalProperties === false)
+        out.push({ path: `${at2}.${k2}`, keyword: "additionalProperties", message: "not allowed" });
+    }
+  }
+  return out;
+}
+
+// packages/core/dist/data/recipe.js
+var isHappy = (r6) => r6.expect_valid && (r6.technique === "EP" || r6.technique === "pairwise");
+var DEFAULT_QUOTAS = { max_happy_share: 0.5, boundaries_on_every_ordered_field: true, negative_for_every_field: true };
+var slugOf = (p4) => p4.replace(/^\$\.?/, "").replace(/\[\*\]/g, "_each").replace(/^\?/, "q_").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "") || "body";
+var HOSTILE = [
+  { name: "empty", value: "", why: "an empty string where text is expected" },
+  { name: "spaces_only", value: "   ", why: "whitespace that trims to nothing" },
+  { name: "padded", value: "  padded  ", why: "leading and trailing spaces, which some systems keep and some drop" },
+  { name: "sql_quote", value: "O'Brien' OR '1'='1", why: "a quote that breaks string concatenation into SQL" },
+  { name: "html", value: "<script>alert(1)</script>", why: "markup that a page may render" },
+  { name: "csv_formula", value: "=1+1", why: "a leading = that a spreadsheet runs as a formula (OWASP CSV injection)" },
+  { name: "rtl_override", value: "abc\u202Edef", why: "a right-to-left override that hides what the text really says" },
+  { name: "accents", value: "\xD1and\xFA caf\xE9", why: "letters outside ASCII" },
+  { name: "emoji", value: "\u{1F600}\u{1F680}", why: "characters outside the Basic Multilingual Plane; a length of 2 or 4 depending on the system" },
+  { name: "long", value: "x".repeat(4096), why: "4,096 characters: past most column widths" }
+];
+function recipeFolder(m4) {
+  return inside(m4, path8.join(path8.dirname(m4.proposals), "data"));
+}
+var recipeFile = (m4, id) => path8.join(recipeFolder(m4), `${id}.yaml`);
+var dataFolder = (m4, id) => path8.join(recipeFolder(m4), id);
+var ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+function planRecipe(m4, o4) {
+  const schemaFile = inside(m4, o4.schema);
+  if (!fs9.existsSync(schemaFile))
+    throw new ManifestError(`${o4.schema} does not exist.`);
+  const model = loadModel(schemaFile, o4.operation);
+  const id = o4.id ?? (model.source.operation ? model.source.operation.replace(/^[A-Z]+\s+\/?/, "").replace(/[^A-Za-z0-9.-]+/g, "-").replace(/^-|-$/g, "") : path8.basename(o4.schema).replace(/\.[^.]+$/, "")).slice(0, 64);
+  if (!ID.test(id))
+    throw new ManifestError(`The recipe id ${JSON.stringify(id)} must be letters, digits, '.', '-' and '_'.`);
+  const clock = o4.clock ?? "2026-01-15T09:30:00Z";
+  if (Number.isNaN(Date.parse(clock)))
+    throw new ManifestError(`The clock ${JSON.stringify(clock)} is not a date and time.`);
+  const seed = o4.seed ?? 20260115;
+  if (!Number.isInteger(seed) || seed < 0 || seed > 2 ** 31)
+    throw new ManifestError("The seed must be a whole number from 0 to 2147483648.");
+  const quotas = { ...DEFAULT_QUOTAS, ...o4.quotas ?? {} };
+  const notes = [];
+  const fields = model.fields.map((f4) => {
+    const constraints = {};
+    for (const k2 of ["enum", "const", "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf", "minLength", "maxLength", "pattern", "format", "minItems", "maxItems", "uniqueItems", "totalDigits", "fractionDigits"])
+      if (f4[k2] !== void 0)
+        constraints[k2] = f4[k2];
+    let valid_from = f4.const !== void 0 ? "const" : f4.enum ? "enum" : f4.examples?.length ? "examples" : f4.pattern ? "pattern" : f4.format ? `format:${f4.format}` : f4.type;
+    let note;
+    if (f4.pattern) {
+      const limit = patternLimits(f4.pattern);
+      if (limit) {
+        valid_from = f4.examples?.length ? "examples" : "type";
+        note = `The pattern can't be generated (${limit}); set a valid value in a row by hand.`;
+      }
+    }
+    if (f4.unsupported?.length)
+      note = `${note ? `${note} ` : ""}Keywords not understood and not honoured: ${f4.unsupported.join(", ")}.`;
+    if (f4.description)
+      note = `${f4.description}${note ? ` ${note}` : ""}`;
+    const silent = f4.path !== "$" && f4.type === "string" && !Object.keys(constraints).length && !f4.examples?.length;
+    return { path: f4.path, type: f4.type, required: f4.required, nullable: f4.nullable, constraints, source: f4.source, valid_from, ...note ? { note } : {}, ...silent ? { low_confidence: "The schema says nothing about this text, so its values are a guess from the field's name. A person confirms it, or an agent proposes a vocabulary." } : {} };
+  });
+  const rows = model.xsd ? xmlRows(model.xsd, model.fields, planRows(model.fields, notes), notes) : planRows(model.fields, notes);
+  if (model.xsd) {
+    notes.push(...model.xsd.notes);
+    for (const f4 of fields) {
+      if (f4.type === "object" || f4.path === "$")
+        continue;
+      const general2 = (p4) => p4.replace(/\[\d+\]/g, "[*]");
+      if (!rows.some((x2) => !x2.expect_valid && x2.invalid_because && general2(x2.invalid_because.path) === f4.path))
+        f4.cannot_break = "Optional text with no limit: in XML every value is text, so nothing here can break it.";
+    }
+  }
+  const layout = model.layout;
+  if (layout) {
+    notes.push(`A record is ${layout.record_size} bytes.`, ...layout.notes);
+    if (layout.counters.length)
+      notes.push(`${layout.counters.join(", ")}: set from the array's length, so not generated. The edge files hold them out of range.`);
+  }
+  const recipe = {
+    id,
+    ...o4.draft ? { draft: true } : {},
+    seed,
+    clock,
+    locale: o4.locale ?? "en_GB",
+    source: { ...model.source, file: path8.relative(m4.root, schemaFile).split(path8.sep).join("/") },
+    generators: { ...o4.generators ?? {} },
+    quotas,
+    fields,
+    rows,
+    ...model.responses ? { responses: model.responses } : {},
+    ...notes.length ? { notes } : {},
+    ...o4.csv ? { csv: o4.csv } : {},
+    ...o4.xlsx ? { xlsx: o4.xlsx } : {},
+    ...layout ? { fixed: { encoding: o4.recordEncoding ?? "cp037" } } : {},
+    ...o4.soap ?? model.xsd?.soap ? { soap: o4.soap ?? model.xsd?.soap } : {}
+  };
+  const problems = checkQuotas(recipe);
+  if (problems.length)
+    throw new ManifestError(`The plan breaks its own quotas: ${problems.join("; ")}`);
+  const file = recipeFile(m4, id);
+  if (fs9.existsSync(file))
+    throw new ManifestError(`${path8.relative(m4.root, file)} already exists. Choose another --id, or delete it.`);
+  fs9.mkdirSync(path8.dirname(file), { recursive: true });
+  fs9.writeFileSync(file, renderRecipe(recipe), "utf8");
+  return { file: path8.relative(m4.root, file).split(path8.sep).join("/"), recipe };
+}
+var HEADER = `# A test-data recipe, written by \`cmtk data plan\`. Review this file, not the rows: \`cmtk data make\`
+# regenerates the rows from it, the same ones every time, from the seed and the clock below.
+# Each row is named by the condition it exercises and says which technique chose it.
+`;
+function renderRecipe(r6) {
+  return HEADER + import_yaml3.default.stringify({ recipe: r6 }, { lineWidth: 0 });
+}
+function loadRecipe(m4, id) {
+  if (!ID.test(id))
+    throw new ManifestError(`The recipe id ${JSON.stringify(id)} must be letters, digits, '.', '-' and '_'.`);
+  const file = recipeFile(m4, id);
+  if (!fs9.existsSync(file))
+    throw new ManifestError(`There is no recipe ${id}: ${path8.relative(m4.root, file)} does not exist. Make one with \`cmtk data plan\`.`);
+  const text2 = fs9.readFileSync(file, "utf8");
+  const doc = import_yaml3.default.parse(text2);
+  const r6 = doc?.recipe;
+  if (!r6 || r6.id !== id || !Array.isArray(r6.rows) || !Array.isArray(r6.fields))
+    throw new ManifestError(`${path8.relative(m4.root, file)} is not a recipe for ${id}.`);
+  const names = /* @__PURE__ */ new Set();
+  for (const row of r6.rows) {
+    if (typeof row.name !== "string" || !/^[A-Za-z0-9_.-]+$/.test(row.name))
+      throw new ManifestError(`${id}: a row name must be letters, digits, '.', '-' and '_': ${JSON.stringify(row.name)}.`);
+    if (names.has(row.name))
+      throw new ManifestError(`${id}: the row name ${row.name} is used twice.`);
+    names.add(row.name);
+    if (typeof row.expect_valid !== "boolean")
+      throw new ManifestError(`${id}: row ${row.name} needs expect_valid: true or false.`);
+    if (!row.expect_valid && !row.invalid_because?.path)
+      throw new ManifestError(`${id}: row ${row.name} is invalid but does not say why (invalid_because: { path, keyword }).`);
+  }
+  return { file: path8.relative(m4.root, file).split(path8.sep).join("/"), recipe: r6, sha256: crypto6.createHash("sha256").update(text2).digest("hex") };
+}
+function checkQuotas(r6) {
+  const out = [];
+  const q2 = r6.quotas ?? DEFAULT_QUOTAS;
+  const happy = r6.rows.filter(isHappy).length;
+  if (r6.rows.length && happy / r6.rows.length > q2.max_happy_share)
+    out.push(`${happy} of ${r6.rows.length} rows are happy paths, above the quota of ${Math.round(q2.max_happy_share * 100)}%: add boundaries and negatives, not more happy paths`);
+  const leaves = r6.fields.filter((f4) => f4.type !== "object" && f4.path !== "$");
+  if (q2.boundaries_on_every_ordered_field) {
+    for (const f4 of r6.fields) {
+      const c4 = f4.constraints;
+      const lengthOnly = c4.pattern !== void 0 || c4.enum !== void 0;
+      if (![c4.minimum, c4.maximum, ...lengthOnly ? [] : [c4.minLength, c4.maxLength], c4.minItems, c4.maxItems].some((x2) => x2 !== void 0))
+        continue;
+      if (!r6.rows.some((x2) => x2.technique === "BVA-3" && x2.coverage_item.startsWith(`${f4.path} `)))
+        out.push(`${f4.path} has a boundary but no BVA-3 rows`);
+    }
+  }
+  if (q2.negative_for_every_field) {
+    const general2 = (p4) => p4.replace(/\[\d+\]/g, "[*]");
+    for (const f4 of leaves)
+      if (!f4.cannot_break && !r6.rows.some((x2) => !x2.expect_valid && x2.invalid_because && general2(x2.invalid_because.path) === f4.path))
+        out.push(`${f4.path} has no row that breaks it`);
+  }
+  return out;
+}
+function planRows(fields, notes) {
+  const rows = [];
+  const add = (row) => {
+    if (!rows.some((x2) => x2.name === row.name))
+      rows.push(row);
+  };
+  const leaves = fields.filter((f4) => f4.path !== "$" && f4.type !== "object");
+  add({ name: "baseline_valid", technique: "EP", coverage_item: "every field: a valid representative", expect_valid: true, oracle: "specified" });
+  if (fields[0]?.type === "object")
+    add({ name: "body_not_an_object", technique: "EP", coverage_item: "$ is a list, not an object", expect_valid: false, invalid_because: { path: "$", keyword: "type" }, oracle: "specified", replace_body: [] });
+  for (const f4 of leaves) {
+    const slug3 = slugOf(f4.path);
+    const p4 = f4.path;
+    const first = f4.path.replace(/\[\*\]/g, "[0]");
+    const num = f4.type === "integer" || f4.type === "number";
+    const step = f4.multipleOf ?? (f4.type === "integer" ? 1 : 0.01);
+    if (num && f4.minimum !== void 0) {
+      const at2 = f4.exclusiveMinimum ? round(f4.minimum + step, step) : f4.minimum;
+      add(bva(slug3, "minimum", "below", first, f4.exclusiveMinimum ? f4.minimum : round(f4.minimum - step, step), false, f4.exclusiveMinimum ? "exclusiveMinimum" : "minimum", `${p4} ${f4.exclusiveMinimum ? "at" : "below"} its minimum (${f4.minimum})`));
+      add(bva(slug3, "minimum", "at", first, at2, true, void 0, `${p4} at its lowest valid value (${at2})`));
+      if (f4.maximum === void 0 || round(at2 + step, step) <= f4.maximum)
+        add(bva(slug3, "minimum", "above", first, round(at2 + step, step), true, void 0, `${p4} one step above its lowest valid value`));
+    }
+    if (num && f4.maximum !== void 0) {
+      const at2 = f4.exclusiveMaximum ? round(f4.maximum - step, step) : f4.maximum;
+      if (f4.minimum === void 0 || round(at2 - step, step) >= f4.minimum)
+        add(bva(slug3, "maximum", "below", first, round(at2 - step, step), true, void 0, `${p4} one step below its highest valid value`));
+      add(bva(slug3, "maximum", "at", first, at2, true, void 0, `${p4} at its highest valid value (${at2})`));
+      add(bva(slug3, "maximum", "above", first, f4.exclusiveMaximum ? f4.maximum : round(f4.maximum + step, step), false, f4.exclusiveMaximum ? "exclusiveMaximum" : "maximum", `${p4} ${f4.exclusiveMaximum ? "at" : "above"} its maximum (${f4.maximum})`));
+    }
+    if (f4.type === "string" && f4.minLength !== void 0 && f4.minLength > 0 && !f4.pattern && !f4.enum) {
+      add(bva(slug3, "minLength", "below", first, "a".repeat(f4.minLength - 1), false, "minLength", `${p4} one character shorter than ${f4.minLength}`));
+      add(bva(slug3, "minLength", "at", first, "a".repeat(f4.minLength), true, void 0, `${p4} exactly ${f4.minLength} characters`));
+      if (f4.maxLength === void 0 || f4.minLength < f4.maxLength)
+        add(bva(slug3, "minLength", "above", first, "a".repeat(f4.minLength + 1), true, void 0, `${p4} ${f4.minLength + 1} characters`));
+    }
+    if (f4.type === "string" && f4.maxLength !== void 0 && !f4.pattern && !f4.enum) {
+      if (f4.minLength === void 0 || f4.maxLength - 1 >= f4.minLength)
+        add(bva(slug3, "maxLength", "below", first, "b".repeat(Math.max(f4.maxLength - 1, 0)), true, void 0, `${p4} one character shorter than ${f4.maxLength}`));
+      add(bva(slug3, "maxLength", "at", first, "b".repeat(f4.maxLength), true, void 0, `${p4} exactly ${f4.maxLength} characters`));
+      add(bva(slug3, "maxLength", "above", first, "b".repeat(f4.maxLength + 1), false, "maxLength", `${p4} one character longer than ${f4.maxLength}`));
+    }
+    if (f4.path.includes("[*]"))
+      continue;
+    if (f4.required)
+      add({ name: `${slug3}_missing`, technique: "EP", coverage_item: `${p4} missing though required`, expect_valid: false, invalid_because: { path: p4, keyword: "required" }, oracle: "specified", unset: [p4] });
+    if (!f4.nullable)
+      add({ name: `${slug3}_null`, technique: "EP", coverage_item: `${p4} null though not nullable`, expect_valid: false, invalid_because: { path: p4, keyword: "type" }, oracle: "specified", set: { [p4]: null } });
+    add({ name: `${slug3}_wrong_type`, technique: "EP", coverage_item: `${p4} of the wrong type`, expect_valid: false, invalid_because: { path: p4, keyword: f4.const !== void 0 ? "const" : f4.enum ? "enum" : "type" }, oracle: "specified", set: { [p4]: wrongType(f4) } });
+    if (f4.enum)
+      add({ name: `${slug3}_not_in_enum`, technique: "EP", coverage_item: `${p4} outside ${JSON.stringify(f4.enum)}`, expect_valid: false, invalid_because: { path: p4, keyword: "enum" }, oracle: "specified", set: { [p4]: typeof f4.enum[0] === "number" ? 999999 : "not-a-valid-choice" } });
+    if (f4.type === "string" && f4.format && ["email", "uuid", "date", "date-time", "uri", "ipv4"].includes(f4.format))
+      add({ name: `${slug3}_bad_${f4.format.replace("-", "_")}`, technique: "EP", coverage_item: `${p4} is not a ${f4.format}`, expect_valid: false, invalid_because: { path: p4, keyword: "format" }, oracle: "specified", set: { [p4]: "not-a-" + f4.format } });
+    if (f4.type === "string" && f4.pattern) {
+      const breaker = ["!!! not a match", "no", "\n", "", "\0"].find((s4) => {
+        try {
+          return !new RegExp(f4.pattern, "u").test(s4);
+        } catch {
+          return false;
+        }
+      });
+      if (breaker !== void 0)
+        add({ name: `${slug3}_breaks_pattern`, technique: "EP", coverage_item: `${p4} does not match ${f4.pattern}`, expect_valid: false, invalid_because: { path: p4, keyword: "pattern" }, oracle: "specified", set: { [p4]: breaker } });
+    }
+    if (f4.enum && typeof f4.enum[0] === "string") {
+      const v2 = f4.enum[0];
+      const other = v2 === v2.toLowerCase() ? v2.toUpperCase() : v2.toLowerCase();
+      if (other !== v2 && !f4.enum.includes(other))
+        add({ name: `${slug3}_enum_other_case`, technique: "EP", coverage_item: `${p4} as ${JSON.stringify(other)}: a listed value in another case`, expect_valid: false, invalid_because: { path: p4, keyword: "enum" }, oracle: "specified", set: { [p4]: other } });
+    }
+    if (num && f4.multipleOf !== void 0)
+      add({ name: `${slug3}_not_a_multiple`, technique: "EP", coverage_item: `${p4} not a multiple of ${f4.multipleOf}`, expect_valid: false, invalid_because: { path: p4, keyword: "multipleOf" }, oracle: "specified", set: { [p4]: round((f4.minimum ?? 0) + f4.multipleOf / 3, f4.multipleOf / 1e3) } });
+    if (f4.type === "integer")
+      add({ name: `${slug3}_fraction`, technique: "EP", coverage_item: `${p4} with a fraction though an integer`, expect_valid: false, invalid_because: { path: p4, keyword: "type" }, oracle: "specified", set: { [p4]: (f4.minimum ?? 0) + 0.5 } });
+    if (f4.type === "array") {
+      if (f4.minItems !== void 0 && f4.minItems > 0) {
+        add(bva(slug3, "minItems", "below", p4, { $items: f4.minItems - 1 }, false, "minItems", `${p4} with ${f4.minItems - 1} items, one fewer than allowed`));
+        add(bva(slug3, "minItems", "at", p4, { $items: f4.minItems }, true, void 0, `${p4} with exactly ${f4.minItems} items`));
+      } else
+        add({ name: `${slug3}_empty`, technique: "EP", coverage_item: `${p4} empty`, expect_valid: true, oracle: "specified", set: { [p4]: { $items: 0 } } });
+      if (f4.maxItems !== void 0) {
+        add(bva(slug3, "maxItems", "at", p4, { $items: f4.maxItems }, true, void 0, `${p4} with exactly ${f4.maxItems} items`));
+        add(bva(slug3, "maxItems", "above", p4, { $items: f4.maxItems + 1 }, false, "maxItems", `${p4} with ${f4.maxItems + 1} items, one more than allowed`));
+      }
+    }
+    if (f4.type === "string" && !f4.enum && !f4.pattern && !f4.format && f4.const === void 0) {
+      for (const h4 of HOSTILE) {
+        const tooLong = f4.maxLength !== void 0 && [...h4.value].length > f4.maxLength;
+        const tooShort = f4.minLength !== void 0 && [...h4.value].length < f4.minLength;
+        const valid = !tooLong && !tooShort;
+        add({ name: `${slug3}_hostile_${h4.name}`, technique: "hostile", coverage_item: `${p4}: ${h4.why}`, expect_valid: valid, ...valid ? {} : { invalid_because: { path: p4, keyword: tooLong ? "maxLength" : "minLength" } }, oracle: valid ? "implicit" : "specified", set: { [p4]: h4.value } });
+      }
+    }
+  }
+  for (const f4 of leaves.filter((x2) => x2.path.includes("[*]") && x2.type !== "array")) {
+    const p4 = f4.path.replace("[*]", "[0]");
+    add({ name: `${slugOf(f4.path)}_element_wrong_type`, technique: "EP", coverage_item: `${f4.path}: the first element of the wrong type`, expect_valid: false, invalid_because: { path: p4, keyword: f4.enum ? "enum" : "type" }, oracle: "specified", set: { [p4]: wrongType(f4) } });
+  }
+  const discrete = leaves.filter((f4) => !f4.path.includes("[*]") && !f4.choice).map((f4) => {
+    const values = [];
+    if (f4.enum)
+      for (const v2 of f4.enum)
+        values.push({ label: `${f4.path}=${JSON.stringify(v2)}`, apply: (r6) => {
+          (r6.set ??= {})[f4.path] = v2;
+        } });
+    else if (f4.type === "boolean")
+      for (const v2 of [true, false])
+        values.push({ label: `${f4.path}=${v2}`, apply: (r6) => {
+          (r6.set ??= {})[f4.path] = v2;
+        } });
+    if (f4.nullable)
+      values.push({ label: `${f4.path}=null`, apply: (r6) => {
+        (r6.set ??= {})[f4.path] = null;
+      } });
+    if (!f4.required)
+      values.push({ label: `${f4.path} absent`, apply: (r6) => {
+        (r6.unset ??= []).push(f4.path);
+      } });
+    if (values.length && !f4.enum && f4.type !== "boolean")
+      values.unshift({ label: `${f4.path} present`, apply: () => {
+      } });
+    return { field: f4, values };
+  }).filter((d4) => d4.values.length >= 2);
+  if (discrete.length >= 2) {
+    const pairs = /* @__PURE__ */ new Set();
+    for (let i8 = 0; i8 < discrete.length; i8++)
+      for (let j2 = i8 + 1; j2 < discrete.length; j2++)
+        for (const a4 of discrete[i8].values)
+          for (const b2 of discrete[j2].values)
+            pairs.add(`${a4.label} & ${b2.label}`);
+    let n3 = 0;
+    while (pairs.size && n3 < 60) {
+      const choice = discrete.map(() => 0);
+      for (let i8 = 0; i8 < discrete.length; i8++) {
+        let best = 0, bestScore = -1;
+        for (let k2 = 0; k2 < discrete[i8].values.length; k2++) {
+          let score = 0;
+          for (let j2 = 0; j2 < i8; j2++)
+            if (pairs.has(`${discrete[j2].values[choice[j2]].label} & ${discrete[i8].values[k2].label}`))
+              score++;
+          if (score > bestScore) {
+            bestScore = score;
+            best = k2;
+          }
+        }
+        choice[i8] = best;
+      }
+      const covered = [];
+      for (let i8 = 0; i8 < discrete.length; i8++)
+        for (let j2 = i8 + 1; j2 < discrete.length; j2++) {
+          const key2 = `${discrete[i8].values[choice[i8]].label} & ${discrete[j2].values[choice[j2]].label}`;
+          if (pairs.delete(key2))
+            covered.push(key2);
+        }
+      if (!covered.length)
+        break;
+      const row = { name: `pairwise_${String(++n3).padStart(2, "0")}`, technique: "pairwise", coverage_item: covered.slice(0, 3).join("; ") + (covered.length > 3 ? `; and ${covered.length - 3} more pairs` : ""), expect_valid: true, oracle: "specified" };
+      discrete.forEach((d4, i8) => d4.values[choice[i8]].apply(row));
+      add(row);
+    }
+    notes.push(`Pairwise rows cover every pair of values of ${discrete.map((d4) => d4.field.path).join(", ")} (${n3} rows).`);
+  }
+  return rows;
+}
+function xmlRows(model, fields, planned, notes) {
+  const byPath = new Map(fields.map((f4) => [f4.path, f4]));
+  const general2 = (p4) => p4.replace(/\[\d+\]/g, "[*]");
+  const keep2 = [];
+  let dropped = 0;
+  for (const row2 of planned) {
+    if (row2.replace_body !== void 0) {
+      dropped++;
+      continue;
+    }
+    const [p4, v2] = Object.entries(row2.set ?? {})[0] ?? [];
+    const f4 = p4 ? byPath.get(general2(p4)) : void 0;
+    if (f4 && !row2.expect_valid && f4.type === "array" && row2.invalid_because?.keyword === "type") {
+      dropped++;
+      continue;
+    }
+    if (f4 && !row2.expect_valid && row2.invalid_because?.keyword !== "required" && f4.type !== "array" && f4.type !== "object") {
+      const simple = { type: f4.type, ...f4.enum ? { enum: f4.enum } : {}, ...f4.minLength !== void 0 ? { minLength: f4.minLength } : {}, ...f4.maxLength !== void 0 ? { maxLength: f4.maxLength } : {}, ...f4.pattern ? { pattern: f4.pattern } : {}, ...f4.format ? { format: f4.format } : {}, ...f4.minimum !== void 0 ? { minimum: f4.minimum } : {}, ...f4.maximum !== void 0 ? { maximum: f4.maximum } : {}, ...f4.exclusiveMinimum ? { exclusiveMinimum: true } : {}, ...f4.exclusiveMaximum ? { exclusiveMaximum: true } : {}, ...f4.multipleOf !== void 0 ? { multipleOf: f4.multipleOf } : {}, ...f4.totalDigits !== void 0 ? { totalDigits: f4.totalDigits } : {}, ...f4.fractionDigits !== void 0 ? { fractionDigits: f4.fractionDigits } : {} };
+      const broken = checkSimple(simple, v2 === null || v2 === void 0 ? "" : typeof v2 === "object" ? JSON.stringify(v2) : String(v2), p4);
+      if (!broken.length) {
+        dropped++;
+        continue;
+      }
+      row2.invalid_because = { path: row2.invalid_because.path, keyword: broken[0].keyword };
+    }
+    keep2.push(row2);
+  }
+  if (dropped)
+    notes.push(`${dropped} rows left out because they mean nothing in XML: every value is text, so a text field can't have the wrong type, and a document always has a root.`);
+  const row = (r6) => {
+    if (!keep2.some((x2) => x2.name === r6.name))
+      keep2.push({ technique: "EP", oracle: "specified", ...r6 });
+  };
+  const root = model.root;
+  if (root.ns)
+    row({ name: "root_wrong_namespace", coverage_item: `$.${root.name} in a namespace the schema does not name`, expect_valid: false, invalid_because: { path: `$.${root.name}`, keyword: "namespace" }, xml_op: { kind: "wrong_namespace" } });
+  const objects = fields.filter((f4) => f4.type === "object" && f4.path !== "$");
+  for (const o4 of objects) {
+    const at2 = o4.path.replace(/\[\*\]/g, "[0]");
+    const slug3 = slugOf(o4.path);
+    const children = fields.filter((f4) => f4.path.startsWith(`${o4.path}.`) && !f4.path.slice(o4.path.length + 1).includes(".") && !f4.path.slice(o4.path.length + 1).includes("[") && !/^[@#]/.test(f4.path.slice(o4.path.length + 1)));
+    if (o4.required && o4.path !== `$.${root.name}` && !o4.path.includes("[*]"))
+      row({ name: `${slug3}_missing`, coverage_item: `${o4.path} missing though required`, expect_valid: false, invalid_because: { path: at2, keyword: "required" }, unset: [o4.path] });
+    if (!children.length)
+      continue;
+    row({ name: `${slug3}_extra_element`, coverage_item: `${o4.path} with an element the schema does not name`, expect_valid: false, invalid_because: { path: `${at2}.NotInTheSchema`, keyword: "additional" }, xml_op: { kind: "extra", path: at2, name: "NotInTheSchema" } });
+    const required = children.filter((f4) => f4.required && !f4.choice && f4.type !== "array");
+    if (required.length >= 2 && !isAll(model, o4.path)) {
+      const [a4, b2] = [required[0].path.split(".").pop(), required[1].path.split(".").pop()];
+      row({ name: `${slug3}_wrong_order`, coverage_item: `${o4.path}: ${b2} before ${a4}, against the sequence`, expect_valid: false, invalid_because: { path: at2, keyword: "order" }, xml_op: { kind: "swap", path: at2, a: a4, b: b2 } });
+    }
+    if (required[0]) {
+      const n3 = required[0].path.split(".").pop();
+      row({ name: `${slugOf(required[0].path)}_twice`, coverage_item: `${required[0].path} twice, though it occurs once`, expect_valid: false, invalid_because: { path: `${at2}.${n3}`, keyword: "maxOccurs" }, xml_op: { kind: "duplicate", path: `${at2}.${n3}` } });
+    }
+  }
+  const groups = /* @__PURE__ */ new Map();
+  for (const f4 of fields)
+    if (f4.choice)
+      groups.set(f4.choice.group, [...groups.get(f4.choice.group) ?? [], f4]);
+  for (const members of groups.values()) {
+    const parent = members[0].choice.parent.replace(/\[\*\]/g, "[0]");
+    const others = [...new Set(members.map((m4) => m4.choice.index))].filter((i8) => i8 > 0).map((i8) => members.find((m4) => m4.choice.index === i8));
+    for (const f4 of others) {
+      row({ name: `${slugOf(f4.path)}_choice_branch`, coverage_item: `${f4.path}: this branch of the choice, on its own`, expect_valid: true, set: { [f4.path.replace(/\[\*\]/g, "[0]")]: { $valid: true } } });
+    }
+    if (others[0])
+      row({ name: `${slugOf(others[0].path)}_choice_two_branches`, coverage_item: `${others[0].path} as well as another branch of the choice`, expect_valid: false, invalid_because: { path: parent, keyword: "choice" }, keep_choices: true, set: { [others[0].path.replace(/\[\*\]/g, "[0]")]: { $valid: true } } });
+  }
+  return keep2;
+}
+function isAll(model, p4) {
+  const parts = p4.replace(/^\$\./, "").replace(/\[\*\]/g, "").split(".");
+  let e6 = model.root;
+  for (const name of parts.slice(1)) {
+    const next = e6.complex?.particles.flatMap((x2) => x2.kind === "element" ? [x2] : x2.options.flat()).find((x2) => x2.name === name);
+    if (!next)
+      return false;
+    e6 = next;
+  }
+  return e6.complex?.order === "all";
+}
+var round = (n3, step) => {
+  const d4 = Math.max(0, Math.min(10, Math.ceil(-Math.log10(step))));
+  return Number(n3.toFixed(d4));
+};
+function bva(slug3, edge, side, path25, value, valid, keyword, item) {
+  return { name: `${slug3}_${edge}_${side}_3bva`, technique: "BVA-3", coverage_item: item, expect_valid: valid, ...valid ? {} : { invalid_because: { path: path25, keyword } }, oracle: "specified", set: { [path25]: value } };
+}
+function wrongType(f4) {
+  switch (f4.type) {
+    case "string":
+      return 12345;
+    case "integer":
+    case "number":
+      return "twelve";
+    case "boolean":
+      return "yes";
+    case "array":
+      return "not-a-list";
+    default:
+      return "wrong";
+  }
+}
+
 // packages/core/dist/data/make.js
 var LOCALES = { en: r2, en_GB: g2, en_US: i3, de: i4, fr: i6, es: i7 };
 var FAKER_VERSION = true ? "10.6.0" : (() => {
@@ -22143,6 +20902,8 @@ function validValue(f4, rand, faker, clock) {
     return f4.const;
   if (f4.enum?.length)
     return f4.enum[Math.floor(rand() * f4.enum.length)];
+  if (f4.vocabulary?.length)
+    return f4.vocabulary[Math.floor(rand() * f4.vocabulary.length)];
   if (f4.examples?.length)
     return f4.examples[0];
   switch (f4.type) {
@@ -22230,7 +20991,7 @@ function baseline(fields, at2, rand, faker, clock) {
     return void 0;
   if (self.type === "object") {
     const out = {};
-    for (const f4 of fields.filter((x2) => x2.path.startsWith(`${at2}.`) && !x2.path.slice(at2.length + 1).includes(".") && !x2.path.slice(at2.length + 1).includes("["))) {
+    for (const f4 of fields.filter((x2) => x2.path.startsWith(`${at2}.`) && !x2.path.slice(at2.length + 1).includes(".") && !x2.path.slice(at2.length + 1).includes("[") && !(x2.choice && x2.choice.index > 0))) {
       out[f4.path.slice(at2.length + 1)] = baseline(fields, f4.path, rand, faker, clock);
     }
     return out;
@@ -22277,60 +21038,86 @@ function unsetAt(root, p4) {
 }
 function fieldsOf(m4, r6) {
   const file = inside(m4, r6.source.file);
-  if (!fs17.existsSync(file))
+  if (!fs10.existsSync(file))
     throw new ManifestError(`The recipe's schema ${r6.source.file} no longer exists.`);
-  const raw = readStructured(file);
-  const model = raw?.openapi || raw?.swagger ? modelFromOpenApi(file, raw, r6.source.operation ?? "") : modelFromSchema(file, raw);
+  const model = loadModel(file, r6.source.operation);
   if (r6.source.sha256 && model.source.sha256 !== r6.source.sha256)
     throw new ManifestError(`${r6.source.file} has changed since the recipe was planned (sha256 ${model.source.sha256.slice(0, 12)}\u2026 now, ${r6.source.sha256.slice(0, 12)}\u2026 then). Plan it again, or restore the file.`);
-  return { fields: model.fields, schema: model.schema, parameters: model.parameters ?? [], hasBody: model.fields.some((f4) => f4.path === "$") };
+  return { fields: model.fields, schema: model.schema, parameters: model.parameters ?? [], hasBody: model.fields.some((f4) => f4.path === "$"), ...model.layout ? { layout: model.layout } : {}, ...model.xsd ? { xsd: model.xsd } : {} };
 }
 var onWire = (v2) => v2 === null ? "" : typeof v2 === "object" ? JSON.stringify(v2) : String(v2);
-function makeRows(m4, r6) {
-  const { fields, schema, parameters, hasBody } = fieldsOf(m4, r6);
-  const rand = rng(r6.seed);
-  const faker = fakerFor(r6.locale, r6.seed, r6.clock);
-  const out = [];
-  const bodyFields = fields.filter((f4) => !f4.path.startsWith("?"));
-  for (const row of r6.rows) {
-    const rowRand = rng(hash(r6.seed, row.name));
-    const rowFaker = fakerFor(r6.locale, hash(r6.seed, row.name), r6.clock);
-    let value = row.replace_body !== void 0 ? structuredClone(row.replace_body) : baseline(bodyFields, "$", rowRand, rowFaker, r6.clock);
-    const query = {};
-    for (const q2 of parameters)
+function rowContext(m4, r6) {
+  const { fields, schema, parameters, hasBody, xsd } = fieldsOf(m4, r6);
+  for (const f4 of fields) {
+    const v2 = r6.fields.find((x2) => x2.path === f4.path)?.vocabulary;
+    if (v2?.length)
+      f4.vocabulary = v2;
+  }
+  return { fields, schema, parameters, hasBody, ...xsd ? { xsd } : {}, bodyFields: fields.filter((f4) => !f4.path.startsWith("?")), rand: rng(r6.seed), faker: fakerFor(r6.locale, r6.seed, r6.clock) };
+}
+function buildRow(c4, r6, row) {
+  const { fields, schema, parameters, hasBody, xsd, bodyFields, rand, faker } = c4;
+  const rowRand = rng(hash(r6.seed, row.name));
+  const rowFaker = fakerFor(r6.locale, hash(r6.seed, row.name), r6.clock);
+  let value = row.replace_body !== void 0 ? structuredClone(row.replace_body) : baseline(bodyFields, "$", rowRand, rowFaker, r6.clock);
+  const query = {};
+  for (const q2 of parameters)
+    if (q2.required)
+      query[q2.name] = validValue(fields.find((f4) => f4.path === `?${q2.name}`), rowRand, rowFaker, r6.clock);
+  const violations = [];
+  for (const [p4, v2] of Object.entries(row.set ?? {}))
+    if (p4.startsWith("?"))
+      query[p4.slice(1)] = structuredClone(v2);
+  for (const p4 of row.unset ?? [])
+    if (p4.startsWith("?"))
+      delete query[p4.slice(1)];
+  for (const q2 of parameters) {
+    if (!(q2.name in query)) {
       if (q2.required)
-        query[q2.name] = validValue(fields.find((f4) => f4.path === `?${q2.name}`), rowRand, rowFaker, r6.clock);
-    const violations = [];
-    for (const [p4, v2] of Object.entries(row.set ?? {}))
+        violations.push({ path: `?${q2.name}`, keyword: "required", message: "missing" });
+      continue;
+    }
+    violations.push(...validate(q2.schema, query[q2.name], `?${q2.name}`));
+  }
+  if (row.replace_body === void 0) {
+    for (const [p4, v2] of Object.entries(row.set ?? {})) {
       if (p4.startsWith("?"))
-        query[p4.slice(1)] = structuredClone(v2);
-    for (const p4 of row.unset ?? [])
-      if (p4.startsWith("?"))
-        delete query[p4.slice(1)];
-    for (const q2 of parameters) {
-      if (!(q2.name in query)) {
-        if (q2.required)
-          violations.push({ path: `?${q2.name}`, keyword: "required", message: "missing" });
         continue;
-      }
-      violations.push(...validate(q2.schema, query[q2.name], `?${q2.name}`));
+      const f4 = fields.find((x2) => x2.path === p4.replace(/\[\d+\]/g, "[*]"));
+      if (v2 && typeof v2 === "object" && !Array.isArray(v2) && Object.keys(v2).length === 1 && "$items" in v2 && f4?.type === "array") {
+        value = setAt(value, p4, Array.from({ length: Number(v2.$items) }, () => baseline(fields, `${f4.path}[*]`, rand, faker, r6.clock)));
+      } else if (v2 && typeof v2 === "object" && !Array.isArray(v2) && v2.$valid === true && f4) {
+        value = setAt(value, p4, baseline(fields, f4.path, rowRand, rowFaker, r6.clock));
+      } else if (v2 && typeof v2 === "object" && !Array.isArray(v2) && typeof v2.$copy === "string") {
+        value = setAt(value, p4, structuredClone(getAt(value, v2.$copy)));
+      } else
+        value = setAt(value, p4, structuredClone(v2));
     }
-    if (row.replace_body === void 0) {
-      for (const [p4, v2] of Object.entries(row.set ?? {})) {
-        if (p4.startsWith("?"))
-          continue;
-        const f4 = fields.find((x2) => x2.path === p4.replace(/\[\d+\]/g, "[*]"));
-        if (v2 && typeof v2 === "object" && !Array.isArray(v2) && Object.keys(v2).length === 1 && "$items" in v2 && f4?.type === "array") {
-          value = setAt(value, p4, Array.from({ length: Number(v2.$items) }, () => baseline(fields, `${f4.path}[*]`, rand, faker, r6.clock)));
-        } else
-          value = setAt(value, p4, structuredClone(v2));
-      }
-      for (const p4 of row.unset ?? [])
-        if (!p4.startsWith("?"))
-          unsetAt(value, p4);
-    }
-    if (hasBody)
-      violations.push(...validate(schema, value));
+    for (const p4 of row.unset ?? [])
+      if (!p4.startsWith("?"))
+        unsetAt(value, p4);
+    violations.push(...applyInvariants(r6, row, value, fields));
+  }
+  let xml;
+  if (xsd) {
+    if (!row.keep_choices)
+      leaveOneBranch(fields, value, Object.keys(row.set ?? {}));
+    xml = toXml(xsd, value, row.xml_op);
+    violations.push(...validateXml(xsd, xml));
+  } else if (hasBody)
+    violations.push(...validate(schema, value));
+  return { value, query, violations, ...xml !== void 0 ? { xml } : {} };
+}
+function probeRow(m4, r6, row) {
+  const c4 = rowContext(m4, r6);
+  const b2 = buildRow(c4, r6, row);
+  return { value: b2.value, violations: b2.violations, schema: c4.schema };
+}
+function makeRows(m4, r6) {
+  const c4 = rowContext(m4, r6);
+  const out = [];
+  for (const row of r6.rows) {
+    const { value, query, violations, xml } = buildRow(c4, r6, row);
     if (row.expect_valid && violations.length)
       throw new ManifestError(`Row ${row.name} should be valid but is not: ${violations.map((v2) => `${v2.path} ${v2.message}`).join("; ")}. The schema may use a keyword the planner does not understand, or the row was edited.`);
     if (!row.expect_valid) {
@@ -22339,50 +21126,215 @@ function makeRows(m4, r6) {
       if (!hit2)
         throw new ManifestError(`Row ${row.name} should break ${why.path} (${why.keyword}) but the schema accepts it${violations.length ? ` (it breaks ${violations.map((v2) => `${v2.path} ${v2.keyword}`).join(", ")} instead)` : ""}. Correct the row or its reason.`);
     }
-    const wire = {};
+    const wire2 = {};
     for (const [k2, v2] of Object.entries(query))
-      wire[k2] = onWire(v2);
-    out.push({ name: row.name, technique: row.technique, coverage_item: row.coverage_item, expect_valid: row.expect_valid, ...row.invalid_because ? { invalid_because: row.invalid_because } : {}, oracle: row.oracle, value, ...parameters.length ? { query: wire } : {} });
+      wire2[k2] = onWire(v2);
+    out.push({ name: row.name, technique: row.technique, coverage_item: row.coverage_item, expect_valid: row.expect_valid, ...row.invalid_because ? { invalid_because: row.invalid_because } : {}, oracle: row.oracle, value, ...c4.parameters.length ? { query: wire2 } : {}, ...xml !== void 0 ? { xml } : {} });
   }
   return out;
 }
-function hash(seed, name) {
-  return crypto8.createHash("sha256").update(`${seed}:${name}`).digest().readUInt32BE(0) >>> 1;
+function getAt(root, p4) {
+  let cur = root;
+  for (const part of parsePath2(p4))
+    cur = cur?.[part];
+  return cur;
 }
+var asOrdinal = (v2) => typeof v2 === "number" ? v2 : typeof v2 === "string" && !Number.isNaN(Date.parse(v2)) ? Date.parse(v2) : void 0;
+function fromOrdinal(n3, like) {
+  if (typeof like === "number")
+    return n3;
+  const iso = new Date(n3).toISOString();
+  return String(like).length === 10 ? iso.slice(0, 10) : iso;
+}
+function applyInvariants(r6, row, value, fields) {
+  const out = [];
+  const list = r6.model?.invariants ?? [];
+  list.forEach((inv, index) => {
+    const leftPath = inv.left.replace(/\[\*\]/g, "[0]");
+    const isDate = typeof getAt(value, leftPath) === "string";
+    const leftField = fields.find((f4) => f4.path === inv.left);
+    const step = isDate ? 864e5 : leftField?.multipleOf ?? (leftField?.type === "integer" ? 1 : 0.01);
+    const round22 = (n3) => isDate ? n3 : round2(n3, step);
+    const rightNow = () => {
+      if (inv.op !== "sum")
+        return asOrdinal(getAt(value, inv.right.replace(/\[\*\]/g, "[0]")));
+      const [head, tail] = inv.right.split("[*]");
+      const list2 = getAt(value, head);
+      if (!Array.isArray(list2))
+        return void 0;
+      const each = list2.map((x2) => asOrdinal(tail ? getAt(x2, `$${tail}`) : x2));
+      return each.every((x2) => x2 !== void 0) ? round22(each.reduce((a4, b2) => a4 + b2, 0)) : void 0;
+    };
+    const right = rightNow();
+    const left = asOrdinal(getAt(value, leftPath));
+    if (right === void 0 || left === void 0)
+      return;
+    const holds = (l4) => {
+      switch (inv.op) {
+        case ">=":
+          return l4 >= right;
+        case ">":
+          return l4 > right;
+        case "<=":
+          return l4 <= right;
+        case "<":
+          return l4 < right;
+        default:
+          return Math.abs(l4 - right) < 1e-9;
+      }
+    };
+    const like = getAt(value, leftPath);
+    const place = (n3) => {
+      setAt(value, leftPath, fromOrdinal(round22(n3), like));
+    };
+    if (row.invariant?.index === index) {
+      if (row.invariant.kind === "edge")
+        place(inv.op === ">" ? right + step : inv.op === "<" ? right - step : right);
+      else
+        place(inv.op === ">=" || inv.op === ">" ? inv.op === ">" ? right : right - step : inv.op === "<=" || inv.op === "<" ? inv.op === "<" ? right : right + step : right + step);
+    } else if (!holds(left)) {
+      const setByRow = (p4) => Object.keys(row.set ?? {}).some((k2) => k2 === p4);
+      if (!setByRow(leftPath))
+        place(inv.op === ">" ? right + step : inv.op === "<" ? right - step : right);
+      else if (inv.op !== "sum" && !setByRow(inv.right.replace(/\[\*\]/g, "[0]")))
+        setAt(value, inv.right.replace(/\[\*\]/g, "[0]"), fromOrdinal(round22(inv.op === ">" ? left - step : inv.op === "<" ? left + step : left), getAt(value, inv.right.replace(/\[\*\]/g, "[0]"))));
+    }
+    const finalLeft = asOrdinal(getAt(value, leftPath)), finalRight = rightNow();
+    if (finalLeft !== void 0 && finalRight !== void 0) {
+      const ok = inv.op === ">=" ? finalLeft >= finalRight : inv.op === ">" ? finalLeft > finalRight : inv.op === "<=" ? finalLeft <= finalRight : inv.op === "<" ? finalLeft < finalRight : Math.abs(finalLeft - finalRight) < 1e-9;
+      if (!ok)
+        out.push({ path: leftPath, keyword: "invariant", message: `breaks ${inv.left} ${inv.op} ${inv.right}` });
+    }
+  });
+  return out;
+}
+function leaveOneBranch(fields, value, setPaths) {
+  for (const p4 of setPaths) {
+    const general2 = p4.replace(/\[\d+\]/g, "[*]");
+    const f4 = fields.find((x2) => x2.choice && (x2.path === general2 || general2.startsWith(`${x2.path}.`) || general2.startsWith(`${x2.path}[`)));
+    if (!f4)
+      continue;
+    for (const other of fields.filter((x2) => x2.choice?.group === f4.choice.group && x2.choice.index !== f4.choice.index))
+      unsetAt(value, other.path.replace(/\[\*\]/g, "[0]"));
+  }
+}
+function hash(seed, name) {
+  return crypto7.createHash("sha256").update(`${seed}:${name}`).digest().readUInt32BE(0) >>> 1;
+}
+var DATA_FORMATS = ["json", "csv", "xlsx", "xml", "fixed", "edge-csv", "edge-xlsx", "edge-fixed"];
 async function makeData(m4, id, o4 = {}) {
   const { file, recipe, sha256 } = loadRecipe(m4, id);
   const rows = makeRows(m4, recipe);
   const problems = checkQuotas(recipe);
-  const formats = o4.formats ?? ["json", "csv"];
+  const asked = o4.formats ?? ["json", "csv"];
+  const formats = recipe.source.format === "xsd" ? [.../* @__PURE__ */ new Set(["json", "xml", ...asked])] : asked;
   const dir = dataFolder(m4, id);
-  fs17.rmSync(dir, { recursive: true, force: true });
-  fs17.mkdirSync(path15.join(dir, "rows"), { recursive: true });
+  fs10.rmSync(dir, { recursive: true, force: true });
+  fs10.mkdirSync(path9.join(dir, "rows"), { recursive: true });
   const files = {};
   const put = (name, bytes) => {
     const b2 = typeof bytes === "string" ? Buffer.from(bytes, "utf8") : bytes;
-    fs17.writeFileSync(path15.join(dir, name), b2);
-    files[name] = crypto8.createHash("sha256").update(b2).digest("hex");
+    fs10.writeFileSync(path9.join(dir, name), b2);
+    files[name.split(path9.sep).join("/")] = crypto7.createHash("sha256").update(b2).digest("hex");
   };
   if (formats.includes("json")) {
     put("rows.json", JSON.stringify(rows, null, 2) + "\n");
     for (const r6 of rows)
       if (r6.value !== void 0)
-        put(path15.join("rows", `${r6.name}.json`), JSON.stringify(r6.value, null, 2) + "\n");
+        put(path9.join("rows", `${r6.name}.json`), JSON.stringify(r6.value, null, 2) + "\n");
   }
   const table = tabulate(rows);
+  const csv = recipe.csv ?? {};
   if (formats.includes("csv")) {
-    const csvOpts = { bom: true, record_delimiter: "\r\n", cast: { boolean: (b2) => b2 ? "true" : "false" } };
-    put("rows.csv", stringify(table.records, { header: true, columns: table.columns, ...csvOpts }));
+    put("rows.csv", csvBytes(table.columns, table.records, csv));
     for (const r6 of rows) {
       if (!r6.value || typeof r6.value !== "object" || Array.isArray(r6.value))
         continue;
       const one = tabulate([r6]);
       const cols = one.columns.filter((c4) => c4 !== "row" && c4 !== "expect_valid" && !c4.startsWith("?"));
-      put(path15.join("rows", `${r6.name}.csv`), stringify(one.records, { header: true, columns: cols, ...csvOpts }));
+      put(path9.join("rows", `${r6.name}.csv`), csvBytes(cols, one.records, csv));
     }
   }
   if (formats.includes("xlsx"))
     put("rows.xlsx", workbook(table, recipe));
+  if (formats.includes("xml")) {
+    if (recipe.source.format !== "xsd")
+      throw new ManifestError(`Recipe ${id} did not come from an XSD or a WSDL, so it has no XML documents.`);
+    for (const r6 of rows) {
+      if (r6.xml === void 0)
+        continue;
+      put(path9.join("rows", `${r6.name}.xml`), XML_DECLARATION + r6.xml + "\n");
+      if (recipe.soap)
+        put(path9.join("rows", `${r6.name}.soap.xml`), soapEnvelope(r6.xml, recipe.soap.version));
+    }
+  }
+  const validRows = rows.filter((r6) => r6.expect_valid && r6.value && typeof r6.value === "object" && !Array.isArray(r6.value));
+  const data = (() => {
+    const t3 = tabulate(validRows);
+    return { columns: t3.columns.filter((c4) => c4 !== "row" && c4 !== "expect_valid" && !c4.startsWith("?")), records: t3.records };
+  })();
+  const edgeInfo = [];
+  const notWritten = [];
+  const putEdges = (folder, edges) => {
+    fs10.mkdirSync(path9.join(dir, "edge", folder), { recursive: true });
+    for (const e6 of edges) {
+      const rel2 = path9.join("edge", folder, e6.file);
+      put(rel2, e6.bytes);
+      edgeInfo.push({ file: rel2.split(path9.sep).join("/"), kind: e6.kind, expect_valid: e6.expect_valid, why: e6.why });
+    }
+  };
+  const dataCheck = () => data.columns.length && data.records.length ? void 0 : "the recipe has no valid rows that are objects";
+  if (formats.includes("edge-csv")) {
+    const why = dataCheck();
+    if (why)
+      notWritten.push({ format: "edge-csv", why });
+    else
+      putEdges("csv", csvEdges(data.columns, data.records, csv));
+  }
+  if (formats.includes("edge-xlsx")) {
+    const why = dataCheck();
+    if (why)
+      notWritten.push({ format: "edge-xlsx", why });
+    else
+      putEdges("xlsx", xlsxEdges(data.columns, data.records, { creator: "cmtk", created: recipe.clock, ...recipe.xlsx?.formulas ? { formulas: recipe.xlsx.formulas } : {} }));
+  }
+  let fixed;
+  if (formats.includes("fixed") || formats.includes("edge-fixed")) {
+    const layout = fieldsOf(m4, recipe).layout;
+    if (!layout)
+      throw new ManifestError(`Recipe ${id} did not come from a copybook, so it has no fixed-width records. Plan it from a .cpy file.`);
+    const enc = recipe.fixed?.encoding ?? "cp037";
+    const records = [];
+    const left_out = [];
+    let baseRecord;
+    for (const r6 of rows) {
+      if (!r6.expect_valid) {
+        left_out.push({ row: r6.name, why: `an invalid row (${r6.invalid_because?.path} ${r6.invalid_because?.keyword}): the edge files hold what a record can hold of this kind` });
+        continue;
+      }
+      try {
+        records.push(encodeRecord(layout, r6.value, enc));
+        baseRecord ??= r6.value;
+      } catch (err) {
+        if (!(err instanceof EncodeError))
+          throw err;
+        left_out.push({ row: r6.name, why: err.message });
+      }
+    }
+    if (!baseRecord)
+      throw new ManifestError(`No valid row of recipe ${id} fits a record.`);
+    const bytes = Buffer.concat(records);
+    const back = decodeFile(layout, bytes, enc);
+    if (back.problems.length || back.records.length !== records.length)
+      throw new ManifestError(`The fixed-width file failed its own check: ${back.problems[0] ?? `${back.records.length} records read back, not ${records.length}`}.`);
+    if (formats.includes("fixed")) {
+      put("records.dat", bytes);
+      put("layout.json", JSON.stringify({ name: layout.name, record_size: layout.record_size, encoding: enc, items: layout.items }, null, 2) + "\n");
+      fixed = { record_size: layout.record_size, encoding: enc, records: records.length, left_out };
+    }
+    if (formats.includes("edge-fixed"))
+      putEdges("fixed", fixedEdges(layout, baseRecord, enc));
+  }
   const valid = rows.filter((r6) => r6.expect_valid).length;
   const manifest = {
     recipe: file,
@@ -22397,11 +21349,14 @@ async function makeData(m4, id, o4 = {}) {
     valid_rows: valid,
     quotas: { max_happy_share: recipe.quotas.max_happy_share, happy_share: rows.length ? Number((recipe.rows.filter(isHappy).length / rows.length).toFixed(3)) : 0, problems },
     validation: { valid_rows_checked: valid, invalid_rows_checked: rows.length - valid },
-    files
+    files,
+    ...edgeInfo.length ? { edge_files: edgeInfo } : {},
+    ...fixed ? { fixed } : {},
+    ...notWritten.length ? { not_written: notWritten } : {}
   };
-  fs17.writeFileSync(path15.join(dir, "MANIFEST.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
-  fs17.writeFileSync(path15.join(dir, "DATA.md"), renderData(recipe, rows, manifest), "utf8");
-  return { folder: path15.relative(m4.root, dir).split(path15.sep).join("/"), manifest, rows };
+  fs10.writeFileSync(path9.join(dir, "MANIFEST.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
+  fs10.writeFileSync(path9.join(dir, "DATA.md"), renderData(recipe, rows, manifest), "utf8");
+  return { folder: path9.relative(m4.root, dir).split(path9.sep).join("/"), manifest, rows };
 }
 function tabulate(rows) {
   const columns = /* @__PURE__ */ new Set(["row", "expect_valid"]);
@@ -22433,9 +21388,9 @@ function workbook(table, recipe) {
   return writeXlsx([
     { name: "rows", rows: [table.columns, ...table.records.map((r6) => table.columns.map((c4) => cell6(r6[c4])))] },
     { name: "recipe", rows: [["recipe", recipe.id], ["seed", recipe.seed], ["clock", recipe.clock], ["locale", recipe.locale], ["source", recipe.source.file]] }
-  ], { creator: "cmtk", created: recipe.clock });
+  ], { creator: "cmtk", created: recipe.clock, ...recipe.xlsx?.formulas ? { formulas: recipe.xlsx.formulas } : {} });
 }
-var cell5 = (s4) => String(s4 ?? "").replace(/\|/g, "\\|").replace(/\r?\n/g, " ").slice(0, 120);
+var cell = (s4) => String(s4 ?? "").replace(/\|/g, "\\|").replace(/\r?\n/g, " ").slice(0, 120);
 function renderData(r6, rows, man) {
   const L2 = [
     `# Test data: ${r6.id}`,
@@ -22451,21 +21406,4648 @@ function renderData(r6, rows, man) {
   ];
   for (const row of rows) {
     const sets = r6.rows.find((x2) => x2.name === row.name);
-    const what = sets?.replace_body !== void 0 ? `body = ${cell5(JSON.stringify(sets.replace_body))}` : [...Object.entries(sets?.set ?? {}).map(([k2, v2]) => `${k2} = ${cell5(JSON.stringify(v2))}`), ...(sets?.unset ?? []).map((k2) => `${k2} removed`)].join("; ");
-    L2.push(`| ${row.name} | ${row.technique} | ${cell5(row.coverage_item)} | ${row.expect_valid ? "yes" : `no: ${row.invalid_because?.path} ${row.invalid_because?.keyword}`} | ${row.oracle} | ${cell5(what)} |`);
+    const what = sets?.replace_body !== void 0 ? `body = ${cell(JSON.stringify(sets.replace_body))}` : [...Object.entries(sets?.set ?? {}).map(([k2, v2]) => `${k2} = ${cell(JSON.stringify(v2))}`), ...(sets?.unset ?? []).map((k2) => `${k2} removed`)].join("; ");
+    L2.push(`| ${row.name} | ${row.technique} | ${cell(row.coverage_item)} | ${row.expect_valid ? "yes" : `no: ${row.invalid_because?.path} ${row.invalid_because?.keyword}`} | ${row.oracle} | ${cell(what)} |`);
   }
   L2.push("", "## Fields", "", "| Field | Type | Required | Constraints | Valid values from | Source |", "|---|---|---|---|---|---|");
   for (const f4 of r6.fields)
-    L2.push(`| ${f4.path} | ${f4.type}${f4.nullable ? " or null" : ""} | ${f4.required ? "yes" : "no"} | ${cell5(JSON.stringify(f4.constraints))} | ${f4.valid_from} | ${cell5(f4.source)} |`);
+    L2.push(`| ${f4.path} | ${f4.type}${f4.nullable ? " or null" : ""} | ${f4.required ? "yes" : "no"} | ${cell(JSON.stringify(f4.constraints))} | ${f4.valid_from} | ${cell(f4.source)} |`);
   if (r6.notes?.length)
     L2.push("", "## Notes", "", ...r6.notes.map((n3) => `- ${n3}`));
+  if (man.edge_files?.length)
+    L2.push("", "## Edge files", "", "What each exercises, and whether the format allows it. What the system should answer comes from the requirement or the legacy system.", "", "| File | Kind | Format allows it | Why |", "|---|---|---|---|", ...man.edge_files.map((e6) => `| ${e6.file} | ${e6.kind} | ${e6.expect_valid ? "yes" : "no"} | ${cell(e6.why)} |`));
+  if (man.fixed)
+    L2.push("", "## Fixed-width records", "", `${man.fixed.records} records of ${man.fixed.record_size} bytes, in ${man.fixed.encoding}. Left out: ${man.fixed.left_out.length}.`, "", ...man.fixed.left_out.map((x2) => `- ${x2.row}: ${cell(x2.why)}`));
   L2.push("", "## Files", "", ...Object.entries(man.files).map(([f4, h4]) => `- \`${f4}\`: sha256 ${h4.slice(0, 16)}\u2026`), "");
   return L2.join("\n");
 }
 
-// packages/core/dist/data/cases.js
+// packages/core/dist/data/model.js
+var SAID_BY = ["structure", "spec", "production"];
+var INVARIANT_OPS = [">=", ">", "<=", "<", "==", "sum"];
+var MUTATION_OPERATORS = ["empty_string", "whitespace_only", "trailing_newline", "decomposed_accent", "zero", "negative_one", "very_large", "absent", "same_as_field"];
+var general = (p4) => p4.replace(/\[\d+\]/g, "[*]");
+var slug = (p4) => p4.replace(/^\$\.?/, "").replace(/\[\*\]/g, "_each").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "") || "body";
+function fieldAt(r6, p4, what) {
+  if (typeof p4 !== "string")
+    throw new ManifestError(`${what} must name a field by its path, such as $.price.`);
+  const f4 = r6.fields.find((x2) => x2.path === general(p4));
+  if (!f4)
+    throw new ManifestError(`${what}: recipe ${r6.id} has no field ${p4}. It has: ${r6.fields.filter((x2) => x2.path !== "$").map((x2) => x2.path).slice(0, 30).join(", ")}.`);
+  return f4;
+}
+var isOrdered = (f4) => f4.type === "number" || f4.type === "integer" || f4.constraints.format === "date" || f4.constraints.format === "date-time";
+var isNumeric = (f4) => f4.type === "number" || f4.type === "integer";
+function checkDataRule(m4, rule) {
+  const raw = rule;
+  if (!raw || typeof raw !== "object")
+    throw new ManifestError("A data rule is needed.");
+  const { recipe } = loadRecipe(m4, String(raw.recipe ?? ""));
+  if (!SAID_BY.includes(String(raw.said_by)))
+    throw new ManifestError(`said_by must be ${SAID_BY.join(", ")}: who says so, and the three are never mixed.`);
+  if (typeof raw.evidence !== "string" || !raw.evidence.trim())
+    throw new ManifestError("evidence is required: the rule's words, or the file and line.");
+  for (const k2 of ["rows", "row", "set", "unset", "value", "expect", "expect_valid", "expected", "invalid_because", "status"]) {
+    if (k2 in raw)
+      throw new ManifestError(`A data rule can't hold ${k2}: the engine makes rows, and what the system should answer comes from a requirement, a person or the legacy system.`);
+  }
+  switch (rule.what) {
+    case "invariant": {
+      const i8 = rule.invariant;
+      if (!i8 || !INVARIANT_OPS.includes(i8.op))
+        throw new ManifestError(`An invariant needs left, right and an op: ${INVARIANT_OPS.join(", ")}.`);
+      const l4 = fieldAt(recipe, i8.left, "invariant.left");
+      const r6 = fieldAt(recipe, i8.right, "invariant.right");
+      if (i8.op === "sum" ? !(isNumeric(l4) && isNumeric(r6) && i8.right.includes("[*]")) : !(isOrdered(l4) && isOrdered(r6)))
+        throw new ManifestError(i8.op === "sum" ? "A sum needs a number on the left, and a number inside a list on the right, such as $.lines[*].amount." : "Both sides of an invariant must be numbers or dates.");
+      if (i8.left === i8.right)
+        throw new ManifestError("An invariant compares two different fields.");
+      return;
+    }
+    case "vocabulary": {
+      const f4 = fieldAt(recipe, rule.path, "vocabulary.path");
+      const c4 = f4.constraints;
+      if (c4.enum !== void 0 || c4.const !== void 0 || c4.pattern !== void 0 || c4.format !== void 0)
+        throw new ManifestError(`The schema already says what ${f4.path} may hold, so it needs no vocabulary. Values come from the schema where it speaks.`);
+      if (f4.type !== "string")
+        throw new ManifestError(`${f4.path} is not text: the engine makes its values.`);
+      if (!rule.prompted_with?.name)
+        throw new ManifestError("prompted_with needs the field's name, and its description and the server's rejection message if there are any: that is what the values were proposed from.");
+      if (!Array.isArray(rule.values) || !rule.values.length || rule.values.length > 50 || !rule.values.every((v2) => typeof v2 === "string"))
+        throw new ManifestError("A vocabulary is one to fifty text values.");
+      const schema = { type: "string", ...c4 };
+      for (const v2 of rule.values) {
+        const broken = validate(schema, v2);
+        if (broken.length)
+          throw new ManifestError(`The gate refuses ${JSON.stringify(v2)} for ${f4.path}: ${broken[0].message}. A vocabulary only holds values the schema accepts; boundaries and negatives come from the engine.`);
+      }
+      return;
+    }
+    case "notional":
+      if (!rule.name || !rule.description)
+        throw new ManifestError("A notional variable needs a name and a description.");
+      if (!Array.isArray(rule.over) || !rule.over.length)
+        throw new ManifestError("A notional variable says which fields it is over.");
+      for (const p4 of rule.over)
+        fieldAt(recipe, p4, "notional.over");
+      return;
+    case "state_machine":
+      if (!rule.name || !Array.isArray(rule.states) || rule.states.length < 2 || !Array.isArray(rule.transitions) || !rule.transitions.length)
+        throw new ManifestError("A state machine needs a name, at least two states, and its transitions.");
+      for (const t3 of rule.transitions)
+        if (!rule.states.includes(t3.from) || !rule.states.includes(t3.to) || !t3.on)
+          throw new ManifestError(`The transition ${JSON.stringify(t3)} needs states from the list and an event in \`on\`.`);
+      return;
+    case "mutation": {
+      mutationRow(m4, recipe, rule);
+      return;
+    }
+    default:
+      throw new ManifestError("what must be invariant, vocabulary, notional, state_machine or mutation.");
+  }
+}
+var OPERATOR_VALUES = {
+  empty_string: { value: "", words: "an empty string" },
+  whitespace_only: { value: "	 ", words: "a tab and a space" },
+  trailing_newline: { value: "value\n", words: "text ending in a line break" },
+  decomposed_accent: { value: "cafe\u0301", words: "an accent as two code points, which looks the same as one" },
+  zero: { value: 0, words: "zero" },
+  negative_one: { value: -1, words: "minus one" },
+  very_large: { value: Number.MAX_SAFE_INTEGER, words: "the largest whole number a double holds exactly" }
+};
+function mutationRow(m4, recipe, rule) {
+  if (!MUTATION_OPERATORS.includes(rule.operator))
+    throw new ManifestError(`A mutation is one of the engine's operators: ${MUTATION_OPERATORS.join(", ")}. It can't hold a value of your own.`);
+  const f4 = fieldAt(recipe, rule.path, "mutation.path");
+  const at2 = f4.path.replace(/\[\*\]/g, "[0]");
+  const name = `mutation_${rule.operator}_${slug(f4.path)}`;
+  if (recipe.rows.some((r6) => r6.name === name))
+    throw new ManifestError(`The gate refuses it: the recipe already has ${name}.`);
+  let row = { name, technique: "hostile", coverage_item: "", expect_valid: true, oracle: "human" };
+  if (rule.operator === "absent") {
+    if (f4.required)
+      throw new ManifestError(`The gate refuses it: ${f4.path} is required, so the recipe already has a row without it.`);
+    row = { ...row, coverage_item: `${f4.path} left out, by mutation`, unset: [at2] };
+  } else if (rule.operator === "same_as_field") {
+    const other = fieldAt(recipe, rule.other, "mutation.other");
+    row = { ...row, coverage_item: `${f4.path} the same as ${other.path}, by mutation`, set: { [at2]: { $copy: other.path.replace(/\[\*\]/g, "[0]") } } };
+  } else {
+    const o4 = OPERATOR_VALUES[rule.operator];
+    row = { ...row, coverage_item: `${f4.path} as ${o4.words}, by mutation`, set: { [at2]: o4.value } };
+  }
+  const probe2 = probeRow(m4, recipe, row);
+  const hit2 = probe2.violations[0];
+  if (hit2)
+    row = { ...row, expect_valid: false, invalid_because: { path: hit2.path, keyword: hit2.keyword } };
+  const delta = (x2) => JSON.stringify([x2.set ?? {}, x2.unset ?? []]);
+  const same = recipe.rows.find((r6) => delta(r6) === delta(row));
+  if (same)
+    throw new ManifestError(`The gate refuses it: it makes the same data as ${same.name}, so it adds no coverage.`);
+  if (hit2) {
+    const again = recipe.rows.find((r6) => !r6.expect_valid && r6.invalid_because?.path === hit2.path && r6.invalid_because.keyword === hit2.keyword);
+    if (again)
+      throw new ManifestError(`The gate refuses it: ${again.name} already breaks ${hit2.path} by ${hit2.keyword}, so it adds no coverage.`);
+  }
+  return row;
+}
+function applyDataRule(m4, rule, who, date) {
+  checkDataRule(m4, rule);
+  const { recipe } = loadRecipe(m4, rule.recipe);
+  const by = { said_by: rule.said_by, evidence: rule.evidence, accepted_by: who, accepted_on: date };
+  const model = recipe.model ?? {};
+  let done = "";
+  switch (rule.what) {
+    case "invariant": {
+      const i8 = rule.invariant;
+      const index = (model.invariants ?? []).length;
+      (model.invariants ??= []).push({ left: i8.left, op: i8.op, right: i8.right, ...by });
+      const name = `${slug(i8.left)}_${i8.op === "sum" ? "sum" : { ">=": "ge", ">": "gt", "<=": "le", "<": "lt", "==": "eq" }[i8.op]}_${slug(i8.right)}`;
+      const says = `${i8.left} ${i8.op === "sum" ? "= the sum of" : i8.op} ${i8.right}`;
+      const left = i8.left.replace(/\[\*\]/g, "[0]");
+      recipe.rows.push({ name: `${name}_at_edge_invariant`, technique: "BVA-3", coverage_item: `${says}: exactly at the edge`, expect_valid: true, oracle: "specified", invariant: { index, kind: "edge" } }, { name: `${name}_broken_invariant`, technique: "BVA-3", coverage_item: `${says}: broken, by one step`, expect_valid: false, invalid_because: { path: left, keyword: "invariant" }, oracle: "specified", invariant: { index, kind: "broken" } });
+      recipe.model = model;
+      let relabelled = 0;
+      for (const r6 of recipe.rows) {
+        if (!r6.expect_valid || r6.invariant)
+          continue;
+        const hit2 = probeRow(m4, recipe, r6).violations.find((v2) => v2.keyword === "invariant");
+        if (!hit2)
+          continue;
+        r6.expect_valid = false;
+        r6.invalid_because = { path: hit2.path, keyword: "invariant" };
+        r6.coverage_item = `${r6.coverage_item}, which breaks ${says}`;
+        relabelled++;
+      }
+      done = `invariant added to recipe ${rule.recipe}, with an edge row and a broken row${relabelled ? `; ${relabelled} rows that break it are now labelled negatives` : ""}`;
+      break;
+    }
+    case "vocabulary": {
+      const f4 = fieldAt(recipe, rule.path, "vocabulary.path");
+      f4.vocabulary = [...rule.values];
+      f4.valid_from = "vocabulary";
+      f4.low_confidence = `Values proposed by an agent from ${JSON.stringify(rule.prompted_with)}, accepted by ${who}. Realistic, not proved.`;
+      done = `vocabulary for ${f4.path} in recipe ${rule.recipe}`;
+      break;
+    }
+    case "notional":
+      (model.notional ??= []).push({ name: rule.name, description: rule.description, over: rule.over, ...by });
+      done = `notional variable ${rule.name} recorded in recipe ${rule.recipe}: no row is made from it yet`;
+      break;
+    case "state_machine":
+      (model.state_machines ??= []).push({ name: rule.name, states: rule.states, transitions: rule.transitions, ...by });
+      done = `state machine ${rule.name} recorded in recipe ${rule.recipe}: no sequence is made from it yet`;
+      break;
+    case "mutation":
+      recipe.rows.push(mutationRow(m4, recipe, rule));
+      done = `row ${recipe.rows[recipe.rows.length - 1].name} added to recipe ${rule.recipe}, for a person to say what should happen`;
+      break;
+  }
+  if (Object.keys(model).length)
+    recipe.model = model;
+  makeRows(m4, recipe);
+  fs11.writeFileSync(recipeFile(m4, rule.recipe), renderRecipe(recipe), "utf8");
+  return done;
+}
+function describeDataRule(r6) {
+  const q2 = (v2) => JSON.stringify(v2 ?? null);
+  const head = `  recipe ${q2(r6.recipe)}, ${r6.what}, ${r6.said_by} says so. Evidence: ${q2(r6.evidence)}`;
+  switch (r6.what) {
+    case "invariant":
+      return [head, `  rule: ${q2(r6.invariant)}. Accepting it adds an edge row and a broken row, made by the engine.`];
+    case "vocabulary":
+      return [head, `  values for ${q2(r6.path)}: ${q2(r6.values)}, proposed from ${q2(r6.prompted_with)}`];
+    case "notional":
+      return [head, `  ${q2(r6.name)}: ${q2(r6.description)}, over ${q2(r6.over)}. It is recorded; no row is made from it yet.`];
+    case "state_machine":
+      return [head, `  ${q2(r6.name)}: states ${q2(r6.states)}, transitions ${q2(r6.transitions)}. It is recorded; no sequence is made from it yet.`];
+    case "mutation":
+      return [head, `  try ${q2(r6.operator)} on ${q2(r6.path)}${r6.other ? ` from ${q2(r6.other)}` : ""}. The engine makes the row, and you say what should happen.`];
+  }
+}
+var findingsFile = (m4, id) => path10.join(path10.dirname(recipeFile(m4, id)), `${id}.findings.yaml`);
+function loadDataFindings(m4, id) {
+  const f4 = findingsFile(m4, id);
+  if (!fs11.existsSync(f4))
+    return [];
+  return import_yaml4.default.parse(fs11.readFileSync(f4, "utf8"))?.findings ?? [];
+}
+function trafficAgainstSchema(m4, id, harFile, o4 = {}) {
+  const { recipe } = loadRecipe(m4, id);
+  const full = inside(m4, harFile);
+  if (!fs11.existsSync(full))
+    throw new ManifestError(`The recording ${harFile} does not exist.`);
+  const entries = JSON.parse(fs11.readFileSync(full, "utf8"))?.log?.entries;
+  if (!Array.isArray(entries))
+    throw new ManifestError(`${harFile} is not a HAR file: it has no log.entries.`);
+  const op = /^([A-Z]+)\s+(\S+)$/.exec(recipe.source.operation ?? "");
+  const wantPath = o4.path ?? op?.[2];
+  const wantMethod = (o4.method ?? op?.[1] ?? "POST").toUpperCase();
+  if (!wantPath)
+    throw new ManifestError("Say which requests to read with a path, such as /api/items.");
+  const schema = schemaOf2(m4, recipe);
+  const count2 = /* @__PURE__ */ new Map();
+  const add = (field, keyword, says) => {
+    const key2 = `${field}|${keyword}`;
+    const d4 = count2.get(key2) ?? { field, keyword, requests: 0, says };
+    d4.requests++;
+    count2.set(key2, d4);
+  };
+  let requests = 0;
+  const known = new Set(recipe.fields.map((f4) => f4.path));
+  const walk = (v2, at2) => {
+    if (Array.isArray(v2)) {
+      v2.forEach((x2) => walk(x2, `${at2}[*]`));
+      return;
+    }
+    if (v2 && typeof v2 === "object")
+      for (const [k2, x2] of Object.entries(v2)) {
+        const p4 = `${at2}.${k2}`;
+        if (!known.has(p4))
+          add(p4, "not in the schema", "Traffic sends this field; the schema does not name it.");
+        else
+          walk(x2, p4);
+      }
+  };
+  for (const e6 of entries) {
+    let url;
+    try {
+      url = new URL(String(e6?.request?.url));
+    } catch {
+      continue;
+    }
+    if (url.pathname !== wantPath || String(e6?.request?.method ?? "").toUpperCase() !== wantMethod)
+      continue;
+    let body;
+    try {
+      body = JSON.parse(String(e6?.request?.postData?.text ?? ""));
+    } catch {
+      continue;
+    }
+    requests++;
+    walk(body, "$");
+    for (const x2 of validate(schema, body))
+      if (x2.keyword !== "additionalProperties")
+        add(general(x2.path), x2.keyword, `Traffic sends what the schema refuses (${x2.keyword}).`);
+  }
+  return { requests, disagreements: [...count2.values()].sort((a4, b2) => a4.field.localeCompare(b2.field)) };
+}
+function schemaOf2(m4, recipe) {
+  return probeRow(m4, recipe, { name: "probe", technique: "EP", coverage_item: "", expect_valid: true, oracle: "specified" }).schema;
+}
+
+// packages/core/dist/proposals.js
+var HEADER2 = "# Proposals from agents. Each one waits for a person: only `cmtk review` accepts or rejects it.\n";
+var KNOWN_ISSUES_HEADER = "# Known issues: failures of `cmtk run` a named person accepted. Only a person adds an entry.\n# Each still shows as a failure, and anything an entry does not describe is an ordinary FAIL.\nknown_issues: []\n";
+function editYaml(file, fallback, fn) {
+  const text2 = fs12.existsSync(file) ? fs12.readFileSync(file, "utf8") : fallback;
+  const crlf = text2.includes("\r\n");
+  const doc = import_yaml5.default.parseDocument(text2);
+  if (doc.errors.length)
+    throw new ManifestError(`${path11.basename(file)} is not valid YAML: ${doc.errors[0].message}`);
+  fn(doc);
+  let out = doc.toString({ lineWidth: 0 });
+  if (crlf)
+    out = out.replace(/\r?\n/g, "\r\n");
+  fs12.mkdirSync(path11.dirname(file), { recursive: true });
+  fs12.writeFileSync(file, out, "utf8");
+}
+function seqAt(doc, key2) {
+  const block = (s5) => {
+    if (s5.flow && s5.items.length === 0)
+      s5.flow = false;
+    return s5;
+  };
+  if ((0, import_yaml5.isSeq)(doc.contents))
+    return block(doc.contents);
+  if (!(0, import_yaml5.isMap)(doc.contents))
+    doc.contents = doc.createNode({});
+  const map = doc.contents;
+  const found = map.get(key2, true);
+  if ((0, import_yaml5.isSeq)(found))
+    return block(found);
+  const s4 = new import_yaml5.YAMLSeq();
+  map.set(key2, s4);
+  return s4;
+}
+function loadProposals(manifest) {
+  const file = inside(manifest, manifest.proposals);
+  if (!fs12.existsSync(file))
+    return [];
+  const doc = import_yaml5.default.parse(fs12.readFileSync(file, "utf8"));
+  const list = Array.isArray(doc) ? doc : doc?.proposals ?? [];
+  return list.filter((p4) => p4 && typeof p4.id === "string");
+}
+var CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/;
+var text = (v2, what, max = 2e3) => {
+  if (typeof v2 !== "string" || !v2.trim())
+    throw new ManifestError(`${what} is required.`);
+  if (v2.length > max)
+    throw new ManifestError(`${what} is longer than ${max} characters.`);
+  if (CONTROL.test(v2))
+    throw new ManifestError(`${what} holds control characters; write plain text.`);
+  return v2.trim();
+};
+var plain = (v2) => String(v2 ?? "").replace(new RegExp(CONTROL.source, "g"), (c4) => `\\u${c4.charCodeAt(0).toString(16).padStart(4, "0")}`);
+var REPAIRABLE_ACTIONS = ["click", "fill", "select", "tick", "invoke", "set_value"];
+function readScript(manifest, rel2) {
+  const full = inside(manifest, rel2);
+  if (!fs12.existsSync(full))
+    throw new ManifestError(`The script ${rel2} does not exist.`);
+  const raw = fs12.readFileSync(full, "utf8");
+  let doc;
+  try {
+    doc = JSON.parse(raw);
+  } catch {
+    throw new ManifestError(`The script ${rel2} is not JSON.`);
+  }
+  if (doc?.cmtk_script !== 1 || !Array.isArray(doc.steps))
+    throw new ManifestError(`${rel2} is not a recorded script.`);
+  return { full, raw, doc };
+}
+function actionOf(step, target2) {
+  if (!step || "read" in step || "check" in step || "reach" in step)
+    return void 0;
+  const merged = { ...step, ...step.on?.[target2] ?? {} };
+  const action = REPAIRABLE_ACTIONS.find((a4) => a4 in merged);
+  return action ? { action, locator: merged[action] } : void 0;
+}
+function describeProposal(p4) {
+  const q2 = (v2) => JSON.stringify(v2 ?? null);
+  const lines = [`${plain(p4.id)}  ${plain(p4.kind)}, proposed by ${plain(p4.proposed_by)} on ${plain(p4.proposed_on)}`];
+  if (p4.kind === "scrub")
+    lines.push(`  hide on every run: ${q2(p4.rule)}`);
+  if (p4.kind === "drift")
+    lines.push(`  approve the difference at ${q2(p4.where)} for ${p4.case === "*" ? "EVERY case" : `case ${q2(p4.case)}`}`);
+  if (p4.kind === "known_issue")
+    lines.push(`  record known issue ${p4.issue_id ? q2(p4.issue_id) : "(the next free id)"}: case ${q2(p4.case)}${p4.target ? ` on target ${q2(p4.target)}` : ""} may keep failing like this: ${q2(p4.fails)}`, "  it still shows as a failure, and the run can read PASS WITH KNOWN ISSUES, with your name on it");
+  if (p4.kind === "defect")
+    lines.push(`  defect: ${q2(p4.title)}`, `  cases: ${q2(p4.cases)}`, ...p4.summary ? [`  summary: ${plain(p4.summary)}`] : []);
+  if (p4.kind === "expectation")
+    lines.push(`  change what case ${q2(p4.case)} expects to: ${q2(p4.expect)}`);
+  if (p4.kind === "locator")
+    lines.push(`  repair step ${q2(p4.step)} of ${q2(p4.script)} (case ${q2(p4.case)}) on target ${q2(p4.target)}`, `  it finds its element by: ${q2(p4.was)}`, `  it would find it by:    ${q2(p4.locator)}`, "  this changes how the step finds an element, never what the case expects. Check it is the same element: the new name came from the page");
+  if (p4.kind === "data_rule" && p4.data_rule)
+    lines.push(...describeDataRule(p4.data_rule).map(plain));
+  lines.push(`  why: ${plain(p4.reason)}`);
+  return lines.join("\n");
+}
+function setStatus(manifest, id, fields) {
+  editYaml(inside(manifest, manifest.proposals), HEADER2 + "proposals: []\n", (doc) => {
+    const item = seqAt(doc, "proposals").items.find((n3) => (0, import_yaml5.isMap)(n3) && n3.get("id") === id);
+    if (!item)
+      throw new ManifestError(`There is no proposal ${id}.`);
+    for (const [k2, v2] of Object.entries(fields))
+      item.set(k2, v2);
+  });
+}
+function caseFileOf(manifest, caseId) {
+  const c4 = loadCases(manifest).find((x2) => x2.id === caseId);
+  if (!c4?.file)
+    throw new ManifestError(`There is no case ${caseId}.`);
+  return { c: c4, file: inside(manifest, c4.file) };
+}
+function caseNode(doc, caseId) {
+  const seq = seqAt(doc, "cases");
+  const index = seq.items.findIndex((n3) => (0, import_yaml5.isMap)(n3) && n3.get("id") === caseId);
+  if (index < 0)
+    throw new ManifestError(`Case ${caseId} is not in its file any more.`);
+  return { seq, index, node: seq.items[index] };
+}
+function decideProposal(manifest, id, accept, person, date, note, shown2) {
+  const p4 = loadProposals(manifest).find((x2) => x2.id === id);
+  if (!p4)
+    throw new ManifestError(`There is no proposal ${id}.`);
+  if (p4.status !== "pending")
+    throw new ManifestError(`${id} was already ${p4.status}.`);
+  if (shown2 && JSON.stringify(p4) !== JSON.stringify(shown2))
+    throw new ManifestError(`${id} changed after it was shown to you. Nothing was applied; run \`cmtk review\` again.`);
+  const who = text(person, "Your name", 100);
+  if (!accept) {
+    setStatus(manifest, id, { status: "rejected", decided_by: who, decided_on: date, ...note ? { decision_note: note } : {} });
+    return { ...p4, status: "rejected", decided_by: who, decided_on: date };
+  }
+  let applied = "";
+  if (p4.kind === "scrub") {
+    editYaml(manifest.file, "", (doc) => {
+      const root = doc.contents;
+      let scrub = root.get("scrub", true);
+      if (!(0, import_yaml5.isMap)(scrub)) {
+        scrub = new import_yaml5.YAMLMap();
+        root.set("scrub", scrub);
+      }
+      const [key2, value] = p4.rule.json_path !== void 0 ? ["json_paths", p4.rule.json_path] : p4.rule.regex ? ["regex", p4.rule.regex] : ["xml_ignore", p4.rule.xml_ignore];
+      const found = scrub.get(key2, true);
+      const list = (0, import_yaml5.isSeq)(found) ? found : new import_yaml5.YAMLSeq();
+      if (!(0, import_yaml5.isSeq)(found))
+        scrub.set(key2, list);
+      list.add(doc.createNode(value));
+    });
+    applied = `scrub rule added to ${path11.basename(manifest.file)}`;
+  }
+  if (p4.kind === "drift") {
+    const ledger = loadDrift(manifest);
+    const next = `DRIFT-${String(1 + Math.max(0, ...ledger.map((d4) => Number(/^DRIFT-(\d+)$/.exec(d4.id)?.[1] ?? 0)))).padStart(3, "0")}`;
+    editYaml(inside(manifest, manifest.drift), "# Approved drift: each entry names the person who approved it.\ndrift: []\n", (doc) => {
+      seqAt(doc, "drift").add(doc.createNode({ id: next, case: p4.case, where: p4.where, reason: p4.reason, approved_by: who, date }));
+    });
+    applied = `${next} in ${manifest.drift}`;
+  }
+  if (p4.kind === "known_issue") {
+    const ledger = loadKnownIssues(manifest);
+    const next = p4.issue_id ?? `KNOWN-${String(1 + Math.max(0, ...ledger.map((k2) => Number(/^KNOWN-(\d+)$/.exec(k2.id)?.[1] ?? 0)))).padStart(3, "0")}`;
+    if (ledger.some((k2) => k2.id === next))
+      throw new ManifestError(`The ledger already holds ${next}. Nothing was applied.`);
+    editYaml(inside(manifest, manifest.known_issues), KNOWN_ISSUES_HEADER, (doc) => {
+      seqAt(doc, "known_issues").add(doc.createNode({ id: next, case: p4.case, fails: p4.fails, reason: p4.reason, accepted_by: who, date, ...p4.target ? { target: p4.target } : {} }));
+    });
+    applied = `${next} in ${manifest.known_issues}`;
+  }
+  if (p4.kind === "defect")
+    applied = "listed by `cmtk defects compare`";
+  if (p4.kind === "locator") {
+    const { full, raw, doc } = readScript(manifest, p4.script);
+    const step = doc.steps[p4.step - 1];
+    const now = actionOf(step, p4.target);
+    if (!now || JSON.stringify(now.locator) !== JSON.stringify(p4.was))
+      throw new ManifestError(`Step ${p4.step} of ${p4.script} changed after this was proposed. Nothing was applied.`);
+    step.on = { ...step.on ?? {}, [p4.target]: { ...step.on?.[p4.target] ?? {}, [now.action]: p4.locator } };
+    doc.recorded = { ...doc.recorded ?? {}, repairs: [...doc.recorded?.repairs ?? [], { step: p4.step, target: p4.target, was: p4.was, now: p4.locator, accepted_by: who, date }] };
+    let out = JSON.stringify(doc, null, 2) + "\n";
+    if (raw.includes("\r\n"))
+      out = out.replace(/\n/g, "\r\n");
+    fs12.writeFileSync(full, out, "utf8");
+    applied = `step ${p4.step} of ${p4.script} on ${p4.target}`;
+  }
+  if (p4.kind === "data_rule")
+    applied = applyDataRule(manifest, p4.data_rule, who, date);
+  if (p4.kind === "expectation") {
+    const { file } = caseFileOf(manifest, p4.case);
+    editYaml(file, "", (doc) => {
+      const { node } = caseNode(doc, p4.case);
+      node.set("expect", doc.createNode(p4.expect));
+      node.delete("expect_draft");
+      node.set("expect_changed_by", who);
+      node.set("expect_changed_on", date);
+    });
+    applied = `case ${p4.case} now expects the proposed block`;
+  }
+  setStatus(manifest, id, { status: "accepted", decided_by: who, decided_on: date, applied, ...note ? { decision_note: note } : {} });
+  return { ...p4, status: "accepted", decided_by: who, decided_on: date, applied };
+}
+function acceptDraft(manifest, caseId, person, date, shown2) {
+  const who = text(person, "Your name", 100);
+  const { c: c4, file } = caseFileOf(manifest, caseId);
+  if (!c4.draft)
+    throw new ManifestError(`${caseId} is not a draft.`);
+  if (shown2 && JSON.stringify(c4) !== JSON.stringify(shown2))
+    throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was accepted; run \`cmtk review\` again.`);
+  editYaml(file, "", (doc) => {
+    const { node } = caseNode(doc, caseId);
+    node.delete("draft");
+    node.delete("draft_note");
+    if (c4.draft_note)
+      node.set("note", c4.draft_note);
+    node.set("accepted_by", who);
+    node.set("accepted_on", date);
+    if (c4.expect_draft) {
+      node.delete("expect_draft");
+      node.set("expect_confirmed_by", who);
+      node.set("expect_confirmed_on", date);
+    }
+  });
+}
+function confirmExpectation(manifest, caseId, person, date, shown2) {
+  const who = text(person, "Your name", 100);
+  const { c: c4, file } = caseFileOf(manifest, caseId);
+  if (!c4.expect_draft)
+    throw new ManifestError(`${caseId} has no drafted expectation.`);
+  if (shown2 && JSON.stringify(c4) !== JSON.stringify(shown2))
+    throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was confirmed; run \`cmtk review\` again.`);
+  editYaml(file, "", (doc) => {
+    const { node } = caseNode(doc, caseId);
+    node.delete("expect_draft");
+    node.delete("draft_note");
+    if (c4.draft_note)
+      node.set("note", c4.draft_note);
+    node.set("expect_confirmed_by", who);
+    node.set("expect_confirmed_on", date);
+  });
+}
+function rejectExpectation(manifest, caseId, person, date, reason, shown2) {
+  const who = text(person, "Your name", 100);
+  const why = text(reason, "A reason", 1e3);
+  const { c: c4, file } = caseFileOf(manifest, caseId);
+  if (!c4.expect_draft)
+    throw new ManifestError(`${caseId} has no drafted expectation.`);
+  if (shown2 && JSON.stringify(c4) !== JSON.stringify(shown2))
+    throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was changed; run \`cmtk review\` again.`);
+  const rejected = inside(manifest, path11.join(path11.dirname(manifest.proposals), "rejected.yaml"));
+  editYaml(rejected, "# Draft cases a person rejected, with the reason. Kept so the same draft is not proposed again.\nrejected: []\n", (doc) => {
+    seqAt(doc, "rejected").add(doc.createNode({ id: c4.id, expect: c4.expect, rejected_by: who, rejected_on: date, rejected_because: why }));
+  });
+  editYaml(file, "", (doc) => {
+    const { node } = caseNode(doc, caseId);
+    node.delete("expect");
+    node.delete("expect_draft");
+    node.delete("draft_note");
+  });
+}
+function rejectDraft(manifest, caseId, person, date, reason) {
+  const who = text(person, "Your name", 100);
+  const why = text(reason, "A reason", 1e3);
+  const { c: c4, file } = caseFileOf(manifest, caseId);
+  if (!c4.draft)
+    throw new ManifestError(`${caseId} is not a draft.`);
+  const { file: _f, ...kept } = c4;
+  const rejected = inside(manifest, path11.join(path11.dirname(manifest.proposals), "rejected.yaml"));
+  editYaml(rejected, "# Draft cases a person rejected, with the reason. Kept so the same draft is not proposed again.\nrejected: []\n", (doc) => {
+    seqAt(doc, "rejected").add(doc.createNode({ ...kept, rejected_by: who, rejected_on: date, rejected_because: why }));
+  });
+  editYaml(file, "", (doc) => {
+    const { seq, index } = caseNode(doc, caseId);
+    seq.items.splice(index, 1);
+  });
+}
+
+// packages/core/dist/defects.js
+var REMOVED = "[removed]";
+function redactor(manifest) {
+  const known = Object.values(manifest.headers_from_env).map((v2) => process.env[v2]).filter((v2) => !!v2 && v2.length >= 4);
+  return (s4) => {
+    let out = s4;
+    for (const v2 of known)
+      out = out.split(v2).join(REMOVED);
+    return out.replace(/\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]{8,}/g, `$1 ${REMOVED}`).replace(/\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]+/g, REMOVED).replace(/\b(sk|pk|rk)_(live|test)_[A-Za-z0-9]{8,}/g, REMOVED);
+  };
+}
+var norm = (where2) => where2.replace(/\[\d+\]/g, "[*]");
+function whyOf(c4) {
+  const note = (c4?.note ?? c4?.draft_note)?.trim();
+  if (!note)
+    return void 0;
+  const line2 = /^Why it looks wrong:\s*(.+)$/im.exec(note)?.[1]?.trim();
+  return (line2 ?? note).slice(0, 1e3);
+}
+function cleanPath(p4, clean2) {
+  const q2 = p4.indexOf("?");
+  if (q2 < 0)
+    return clean2(p4);
+  const params = new URLSearchParams(p4.slice(q2 + 1));
+  for (const k2 of [...new Set(params.keys())])
+    if (looksSecret(k2))
+      params.set(k2, REMOVED);
+  return clean2(`${p4.slice(0, q2)}?${params.toString()}`);
+}
+function cleanUrl(u4) {
+  try {
+    const url = new URL(u4);
+    if (!url.username && !url.password)
+      return u4;
+    url.username = "";
+    url.password = "";
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return u4.replace(/\/\/[^/@]*@/, "//");
+  }
+}
+function stepsFor(c4, target2, clean2) {
+  if (!c4)
+    return ["(the case is no longer in the case files)"];
+  const headers = Object.entries(c4.request.headers ?? {}).map(([k2, v2]) => `${k2}: ${looksSecret(k2, "header") ? REMOVED : clean2(v2)}`);
+  const contentType = Object.entries(c4.request.headers ?? {}).find(([k2]) => k2.toLowerCase() === "content-type")?.[1] ?? "";
+  return [
+    `Send \`${c4.request.method} ${cleanPath(c4.request.path, clean2)}\` to ${target2}${c4.surface && c4.surface !== "http" ? ` through the ${c4.surface} adapter` : ""}.`,
+    ...headers.length ? [`With headers: ${headers.join("; ")}.`] : [],
+    ...c4.request.body ? [`With the body: ${clean2(redactBody(String(c4.request.body), contentType)[0]).slice(0, 500)}`] : [],
+    ...c4.request.body_file ? [`With the body from the file \`${c4.request.body_file}\`.`] : [],
+    ...typeof c4.request.body_form === "string" ? [`As a form (application/x-www-form-urlencoded), the fields from \`${c4.request.body_form}\`.`] : c4.request.body_form ? [`As a form (application/x-www-form-urlencoded) with the fields: ${clean2(Object.entries(c4.request.body_form).map(([k2, v2]) => `${k2}=${looksSecret(k2) ? REMOVED : JSON.stringify(v2)}`).join(", ")).slice(0, 500)}`] : [],
+    ...c4.request.files?.length ? [`With the files: ${c4.request.files.map((f4) => `${f4.field} = \`${f4.path}\``).join(", ")}.`] : [],
+    ...c4.request.before ? [`Before it, read \`GET ${cleanPath(c4.request.before.get, clean2)}\` on the same target and carry its cookies${c4.request.before.take ? `, with ${Object.entries(c4.request.before.take).map(([k2, s4]) => `${k2} taken from \`${s4}\``).join(", ")} into the form` : ""}.`] : []
+  ];
+}
+var fieldOf = (c4) => /^(\$(?:\.[A-Za-z_][\w]*|\[\d+\]|\[\*\])*)\b/.exec(c4?.name ?? "")?.[1];
+function draftDefects(manifest, mode) {
+  const dir = inside(manifest, path12.join(manifest.evidence, mode));
+  const reportFile = path12.join(dir, "REPORT.json");
+  if (!fs13.existsSync(reportFile))
+    throw new ManifestError(`There is no ${mode} report yet. Run \`cmtk ${mode}\` first.`);
+  const report = JSON.parse(fs13.readFileSync(reportFile, "utf8"));
+  const clean2 = redactor(manifest);
+  const cases = new Map(loadCases(manifest).map((c4) => [c4.id, c4]));
+  const [targetName, targetWhere] = Object.entries(report.targets).at(-1) ?? ["the target", ""];
+  const target2 = `${targetName}${targetWhere ? ` (${clean2(cleanUrl(targetWhere))})` : ""}`;
+  const groups = /* @__PURE__ */ new Map();
+  for (const c4 of report.cases) {
+    if (mode === "run" && c4.result === "FAIL" && !c4.known_issues) {
+      const f4 = c4.failures ?? [];
+      const key2 = f4.map((x2) => `${norm(x2.check)}|${x2.expected}|${x2.actual}`).join("\n") + (fieldOf(cases.get(c4.id)) ? `
+field:${fieldOf(cases.get(c4.id))}` : "");
+      const g3 = groups.get(key2) ?? {
+        title: f4.length === 1 ? `${f4[0].check}: expected ${f4[0].expected}, got ${f4[0].actual}` : `${f4.length} checks fail, first ${f4[0]?.check}: expected ${f4[0]?.expected}, got ${f4[0]?.actual}`,
+        ids: [],
+        expected: f4.map((x2) => `- \`${x2.check}\`: ${x2.expected}`).join("\n"),
+        actual: f4.map((x2) => `- \`${x2.check}\`: ${x2.actual}`).join("\n")
+      };
+      g3.ids.push(c4.id);
+      groups.set(key2, g3);
+    }
+    if (mode === "compare" && c4.result === "DIFFERENT") {
+      const open = (c4.differences ?? []).filter((d4) => !d4.drift);
+      const key2 = [...new Set(open.map((d4) => norm(d4.where)))].sort().join("\n");
+      const first = open[0];
+      const g3 = groups.get(key2) ?? {
+        title: open.length === 1 ? `${first.where} differs from the reference: ${first.reference} vs ${first.candidate}` : `${open.length} differences from the reference, first at ${first.where}`,
+        ids: [],
+        expected: open.map((d4) => `- \`${d4.where}\`: ${d4.reference} (as the reference answers)`).join("\n"),
+        actual: open.map((d4) => `- \`${d4.where}\`: ${d4.candidate}`).join("\n")
+      };
+      g3.ids.push(c4.id);
+      groups.set(key2, g3);
+    }
+  }
+  const answer = (id) => mode === "run" ? [`answers/${id}.json`] : [`answers/${id}.reference.json`, `answers/${id}.candidate.json`];
+  const named = (ids) => {
+    const names = ids.map((id) => cases.get(id)?.name?.trim());
+    if (names.every((n3) => n3 && n3 === names[0]))
+      return names[0];
+    const field = fieldOf(cases.get(ids[0]));
+    if (field && ids.every((id) => fieldOf(cases.get(id)) === field))
+      return `${field}: ${names.filter(Boolean).map((n3) => n3.replace(/^\$[^ ]* ?/, "")).join("; ")}`;
+    return void 0;
+  };
+  const drafts = [...groups.values()].map((g3, i8) => ({
+    id: `D-${String(i8 + 1).padStart(2, "0")}`,
+    title: clean2(named(g3.ids) ?? g3.title).slice(0, 200) + (g3.ids.length > 1 ? ` (${g3.ids.length} cases)` : ""),
+    requirements: [...new Set(g3.ids.flatMap((id) => report.cases.find((c4) => c4.id === id)?.requirement ?? []))],
+    cases: g3.ids,
+    steps: stepsFor(cases.get(g3.ids[0]), target2, clean2),
+    ...whyOf(cases.get(g3.ids[0])) ? { why: clean2(whyOf(cases.get(g3.ids[0]))) } : {},
+    expected: clean2(g3.expected),
+    actual: clean2(g3.actual),
+    evidence: g3.ids.flatMap(answer),
+    source: mode
+  }));
+  if (mode === "compare") {
+    for (const p4 of loadProposals(manifest).filter((x2) => x2.kind === "defect" && x2.status === "accepted")) {
+      drafts.push({
+        id: `D-${String(drafts.length + 1).padStart(2, "0")}`,
+        title: clean2(p4.title ?? p4.id),
+        requirements: [],
+        cases: p4.cases ?? [],
+        steps: stepsFor(cases.get(p4.cases?.[0] ?? ""), target2, clean2),
+        expected: "(see the summary)",
+        actual: clean2(p4.summary ?? p4.reason),
+        evidence: (p4.cases ?? []).flatMap(answer),
+        source: "triage"
+      });
+    }
+  }
+  const L2 = [
+    `# Draft defects: ${report.system}`,
+    "",
+    `From \`cmtk ${mode}\` on ${report.date} (verdict ${report.verdict}). Each draft groups the cases that fail the same way.`,
+    "A person checks each one and files it. Nothing here has been filed.",
+    ""
+  ];
+  for (const d4 of drafts) {
+    L2.push(`## ${d4.id}: ${d4.title}`, "", `- Requirements: ${d4.requirements.join(", ") || "(none named)"}`, `- Cases: ${d4.cases.join(", ")}`, `- Found by: ${d4.source === "triage" ? "triage of a comparison, accepted by a person" : `\`cmtk ${mode}\``} on ${report.date}`, "", "### Steps to reproduce", "", ...d4.steps.map((s4, i8) => `${i8 + 1}. ${s4}`), "", ...d4.why ? ["### Why it matters", "", d4.why, ""] : [], "### Expected", "", d4.expected, "", "### Actual", "", d4.actual, "", "### Evidence", "", ...d4.evidence.map((e6) => `- \`${path12.join(path12.relative(manifest.root, dir), e6).split(path12.sep).join("/")}\``), "");
+  }
+  if (!drafts.length)
+    L2.push("No defects: nothing failed.", "");
+  fs13.writeFileSync(path12.join(dir, "DEFECTS.md"), L2.join("\n"), "utf8");
+  fs13.writeFileSync(path12.join(dir, "DEFECTS.json"), JSON.stringify(drafts, null, 2) + "\n", "utf8");
+  return { file: path12.relative(manifest.root, path12.join(dir, "DEFECTS.md")), drafts };
+}
+
+// packages/core/dist/drift.js
+function coveringDrift(ledger, caseId, where2) {
+  return ledger.find((d4) => (d4.case === "*" || d4.case === caseId) && covers2(d4.where, where2));
+}
+function covers2(pattern, where2) {
+  for (const prefix of ["", "effects:"]) {
+    if (pattern.startsWith(prefix + "$") && where2.startsWith(prefix + "$")) {
+      try {
+        return matches(parsePath(pattern.slice(prefix.length)), locationOf(where2.slice(prefix.length)));
+      } catch {
+        return false;
+      }
+    }
+  }
+  return starGlob(pattern).test(where2);
+}
+var starGlob = (pattern) => new RegExp(`^${pattern.split("*").map((p4) => p4.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`, "s");
+
+// packages/core/dist/engine.js
+import crypto10 from "node:crypto";
 import fs18 from "node:fs";
+import path17 from "node:path";
+
+// packages/core/dist/assembly.js
+import crypto9 from "node:crypto";
+import fs16 from "node:fs";
+import path15 from "node:path";
+
+// packages/core/dist/discover.js
+import { spawnSync } from "node:child_process";
+import fs15 from "node:fs";
+import path14 from "node:path";
+
+// packages/core/dist/routes.js
+import crypto8 from "node:crypto";
+import fs14 from "node:fs";
+import path13 from "node:path";
+var ROUTE_ATTR = /(^|\.)(Route|RoutePrefix|HttpGet|HttpPost|HttpPut|HttpDelete|HttpPatch|HttpHead|HttpOptions|AcceptVerbs)Attribute$/;
+var SOURCE_ATTR = /^(?:[\w.]+\.)?(Route|RoutePrefix|HttpGet|HttpPost|HttpPut|HttpDelete|HttpPatch|HttpHead|HttpOptions)(?:Attribute)?$/;
+var isRouteAttribute = (name) => !!name && ROUTE_ATTR.test(name);
+var compressed = (n3) => n3 < 128 ? [n3] : n3 < 16384 ? [128 | n3 >> 8, n3 & 255] : [192 | n3 >>> 24, n3 >> 16 & 255, n3 >> 8 & 255, n3 & 255];
+var serString = (s4) => {
+  const b2 = Buffer.from(s4, "utf8");
+  return Buffer.concat([Buffer.from(compressed(b2.length)), b2]);
+};
+function encodeRouteValue(template, named = []) {
+  const parts = [Buffer.from([1, 0])];
+  if (template !== null)
+    parts.push(serString(template));
+  parts.push(Buffer.from([named.length & 255, named.length >> 8]));
+  for (const n3 of named) {
+    const isText = typeof n3.value === "string";
+    parts.push(Buffer.from([84, isText ? 14 : 8]), serString(n3.name));
+    if (isText)
+      parts.push(serString(n3.value));
+    else {
+      const i8 = Buffer.alloc(4);
+      i8.writeInt32LE(n3.value);
+      parts.push(i8);
+    }
+  }
+  return Buffer.concat(parts);
+}
+function decodeRouteValue(b2) {
+  if (b2.length < 3 || b2.readUInt16LE(0) !== 1 || b2[2] === 255)
+    return void 0;
+  const lead = b2[2];
+  const [len, width] = lead < 128 ? [lead, 1] : lead < 192 ? [(lead & 63) << 8 | (b2[3] ?? 0), 2] : [(lead & 31) << 24 | (b2[3] ?? 0) << 16 | (b2[4] ?? 0) << 8 | (b2[5] ?? 0), 4];
+  if (2 + width + len > b2.length)
+    return void 0;
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(b2.subarray(2 + width, 2 + width + len));
+  } catch {
+    return void 0;
+  }
+}
+var sha = (b2) => crypto8.createHash("sha256").update(b2).digest("hex");
+function templateFromRea(a4) {
+  if (typeof a4.decoded_fixed_string === "string")
+    return a4.decoded_fixed_string;
+  const raw = a4.value_hex ? Buffer.from(a4.value_hex, "hex") : a4.value_base64 ? Buffer.from(a4.value_base64, "base64") : void 0;
+  if (!raw || a4.value_sha256 && sha(raw) !== a4.value_sha256)
+    return void 0;
+  return decodeRouteValue(raw);
+}
+function sourceMatches(s4, a4) {
+  if (s4.named === void 0 || !a4.value_sha256)
+    return false;
+  const b2 = encodeRouteValue(s4.template, s4.named);
+  return b2.length === a4.value_length && sha(b2) === a4.value_sha256;
+}
+function withoutComments(text2) {
+  return text2.replace(/@"(?:[^"]|"")*"|"(?:[^"\\\n]|\\.)*"|\/\/[^\n]*|\/\*[\s\S]*?\*\//g, (m4) => m4.startsWith("/") ? m4.replace(/[^\n]/g, " ") : m4);
+}
+var STRING = /^\s*(?:@"((?:[^"]|"")*)"|"((?:[^"\\\n]|\\.)*)")/;
+var unString = (m4) => m4[1] !== void 0 ? m4[1].replace(/""/g, '"') : m4[2].replace(/\\(.)/g, "$1");
+function parseArgs(args) {
+  let rest = args;
+  let template = null;
+  const first = STRING.exec(rest);
+  if (first) {
+    template = unString(first);
+    rest = rest.slice(first[0].length).replace(/^\s*,/, "");
+  } else if (rest.trim() && !/^\s*\w+\s*=/.test(rest))
+    return { template: null };
+  const named = [];
+  while (rest.trim()) {
+    const n3 = /^\s*(\w+)\s*=/.exec(rest);
+    if (!n3)
+      return { template };
+    rest = rest.slice(n3[0].length);
+    const s4 = STRING.exec(rest);
+    const i8 = /^\s*(-?\d+)/.exec(rest);
+    if (s4) {
+      named.push({ name: n3[1], value: unString(s4) });
+      rest = rest.slice(s4[0].length);
+    } else if (i8) {
+      named.push({ name: n3[1], value: Number(i8[1]) });
+      rest = rest.slice(i8[0].length);
+    } else
+      return { template };
+    rest = rest.replace(/^\s*,/, "");
+  }
+  return { template, named };
+}
+function readRoutesFromSource(text2, file) {
+  const src = withoutComments(text2);
+  const out = [];
+  const lineAt = (i8) => src.slice(0, i8).split("\n").length;
+  const re2 = /\bnamespace\s+([\w.]+)\s*([;{])|\b(?:class|record|struct|interface)\s+(\w+)(?:<[^>{]*>)?\s*(?::\s*([^{;]+?))?\s*(?:where\s[^{]*)?\{|\[\s*((?:[\w.]+\s*(?:\((?:[^()"]|"(?:[^"\\\n]|\\.)*"|@"(?:[^"]|"")*")*\))?\s*,?\s*)+)\]|\b(?:public|protected|internal|private)\s+(?:(?:static|virtual|override|async|sealed|new|abstract|partial|extern)\s+)*[\w<>[\],.?\s]+?\s+(\w+)\s*(?:<[^>(]*>)?\s*\(|[{}]|"(?:[^"\\\n]|\\.)*"|@"(?:[^"]|"")*"/g;
+  let depth = 0;
+  const scope = [];
+  const prefix = [];
+  let fileNs = "";
+  let pending = [];
+  for (let m4 = re2.exec(src); m4; m4 = re2.exec(src)) {
+    const tok = m4[0];
+    if (tok === "{") {
+      depth++;
+      continue;
+    }
+    if (tok === "}") {
+      depth--;
+      while (scope.length && scope[scope.length - 1].at > depth)
+        scope.pop();
+      while (prefix.length && prefix[prefix.length - 1].at > depth)
+        prefix.pop();
+      continue;
+    }
+    if (tok.startsWith('"') || tok.startsWith('@"'))
+      continue;
+    if (m4[1]) {
+      if (m4[2] === ";")
+        fileNs = m4[1];
+      else {
+        depth++;
+        prefix.push({ name: m4[1], at: depth });
+      }
+      continue;
+    }
+    if (m4[3]) {
+      depth++;
+      const inType = [...scope].reverse().find((s4) => s4.type)?.type;
+      const ns = [fileNs, ...prefix.map((p4) => p4.name)].filter(Boolean).join(".");
+      const type = {
+        type: inType ? `${inType.type}/${m4[3]}` : ns ? `${ns}.${m4[3]}` : m4[3],
+        controller: /(^|[\s,.:])(\w*Controller\w*|ApiController)(<|\s|,|$)/.test(m4[4] ?? "") || /Controller\d*$/.test(m4[3]),
+        on_type: pending,
+        on_methods: []
+      };
+      pending = [];
+      out.push(type);
+      scope.push({ type, at: depth });
+      continue;
+    }
+    if (m4[5]) {
+      const line2 = lineAt(m4.index);
+      for (const a4 of m4[5].matchAll(/([\w.]+)\s*(?:\(((?:[^()"]|"(?:[^"\\\n]|\\.)*"|@"(?:[^"]|"")*")*)\))?/g)) {
+        const hit2 = SOURCE_ATTR.exec(a4[1]);
+        if (!hit2)
+          continue;
+        const { template, named } = parseArgs(a4[2] ?? "");
+        pending.push({ attribute: hit2[1], template, ...named ? { named } : {}, file, line: line2 });
+      }
+      continue;
+    }
+    if (m4[6]) {
+      const owner = [...scope].reverse().find((s4) => s4.type)?.type;
+      if (owner && pending.length)
+        owner.on_methods.push({ method: m4[6], routes: pending });
+      pending = [];
+    }
+  }
+  return out;
+}
+var SKIP_DIRS = /* @__PURE__ */ new Set(["bin", "obj", "node_modules", ".git", ".vs", "packages"]);
+function readRouteSources(where2, label2) {
+  const out = [];
+  const visit = (p4) => {
+    const st2 = fs14.statSync(p4);
+    if (st2.isDirectory()) {
+      for (const e6 of fs14.readdirSync(p4).sort())
+        if (!SKIP_DIRS.has(e6))
+          visit(path13.join(p4, e6));
+    } else if (/\.cs$/i.test(p4))
+      out.push(...readRoutesFromSource(fs14.readFileSync(p4, "utf8"), label2(p4)));
+  };
+  visit(where2);
+  return out;
+}
+function joinRoutes(onType, onMethods) {
+  const clean2 = (s4) => `/${s4.replace(/^\/+|\/+$/g, "")}`;
+  const heads = onType.filter((t3) => t3 !== null);
+  const out = /* @__PURE__ */ new Set();
+  for (const r6 of onMethods) {
+    if (r6 === null)
+      continue;
+    if (r6.startsWith("~/"))
+      out.add(clean2(r6.slice(2)));
+    else if (r6.startsWith("/"))
+      out.add(clean2(r6));
+    else if (heads.length)
+      for (const h4 of heads)
+        out.add(`${clean2(h4)}${r6 ? clean2(r6) : ""}`);
+    else
+      out.add(clean2(r6));
+  }
+  if (heads.length && (!out.size || onMethods.some((r6) => r6 === null)))
+    for (const h4 of heads)
+      out.add(clean2(h4));
+  return [...out].sort();
+}
+var REA_ROUTE_GAP = "REA gives a route attribute's length and sha256 but not its value: `value_hex` or `decoded_fixed_string` on each attribute in `rea inspect-managed-artifact` would be enough";
+
+// packages/core/dist/discover.js
+var CONTROL2 = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f​-‏‪-‮⁦-⁩]/;
+var clean = (v2, what, max = 500) => {
+  if (typeof v2 !== "string" || !v2.trim())
+    throw new ManifestError(`${what} is required.`);
+  if (CONTROL2.test(v2))
+    throw new ManifestError(`${what} holds control characters; write plain text.`);
+  return v2.trim().slice(0, max);
+};
+var slug2 = (s4) => s4.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "unnamed";
+var rel = (m4, f4) => path14.relative(m4.root, f4).split(path14.sep).join("/");
+var CALL_RULES = [
+  [/^System\.ServiceModel\.(ServiceHost|ServiceHostBase)$/, "soap", "in"],
+  [/^System\.ServiceModel\.(ClientBase`1|ChannelFactory`1)$/, "soap", "out"],
+  [/^System\.Net\.Http\.HttpClient$|^System\.Net\.(WebClient|HttpWebRequest|WebRequest)$|^RestSharp\.|^Flurl\./, "outbound-http", "out"],
+  [/^System\.Data\.(Entity|SqlClient|OleDb|Odbc)\.|^Microsoft\.Data\.(SqlClient|Sqlite)\.|^Microsoft\.EntityFrameworkCore\.?|^(Npgsql|MySql|MySqlConnector|Oracle|Dapper|MongoDB|StackExchange\.Redis)\b/, "database", "out"],
+  [/^System\.IO\.(File|FileInfo|FileStream|Directory|DirectoryInfo|FileSystemWatcher)$|^System\.IO\.Compression\.ZipFile$/, "files", "out"],
+  [/^System\.Net\.Mail\.|^(MailKit|MimeKit|SendGrid)\./, "email", "out"],
+  [/^System\.Messaging\.|^(RabbitMQ|Confluent\.Kafka|Amazon\.SQS|MassTransit|NServiceBus)\b|^Azure\.Messaging\.|^Microsoft\.Azure\.ServiceBus/, "queue", "out"],
+  [/^Twilio\./, "sms", "out"],
+  [/^(Stripe|Braintree|PayPal|Adyen|Square)\./, "payments", "out"],
+  [/^System\.ServiceProcess\.ServiceBase$|^Microsoft\.Extensions\.Hosting\.BackgroundService$|^(Quartz|Hangfire)\./, "worker", "in"],
+  [/^(log4net|NLog|Serilog)\./, "logs", "out"]
+];
+var MVC = /^System\.Web\.Mvc\.(Controller|ControllerBase)$|^Microsoft\.AspNetCore\.Mvc\.(Controller|ControllerBase)$/;
+var WEB_API = /^System\.Web\.Http\.ApiController$/;
+function attributesOf(raw) {
+  const n3 = raw?.normalized_result ?? raw;
+  return Array.isArray(n3?.attributes) && !Array.isArray(n3?.methods) ? n3.attributes : void 0;
+}
+var assemblyName = (raw, what) => {
+  const j2 = raw;
+  return path14.basename(String(j2?.subject?.name ?? j2?.normalized_result?.artifact?.path ?? what));
+};
+function readReaMembers(raw, what) {
+  const j2 = raw;
+  const n3 = j2?.normalized_result ?? j2;
+  if (!Array.isArray(n3?.methods) || !Array.isArray(n3?.call_edges)) {
+    throw new ManifestError(`${what} is not the output of \`rea inspect-managed-members <dll> --json\`: it has no methods and call_edges.`);
+  }
+  const assembly = path14.basename(String(j2?.subject?.name ?? n3?.artifact?.path ?? what));
+  return { assembly, members: n3 };
+}
+function routeOf(type, n3, attrs, src, guess) {
+  const typeToken = (n3.types ?? []).find((t3) => t3.full_name === type)?.token;
+  const tokens = new Map((n3.methods ?? []).filter((m4) => m4.declaring_type === type).map((m4) => [m4.token, m4.name ?? ""]));
+  const route = (attrs ?? []).filter((a4) => isRouteAttribute(a4.type_name));
+  const onType = route.filter((a4) => a4.parent_token === typeToken);
+  const onMethods = route.filter((a4) => a4.parent_token !== void 0 && tokens.has(a4.parent_token));
+  const found = [...onType, ...onMethods];
+  const srcRoutes = src ? [...src.on_type, ...src.on_methods.flatMap((x2) => x2.routes)] : [];
+  const join = (t3, m4) => joinRoutes(t3, m4).join(", ");
+  if (!found.length && !srcRoutes.length) {
+    return { where: `${guess} (by naming convention; ${attrs ? "it has no [Route] attribute" : "check the real route"})` };
+  }
+  if (found.length) {
+    const fromRea = found.map(templateFromRea);
+    if (fromRea.every((t3) => t3 !== void 0)) {
+      const heads = onType.map((a4) => templateFromRea(a4));
+      return { where: join(heads, onMethods.map((a4) => templateFromRea(a4))), evidence: [{ source: "REA", detail: `${found.length} route attribute${found.length === 1 ? "" : "s"} decoded` }] };
+    }
+  }
+  if (srcRoutes.length && src) {
+    const where2 = join(src.on_type.map((r6) => r6.template), src.on_methods.flatMap((x2) => x2.routes.map((r6) => r6.template)));
+    const at2 = srcRoutes.map((r6) => `${r6.file}:${r6.line}`).join(", ");
+    if (!found.length) {
+      if (attrs)
+        return { where: `${where2} (from source; the assembly has no such attribute: is the source for this build?)`, evidence: [{ source: "source", detail: `route attributes at ${at2}, none in the assembly` }] };
+      return { where: `${where2} (from source; not checked against a build)`, evidence: [{ source: "source", detail: `route attributes at ${at2}` }] };
+    }
+    const unmatched = found.filter((a4) => !srcRoutes.some((s4) => sourceMatches(s4, a4)));
+    if (!unmatched.length && srcRoutes.length === found.length) {
+      return { where: where2, evidence: [{ source: "source", detail: `route attributes at ${at2}, each matching the assembly's attribute by sha256` }] };
+    }
+    return { where: `${where2} (from source; ${unmatched.length || "some"} of ${found.length} attributes in the assembly do not match it: is the source for this build?)`, evidence: [{ source: "source", detail: `route attributes at ${at2}` }] };
+  }
+  return { where: `route attribute present, value not read: ${found.length} on this controller. Pass its source with --routes-from. ${REA_ROUTE_GAP}` };
+}
+function fromReaMembers(assembly, n3, source, attrs, sources = []) {
+  const typeOf4 = new Map(n3.methods.map((m4) => [m4.token, m4.declaring_type ?? ""]));
+  const callerType = (e6) => {
+    const t3 = e6.caller_token && typeOf4.get(e6.caller_token) || "";
+    return t3.startsWith("<") ? "" : t3;
+  };
+  const out = [];
+  const controllers = /* @__PURE__ */ new Map();
+  const byKind = /* @__PURE__ */ new Map();
+  for (const e6 of n3.call_edges) {
+    const target2 = e6.target_declaring_type ?? "";
+    const caller = callerType(e6);
+    if (!target2 || !caller)
+      continue;
+    if (MVC.test(target2)) {
+      if (!controllers.has(caller))
+        controllers.set(caller, "mvc");
+      continue;
+    }
+    if (WEB_API.test(target2)) {
+      controllers.set(caller, "api");
+      continue;
+    }
+    const rule = CALL_RULES.find(([re2]) => re2.test(target2));
+    if (!rule)
+      continue;
+    const key2 = `${rule[1]}|${rule[2]}`;
+    const k2 = byKind.get(key2) ?? { kind: rule[1], direction: rule[2], uses: /* @__PURE__ */ new Map() };
+    k2.uses.set(caller, (k2.uses.get(caller) ?? /* @__PURE__ */ new Set()).add(target2));
+    byKind.set(key2, k2);
+  }
+  for (const [type, style] of [...controllers].sort()) {
+    const short2 = type.split(".").pop().replace(/Controller\d*$/, (m4) => m4.replace("Controller", ""));
+    const guess = style === "api" ? `/api/${short2.toLowerCase()}` : `/${short2}`;
+    const route = routeOf(type, n3, attrs, sources.find((s4) => s4.type === type), guess);
+    out.push({
+      kind: "http",
+      direction: "in",
+      name: type,
+      where: route.where,
+      found_in: [{ source, detail: `${type} is ${style === "api" ? "a Web API" : "an MVC"} controller` }, ...route.evidence ?? []]
+    });
+  }
+  for (const k2 of byKind.values()) {
+    const users = [...k2.uses].sort(([a4], [b2]) => a4.localeCompare(b2));
+    const short2 = (t3) => t3.replace(/`\d+$/, "").split(".").pop();
+    const listed = users.slice(0, 6).map(([t3, targets]) => {
+      const ts = [...targets].sort();
+      return `${t3} (${ts.slice(0, 3).map(short2).join(", ")}${ts.length > 3 ? ", \u2026" : ""})`;
+    });
+    out.push({
+      kind: k2.kind,
+      direction: k2.direction,
+      name: `${assembly}: ${k2.kind}`,
+      users: users.map(([t3]) => t3),
+      found_in: [{ source, detail: `used by ${listed.join("; ")}${users.length > 6 ? `; and ${users.length - 6} more types` : ""}` }]
+    });
+  }
+  return out;
+}
+function runRea(file, command = "inspect-managed-members") {
+  const set = process.env.CMTK_REA?.trim();
+  const [cmd, pre] = set ? /\.(m?js|cjs)$/i.test(set) ? [process.execPath, [set]] : [set, []] : [process.platform === "win32" ? "rea.cmd" : "rea", []];
+  const shell = process.platform === "win32" && /\.(cmd|bat)$/i.test(cmd);
+  if (shell && /["%^&|<>!\r\n]/.test(file))
+    throw new ManifestError(`${file}: the path holds a character the Windows shell would read; rename the file or folder.`);
+  const args = [...pre, command, shell ? `"${file}"` : file, "--json"];
+  const r6 = spawnSync(cmd, args, { encoding: "utf8", maxBuffer: 512 * 1024 * 1024, timeout: 3e5, shell, windowsHide: true });
+  if (r6.error && r6.error.code === "ENOENT" || shell && r6.status !== 0 && /not recognized/i.test(r6.stderr ?? "")) {
+    throw new ManifestError("REA is not installed. Install it with `npm install --global rea-agents` (it needs Node.js 22.19 or later), or set CMTK_REA to its command. Or run `rea inspect-managed-members <dll> --json` elsewhere and pass the saved output with --rea-json.");
+  }
+  if (r6.error)
+    throw new ManifestError(`REA failed on ${path14.basename(file)}: ${r6.error.message}`);
+  if (r6.status !== 0)
+    throw new ManifestError(`REA failed on ${path14.basename(file)}: ${(r6.stderr || r6.stdout || "").trim().split("\n")[0]?.slice(0, 300) ?? `exit ${r6.status}`}`);
+  try {
+    return JSON.parse(r6.stdout);
+  } catch {
+    throw new ManifestError(`REA's output for ${path14.basename(file)} is not JSON.`);
+  }
+}
+function describeConnection(cs) {
+  const parts = /* @__PURE__ */ new Map();
+  for (const p4 of cs.split(";")) {
+    const i8 = p4.indexOf("=");
+    if (i8 > 0)
+      parts.set(p4.slice(0, i8).trim().toLowerCase(), p4.slice(i8 + 1).trim());
+  }
+  const server = parts.get("data source") ?? parts.get("server") ?? parts.get("host") ?? parts.get("address") ?? parts.get("addr") ?? parts.get("network address");
+  const db = parts.get("initial catalog") ?? parts.get("database");
+  if (!server && !db)
+    return /^[a-z]+:\/\//i.test(cs) ? cleanUrl(cs).replace(/\?.*$/, "") : "(not recognised)";
+  return [server && `server ${server}`, db && `database ${db}`].filter(Boolean).join(", ");
+}
+var URL_RE = /^https?:\/\/[^\s"'<>]+$/i;
+var origin = (u4) => {
+  try {
+    const x2 = new URL(u4);
+    x2.username = "";
+    x2.password = "";
+    return `${x2.protocol}//${x2.host}`;
+  } catch {
+    return u4;
+  }
+};
+function walkXml(n3, visit, at2 = []) {
+  const here = [...at2, n3.local];
+  visit(n3, here);
+  for (const c4 of n3.children)
+    walkXml(c4, visit, here);
+}
+function fromXmlConfig(text2, source) {
+  const out = [];
+  walkXml(parseXml(text2), (n3, at2) => {
+    const parent = at2[at2.length - 2];
+    const a4 = (k2) => n3.attrs.get(k2);
+    if (parent === "connectionStrings" && n3.local === "add" && a4("name")) {
+      out.push({ kind: "database", direction: "out", name: a4("name"), where: describeConnection(a4("connectionString") ?? ""), found_in: [{ source, detail: `connection string "${a4("name")}"${a4("providerName") ? ` (${a4("providerName")})` : ""}` }] });
+    } else if (parent === "appSettings" && n3.local === "add" && a4("key") && a4("value")) {
+      const v2 = a4("value").trim();
+      if (URL_RE.test(v2))
+        out.push({ kind: "outbound-http", direction: "out", name: a4("key"), where: origin(v2), found_in: [{ source, detail: `appSettings "${a4("key")}"` }] });
+      else if (/^formatname:|\\private\$\\/i.test(v2))
+        out.push({ kind: "queue", direction: "out", name: a4("key"), where: v2, found_in: [{ source, detail: `appSettings "${a4("key")}" names a message queue` }] });
+      else if (/^\\\\[^\\]+\\[^\\]+/.test(v2))
+        out.push({ kind: "files", direction: "out", name: a4("key"), where: v2, found_in: [{ source, detail: `appSettings "${a4("key")}" names a file share` }] });
+    } else if (n3.local === "smtp" && at2.includes("mailSettings")) {
+      const host = n3.children.find((c4) => c4.local === "network")?.attrs.get("host");
+      out.push({ kind: "email", direction: "out", name: "smtp", where: host ?? a4("pickupDirectoryLocation") ?? a4("deliveryMethod") ?? "(not set)", found_in: [{ source, detail: "system.net/mailSettings/smtp" }] });
+    } else if (n3.local === "endpoint" && parent === "client" && at2.includes("system.serviceModel")) {
+      out.push({ kind: "soap", direction: "out", name: a4("name") ?? a4("contract") ?? "client endpoint", where: a4("address") ? origin(a4("address")) : void 0, found_in: [{ source, detail: `WCF client endpoint for ${a4("contract") ?? "a contract"}` }] });
+    } else if (n3.local === "service" && parent === "services" && at2.includes("system.serviceModel")) {
+      out.push({ kind: "soap", direction: "in", name: a4("name") ?? "service", found_in: [{ source, detail: "WCF service" }] });
+    }
+  });
+  return out;
+}
+function fromJsonConfig(value, source) {
+  const out = [];
+  const walk = (v2, at2) => {
+    if (v2 && typeof v2 === "object" && !Array.isArray(v2)) {
+      for (const [k2, x2] of Object.entries(v2))
+        walk(x2, [...at2, k2]);
+      return;
+    }
+    if (Array.isArray(v2)) {
+      v2.forEach((x2, i8) => walk(x2, [...at2, String(i8)]));
+      return;
+    }
+    if (typeof v2 !== "string")
+      return;
+    const key2 = at2.join(":");
+    if (at2.length === 2 && at2[0].toLowerCase() === "connectionstrings") {
+      out.push({ kind: "database", direction: "out", name: at2[1], where: describeConnection(v2), found_in: [{ source, detail: `ConnectionStrings:${at2[1]}` }] });
+    } else if (URL_RE.test(v2.trim())) {
+      out.push({ kind: "outbound-http", direction: "out", name: key2, where: origin(v2.trim()), found_in: [{ source, detail: key2 }] });
+    } else if (/smtp/i.test(key2) && /host|server/i.test(at2[at2.length - 1] ?? "")) {
+      out.push({ kind: "email", direction: "out", name: key2, where: v2, found_in: [{ source, detail: key2 }] });
+    }
+  };
+  walk(value, []);
+  return out;
+}
+function fromHar(raw, source, ownHosts) {
+  const entries = raw?.log?.entries;
+  if (!Array.isArray(entries))
+    throw new ManifestError(`${source} is not a HAR file: it has no log.entries.`);
+  const byOrigin = /* @__PURE__ */ new Map();
+  for (const e6 of entries) {
+    try {
+      const u4 = new URL(String(e6?.request?.url));
+      const o4 = `${u4.protocol}//${u4.host}`;
+      byOrigin.set(o4, (byOrigin.get(o4) ?? /* @__PURE__ */ new Set()).add(`${String(e6.request.method ?? "GET").toUpperCase()} ${u4.pathname}`));
+    } catch {
+    }
+  }
+  return [...byOrigin].map(([o4, paths]) => {
+    const own = ownHosts.has(new URL(o4).host);
+    return {
+      kind: own ? "http" : "outbound-http",
+      direction: own ? "in" : "out",
+      name: o4,
+      where: o4,
+      found_in: [{ source, detail: `${paths.size} distinct request${paths.size === 1 ? "" : "s"}${own ? "" : ", made by the browser"}` }]
+    };
+  });
+}
+function describing(n3) {
+  return ["name", "id", "type", "subtype", "kind_detail", "technology", "tech", "format", "storage", "access", "organization", "dsn", "platform", "runtime"].map((k2) => typeof n3?.[k2] === "string" ? n3[k2] : "").join(" ");
+}
+var NEEDS = {
+  vsam: "VSAM keeps records by key, so a test unloads it to a flat file (IDCAMS REPRO, or the emulator's own unload) and compares decoded records, using the copybook. A files adapter alone can't read it.",
+  sequential: "A flat file: a files adapter compares it, and `cmtk data` can write it from a copybook.",
+  db2: "A database adapter with a DB2 driver: the read-only database adapter must be told which driver to use.",
+  ims: "IMS is hierarchical: no adapter reads it yet, so it needs its own.",
+  jcl: "A batch adapter that submits this JCL on the legacy side and starts the rebuilt job on the other, then compares its output files and return code. It needs a mainframe or an emulator such as AWS Mainframe Modernization or GnuCOBOL with a JCL runner: none is written.",
+  cics: "A 3270 terminal adapter that drives the BMS map (for example through s3270) and reports its fields. A web or desktop adapter can't reach it: none is written.",
+  mq: "A queue adapter with an IBM MQ client: the Service Bus and RabbitMQ adapters don't speak it."
+};
+function fromTopology(raw, source) {
+  const out = [];
+  if (!raw?.root && !Array.isArray(raw?.nodes))
+    throw new ManifestError(`${source} is not modernize's topology.json: it has no root.`);
+  const ignored = /* @__PURE__ */ new Map();
+  const walk = (n3) => {
+    if (!n3 || typeof n3 !== "object")
+      return;
+    const name = String(n3.name ?? n3.id ?? "");
+    const words2 = describing(n3);
+    const detail = (what) => [{ source, detail: `${what} ${n3.id ?? name}${typeof n3.type === "string" ? ` (${n3.type})` : ""}` }];
+    if (n3.kind === "datastore") {
+      const isDb = /\b(db2|sql|rdbms|table|database|oracle|postgres|ims)\b/i.test(words2);
+      const isFile = /vsam|ksds|esds|rrds|\bfile|folder|share|csv|dataset|sequential|flat|\bgdg\b|\bps\b/i.test(words2);
+      const needs = /vsam|ksds|esds|rrds/i.test(words2) ? NEEDS.vsam : /\bdb2\b/i.test(words2) ? NEEDS.db2 : /\bims\b/i.test(words2) ? NEEDS.ims : isFile && !isDb ? NEEDS.sequential : void 0;
+      out.push({
+        kind: isFile && !isDb ? "files" : "database",
+        direction: "out",
+        name,
+        ...typeof n3.dsn === "string" ? { where: n3.dsn } : {},
+        ...needs ? { needs } : !isDb ? { needs: "The map does not say how this is stored, so calling it a database is a guess: a person checks it." } : {},
+        found_in: detail("data store")
+      });
+    } else if (n3.kind === "job") {
+      out.push({ kind: "worker", direction: "in", name, .../\bjcl\b|\.jcl$/i.test(words2) ? { needs: NEEDS.jcl } : {}, found_in: detail("job") });
+    } else if (n3.kind === "screen" || n3.kind === "transaction") {
+      out.push({ kind: "ui", direction: "in", name, .../cics|bms|3270/i.test(words2) ? { needs: NEEDS.cics } : {}, found_in: detail(n3.kind) });
+    } else if (n3.kind === "queue") {
+      out.push({ kind: "queue", direction: "out", name, .../\bmq\b|mqseries/i.test(words2) ? { needs: NEEDS.mq } : {}, found_in: detail("queue") });
+    } else if (n3.kind === "external" || n3.kind === "service") {
+      out.push({ kind: "outbound-http", direction: "out", name, found_in: detail(n3.kind) });
+    } else if (typeof n3.kind === "string" && !Array.isArray(n3.children)) {
+      ignored.set(n3.kind, (ignored.get(n3.kind) ?? 0) + 1);
+    }
+    for (const c4 of Array.isArray(n3.children) ? n3.children : [])
+      walk(c4);
+  };
+  if (raw.root)
+    walk(raw.root);
+  for (const n3 of Array.isArray(raw.nodes) ? raw.nodes : [])
+    walk(n3);
+  const note = ignored.size ? `${source} also holds ${[...ignored].sort().map(([k2, c4]) => `${c4} ${k2} node${c4 === 1 ? "" : "s"}`).join(", ")}, not listed as boundaries because each is inside the system.` : void 0;
+  return { found: out, ...note ? { note } : {} };
+}
+function coveredBy(b2, m4) {
+  if (b2.direction === "in" && (b2.kind === "http" || b2.kind === "soap"))
+    return "http (built in)";
+  for (const [name, a4] of Object.entries(m4.adapters))
+    if (name === b2.kind || (a4.covers ?? []).includes(b2.kind))
+      return name;
+  return void 0;
+}
+function discoveryFolder(m4) {
+  return inside(m4, path14.join(path14.dirname(m4.proposals), "discovery"));
+}
+function loadDiscovery(m4) {
+  const f4 = path14.join(discoveryFolder(m4), "boundaries.json");
+  if (!fs15.existsSync(f4))
+    return void 0;
+  const d4 = JSON.parse(fs15.readFileSync(f4, "utf8"));
+  for (const b2 of d4.boundaries)
+    b2.covered_by = coveredBy(b2, m4);
+  return d4;
+}
+function discover(m4, input, date = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)) {
+  const found = [];
+  const sources = [];
+  const notes = [];
+  const file = (f4, what) => {
+    const full = inside(m4, f4);
+    if (!fs15.existsSync(full) || !fs15.statSync(full).isFile())
+      throw new ManifestError(`${what} ${f4} does not exist.`);
+    return full;
+  };
+  const routeSources = [];
+  for (const f4 of input.routesFrom ?? []) {
+    const full = inside(m4, f4);
+    if (!fs15.existsSync(full))
+      throw new ManifestError(`The source ${f4} does not exist.`);
+    routeSources.push(...readRouteSources(full, (x2) => rel(m4, x2)));
+    sources.push(`C# source ${rel(m4, full)}`);
+  }
+  const seenControllers = /* @__PURE__ */ new Set();
+  const fromRea = (assembly, members, source, attrs) => {
+    const out = fromReaMembers(assembly, members, source, attrs, routeSources);
+    for (const x2 of out)
+      if (x2.kind === "http")
+        seenControllers.add(x2.name);
+    found.push(...out);
+  };
+  for (const f4 of input.assemblies ?? []) {
+    const full = file(f4, "The assembly");
+    const { assembly, members } = readReaMembers(runRea(full), rel(m4, full));
+    let attrs;
+    try {
+      attrs = attributesOf(runRea(full, "inspect-managed-artifact"));
+    } catch {
+      attrs = void 0;
+    }
+    fromRea(assembly, members, `REA: ${rel(m4, full)}`, attrs);
+    sources.push(`REA on ${rel(m4, full)}`);
+  }
+  const saved = (input.reaJson ?? []).map((f4) => {
+    const full = file(f4, "REA's output");
+    return { full, raw: JSON.parse(fs15.readFileSync(full, "utf8")) };
+  });
+  const savedAttrs = /* @__PURE__ */ new Map();
+  for (const s4 of saved) {
+    const attrs = attributesOf(s4.raw);
+    if (attrs) {
+      savedAttrs.set(assemblyName(s4.raw, rel(m4, s4.full)), attrs);
+      sources.push(`REA's saved output ${rel(m4, s4.full)}`);
+    }
+  }
+  for (const s4 of saved) {
+    if (attributesOf(s4.raw))
+      continue;
+    const { assembly, members } = readReaMembers(s4.raw, rel(m4, s4.full));
+    fromRea(assembly, members, `REA: ${rel(m4, s4.full)}`, savedAttrs.get(assembly));
+    sources.push(`REA's saved output ${rel(m4, s4.full)}`);
+  }
+  for (const s4 of routeSources) {
+    if (!s4.controller || seenControllers.has(s4.type))
+      continue;
+    const onMethods = s4.on_methods.flatMap((x2) => x2.routes.map((r6) => r6.template));
+    const routes = joinRoutes(s4.on_type.map((r6) => r6.template), onMethods);
+    const at2 = [...s4.on_type, ...s4.on_methods.flatMap((x2) => x2.routes)][0];
+    found.push({ kind: "http", direction: "in", name: s4.type, where: routes.length ? `${routes.join(", ")} (from source; not checked against a build)` : "(no route attribute in the source)", found_in: [{ source: "source", detail: at2 ? `${at2.file}:${at2.line}` : `${s4.type} looks like a controller` }] });
+  }
+  for (const f4 of input.configs ?? []) {
+    const full = file(f4, "The settings file");
+    const text2 = fs15.readFileSync(full, "utf8").replace(/^﻿/, "");
+    found.push(.../\.json$/i.test(full) ? fromJsonConfig(JSON.parse(text2), rel(m4, full)) : fromXmlConfig(text2, rel(m4, full)));
+    sources.push(rel(m4, full));
+  }
+  const ownHosts = new Set(Object.values(m4.targets).flatMap((t3) => {
+    try {
+      return t3.base_url ? [new URL(t3.base_url).host] : [];
+    } catch {
+      return [];
+    }
+  }));
+  for (const f4 of input.har ?? []) {
+    const full = file(f4, "The HAR file");
+    found.push(...fromHar(JSON.parse(fs15.readFileSync(full, "utf8")), rel(m4, full), ownHosts));
+    sources.push(rel(m4, full));
+  }
+  for (const f4 of input.topology ?? []) {
+    const full = file(f4, "The topology file");
+    const t3 = fromTopology(JSON.parse(fs15.readFileSync(full, "utf8")), rel(m4, full));
+    found.push(...t3.found);
+    if (t3.note)
+      notes.push(t3.note);
+    sources.push(rel(m4, full));
+  }
+  if (input.found?.length) {
+    const who = clean(input.agent, "The agent's name", 100);
+    for (const [i8, x2] of input.found.entries()) {
+      const kind = clean(x2.kind, `found[${i8}].kind`, 40);
+      if (!BOUNDARY_KINDS.includes(kind))
+        throw new ManifestError(`found[${i8}].kind must be one of: ${BOUNDARY_KINDS.join(", ")}.`);
+      found.push({
+        kind,
+        direction: x2.direction === "in" ? "in" : x2.direction === "out" ? "out" : kind === "http" || kind === "soap" || kind === "worker" || kind === "ui" ? "in" : "out",
+        name: clean(x2.name, `found[${i8}].name`, 200),
+        ...x2.where ? { where: cleanUrl(clean(x2.where, `found[${i8}].where`, 300)) } : {},
+        found_in: [{ source: `agent: ${who.replace(/^agent:\s*/i, "")}`, detail: clean(x2.evidence, `found[${i8}].evidence`, 500) }]
+      });
+    }
+    sources.push(`findings from agent ${who.replace(/^agent:\s*/i, "")}`);
+  }
+  if (!sources.length)
+    throw new ManifestError("Give discover something to read: --assembly, --rea-json, --routes-from, --config, --har or --topology (or findings, from an agent).");
+  for (const db of found.filter((f4) => f4.kind === "database" && f4.users)) {
+    const named = found.find((f4) => f4.kind === "database" && !f4.users && db.users.some((u4) => u4.split(".").pop() === f4.name));
+    if (named) {
+      named.found_in.push(...db.found_in);
+      found.splice(found.indexOf(db), 1);
+    }
+  }
+  const previous = input.fresh ? void 0 : loadDiscovery(m4);
+  const byId = new Map((previous?.boundaries ?? []).map((b2) => [b2.id, b2]));
+  for (const f4 of found) {
+    const id = `${f4.kind}:${slug2(f4.name)}`;
+    const b2 = byId.get(id) ?? { id, kind: f4.kind, direction: f4.direction, name: f4.name, found_in: [] };
+    if (!b2.where && f4.where)
+      b2.where = f4.where;
+    if (!b2.needs && f4.needs)
+      b2.needs = f4.needs;
+    for (const e6 of f4.found_in)
+      if (!b2.found_in.some((x2) => x2.source === e6.source && x2.detail === e6.detail))
+        b2.found_in.push(e6);
+    byId.set(id, b2);
+  }
+  const boundaries = [...byId.values()].map((b2) => ({ ...b2, covered_by: coveredBy(b2, m4) })).sort((a4, b2) => Number(!!a4.covered_by) - Number(!!b2.covered_by) || BOUNDARY_KINDS.indexOf(a4.kind) - BOUNDARY_KINDS.indexOf(b2.kind) || a4.name.localeCompare(b2.name));
+  const discovery = { system: m4.system, date, sources: [.../* @__PURE__ */ new Set([...previous?.sources ?? [], ...sources])], boundaries, ...notes.length || previous?.notes?.length ? { notes: [.../* @__PURE__ */ new Set([...previous?.notes ?? [], ...notes])] } : {} };
+  const dir = discoveryFolder(m4);
+  fs15.mkdirSync(dir, { recursive: true });
+  fs15.writeFileSync(path14.join(dir, "boundaries.json"), JSON.stringify(discovery, null, 2) + "\n", "utf8");
+  fs15.writeFileSync(path14.join(dir, "BOUNDARIES.md"), renderDiscovery(discovery), "utf8");
+  return { file: rel(m4, path14.join(dir, "BOUNDARIES.md")), discovery };
+}
+var cell2 = (s4) => (s4 ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
+function describeDiscovery(d4) {
+  const open = d4.boundaries.filter((b2) => !b2.covered_by);
+  return `${d4.boundaries.length} boundar${d4.boundaries.length === 1 ? "y" : "ies"}: ${d4.boundaries.length - open.length} covered by an adapter, ${open.length} uncovered.`;
+}
+function renderDiscovery(d4) {
+  const open = d4.boundaries.filter((b2) => !b2.covered_by);
+  const L2 = [
+    `# Boundaries: ${d4.system}`,
+    "",
+    `Written by \`cmtk discover\` on ${d4.date}. ${describeDiscovery(d4)}`,
+    "",
+    "A boundary is anything the system serves, or calls, stores, sends or reads through. Each one needs cases, and an adapter to run them, before parity can be claimed for it. Run `cmtk discover` again after adding a source or an adapter.",
+    "",
+    `Sources: ${d4.sources.join("; ")}.`,
+    "",
+    "| Boundary | Kind | Direction | Where | Covered by | Found in |",
+    "|---|---|---|---|---|---|"
+  ];
+  for (const b2 of d4.boundaries) {
+    L2.push(`| ${cell2(b2.name)} | ${b2.kind} | ${b2.direction} | ${cell2(b2.where)} | ${b2.covered_by ? cell2(b2.covered_by) : "**uncovered**"} | ${cell2(b2.found_in.map((f4) => `${f4.source}: ${f4.detail}`).join("; "))} |`);
+  }
+  L2.push("");
+  if (open.length) {
+    L2.push("## Uncovered", "", "No adapter covers these, so no case can check them yet. For each kind, either:", "- write an adapter with `cmtk adapter new <name>` and list the kind under its `covers` in `cmtk.yaml`; or", "- have a person record why it is out of scope.", "");
+    for (const k2 of [...new Set(open.map((b2) => b2.kind))])
+      L2.push(`- **${k2}**: ${open.filter((b2) => b2.kind === k2).map((b2) => cell2(b2.name)).join(", ")}`);
+    L2.push("");
+  }
+  const needs = [...new Set(d4.boundaries.flatMap((b2) => b2.needs ? [b2.needs] : []))];
+  if (needs.length) {
+    L2.push("## What these need", "");
+    for (const n3 of needs)
+      L2.push(`- **${d4.boundaries.filter((b2) => b2.needs === n3).length}**: ${cell2(n3)} (${d4.boundaries.filter((b2) => b2.needs === n3).slice(0, 6).map((b2) => cell2(b2.name)).join(", ")}${d4.boundaries.filter((b2) => b2.needs === n3).length > 6 ? ", \u2026" : ""})`);
+    L2.push("");
+  }
+  for (const n3 of d4.notes ?? [])
+    L2.push(`Note: ${cell2(n3)}`, "");
+  L2.push("## Limits", "", "- Assemblies are read by REA, never run. Calls made through reflection, dependency injection resolved at run time, or configuration may be missed.", "- A controller's route comes from its [Route] attributes, read from its source with `--routes-from` and proved against the build by REA's sha256. REA does not give an attribute's value, so without the source a controller with an attribute says so, and only a controller with no attribute keeps a guess from its name.", '- An adapter covers a kind, not a technology: an adapter listed for `ui` covers a CICS screen here even if it only drives a browser. Read "What these need".', "- Discovery lists what its sources show. It never proves that nothing else exists: add sources (configuration, recordings, the map) until the list stops growing.", "");
+  return L2.join("\n");
+}
+
+// packages/core/dist/assembly.js
+function readInventory(raw, what) {
+  const j2 = raw;
+  const n3 = j2?.normalized_result ?? j2;
+  if (!Array.isArray(n3?.methods) || !Array.isArray(n3?.types))
+    throw new ManifestError(`${what} is not the output of \`rea inspect-managed-members <dll> --json\`: it has no types and methods.`);
+  const types = n3.types;
+  const defs = /* @__PURE__ */ new Map();
+  for (const t3 of types) {
+    const r6 = rowOf(t3.token);
+    if (r6)
+      defs.set(r6, t3);
+  }
+  const refs = /* @__PURE__ */ new Map();
+  const seen = /* @__PURE__ */ new Set();
+  for (const r6 of n3.member_refs ?? []) {
+    if (!r6.parent_name)
+      continue;
+    seen.add(r6.parent_name);
+    const row = rowOf(r6.parent_token ?? void 0);
+    if (row && String(r6.parent_token).toLowerCase().startsWith("0x01"))
+      refs.set(row, r6.parent_name);
+  }
+  return { assembly: path15.basename(String(j2?.subject?.name ?? what)), types, methods: n3.methods, fields: n3.fields ?? [], complete: (n3.coverage?.state ?? "complete") === "complete", defs, refs, seen };
+}
+var rowOf = (token) => token ? parseInt(token.slice(4), 16) || void 0 : void 0;
+var LIKELY = {
+  "System": ["Action", "Action`1", "Action`2", "Action`3", "Array", "Boolean", "Byte", "Char", "DateTime", "DateTimeOffset", "Decimal", "Delegate", "Double", "Enum", "EventArgs", "EventHandler", "Exception", "Func`1", "Func`2", "Func`3", "Func`4", "Guid", "IDisposable", "Int16", "Int32", "Int64", "Lazy`1", "Nullable`1", "Object", "Single", "String", "TimeSpan", "Tuple`2", "Tuple`3", "Type", "Uri", "ValueTuple`2", "ValueTuple`3", "Version"],
+  "System.Collections": ["ArrayList", "Hashtable", "ICollection", "IDictionary", "IEnumerable", "IEnumerator", "IList"],
+  "System.Collections.Generic": ["Dictionary`2", "HashSet`1", "ICollection`1", "IDictionary`2", "IEnumerable`1", "IEnumerator`1", "IList`1", "IReadOnlyCollection`1", "IReadOnlyDictionary`2", "IReadOnlyList`1", "ISet`1", "KeyValuePair`2", "LinkedList`1", "List`1", "Queue`1", "SortedDictionary`2", "Stack`1"],
+  "System.Collections.ObjectModel": ["Collection`1", "ObservableCollection`1", "ReadOnlyCollection`1"],
+  "System.Data": ["DataSet", "DataTable", "IDataReader", "IDbConnection"],
+  "System.IO": ["FileInfo", "MemoryStream", "Stream", "TextReader", "TextWriter"],
+  "System.Linq": ["IGrouping`2", "IOrderedQueryable`1", "IQueryable", "IQueryable`1"],
+  "System.Linq.Expressions": ["Expression", "Expression`1"],
+  "System.Threading": ["CancellationToken"],
+  "System.Threading.Tasks": ["Task", "Task`1", "ValueTask", "ValueTask`1"],
+  "System.Web.Mvc": ["ActionResult", "JsonResult", "ViewResult"],
+  "System.Xml": ["XmlDocument", "XmlElement", "XmlNode"],
+  "System.Xml.Linq": ["XDocument", "XElement"],
+  "Microsoft.AspNetCore.Mvc": ["ActionResult", "ActionResult`1", "IActionResult"]
+};
+var likelyNames = () => Object.entries(LIKELY).flatMap(([ns, names]) => names.map((n3) => `${ns}.${n3}`));
+function nameDigest(full) {
+  const i8 = full.lastIndexOf(".");
+  return crypto9.createHash("sha256").update(Buffer.from([0])).update(i8 < 0 ? "" : full.slice(0, i8)).update(Buffer.from([0])).update(full.slice(i8 + 1)).digest();
+}
+var ELEMENTS = { void: 1, bool: 2, char: 3, i1: 4, u1: 5, i2: 6, u2: 7, i4: 8, u4: 9, i8: 10, u8: 11, r4: 12, r8: 13, string: 14, "native-int": 24, "native-uint": 25, object: 28, typedbyref: 22 };
+var compressed2 = (n3) => n3 < 128 ? [n3] : n3 < 16384 ? [128 | n3 >> 8, n3 & 255] : [192 | n3 >>> 24, n3 >> 16 & 255, n3 >> 8 & 255, n3 & 255];
+function encodeType(text2) {
+  let i8 = 0;
+  const one = () => {
+    let body;
+    const m4 = /^(class|valuetype|var|mvar):(\d+)/.exec(text2.slice(i8));
+    if (m4) {
+      i8 += m4[0].length;
+      const n3 = Number(m4[2]);
+      if (m4[1] === "var" || m4[1] === "mvar")
+        body = [m4[1] === "var" ? 19 : 30, ...compressed2(n3)];
+      else {
+        const lead = m4[1] === "class" ? 18 : 17;
+        if (text2[i8] === "<") {
+          i8++;
+          const args = [one()];
+          while (text2[i8] === ",") {
+            i8++;
+            args.push(one());
+          }
+          if (text2[i8] !== ">")
+            throw new Error("unexpected type text");
+          i8++;
+          body = [21, lead, { operand: n3 }, ...compressed2(args.length), ...args.flat()];
+        } else
+          body = [lead, { operand: n3 }];
+      }
+    } else {
+      const e6 = /^[a-z0-9-]+/.exec(text2.slice(i8));
+      if (!e6 || ELEMENTS[e6[0]] === void 0)
+        throw new Error("type text not understood");
+      i8 += e6[0].length;
+      body = [ELEMENTS[e6[0]]];
+    }
+    for (; ; ) {
+      if (text2.startsWith("[]", i8)) {
+        i8 += 2;
+        body = [29, ...body];
+      } else if (text2[i8] === "&") {
+        i8++;
+        body = [16, ...body];
+      } else if (text2[i8] === "*") {
+        i8++;
+        body = [15, ...body];
+      } else
+        return body;
+    }
+  };
+  const out = one();
+  if (i8 !== text2.length)
+    throw new Error("type text not understood");
+  return out;
+}
+function encodeSignature(s4) {
+  try {
+    if (s4.parse_status !== "decoded")
+      return void 0;
+    if (s4.kind === "field")
+      return [6, ...encodeType(s4.field_type ?? "")];
+    const cc = s4.calling_convention ?? "";
+    const words2 = cc.split(" ");
+    if (words2[0] !== "default")
+      return void 0;
+    const first = (words2.includes("has-this") ? 32 : 0) | (words2.includes("explicit-this") ? 64 : 0) | (words2.includes("generic") ? 16 : 0);
+    return [first, ...words2.includes("generic") ? compressed2(s4.generic_parameter_count ?? 0) : [], ...compressed2(s4.parameter_count ?? 0), ...encodeType(s4.return_type ?? ""), ...(s4.parameter_types ?? []).flatMap(encodeType)];
+  } catch {
+    return void 0;
+  }
+}
+var operandsOf = (text2) => [...text2.matchAll(/(?:class|valuetype):(\d+)/g)].map((m4) => Number(m4[1]));
+var allTypes = (s4) => [s4.return_type ?? "", s4.field_type ?? "", ...s4.parameter_types ?? []];
+function resolvedDigest(parts, digest) {
+  const h4 = crypto9.createHash("sha256");
+  let run2 = [];
+  for (const p4 of parts) {
+    if (typeof p4 === "number") {
+      run2.push(p4);
+      continue;
+    }
+    const d4 = digest(p4.operand);
+    if (!d4)
+      return void 0;
+    h4.update(Buffer.from(run2));
+    run2 = [];
+    h4.update(Buffer.from([255]));
+    h4.update(d4);
+  }
+  h4.update(Buffer.from(run2));
+  return h4.digest("hex");
+}
+function proveTypeNames(inv, members, extra = []) {
+  const guesses = [.../* @__PURE__ */ new Set([...extra, ...inv.seen, ...likelyNames()])].filter((g3) => !/[<>]/.test(g3));
+  const digests = new Map(guesses.map((g3) => [g3, nameDigest(g3)]));
+  let budget = 4e5;
+  const known = (operand) => {
+    const row = operand >> 2;
+    if ((operand & 3) === 0) {
+      const d4 = inv.defs.get(row)?.name_sha256;
+      return d4 ? Buffer.from(d4, "hex") : void 0;
+    }
+    if ((operand & 3) === 1 && inv.refs.has(row))
+      return digests.get(inv.refs.get(row)) ?? nameDigest(inv.refs.get(row));
+    return void 0;
+  };
+  const work = members.flatMap((m4) => {
+    const s4 = m4.signature;
+    if (!s4?.resolved_sha256 || !s4.raw_sha256)
+      return [];
+    const parts = encodeSignature(s4);
+    if (!parts)
+      return [];
+    const raw = Buffer.from(parts.flatMap((p4) => typeof p4 === "number" ? [p4] : compressed2(p4.operand)));
+    if (crypto9.createHash("sha256").update(raw).digest("hex") !== s4.raw_sha256)
+      return [];
+    return [{ s: s4, parts }];
+  });
+  for (let progress = true; progress; ) {
+    progress = false;
+    for (const { s: s4, parts } of work) {
+      const open = [...new Set(allTypes(s4).flatMap(operandsOf))].filter((o4) => (o4 & 3) === 1 && !inv.refs.has(o4 >> 2));
+      if (!open.length || open.length > 2)
+        continue;
+      const tryNames = (i8, chosen, names) => {
+        if (i8 === open.length) {
+          if (budget-- <= 0)
+            return false;
+          if (resolvedDigest(parts, (o4) => chosen.get(o4) ?? known(o4)) !== s4.resolved_sha256)
+            return false;
+          for (const [o4, n3] of names)
+            inv.refs.set(o4 >> 2, n3);
+          return true;
+        }
+        for (const g3 of guesses) {
+          chosen.set(open[i8], digests.get(g3));
+          names.set(open[i8], g3);
+          if (tryNames(i8 + 1, chosen, names))
+            return true;
+        }
+        chosen.delete(open[i8]);
+        names.delete(open[i8]);
+        return false;
+      };
+      if (tryNames(0, /* @__PURE__ */ new Map(), /* @__PURE__ */ new Map()))
+        progress = true;
+    }
+  }
+}
+var WORDS = { i4: "int", i8: "long", i2: "short", i1: "sbyte", u1: "byte", u2: "ushort", u4: "uint", u8: "ulong", r4: "float", r8: "double", "native-int": "nint", "native-uint": "nuint" };
+function mapName(full, map) {
+  const from = Object.keys(map).filter((k2) => full === k2 || full.startsWith(`${k2}.`)).sort((a4, b2) => b2.length - a4.length)[0];
+  return from === void 0 ? full : map[from] + full.slice(from.length);
+}
+function renderType(text2, inv, map) {
+  return text2.replace(/(?:class|valuetype):(\d+)/g, (_2, n3) => {
+    const v2 = Number(n3), row = v2 >> 2;
+    if ((v2 & 3) === 0) {
+      const t3 = inv.defs.get(row)?.full_name;
+      return t3 ? mapName(t3, map) : `?def:${row}`;
+    }
+    if ((v2 & 3) === 1) {
+      const t3 = inv.refs.get(row);
+      return t3 ? mapName(t3, map) : `?ref:${row}`;
+    }
+    return `?spec:${row}`;
+  }).replace(/\b(i[1248]|u[1248]|r[48]|native-u?int)\b/g, (w2) => WORDS[w2] ?? w2);
+}
+var SURFACE = (flags) => {
+  const a4 = (flags ?? 0) & 7;
+  return a4 === 4 || a4 === 5 || a4 === 6;
+};
+var STATIC2 = 16;
+function show2(m4, inv, map, isField) {
+  const s4 = m4.signature ?? {};
+  const r6 = (t3) => renderType(t3 ?? "", inv, map);
+  const stat = ((m4.flags ?? 0) & STATIC2) !== 0 ? "static " : "";
+  const generic = s4.generic_parameter_count ? `<${s4.generic_parameter_count}>` : "";
+  const text2 = isField ? `${stat}${r6(s4.field_type)} ${m4.name}` : `${stat}${r6(s4.return_type)} ${m4.name}${generic}(${(s4.parameter_types ?? []).map(r6).join(", ")})`;
+  return {
+    key: m4.name,
+    name: m4.name,
+    text: text2,
+    shape: text2.replace(/\?(ref|spec|def):\d+/g, "?"),
+    proved: !text2.includes("?") && s4.parse_status === "decoded",
+    digest: s4.resolved_sha256 ?? void 0,
+    decoded: s4.parse_status === "decoded"
+  };
+}
+function fits(a4, b2) {
+  const parts = (s4) => s4.split(/([,<>()\s]+)/);
+  const [x2, y2] = [parts(a4), parts(b2)];
+  return x2.length === y2.length && x2.every((t3, i8) => t3 === y2[i8] || t3 === "?" || y2[i8] === "?");
+}
+function compareMembers(type, kind, a4, b2, f4) {
+  const rest = new Set(b2);
+  const left = [];
+  for (const x2 of a4) {
+    const same = [...rest].find((y2) => y2.key === x2.key && (x2.proved && y2.proved && x2.text === y2.text || x2.shape === y2.shape && x2.decoded && y2.decoded && x2.digest && x2.digest === y2.digest));
+    if (same)
+      rest.delete(same);
+    else
+      left.push(x2);
+  }
+  const leftAfter = [];
+  for (const x2 of left) {
+    const maybe = [...rest].find((y2) => y2.key === x2.key && fits(x2.shape, y2.shape) && !(x2.proved && y2.proved));
+    if (maybe) {
+      rest.delete(maybe);
+      f4.push({ breaking: null, what: `${type}.${x2.name}: can't be proved unchanged, because REA names a type only by number: ${x2.text} and ${maybe.text}. A person checks it` });
+    } else
+      leftAfter.push(x2);
+  }
+  const byName = /* @__PURE__ */ new Map();
+  for (const y2 of rest)
+    byName.set(y2.key, [...byName.get(y2.key) ?? [], y2]);
+  for (const x2 of leftAfter) {
+    const pool = byName.get(x2.key);
+    const y2 = pool?.shift();
+    if (y2) {
+      rest.delete(y2);
+      f4.push({ breaking: true, what: `${type}: signature changed: ${x2.text} \u2192 ${y2.text}` });
+    } else
+      f4.push({ breaking: true, what: `${type}: ${kind} removed: ${x2.text}` });
+  }
+  for (const y2 of [...rest].sort((p4, q2) => p4.text.localeCompare(q2.text)))
+    f4.push({ breaking: false, what: `${type}: ${kind} added: ${y2.text}` });
+}
+var hidden = (name) => name.includes("<");
+var picks = (patterns, t3) => patterns.some((p4) => p4.endsWith(".*") ? t3.startsWith(p4.slice(0, -1)) : t3 === p4);
+function diffAssemblies(legacy, candidate, c4) {
+  const map = c4.namespace_map ?? {};
+  const f4 = [];
+  if (!legacy.complete)
+    f4.push({ breaking: null, what: `REA read only part of ${legacy.assembly}, so something may be missing from this comparison` });
+  if (!candidate.complete)
+    f4.push({ breaking: null, what: `REA read only part of ${candidate.assembly}, so something may be missing from this comparison` });
+  const names = (inv) => inv.types.map((t3) => t3.full_name ?? "").filter((n3) => n3 && !hidden(n3));
+  const typesA = names(legacy).filter((t3) => picks(c4.types, t3)).sort();
+  const mappedPatterns = c4.types.map((p4) => p4.endsWith(".*") ? `${mapName(p4.slice(0, -2), map)}.*` : mapName(p4, map));
+  for (const p4 of c4.types)
+    if (!p4.endsWith(".*") && !typesA.includes(p4))
+      f4.push({ breaking: null, what: `the contract lists ${p4}, but ${legacy.assembly} has no such type` });
+  const members = (inv, type) => ({
+    methods: inv.methods.filter((m4) => m4.declaring_type === type && SURFACE(m4.flags) && !hidden(m4.name)),
+    fields: inv.fields.filter((m4) => m4.declaring_type === type && SURFACE(m4.flags) && !hidden(m4.name))
+  });
+  const inScope = (inv, types) => types.flatMap((t3) => {
+    const x2 = members(inv, t3);
+    return [...x2.methods, ...x2.fields];
+  });
+  const typesB = names(candidate).filter((t3) => picks(mappedPatterns, t3)).sort();
+  proveTypeNames(legacy, inScope(legacy, typesA), c4.known_types);
+  proveTypeNames(candidate, inScope(candidate, typesB), c4.known_types);
+  const seen = /* @__PURE__ */ new Set();
+  let compared = 0;
+  for (const t3 of typesA) {
+    const to = mapName(t3, map);
+    seen.add(to);
+    if (!names(candidate).includes(to)) {
+      f4.push({ breaking: true, what: `type removed: ${t3} (expected ${to})` });
+      continue;
+    }
+    const a4 = members(legacy, t3), b2 = members(candidate, to);
+    compared += a4.methods.length + a4.fields.length;
+    compareMembers(to, "method", a4.methods.map((m4) => show2(m4, legacy, map, false)), b2.methods.map((m4) => show2(m4, candidate, {}, false)), f4);
+    compareMembers(to, "field", a4.fields.map((m4) => show2(m4, legacy, map, true)), b2.fields.map((m4) => show2(m4, candidate, {}, true)), f4);
+  }
+  for (const t3 of typesB)
+    if (!seen.has(t3))
+      f4.push({ breaking: false, what: `type added: ${t3}` });
+  if (!typesA.length)
+    f4.push({ breaking: null, what: `no type in ${legacy.assembly} matches ${c4.types.join(", ")}, so nothing was compared` });
+  return { findings: f4, note: `${compared} public member${compared === 1 ? "" : "s"} of ${typesA.length} type${typesA.length === 1 ? "" : "s"} compared` };
+}
+function inventoryOf(m4, file, what) {
+  const full = inside(m4, file);
+  if (!fs16.existsSync(full) || !fs16.statSync(full).isFile())
+    throw new ManifestError(`${what} ${file} does not exist.`);
+  return readInventory(/\.json$/i.test(full) ? JSON.parse(fs16.readFileSync(full, "utf8")) : runRea(full), file);
+}
+function checkAssemblyContract(m4, c4) {
+  const base2 = { name: c4.name, kind: c4.kind };
+  const a4 = c4.assembly;
+  if (!a4)
+    return { ...base2, result: "ERROR", findings: [{ breaking: false, what: "the contract has no assembly settings" }] };
+  let out;
+  try {
+    out = diffAssemblies(inventoryOf(m4, a4.legacy, "The legacy assembly"), inventoryOf(m4, a4.candidate, "The candidate assembly"), a4);
+  } catch (err) {
+    return { ...base2, result: "ERROR", findings: [{ breaking: false, what: err.message }] };
+  }
+  for (const x2 of out.findings)
+    x2.where = `contract:${c4.name}: ${x2.what}`;
+  const result = out.findings.some((x2) => x2.breaking === true) ? "BREAKING" : out.findings.some((x2) => x2.breaking === null) ? "REVIEW" : out.findings.length ? "COMPATIBLE" : "EQUIVALENT";
+  return { ...base2, result, findings: out.findings, note: out.note };
+}
+
+// packages/core/dist/contracts.js
+var obj = (v2) => v2 && typeof v2 === "object" && !Array.isArray(v2) ? v2 : {};
+var METHODS = ["get", "put", "post", "delete", "patch", "head", "options"];
+function schemaProps(doc) {
+  const schemas = obj(obj(doc.components).schemas ?? doc.definitions);
+  const out = /* @__PURE__ */ new Map();
+  for (const [name, s4] of Object.entries(schemas)) {
+    const props = /* @__PURE__ */ new Map();
+    for (const [p4, v2] of Object.entries(obj(obj(s4).properties)))
+      props.set(p4, String(obj(v2).type ?? obj(v2).$ref ?? ""));
+    out.set(name, { props, required: new Set(obj(s4).required ?? []) });
+  }
+  return out;
+}
+function diffOpenApi(a4, b2) {
+  const f4 = [];
+  const ops = (d4) => {
+    const m4 = /* @__PURE__ */ new Map();
+    for (const [p4, item] of Object.entries(obj(d4.paths)))
+      for (const [verb, op] of Object.entries(obj(item)))
+        if (METHODS.includes(verb))
+          m4.set(`${verb.toUpperCase()} ${p4}`, obj(op));
+    return m4;
+  };
+  const oa = ops(a4), ob = ops(b2);
+  for (const k2 of [...oa.keys()].filter((k3) => !ob.has(k3)).sort())
+    f4.push({ breaking: true, what: `operation removed: ${k2}` });
+  for (const k2 of [...ob.keys()].filter((k3) => !oa.has(k3)).sort())
+    f4.push({ breaking: false, what: `operation added: ${k2}` });
+  for (const k2 of [...oa.keys()].filter((k3) => ob.has(k3)).sort()) {
+    const pa = /* @__PURE__ */ new Map(), pb = /* @__PURE__ */ new Map();
+    for (const p4 of oa.get(k2).parameters ?? [])
+      pa.set(`${p4.name} (${p4.in})`, p4);
+    for (const p4 of ob.get(k2).parameters ?? [])
+      pb.set(`${p4.name} (${p4.in})`, p4);
+    for (const [n3, p4] of pb)
+      if (!pa.has(n3) && p4.required)
+        f4.push({ breaking: true, what: `${k2}: new required parameter ${n3}` });
+    for (const n3 of pa.keys())
+      if (!pb.has(n3))
+        f4.push({ breaking: true, what: `${k2}: parameter removed ${n3}` });
+    const ra = Object.keys(obj(oa.get(k2).responses)), rb = new Set(Object.keys(obj(ob.get(k2).responses)));
+    for (const code of ra)
+      if (!rb.has(code))
+        f4.push({ breaking: true, what: `${k2}: response ${code} removed` });
+  }
+  const sa = schemaProps(a4), sb = schemaProps(b2);
+  for (const name of [...sa.keys()].sort()) {
+    const x2 = sa.get(name), y2 = sb.get(name);
+    if (!y2) {
+      f4.push({ breaking: true, what: `schema removed: ${name}` });
+      continue;
+    }
+    for (const [p4, t3] of x2.props) {
+      if (!y2.props.has(p4))
+        f4.push({ breaking: true, what: `schema ${name}: property removed ${p4}` });
+      else if (y2.props.get(p4) !== t3)
+        f4.push({ breaking: true, what: `schema ${name}: property ${p4} type ${t3 || "?"} \u2192 ${y2.props.get(p4) || "?"}` });
+    }
+    for (const p4 of y2.required)
+      if (!x2.required.has(p4))
+        f4.push({ breaking: true, what: `schema ${name}: ${p4} is now required` });
+    for (const p4 of y2.props.keys())
+      if (!x2.props.has(p4))
+        f4.push({ breaking: false, what: `schema ${name}: property added ${p4}` });
+  }
+  return f4;
+}
+function wsdlSummary(text2) {
+  const root = parseXml(text2);
+  const out = { tns: /* @__PURE__ */ new Set(), ops: /* @__PURE__ */ new Set(), types: /* @__PURE__ */ new Map() };
+  const walk = (n3) => {
+    const tns = n3.attrs.get("targetNamespace");
+    if (tns)
+      out.tns.add(`${n3.local}:${tns}`);
+    const name = n3.attrs.get("name");
+    if (n3.local === "operation" && name)
+      out.ops.add(name);
+    if ((n3.local === "element" || n3.local === "complexType") && name) {
+      const kids = /* @__PURE__ */ new Map();
+      const collect2 = (c4) => {
+        for (const k2 of c4.children) {
+          if (k2.local === "element" && k2.attrs.get("name"))
+            kids.set(k2.attrs.get("name"), { type: k2.attrs.get("type") ?? "", min: k2.attrs.get("minOccurs") ?? "1" });
+          else
+            collect2(k2);
+        }
+      };
+      collect2(n3);
+      const key2 = `${n3.local} ${name}`;
+      if (!out.types.has(key2))
+        out.types.set(key2, kids);
+    }
+    n3.children.forEach(walk);
+  };
+  walk(root);
+  return out;
+}
+function diffWsdl(a4, b2) {
+  const x2 = wsdlSummary(a4), y2 = wsdlSummary(b2);
+  const f4 = [];
+  const local = (t3) => t3.split(":").pop() ?? t3;
+  for (const t3 of [...x2.tns].filter((t4) => !y2.tns.has(t4)).sort()) {
+    const [where2, ...ns] = t3.split(":");
+    f4.push({ breaking: true, what: `target namespace no longer offered: ${ns.join(":")} (${where2})` });
+  }
+  for (const op of [...x2.ops].filter((o4) => !y2.ops.has(o4)).sort())
+    f4.push({ breaking: true, what: `operation removed: ${op}` });
+  for (const op of [...y2.ops].filter((o4) => !x2.ops.has(o4)).sort())
+    f4.push({ breaking: false, what: `operation added: ${op}` });
+  for (const [owner, ka] of [...x2.types].sort()) {
+    const kb = y2.types.get(owner);
+    if (!kb) {
+      f4.push({ breaking: true, what: `${owner} removed` });
+      continue;
+    }
+    for (const [c4, v2] of ka) {
+      if (!kb.has(c4))
+        f4.push({ breaking: true, what: `${owner}: element ${c4} removed` });
+      else if (local(kb.get(c4).type) !== local(v2.type))
+        f4.push({ breaking: true, what: `${owner}: element ${c4} type ${v2.type} \u2192 ${kb.get(c4).type}` });
+    }
+    for (const [c4, v2] of kb) {
+      if (!ka.has(c4)) {
+        const required = v2.min !== "0";
+        f4.push({ breaking: required, what: `${owner}: element ${c4} added${required ? " (required)" : ""}` });
+      }
+    }
+  }
+  return f4;
+}
+function checkContract(c4, ref, cand) {
+  const base2 = { name: c4.name, kind: c4.kind };
+  for (const [side, r6] of [["reference", ref], ["candidate", cand]]) {
+    if (r6.error)
+      return { ...base2, result: "ERROR", findings: [{ breaking: false, what: `${side}: ${r6.error}` }] };
+    if (r6.status !== 200)
+      return { ...base2, result: "ERROR", findings: [{ breaking: false, what: `${side} answered HTTP ${r6.status}` }] };
+  }
+  let findings = [];
+  try {
+    const kind = c4.kind.toLowerCase();
+    if (kind === "openapi")
+      findings = diffOpenApi(JSON.parse(ref.body ?? ""), JSON.parse(cand.body ?? ""));
+    else if (kind === "wsdl" || kind === "xsd")
+      findings = diffWsdl(ref.body ?? "", cand.body ?? "");
+    else if (ref.sha256 !== cand.sha256)
+      findings = [{ breaking: null, what: "the text differs; this kind is not analysed, so a person must review it" }];
+  } catch (err) {
+    return { ...base2, result: "ERROR", findings: [{ breaking: false, what: `could not parse: ${err.message}` }] };
+  }
+  for (const x2 of findings)
+    x2.where = `contract:${c4.name}: ${x2.what}`;
+  const result = findings.some((x2) => x2.breaking === true) ? "BREAKING" : findings.some((x2) => x2.breaking === null) ? "REVIEW" : findings.length ? "COMPATIBLE" : ref.sha256 === cand.sha256 ? "IDENTICAL" : "EQUIVALENT";
+  return { ...base2, result, findings };
+}
+
+// packages/core/dist/trend.js
+import fs17 from "node:fs";
 import path16 from "node:path";
+var position = (w2) => w2.replace(/\[\d+\]/g, "[*]");
+var RESULT = { PASS: "pass", MATCH: "pass", DRIFT: "pass", FAIL: "fail", DIFFERENT: "fail", ERROR: "error" };
+function scrubRules(s4) {
+  return [...(s4?.json_paths ?? []).map((p4) => `json_path ${p4}`), ...(s4?.xml_ignore ?? []).map((e6) => `xml_ignore ${e6}`), ...(s4?.regex ?? []).map((r6) => `regex ${r6.pattern}`)];
+}
+function fromReport(name, r6) {
+  const results = /* @__PURE__ */ new Map();
+  const places = [];
+  const used = /* @__PURE__ */ new Set();
+  for (const c4 of r6.cases ?? []) {
+    results.set(c4.id, RESULT[c4.result] ?? "other");
+    for (const d4 of c4.differences ?? []) {
+      places.push({ where: position(d4.where), case: c4.id, approved: !!d4.drift });
+      if (d4.drift)
+        used.add(d4.drift);
+    }
+    for (const f4 of c4.failures ?? [])
+      places.push({ where: position(f4.check), case: c4.id, approved: !!f4.known_issue });
+  }
+  for (const k2 of r6.contracts ?? []) {
+    for (const f4 of k2.findings ?? []) {
+      if (f4.drift)
+        used.add(f4.drift);
+      if (f4.where)
+        places.push({ where: f4.where, case: `contract-${k2.name}`, approved: !!f4.drift });
+    }
+  }
+  return { run: { run: name, verdict: r6.verdict, counts: r6.counts ?? {}, partial: !!r6.partial }, results, places, used, unused: r6.unused_drift ?? [], ...r6.scrub_fired ? { fired: r6.scrub_fired } : {}, scrubs: scrubRules(r6.settings?.scrub), ...r6.settings?.manifest_sha256 ? { sha: r6.settings.manifest_sha256 } : {} };
+}
+function fromShadow(name, r6) {
+  const results = /* @__PURE__ */ new Map();
+  const places = [];
+  const used = /* @__PURE__ */ new Set();
+  for (const e6 of r6.endpoints ?? []) {
+    results.set(e6.endpoint, e6.unexplained ? "fail" : e6.errors && !e6.matched && !e6.drift ? "error" : "pass");
+    for (const d4 of e6.differences ?? []) {
+      places.push({ where: d4.where, case: e6.endpoint, approved: !!d4.drift });
+      if (d4.drift)
+        used.add(d4.drift);
+    }
+  }
+  const p4 = r6.replay;
+  const counts = { SENT: p4?.sent ?? 0, MATCHED: p4?.matched ?? 0, DRIFT: p4?.drift ?? 0, UNEXPLAINED: p4?.different ?? 0, ERROR: p4?.errors ?? 0, "NOT SENT": p4?.not_sent ?? 0, DROPPED: r6.capture?.dropped_total ?? 0 };
+  return { run: { run: name, verdict: r6.verdict, counts, partial: false }, results, places, used, unused: r6.unused_drift ?? [], ...r6.scrub_fired ? { fired: r6.scrub_fired } : {}, scrubs: scrubRules(r6.settings?.scrub), ...r6.settings?.manifest_sha256 ? { sha: r6.settings.manifest_sha256 } : {} };
+}
+function trendOf(mode, system, rows, unreadable) {
+  const latest = rows[rows.length - 1];
+  const places = /* @__PURE__ */ new Map();
+  for (const row of rows) {
+    for (const p4 of row.places) {
+      const e6 = places.get(p4.where) ?? { runs: /* @__PURE__ */ new Set(), cases: /* @__PURE__ */ new Set(), first: row.run.run, last: row.run.run, approved: true };
+      e6.runs.add(row.run.run);
+      e6.cases.add(p4.case);
+      e6.last = row.run.run;
+      e6.approved &&= p4.approved;
+      places.set(p4.where, e6);
+    }
+  }
+  const STATE_ORDER = { new: 0, "keeps coming back": 1, "not checked": 2, gone: 3 };
+  const differences = [...places].map(([where2, e6]) => {
+    const inLatest = !!latest && e6.runs.has(latest.run.run);
+    const checkedInLatest = !!latest && [...e6.cases].some((c4) => ["pass", "fail"].includes(latest.results.get(c4) ?? "") || c4.startsWith("contract-"));
+    const state = inLatest ? e6.runs.size === 1 ? "new" : "keeps coming back" : checkedInLatest ? "gone" : "not checked";
+    return { where: where2, state, runs: e6.runs.size, first_seen: e6.first, last_seen: e6.last, cases: [...e6.cases].sort(), approved: e6.approved };
+  }).sort((a4, b2) => STATE_ORDER[a4.state] - STATE_ORDER[b2.state] || Number(a4.approved) - Number(b2.approved) || b2.runs - a4.runs || a4.where.localeCompare(b2.where));
+  const flaky = [];
+  const fixed = [], regressed = [];
+  const ids = new Set(rows.flatMap((r6) => [...r6.results.keys()]));
+  for (const id of [...ids].sort()) {
+    const seq = rows.map((r6) => r6.results.get(id)).filter((x2) => x2 === "pass" || x2 === "fail");
+    let flips = 0;
+    for (let i8 = 1; i8 < seq.length; i8++)
+      if (seq[i8] !== seq[i8 - 1])
+        flips++;
+    const errors = rows.filter((r6) => r6.results.get(id) === "error").length;
+    if (flips >= 2)
+      flaky.push({ case: id, passed: seq.filter((x2) => x2 === "pass").length, failed: seq.filter((x2) => x2 === "fail").length, flips, errors, latest: latest?.results.get(id) ?? "not in the latest run" });
+    else if (flips === 1)
+      (seq[seq.length - 1] === "pass" ? fixed : regressed).push(id);
+  }
+  flaky.sort((a4, b2) => b2.flips - a4.flips || a4.case.localeCompare(b2.case));
+  const everUsed = new Set(rows.flatMap((r6) => [...r6.used]));
+  const unused = latest?.unused ?? [];
+  const recorded = rows.filter((r6) => r6.fired);
+  const fired = new Set(recorded.flatMap((r6) => Object.entries(r6.fired).filter(([, n3]) => n3 > 0).map(([k2]) => k2)));
+  const settingsChanged = [];
+  for (let i8 = 1; i8 < rows.length; i8++)
+    if (rows[i8].sha && rows[i8 - 1].sha && rows[i8].sha !== rows[i8 - 1].sha)
+      settingsChanged.push(rows[i8].run.run);
+  const open = differences.filter((d4) => !d4.approved);
+  const count2 = (s4) => open.filter((d4) => d4.state === s4).length;
+  const summary = !rows.length ? "No readable dated runs." : `${rows.length} run${rows.length === 1 ? "" : "s"} from ${rows[0].run.run} to ${latest.run.run}. Latest verdict: ${latest.run.verdict}. Differences no person accepted: ${count2("new")} new, ${count2("keeps coming back")} keep coming back, ${count2("gone")} gone. ${flaky.length} flaky.`;
+  return {
+    tool: "cmtk",
+    mode,
+    system,
+    runs: rows.map((r6) => r6.run),
+    unreadable,
+    differences,
+    flaky,
+    fixed,
+    regressed,
+    drift_stopped_matching: unused.filter((d4) => everUsed.has(d4)).sort(),
+    drift_never_matched: unused.filter((d4) => !everUsed.has(d4)).sort(),
+    scrubs_never_fired: recorded.length ? (latest?.scrubs ?? []).filter((s4) => !fired.has(s4)) : [],
+    settings_changed: settingsChanged,
+    summary
+  };
+}
+var cell3 = (v2) => String(v2).replace(/\|/g, "\\|").replace(/\r?\n/g, " ").replace(/`/g, "'");
+function renderTrend(t3) {
+  const L2 = [`# Trend report: ${t3.system} (${t3.mode})`, "", t3.summary, "", "Read from the dated reports in the evidence folder. Nothing was sent. Run times are in UTC. Only a person signs a report: this one is not signed.", ""];
+  L2.push("## Verdict over time", "", "| Run | Verdict | Counts |", "| --- | --- | --- |");
+  for (const r6 of t3.runs)
+    L2.push(`| ${r6.run} | ${cell3(r6.verdict)}${r6.partial ? " (partial run)" : ""} | ${cell3(Object.entries(r6.counts).map(([k2, v2]) => `${v2} ${k2.toLowerCase()}`).join(", "))} |`);
+  if (t3.settings_changed.length)
+    L2.push("", `The settings file changed before: ${t3.settings_changed.join(", ")}. A verdict can change because a scrub or a drift entry did, so read what changed.`);
+  if (t3.unreadable.length)
+    L2.push("", `Could not be read, so not counted: ${t3.unreadable.join(", ")}.`);
+  L2.push("", "## Differences by where", "");
+  if (t3.differences.length) {
+    L2.push("| Where | State | Runs | First seen | Last seen | Accepted by a person | Cases |", "| --- | --- | --- | --- | --- | --- | --- |");
+    for (const d4 of t3.differences.slice(0, 500))
+      L2.push(`| \`${cell3(d4.where)}\` | ${d4.state} | ${d4.runs} of ${t3.runs.length} | ${d4.first_seen} | ${d4.last_seen} | ${d4.approved ? "yes" : "no"} | ${cell3(d4.cases.slice(0, 5).join(", "))}${d4.cases.length > 5 ? `, and ${d4.cases.length - 5} more` : ""} |`);
+    if (t3.differences.length > 500)
+      L2.push("", `${t3.differences.length - 500} more are in TREND.json.`);
+  } else
+    L2.push("None in these runs.");
+  L2.push("", "## Flaky cases", "", "A case whose result changed at least twice: it passes sometimes and fails sometimes.", "");
+  if (t3.flaky.length) {
+    L2.push(`| ${t3.mode === "shadow" ? "Endpoint" : "Case"} | Passed | Failed | Changes | Errors | Latest |`, "| --- | --- | --- | --- | --- | --- |");
+    for (const f4 of t3.flaky)
+      L2.push(`| ${cell3(f4.case)} | ${f4.passed} | ${f4.failed} | ${f4.flips} | ${f4.errors} | ${f4.latest} |`);
+  } else
+    L2.push("None.");
+  if (t3.regressed.length)
+    L2.push("", `Started failing and stayed that way: ${cell3(t3.regressed.join(", "))}.`);
+  if (t3.fixed.length)
+    L2.push("", `Started passing and stayed that way: ${cell3(t3.fixed.join(", "))}.`);
+  L2.push("", "## Ledger and settings to check", "");
+  const lines = [
+    t3.drift_stopped_matching.length && `- Drift entries that stopped matching: ${cell3(t3.drift_stopped_matching.join(", "))}. They matched earlier and match nothing now. A person checks whether they are still needed.`,
+    t3.drift_never_matched.length && `- Drift entries that have never matched in these runs: ${cell3(t3.drift_never_matched.join(", "))}.`,
+    t3.scrubs_never_fired.length && `- Scrub rules that never fired in these runs: ${t3.scrubs_never_fired.map((s4) => `\`${cell3(s4)}\``).join(", ")}. A rule that hides nothing may be mistyped, or no longer needed.`
+  ].filter(Boolean);
+  L2.push(...lines.length ? lines : ["Nothing to check."], "");
+  return L2.join("\n");
+}
+function newestMode(manifest) {
+  let best;
+  for (const mode of HISTORY_MODES) {
+    const runs = datedRuns(manifest, mode);
+    const last = runs[runs.length - 1];
+    if (last && (!best || last.time > best.time))
+      best = { mode, time: last.time };
+  }
+  return best?.mode;
+}
+function trend(manifest, o4 = {}) {
+  const mode = o4.mode ?? newestMode(manifest) ?? "compare";
+  let runs = datedRuns(manifest, mode);
+  if (o4.last !== void 0)
+    runs = runs.slice(-o4.last);
+  const rows = [];
+  const unreadable = [];
+  for (const r6 of runs) {
+    try {
+      const doc = JSON.parse(fs17.readFileSync(path16.join(r6.dir, "REPORT.json"), "utf8"));
+      if (typeof doc?.verdict !== "string")
+        throw new Error("no verdict");
+      rows.push(mode === "shadow" ? fromShadow(r6.name, doc) : fromReport(r6.name, doc));
+    } catch {
+      unreadable.push(r6.name);
+    }
+  }
+  const report = trendOf(mode, manifest.system, rows, unreadable);
+  if (!rows.length)
+    return { report };
+  const dir = ownedFolder(manifest, path16.join(manifest.evidence, "trend", mode));
+  fs17.mkdirSync(dir, { recursive: true });
+  fs17.writeFileSync(path16.join(dir, "TREND.json"), JSON.stringify(report, null, 2) + "\n", "utf8");
+  fs17.writeFileSync(path16.join(dir, "TREND.md"), renderTrend(report), "utf8");
+  return { report, file: path16.relative(manifest.root, path16.join(dir, "TREND.md")).split(path16.sep).join("/") };
+}
+
+// packages/core/dist/expect.js
+function regex(pattern, where2) {
+  try {
+    return new RegExp(pattern);
+  } catch (err) {
+    throw new ConfigError(`expect ${where2}: ${JSON.stringify(pattern)} is not a valid regular expression (${err.message}).`);
+  }
+}
+var typeOf3 = (v2) => v2 === null ? "null" : Array.isArray(v2) ? "array" : typeof v2;
+function checkJson(path25, check2, doc) {
+  const found = select(doc, parsePath(path25));
+  if ("exists" in check2) {
+    return found.length > 0 === check2.exists ? [] : [{ check: path25, expected: check2.exists ? "present" : "absent", actual: found.length ? short(found[0].value) : "(missing)" }];
+  }
+  if (found.length === 0)
+    return [{ check: path25, expected: describe(check2), actual: "(missing)" }];
+  const out = [];
+  for (const { at: at2, value } of found) {
+    let ok = true;
+    if ("equals" in check2)
+      ok = jsonEqual(value, check2.equals);
+    else if ("matches" in check2)
+      ok = typeof value === "string" && regex(check2.matches, path25).test(value);
+    else if ("type" in check2)
+      ok = typeOf3(value) === check2.type;
+    if (!ok)
+      out.push({ check: found.length > 1 ? render(at2) : path25, expected: describe(check2), actual: short(value) });
+  }
+  return out;
+}
+function describe(check2) {
+  if ("equals" in check2)
+    return short(check2.equals);
+  if ("matches" in check2)
+    return `matches /${check2.matches}/`;
+  if ("type" in check2)
+    return `a ${check2.type}`;
+  return check2.exists ? "present" : "absent";
+}
+function checkExpectation(exp, obs) {
+  const out = [];
+  if (exp.status !== void 0) {
+    const allowed = Array.isArray(exp.status) ? exp.status : [exp.status];
+    if (!allowed.includes(obs.status ?? -1))
+      out.push({ check: "status", expected: allowed.join(" or "), actual: String(obs.status ?? "(none)") });
+  }
+  for (const [name, want] of Object.entries(exp.headers ?? {})) {
+    const got = obs.headers?.[name.toLowerCase()];
+    const ok = typeof want === "string" ? got === want : got !== void 0 && regex(want.matches, `header ${name}`).test(got);
+    if (!ok)
+      out.push({ check: `header:${name.toLowerCase()}`, expected: typeof want === "string" ? want : `matches /${want.matches}/`, actual: got ?? "(missing)" });
+  }
+  if (exp.json) {
+    let doc;
+    try {
+      doc = JSON.parse(obs.body ?? "");
+    } catch {
+      return [...out, { check: "body", expected: "JSON", actual: short(obs.body ?? "", 60) }];
+    }
+    for (const [path25, check2] of Object.entries(exp.json))
+      out.push(...checkJson(path25, check2, doc));
+  }
+  for (const text2 of exp.body_contains ?? []) {
+    if (!(obs.body ?? "").includes(text2))
+      out.push({ check: "body", expected: `contains ${short(text2, 60)}`, actual: "not found" });
+  }
+  for (const text2 of exp.body_excludes ?? []) {
+    const at2 = (obs.body ?? "").indexOf(text2);
+    if (at2 >= 0)
+      out.push({ check: "body", expected: `never contains ${short(text2, 60)}`, actual: `found: ${short((obs.body ?? "").slice(Math.max(0, at2 - 20), at2 + text2.length + 40), 100)}` });
+  }
+  return out;
+}
+
+// packages/core/dist/report.js
+var NOISE = [
+  ["a GUID", /^"?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"?$/],
+  ["a timestamp", /^"?\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/],
+  ["a /Date()/ value", /^"?\\?\/Date\(\d+/]
+];
+var noiseKind = (value) => NOISE.find(([, rx]) => rx.test(value))?.[0];
+function noise(cases) {
+  const byWhere = /* @__PURE__ */ new Map();
+  for (const c4 of cases) {
+    for (const d4 of c4.differences ?? []) {
+      if (d4.drift)
+        continue;
+      const k2 = d4.where.replace(/\[\d+\]/g, "[*]");
+      const list = byWhere.get(k2);
+      if (list)
+        list.push(d4);
+      else
+        byWhere.set(k2, [d4]);
+    }
+  }
+  const out = [];
+  for (const [where2, ds] of [...byWhere].sort()) {
+    const hit2 = NOISE.find(([, rx]) => ds.every((d4) => rx.test(d4.reference) && rx.test(d4.candidate)));
+    if (hit2)
+      out.push({ where: where2, cases: ds.length, why: `both sides hold ${hit2[0]} that changes on every call` });
+  }
+  return out;
+}
+var RAN = /* @__PURE__ */ new Set(["MATCH", "DRIFT", "DIFFERENT"]);
+function scopeOf(cases, contracts, surfaces) {
+  const lists = Object.entries(surfaces);
+  if (!lists.some(([, l4]) => l4))
+    return void 0;
+  const listed = [...new Set(lists.flatMap(([, l4]) => l4 ?? []))].sort();
+  const lacks = (s4) => lists.filter(([, l4]) => l4 && !l4.includes(s4)).map(([n3]) => n3);
+  const words2 = (names, s4) => `${names.join(" and ")} ${names.length > 1 ? "have" : "has"} no ${s4} surface`;
+  const count2 = /* @__PURE__ */ new Map();
+  for (const c4 of cases)
+    if (RAN.has(c4.result))
+      count2.set(c4.surface, (count2.get(c4.surface) ?? 0) + 1);
+  const compared = [...count2].sort().map(([surface, n3]) => ({ surface, cases: n3 }));
+  const out = /* @__PURE__ */ new Map();
+  for (const c4 of cases)
+    if (c4.result === "NOT COMPARABLE")
+      out.set(c4.surface, (out.get(c4.surface) ?? 0) + 1);
+  for (const s4 of listed)
+    if (lacks(s4).length && !out.has(s4))
+      out.set(s4, 0);
+  const not_compared = [...out].sort().map(([surface, n3]) => ({ surface, cases: n3, why: words2(lacks(surface), surface) }));
+  const no_cases = listed.filter((s4) => !lacks(s4).length && !count2.has(s4));
+  const contracts_not_compared = contracts.filter((k2) => k2.result === "NOT COMPARABLE").map((k2) => k2.name);
+  const whole = !not_compared.length && !no_cases.length && !contracts_not_compared.length;
+  const statement = whole ? `Every surface the targets list was compared: ${compared.map((c4) => c4.surface).join(", ")}.` : `This comparison covers only ${compared.map((c4) => c4.surface).join(", ") || "no surface at all"}, not the whole system. Not compared: ${[
+    ...not_compared.map((n3) => `${n3.cases ? `${plural(n3.cases, "case")} on ${n3.surface}` : n3.surface} (${n3.why})`),
+    ...no_cases.map((s4) => `${s4} (no case compared it)`),
+    ...contracts_not_compared.map((k2) => `contract ${k2}`)
+  ].join("; ")}.`;
+  return { whole, statement, compared, not_compared, no_cases, contracts_not_compared };
+}
+function summarise(x2) {
+  const counts = {};
+  const keys = x2.mode === "run" ? ["PASS", "FAIL", "SKIPPED", "ERROR"] : ["MATCH", "DRIFT", "DIFFERENT", "SKIPPED", "ERROR"];
+  for (const k2 of keys)
+    counts[k2] = x2.cases.filter((c4) => c4.result === k2 && !c4.known_issues).length;
+  const knownFailing = x2.cases.filter((c4) => c4.known_issues).length;
+  if (knownFailing)
+    counts["KNOWN ISSUE"] = knownFailing;
+  const notComparable = x2.cases.filter((c4) => c4.result === "NOT COMPARABLE").length;
+  if (notComparable)
+    counts["NOT COMPARABLE"] = notComparable;
+  const scope = x2.mode === "compare" && x2.surfaces ? scopeOf(x2.cases, x2.contracts, x2.surfaces) : void 0;
+  const stale = (x2.known ?? []).filter((k2) => k2.state === "no longer fails").map((k2) => k2.id).sort();
+  const decided = decide({ ...x2, scope }, counts);
+  const { verdict, next } = decided;
+  const gaps = /* @__PURE__ */ new Map();
+  for (const c4 of x2.cases)
+    if (c4.no_adapter)
+      gaps.set(c4.surface, [...gaps.get(c4.surface) ?? [], c4.id]);
+  const noAdapter2 = [...gaps].sort().map(([surface, cases]) => ({ surface, cases }));
+  const gapCount = noAdapter2.reduce((n3, g3) => n3 + g3.cases.length, 0);
+  const reason = decided.reason + (gapCount ? ` ${plural(gapCount, "case")} on a surface with no adapter (${noAdapter2.map((g3) => g3.surface).join(", ")}): nothing was sent for ${gapCount === 1 ? "it" : "them"}.` : "") + (scope && !scope.whole ? ` ${scope.statement}` : "") + (x2.excludedCompareOnly ? ` ${plural(x2.excludedCompareOnly, "case")} on a compare-only surface (${x2.compareOnlySurfaces.join(", ")}) ${x2.excludedCompareOnly === 1 ? "was" : "were"} left out: \`cmtk compare\` covers ${x2.excludedCompareOnly === 1 ? "it" : "them"}.` : "") + (stale.length ? ` ${stale.length === 1 ? "A known issue no longer fails" : "Known issues no longer fail"} (${stale.join(", ")}): a person removes ${stale.length === 1 ? "it" : "them"} from the ledger.` : "") + (x2.excludedDrafts ? ` ${x2.excludedDrafts} draft case${x2.excludedDrafts === 1 ? " was" : "s were"} left out (--accepted-only).` : "");
+  const reqs = /* @__PURE__ */ new Map();
+  for (const c4 of x2.cases) {
+    for (const r6 of c4.requirement.length ? c4.requirement : ["(no requirement named)"]) {
+      const e6 = reqs.get(r6) ?? { cases: 0, passed: 0, failed: 0, other: 0 };
+      e6.cases++;
+      if (c4.result === "PASS" || c4.result === "MATCH" || c4.result === "DRIFT")
+        e6.passed++;
+      else if (c4.result === "FAIL" || c4.result === "DIFFERENT")
+        e6.failed++;
+      else
+        e6.other++;
+      reqs.set(r6, e6);
+    }
+  }
+  return {
+    tool: "cmtk",
+    mode: x2.mode,
+    system: x2.manifest.system,
+    date: x2.date,
+    verdict,
+    targets: x2.targets,
+    counts,
+    cases: x2.cases,
+    contracts: x2.contracts,
+    requirements: [...reqs].map(([requirement, v2]) => ({ requirement, ...v2 })).sort((a4, b2) => a4.requirement.localeCompare(b2.requirement)),
+    unused_drift: unusedDrift({ ...x2, partial: x2.partial || !!(scope && !scope.whole) }),
+    ...x2.known?.length ? { known_issues: x2.known, stale_known_issues: stale } : {},
+    suggested_scrubs: x2.mode === "compare" ? noise(x2.cases) : [],
+    partial: x2.partial,
+    ...x2.excludedDrafts ? { excluded_drafts: x2.excludedDrafts } : {},
+    ...x2.excludedCompareOnly ? { excluded_compare_only: x2.excludedCompareOnly } : {},
+    ...noAdapter2.length ? { no_adapter: noAdapter2 } : {},
+    ...scope ? { scope } : {},
+    ...x2.settings ? { settings: x2.settings } : {},
+    ...x2.scrubFired ? { scrub_fired: x2.scrubFired } : {},
+    ...x2.modelCalls ? { model_calls: x2.modelCalls } : {},
+    reason,
+    next
+  };
+}
+function unusedDrift(x2) {
+  const ran = new Set(x2.cases.filter((c4) => c4.result !== "NOT COMPARABLE").map((c4) => c4.id));
+  return x2.drift.filter((d4) => !x2.usedDrift.has(d4.id) && (!x2.partial || ran.has(d4.case))).map((d4) => d4.id).sort();
+}
+var plural = (n3, one, many = `${one}s`) => `${n3} ${n3 === 1 ? one : many}`;
+function decide(x2, counts) {
+  const ran = x2.cases.filter((c4) => c4.result !== "SKIPPED" && c4.result !== "ERROR" && c4.result !== "NOT COMPARABLE").length;
+  const errored = x2.cases.filter((c4) => c4.result === "ERROR");
+  const skipped = x2.cases.filter((c4) => c4.result === "SKIPPED");
+  const again = `\`cmtk ${x2.mode}\` again`;
+  const cut = x2.cases.filter((c4) => c4.truncated).length;
+  const cutWords = `${plural(cut, "answer")} ${cut === 1 ? "was" : "were"} over 5 MB, and only the first 5 MB ${x2.mode === "run" ? "were checked" : "were compared"}.`;
+  const why = () => {
+    const first = errored[0] ?? skipped[0];
+    if (!first)
+      return "";
+    const refused = errored.some((c4) => /ECONNREFUSED|ENOTFOUND|EHOSTUNREACH|ETIMEDOUT/.test(c4.why ?? ""));
+    return refused ? `a system did not answer (${first.why}). Start it, or correct its base_url in cmtk.yaml, then run ${again}.` : `${first.id}: ${first.why}. Fix that, then run ${again}.`;
+  };
+  const notRun = () => [errored.length && `${plural(errored.length, "case")} could not run`, skipped.length && `${plural(skipped.length, "case")} were skipped`].filter(Boolean).join(" and ");
+  if (x2.mode === "run") {
+    const stillFailing = (x2.known ?? []).filter((k2) => x2.cases.some((c4) => c4.known_issues?.includes(k2.id)));
+    const known = counts["KNOWN ISSUE"] ?? 0;
+    const knownWords = known ? ` ${plural(known, "case")} failed only as known issues (${stillFailing.map((k2) => `${k2.id}, accepted by ${k2.accepted_by}`).join("; ")}).` : "";
+    if (x2.cases.length === 0)
+      return { verdict: "NO EVIDENCE", reason: "There are no cases.", next: "add cases (cmtk/cases/*.yaml, or `cmtk import-har`), then `cmtk run`." };
+    if (counts.FAIL)
+      return { verdict: "FAIL", reason: `${plural(counts.FAIL, "case")} failed.${knownWords}`, next: "fix what failed (or correct an expectation with the person who owns the requirement), then `cmtk run` again." };
+    if (ran === 0)
+      return { verdict: "NO EVIDENCE", reason: `No case ran: ${notRun()}.`, next: why() };
+    if (errored.length || skipped.length)
+      return { verdict: "INCOMPLETE", reason: `${notRun()}.${knownWords}`, next: why() };
+    if (x2.partial)
+      return { verdict: "INCOMPLETE", reason: `Only the ${plural(ran, "case")} named with --only ran, ${known ? "with no new failures" : "and all passed"}.${knownWords}`, next: "run every case with `cmtk run` before anyone signs." };
+    if (cut)
+      return { verdict: "INCOMPLETE", reason: `Nothing failed, but ${cutWords}${knownWords}`, next: "a person checks those cases another way, such as a smaller answer, before anyone signs." };
+    if (known)
+      return { verdict: "PASS WITH KNOWN ISSUES", reason: `${plural(ran - known, "case")} passed.${knownWords} These still fail: they are accepted, not fixed.`, next: "a person reviews the report, known issues included, and signs it with `cmtk signoff run`." };
+    return { verdict: "PASS", reason: `All ${plural(ran, "case")} passed.`, next: "a person reviews the report and signs it with `cmtk signoff run`." };
+  }
+  const openFindings = x2.contracts.flatMap((k2) => k2.findings.filter((f4) => f4.where && !f4.drift));
+  const approvedFindings = x2.contracts.flatMap((k2) => k2.findings.filter((f4) => f4.drift));
+  const contractErrors = x2.contracts.filter((k2) => k2.result === "ERROR");
+  if (counts.DIFFERENT || openFindings.length) {
+    const parts = [counts.DIFFERENT && `${plural(counts.DIFFERENT, "case")} answered differently`, openFindings.length && `${plural(openFindings.length, "contract change")} not approved`].filter(Boolean);
+    return { verdict: "NO PARITY", reason: `${parts.join(" and ")}.`, next: "for each difference: scrub it if it is noise, approve it as drift in the drift ledger (a named person), or fix the candidate. Then `cmtk compare` again." };
+  }
+  if (x2.cases.length === 0) {
+    return { verdict: "NO EVIDENCE", reason: x2.contracts.length ? "Only the contracts were checked; there are no cases to compare behaviour." : "There are no cases and no contracts.", next: "add cases (cmtk/cases/*.yaml, or `cmtk import-har`), then `cmtk compare`." };
+  }
+  const notComparable = counts["NOT COMPARABLE"] ?? 0;
+  if (ran === 0)
+    return { verdict: "NO EVIDENCE", reason: `No case ran: ${[notRun(), notComparable && `${plural(notComparable, "case")} not comparable`].filter(Boolean).join(" and ")}.`, next: why() || "add cases on a surface both targets offer, then `cmtk compare`." };
+  if (errored.length || skipped.length || contractErrors.length) {
+    const parts = [notRun(), contractErrors.length && `${plural(contractErrors.length, "contract")} could not be checked`].filter(Boolean);
+    return { verdict: "INCOMPLETE", reason: `${parts.join(" and ")}.`, next: why() || `see the contracts table (${contractErrors[0]?.findings[0]?.what ?? ""}), fix that, then \`cmtk compare\` again.` };
+  }
+  const drifted = counts.DRIFT || approvedFindings.length;
+  if (x2.partial)
+    return { verdict: "INCOMPLETE", reason: `Only the ${plural(ran, "case")} named with --only ran, with no unapproved differences.`, next: "compare every case with `cmtk compare` before anyone signs." };
+  if (cut)
+    return { verdict: "PARTIAL COMPARISON", reason: `No difference in what was compared, but ${cutWords}`, next: "a person reads which cases those were, and signs for what was compared. The rest of those answers still has to be compared another way." };
+  if (x2.scope && !x2.scope.whole)
+    return { verdict: "PARTIAL COMPARISON", reason: drifted ? "On what was compared, every difference is approved drift." : "On what was compared, there are no differences.", next: "a person reads the scope and signs with `cmtk signoff compare` for what was compared. The rest of the system still has to be compared." };
+  return drifted ? { verdict: "DRIFT ONLY", reason: "Every difference is approved drift.", next: "a person reviews the report and signs it with `cmtk signoff compare`." } : { verdict: "PARITY", reason: "No differences at all.", next: "a person reviews the report and signs it with `cmtk signoff compare`." };
+}
+var cell4 = (v2) => String(v2).replace(/\|/g, "\\|").replace(/\r?\n/g, " ").replace(/`/g, "'");
+function renderReport(r6) {
+  const L2 = [];
+  const title = r6.mode === "run" ? "Test report" : "Comparison report";
+  L2.push(`# ${title}: ${r6.system}`, "", `**Verdict: ${r6.verdict}**${r6.partial ? " (partial run: only some cases)" : ""}${r6.scope && !r6.scope.whole ? " (only part of the system: see Scope)" : ""}`, "", r6.reason, "", `Next: ${r6.next}`, "");
+  L2.push(`- Date: ${r6.date}`);
+  for (const [name, url] of Object.entries(r6.targets))
+    L2.push(`- ${name}: \`${url}\``);
+  L2.push(`- Cases: ${Object.entries(r6.counts).map(([k2, v2]) => `${v2} ${k2.toLowerCase()}`).join(", ")}`);
+  if (r6.model_calls)
+    L2.push(`- Model calls: ${r6.model_calls.total}${r6.model_calls.cases_not_counted ? ` counted, and ${plural(r6.model_calls.cases_not_counted, "answer")} from an adapter that does not count them` : ""}`);
+  L2.push("");
+  L2.push("Written by `cmtk " + r6.mode + "` from the files in this folder. Do not edit the numbers: run it again.", "");
+  if (r6.settings) {
+    const s4 = r6.settings;
+    const scrubs = [...s4.scrub.json_paths.map((p4) => `\`${p4}\``), ...s4.scrub.xml_ignore.map((e6) => `XML \`${e6}\``), ...s4.scrub.regex.map((x2) => `regex \`${x2.pattern}\``)];
+    L2.push("## Settings", "", "What produced this report. Check what is hidden or approved before you sign.", "", `- Settings file: \`${s4.manifest}\` (sha256 ${s4.manifest_sha256.slice(0, 16)}\u2026)`, ...r6.mode === "compare" ? [
+      `- Match level: ${s4.match}${s4.overrides.length ? `; overrides: ${s4.overrides.map((o4) => `\`${o4.path}\` ${o4.match}`).join(", ")}` : ""}`,
+      `- Scrubbed (hidden from every comparison): ${scrubs.length ? scrubs.join(", ") : "nothing"}`,
+      ...s4.visual_tolerance ? [`- Screenshots: up to ${(s4.visual_tolerance * 100).toFixed(2)}% of pixels may change (visual_tolerance)`] : [],
+      `- Approved drift: ${s4.drift_entries} entr${s4.drift_entries === 1 ? "y" : "ies"} in \`${s4.drift_file}\``
+    ] : [], ...s4.known_issues_file && s4.known_issues_entries ? [`- Known issues: ${s4.known_issues_entries} entr${s4.known_issues_entries === 1 ? "y" : "ies"} for this target in \`${s4.known_issues_file}\``] : [], "");
+  }
+  if (r6.scope) {
+    L2.push("## Scope", "", r6.scope.statement, "");
+    for (const c4 of r6.scope.compared)
+      L2.push(`- Compared: ${c4.surface}, ${c4.cases} case${c4.cases === 1 ? "" : "s"}`);
+    for (const n3 of r6.scope.not_compared)
+      L2.push(`- Not compared: ${n3.surface}, ${n3.cases} case${n3.cases === 1 ? "" : "s"}: ${cell4(n3.why)}`);
+    for (const s4 of r6.scope.no_cases)
+      L2.push(`- Not compared: ${s4}: both targets offer it, and no case compared it`);
+    for (const k2 of r6.scope.contracts_not_compared)
+      L2.push(`- Not compared: contract ${cell4(k2)}`);
+    L2.push("");
+  }
+  if (r6.no_adapter?.length) {
+    L2.push("## Cases with no adapter", "", "Nothing was sent for these cases, because no adapter drives their surface. They count as errors, so this report can't pass until each has an adapter.", "");
+    for (const n3 of r6.no_adapter)
+      L2.push(`- ${cell4(n3.surface)}: ${n3.cases.map(cell4).join(", ")}`);
+    L2.push("");
+  }
+  L2.push("## Requirements", "", "| Requirement | Cases | Passed | Failed | Not run |", "| --- | --- | --- | --- | --- |");
+  for (const q2 of r6.requirements)
+    L2.push(`| ${cell4(q2.requirement)} | ${q2.cases} | ${q2.passed} | ${q2.failed} | ${q2.other} |`);
+  if (r6.requirements.length === 0)
+    L2.push("| (no cases) | 0 | 0 | 0 | 0 |");
+  if (r6.mode === "compare") {
+    L2.push("", "## Contracts", "");
+    if (r6.contracts.length) {
+      L2.push("| Contract | Kind | Result | Findings |", "| --- | --- | --- | --- |");
+      for (const k2 of r6.contracts)
+        L2.push(`| ${cell4(k2.name)} | ${cell4(k2.kind)} | ${k2.result} | ${cell4(k2.findings.map((f4) => `${f4.what}${f4.drift ? ` (approved: ${f4.drift})` : ""}`).join("; ") || "none")}${k2.note ? ` (${cell4(k2.note)})` : ""} |`);
+    } else
+      L2.push("No contracts are listed in cmtk.yaml, so none were checked.");
+  }
+  L2.push("", "## Cases", "", r6.mode === "compare" ? "| Case | Request | Level | Result |" : "| Case | Request | Requirement | Result |", "| --- | --- | --- | --- |");
+  for (const c4 of r6.cases) {
+    const mid = r6.mode === "compare" ? c4.match ?? "" : c4.requirement.join(", ") || "\u2014";
+    const shown2 = c4.known_issues ? `FAIL (known issue ${c4.known_issues.join(", ")})` : c4.result;
+    L2.push(`| ${c4.id} | ${cell4(c4.name)} | ${cell4(mid)} | ${c4.result === "NOT COMPARABLE" ? cell4(c4.why) : `${shown2}${c4.why ? ` \u2014 ${cell4(c4.why)}` : ""}${c4.note ? ` \u2014 ${cell4(c4.note)}` : ""}`} |`);
+  }
+  const sent = r6.cases.filter((c4) => c4.inputs?.length);
+  if (sent.length) {
+    L2.push("", "## Input files", "", "The files cases sent, fingerprinted. A different file gives a different SHA-256.", "", "| Case | File | SHA-256 | Bytes | Sent as |", "| --- | --- | --- | --- | --- |");
+    for (const c4 of sent)
+      for (const f4 of c4.inputs)
+        L2.push(`| ${c4.id} | ${cell4(f4.path)} | ${f4.sha256.slice(0, 16)}\u2026 | ${f4.bytes} | ${f4.field ? `field ${cell4(f4.field)}, ${cell4(f4.filename ?? "")} (${cell4(f4.content_type ?? "")})` : f4.as === "form" ? "the form fields" : "the body"} |`);
+  }
+  const prepared = r6.cases.filter((c4) => c4.before);
+  if (prepared.length) {
+    L2.push("", "## Pages read first", "", "A page read before the request, for the values it carries and the cookies it sets. The evidence holds their names, never their values.", "", "| Case | Page | Status | Values taken | Cookies |", "| --- | --- | --- | --- | --- |");
+    for (const c4 of prepared)
+      L2.push(`| ${c4.id} | ${cell4(c4.before.request)} | ${c4.before.status ?? ""} | ${cell4(c4.before.took.join(", ")) || "\u2014"} | ${cell4(c4.before.cookies.join(", ")) || "\u2014"} |`);
+  }
+  const fails = r6.cases.flatMap((c4) => (c4.failures ?? []).map((f4) => [c4.id, f4]));
+  if (fails.length) {
+    const anyKnown = fails.some(([, f4]) => f4.known_issue);
+    L2.push("", "## Failures", "", `| Case | Check | Expected | Actual |${anyKnown ? " Known issue |" : ""}`, `| --- | --- | --- | --- |${anyKnown ? " --- |" : ""}`);
+    for (const [id, f4] of fails.slice(0, 500))
+      L2.push(`| ${id} | \`${cell4(f4.check)}\` | ${cell4(f4.expected)} | ${cell4(f4.actual)} |${anyKnown ? ` ${f4.known_issue ?? "\u2014"} |` : ""}`);
+  }
+  if (r6.known_issues?.length) {
+    L2.push("", "## Known issues", "", "Failures a named person accepted. Each still fails: it is accepted, not fixed. Anything an entry does not describe is an ordinary failure.", "", "| Id | Case | What fails | Reason | Accepted by | Date | This run |", "| --- | --- | --- | --- | --- | --- | --- |");
+    for (const k2 of r6.known_issues) {
+      const what = k2.fails.map((f4) => [f4.check, f4.expected !== void 0 && `expected ${f4.expected}`, f4.actual !== void 0 && `actual ${f4.actual}`].filter(Boolean).join(", ")).join("; ");
+      L2.push(`| ${k2.id} | ${cell4(k2.case)} | ${cell4(what)} | ${cell4(k2.reason)} | ${cell4(k2.accepted_by)} | ${cell4(k2.date ?? "")} | ${k2.state} |`);
+    }
+    if (r6.stale_known_issues?.length)
+      L2.push("", `No longer failing: ${r6.stale_known_issues.join(", ")}. A person checks each one and removes it from the ledger, so a later return of the failure is reported as new.`);
+  }
+  const diffs = r6.cases.flatMap((c4) => (c4.differences ?? []).map((d4) => [c4.id, d4]));
+  if (diffs.length) {
+    const [a4, b2] = Object.keys(r6.targets);
+    L2.push("", "## Differences", "", `| Case | Where | ${a4} | ${b2} | Approved drift |`, "| --- | --- | --- | --- | --- |");
+    for (const [id, d4] of diffs.slice(0, 500))
+      L2.push(`| ${id} | \`${cell4(d4.where)}\` | ${cell4(d4.reference)} | ${cell4(d4.candidate)} | ${d4.drift ?? "\u2014"} |`);
+    if (diffs.length > 500)
+      L2.push("", `${diffs.length - 500} more are in REPORT.json.`);
+  }
+  if (r6.suggested_scrubs.length) {
+    L2.push("", "## Probably noise", "", "These look like values that change on every call. A person decides whether to scrub them: a scrub hides them from every later run.", "", "| Where | Cases | Why |", "| --- | --- | --- |");
+    for (const s4 of r6.suggested_scrubs)
+      L2.push(`| \`${cell4(s4.where)}\` | ${s4.cases} | ${s4.why} |`);
+  }
+  if (r6.unused_drift.length)
+    L2.push("", "## Drift that matched nothing", "", `These approved differences no longer occur; check whether they are still needed: ${r6.unused_drift.join(", ")}.`);
+  L2.push("", "## Sign-off", "", "A person fills this in with `cmtk signoff`; an agent never does. The evidence fingerprint ties the signature to the files in this folder, and running again clears it, because the evidence has changed.", "", "| | |", "|---|---|", "| Name | ________________ |", "| Role | ________________ |", "| Date | __________ |", "| Decision | accept / accept with conditions / reject |", "| Evidence | (fingerprint written at sign-off) |", "");
+  return L2.join("\n");
+}
+
+// packages/core/dist/engine.js
+var SAFE_METHODS = /* @__PURE__ */ new Set(["GET", "HEAD", "OPTIONS"]);
+var today = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+function envHeaders(manifest) {
+  const out = {};
+  for (const [header, variable] of Object.entries(manifest.headers_from_env)) {
+    const value = process.env[variable];
+    if (value === void 0)
+      throw new ManifestError(`headers_from_env: the environment variable ${variable} for ${header} is not set.`);
+    if (/[\0-\x08\x0a-\x1f\x7f]/.test(value))
+      throw new ManifestError(`headers_from_env: the environment variable ${variable} holds a line break or another control character; set it again without one.`);
+    out[header] = value;
+  }
+  return out;
+}
+function matchFor(c4, manifest) {
+  let level2 = manifest.match;
+  const p4 = c4.request.path.split("?")[0];
+  for (const o4 of manifest.overrides)
+    if (path17.posix.matchesGlob(p4, o4.path))
+      level2 = o4.match;
+  return c4.match ?? level2;
+}
+function adaptersFor(manifest) {
+  const cache = /* @__PURE__ */ new Map();
+  return {
+    get(surface) {
+      const s4 = surface || "http";
+      if (!cache.has(s4)) {
+        if (s4 === "http")
+          cache.set(s4, httpAdapter({ timeoutS: manifest.timeout_s, insecureTls: manifest.insecure_tls, root: manifest.root }));
+        else if (manifest.adapters[s4])
+          cache.set(s4, processAdapter(s4, manifest.adapters[s4], manifest.root));
+        else
+          throw new ManifestError(`No adapter for surface "${s4}". Add it under \`adapters:\` in cmtk.yaml, or run \`cmtk adapter new ${s4}\`.`);
+      }
+      return cache.get(s4);
+    },
+    async closeAll() {
+      for (const a4 of cache.values())
+        await a4.close?.();
+    }
+  };
+}
+function selectCases(manifest, mode, only, acceptedOnly = false) {
+  const picked = pick(manifest, only);
+  if (!acceptedOnly)
+    return Object.assign(picked, { excluded: 0 });
+  const held = (c4) => c4.draft || mode === "run" && c4.expect_draft;
+  return Object.assign(picked.filter((c4) => !held(c4)), { excluded: picked.filter(held).length });
+}
+function pick(manifest, only) {
+  const all = loadCases(manifest);
+  if (!only?.length)
+    return all;
+  const ids = new Set(all.map((c4) => c4.id));
+  const unknown = only.filter((i8) => !ids.has(i8));
+  if (unknown.length)
+    throw new ManifestError(`Unknown case ids: ${unknown.join(", ")}.`);
+  return all.filter((c4) => only.includes(c4.id));
+}
+function noAdapter(c4, manifest) {
+  const s4 = c4.surface ?? "http";
+  if (s4 === "http" || Object.hasOwn(manifest.adapters, s4))
+    return void 0;
+  return { result: "ERROR", no_adapter: true, why: `surface "${s4}" has no adapter, so nothing was sent. Add it under \`adapters:\` in cmtk.yaml: \`cmtk adapter new ${s4}\` writes one, and \`cmtk adapter add ${s4}\` lets a person install one` };
+}
+var requirementsOf = (c4) => c4.requirement === void 0 ? [] : Array.isArray(c4.requirement) ? c4.requirement.map(String) : [String(c4.requirement)];
+function base(c4) {
+  return { id: c4.id, name: c4.name ?? `${c4.request.method} ${c4.request.path}`, request: `${c4.request.method} ${c4.request.path}`, requirement: requirementsOf(c4), surface: c4.surface ?? "http" };
+}
+function unsafe(c4, manifest, opts) {
+  const safe = SAFE_METHODS.has(c4.request.method) || c4.safe === true;
+  return !safe && !(manifest.allow_unsafe_methods && opts.allowUnsafe);
+}
+var lacking = (surface, ...targets) => targets.filter((t3) => t3.surfaces && !t3.surfaces.includes(surface)).map((t3) => t3.name);
+var hasNo = (names, surface) => `${names.join(" and ")} ${names.length > 1 ? "have" : "has"} no ${surface} surface`;
+var DRAFT_WHY = "a draft: a person accepts it with `cmtk review` before it counts";
+var EXPECT_DRAFT_WHY = "draft expectation: review it with `cmtk review`. It records what the system answered, which a person confirms before it counts";
+var UNSAFE_WHY = "changes data: needs allow_unsafe_methods in cmtk.yaml and --allow-unsafe on this run";
+var NO_ANSWER = /^(ETIMEDOUT|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENETUNREACH|ENOTFOUND|EAI_AGAIN)\b/;
+var STOP_AFTER_NO_ANSWER = 3;
+var STOPPED_WHY = `not run: ${STOP_AFTER_NO_ANSWER} requests in a row got no answer, so the run stopped early. Check the system is up, then run again`;
+var noAnswer = (o4) => !!o4.error && NO_ANSWER.test(o4.error);
+var LOCK_STALE_MS = 3 * 60 * 6e4;
+function alive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return err.code === "EPERM";
+  }
+}
+function evidenceDir(manifest, mode, opts = {}) {
+  ownedFolder(manifest, manifest.evidence);
+  const final = ownedFolder(manifest, path17.join(manifest.evidence, mode));
+  const work = ownedFolder(manifest, path17.join(manifest.evidence, `.${mode}.partial`));
+  const lock = ownedFolder(manifest, path17.join(manifest.evidence, `.${mode}.lock`));
+  fs18.mkdirSync(path17.dirname(lock), { recursive: true });
+  const mine = JSON.stringify({ pid: process.pid, started: (/* @__PURE__ */ new Date()).toISOString() });
+  try {
+    fs18.writeFileSync(lock, mine, { flag: "wx" });
+  } catch {
+    let held = {};
+    try {
+      held = JSON.parse(fs18.readFileSync(lock, "utf8"));
+    } catch {
+    }
+    const age = held.started ? Date.now() - Date.parse(held.started) : Infinity;
+    if (typeof held.pid === "number" && alive(held.pid) && age < LOCK_STALE_MS) {
+      throw new ManifestError(`Another \`cmtk ${mode}\` is writing ${path17.relative(manifest.root, final)} (process ${held.pid}, started ${held.started}). Wait for it to finish, then run again.`);
+    }
+    fs18.writeFileSync(lock, mine);
+  }
+  const release = () => {
+    try {
+      if (fs18.readFileSync(lock, "utf8") === mine)
+        fs18.rmSync(lock, { force: true });
+    } catch {
+    }
+  };
+  try {
+    fs18.rmSync(work, { recursive: true, force: true });
+    fs18.mkdirSync(path17.join(work, "answers"), { recursive: true });
+  } catch (err) {
+    release();
+    throw err;
+  }
+  return {
+    dir: work,
+    commit() {
+      fs18.rmSync(final, { recursive: true, force: true });
+      fs18.renameSync(work, final);
+      if (opts.dated || manifest.evidence_history.dated) {
+        const note = opts.note ?? ((line2) => {
+          process.stderr.write(`${line2}
+`);
+        });
+        try {
+          const kept = keepDated(manifest, mode, final);
+          note(`Kept a dated copy: ${path17.join(manifest.evidence, "history", mode, kept.name).split(path17.sep).join("/")}.`);
+          if (kept.removed.length)
+            note(`Removed old dated runs by the clean-up rule: ${kept.removed.join(", ")}.`);
+          for (const w2 of kept.warnings)
+            note(`Warning: ${w2}`);
+        } catch (err) {
+          note(`Warning: no dated copy was kept: ${err.message}`);
+        }
+      }
+      return final;
+    },
+    release
+  };
+}
+var failed = (err) => err instanceof Error ? err.message : String(err);
+function settingsOf(manifest, drift, known) {
+  return {
+    manifest: path17.relative(manifest.root, manifest.file).split(path17.sep).join("/"),
+    manifest_sha256: crypto10.createHash("sha256").update(fs18.readFileSync(manifest.file)).digest("hex"),
+    match: manifest.match,
+    overrides: manifest.overrides,
+    scrub: manifest.scrub,
+    ...manifest.visual_tolerance ? { visual_tolerance: manifest.visual_tolerance } : {},
+    drift_file: manifest.drift,
+    drift_entries: drift.length,
+    ...known ? { known_issues_file: manifest.known_issues, known_issues_entries: known.length } : {}
+  };
+}
+var where = (t3) => (t3.base_url ? cleanUrl(t3.base_url) : void 0) ?? Object.entries(t3).filter(([k2]) => k2 !== "name" && k2 !== "surfaces").map(([k2, v2]) => `${k2}=${v2}`).join(", ");
+var writeJson = (file, data) => fs18.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8");
+function evidenceOf(obs, dir, stem) {
+  const { screenshots, ...rest } = obs;
+  if (!screenshots?.length)
+    return rest;
+  if (!dir || !stem)
+    return rest;
+  return {
+    ...rest,
+    screenshots: screenshots.map((s4, i8) => {
+      const bytes = Buffer.from(String(s4.png_base64), "base64");
+      const file = `${stem}.screen-${String(i8 + 1).padStart(2, "0")}.png`;
+      fs18.writeFileSync(path17.join(dir, file), bytes);
+      return { page: String(s4.page), file, sha256: crypto10.createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length };
+    })
+  };
+}
+function modelCalls() {
+  const tally = { total: 0, cases_not_counted: 0 };
+  return {
+    tally,
+    add(surface, obs) {
+      if (surface === "http")
+        return;
+      if (typeof obs.model_calls === "number" && Number.isInteger(obs.model_calls) && obs.model_calls >= 0)
+        tally.total += obs.model_calls;
+      else
+        tally.cases_not_counted++;
+    }
+  };
+}
+function target(manifest, name, role) {
+  if (!name)
+    throw new ManifestError(`cmtk.yaml names no ${role} target. Set \`${role}:\` to one of: ${Object.keys(manifest.targets).join(", ")}.`);
+  const t3 = manifest.targets[name];
+  if (!t3)
+    throw new ManifestError(`No target called ${name}. Targets: ${Object.keys(manifest.targets).join(", ")}.`);
+  return t3;
+}
+async function run(manifest, opts = {}) {
+  const t3 = target(manifest, opts.target ?? manifest.default_target, "default_target");
+  const selected = selectCases(manifest, "run", opts.only, opts.acceptedOnly);
+  const compareOnly = (c4) => manifest.compare_only_surfaces.includes(c4.surface ?? "http");
+  const cases = selected.filter((c4) => !compareOnly(c4));
+  const leftOut = selected.length - cases.length;
+  const known = loadKnownIssues(manifest).filter((k2) => !k2.target || k2.target === t3.name);
+  const extra = envHeaders(manifest);
+  const adapters = adaptersFor(manifest);
+  const ev = evidenceDir(manifest, "run", opts);
+  try {
+    const dir = ev.dir;
+    const out = [];
+    const models = modelCalls();
+    let silent = 0;
+    try {
+      for (const c4 of cases) {
+        const b2 = base(c4);
+        const gap = noAdapter(c4, manifest);
+        if (gap) {
+          out.push({ ...b2, ...gap });
+          continue;
+        }
+        const missing = lacking(b2.surface, t3);
+        if (missing.length) {
+          out.push({ ...b2, result: "SKIPPED", why: `not run: ${hasNo(missing, b2.surface)}` });
+          continue;
+        }
+        if (c4.expect_draft) {
+          out.push({ ...b2, result: "SKIPPED", why: EXPECT_DRAFT_WHY });
+          continue;
+        }
+        if (c4.draft) {
+          out.push({ ...b2, result: "SKIPPED", why: DRAFT_WHY });
+          continue;
+        }
+        if (!c4.expect) {
+          out.push({ ...b2, result: "SKIPPED", why: "no `expect:` block, so there is nothing to check on one system" });
+          continue;
+        }
+        if (unsafe(c4, manifest, opts)) {
+          out.push({ ...b2, result: "SKIPPED", why: UNSAFE_WHY });
+          continue;
+        }
+        if (silent >= STOP_AFTER_NO_ANSWER) {
+          out.push({ ...b2, result: "SKIPPED", why: STOPPED_WHY });
+          continue;
+        }
+        try {
+          const obs = await adapters.get(b2.surface).run(c4, t3, extra);
+          writeJson(path17.join(dir, "answers", `${c4.id}.json`), evidenceOf(obs, path17.join(dir, "answers"), c4.id));
+          models.add(b2.surface, obs);
+          silent = noAnswer(obs) ? silent + 1 : 0;
+          const sent = { ...obs.inputs?.length ? { inputs: obs.inputs } : {}, ...obs.before ? { before: obs.before } : {} };
+          if (obs.error) {
+            out.push({ ...b2, ...sent, result: "ERROR", why: obs.error });
+            continue;
+          }
+          const failures = checkExpectation(c4.expect, obs);
+          const accepted = markKnown(c4.id, failures, known);
+          out.push({ ...b2, ...sent, result: failures.length ? "FAIL" : "PASS", ...failures.length ? { failures } : {}, ...accepted ? { known_issues: accepted } : {}, ...obs.truncated ? { truncated: true, note: "the answer was over 5 MB; only the first 5 MB were checked" } : {} });
+        } catch (err) {
+          out.push({ ...b2, result: "ERROR", why: failed(err) });
+        }
+      }
+    } finally {
+      await adapters.closeAll();
+    }
+    const report = summarise({ mode: "run", manifest, targets: { [t3.name]: where(t3) }, cases: out, contracts: [], drift: [], usedDrift: /* @__PURE__ */ new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, [], known), modelCalls: models.tally, excludedDrafts: selected.excluded, excludedCompareOnly: leftOut, compareOnlySurfaces: manifest.compare_only_surfaces, known: knownInReport(known, out, new Set(loadCases(manifest).map((c4) => c4.id))) });
+    writeJson(path17.join(dir, "REPORT.json"), report);
+    fs18.writeFileSync(path17.join(dir, "REPORT.md"), renderReport(report), "utf8");
+    ev.commit();
+    return report;
+  } finally {
+    ev.release();
+  }
+}
+async function compare(manifest, opts = {}) {
+  const ref = target(manifest, manifest.reference, "reference");
+  const cand = target(manifest, manifest.candidate, "candidate");
+  if (ref.name === cand.name)
+    throw new ManifestError("The reference and the candidate are the same target; comparing needs two systems.");
+  const cases = selectCases(manifest, "compare", opts.only, opts.acceptedOnly);
+  const drift = loadDrift(manifest);
+  scrubberOf(manifest);
+  const extra = envHeaders(manifest);
+  const adapters = adaptersFor(manifest);
+  const ev = evidenceDir(manifest, "compare", opts);
+  try {
+    const dir = ev.dir;
+    const used = /* @__PURE__ */ new Set();
+    const fired = new Map(scrubRules(manifest.scrub).map((rule) => [rule, 0]));
+    const contracts = [];
+    const out = [];
+    const models = modelCalls();
+    let silent = 0;
+    try {
+      const http2 = adapters.get("http");
+      for (const k2 of manifest.contracts) {
+        if (k2.kind === "assembly") {
+          const outcome2 = checkAssemblyContract(manifest, k2);
+          for (const f4 of outcome2.findings) {
+            const hit2 = f4.where ? coveringDrift(drift, `contract-${k2.name}`, f4.where) : void 0;
+            if (hit2) {
+              f4.drift = hit2.id;
+              used.add(hit2.id);
+            }
+          }
+          contracts.push(outcome2);
+          continue;
+        }
+        const missing = lacking("http", ref, cand);
+        if (missing.length) {
+          contracts.push({ name: k2.name, kind: k2.kind, result: "NOT COMPARABLE", findings: [{ breaking: null, what: `not comparable: ${hasNo(missing, "http")}` }] });
+          continue;
+        }
+        const probe2 = { id: `contract-${k2.name}`, request: { method: "GET", path: k2.path } };
+        const [a4, b2] = [await http2.run(probe2, ref, extra), await http2.run(probe2, cand, extra)];
+        const slug3 = k2.name.replace(/[^A-Za-z0-9_.-]/g, "_").slice(0, 64);
+        if (a4.body !== void 0)
+          fs18.writeFileSync(path17.join(dir, "answers", `contract-${slug3}.reference.txt`), a4.body, "utf8");
+        if (b2.body !== void 0)
+          fs18.writeFileSync(path17.join(dir, "answers", `contract-${slug3}.candidate.txt`), b2.body, "utf8");
+        const outcome = checkContract(k2, a4, b2);
+        for (const f4 of outcome.findings) {
+          const hit2 = f4.where ? coveringDrift(drift, `contract-${k2.name}`, f4.where) : void 0;
+          if (hit2) {
+            f4.drift = hit2.id;
+            used.add(hit2.id);
+          }
+        }
+        contracts.push(outcome);
+      }
+      for (const c4 of cases) {
+        const b2 = { ...base(c4), match: matchFor(c4, manifest) };
+        const gap = noAdapter(c4, manifest);
+        if (gap) {
+          out.push({ ...b2, ...gap });
+          continue;
+        }
+        if (c4.draft) {
+          out.push({ ...b2, result: "SKIPPED", why: DRAFT_WHY });
+          continue;
+        }
+        const missing = lacking(b2.surface, ref, cand);
+        if (missing.length) {
+          out.push({ ...b2, result: "NOT COMPARABLE", why: `not comparable: ${hasNo(missing, b2.surface)}` });
+          continue;
+        }
+        if (unsafe(c4, manifest, opts)) {
+          out.push({ ...b2, result: "SKIPPED", why: UNSAFE_WHY });
+          continue;
+        }
+        if (silent >= STOP_AFTER_NO_ANSWER) {
+          out.push({ ...b2, result: "SKIPPED", why: STOPPED_WHY });
+          continue;
+        }
+        try {
+          const adapter = adapters.get(b2.surface);
+          if (adapter.reset) {
+            await adapter.reset(ref);
+            await adapter.reset(cand);
+          }
+          const ra = await adapter.run(c4, ref, extra);
+          const rb = await adapter.run(c4, cand, extra);
+          writeJson(path17.join(dir, "answers", `${c4.id}.reference.json`), evidenceOf(ra, path17.join(dir, "answers"), `${c4.id}.reference`));
+          writeJson(path17.join(dir, "answers", `${c4.id}.candidate.json`), evidenceOf(rb, path17.join(dir, "answers"), `${c4.id}.candidate`));
+          models.add(b2.surface, ra);
+          models.add(b2.surface, rb);
+          silent = noAnswer(ra) || noAnswer(rb) ? silent + 1 : 0;
+          if (ra.inputs?.length)
+            b2.inputs = ra.inputs;
+          if (ra.before)
+            b2.before = ra.before;
+          if (ra.error || rb.error) {
+            out.push({ ...b2, result: "ERROR", why: [ra.error && `reference: ${ra.error}`, rb.error && `candidate: ${rb.error}`].filter(Boolean).join("; ") });
+            continue;
+          }
+          const diffs = compareObservations(ra, rb, manifest, b2.match, fired);
+          for (const d4 of diffs) {
+            const hit2 = coveringDrift(drift, c4.id, d4.where);
+            if (hit2) {
+              d4.drift = hit2.id;
+              used.add(hit2.id);
+            }
+          }
+          const open = diffs.filter((d4) => !d4.drift);
+          out.push({
+            ...b2,
+            result: open.length ? "DIFFERENT" : diffs.length ? "DRIFT" : "MATCH",
+            ...diffs.length ? { differences: diffs } : {},
+            ...ra.truncated || rb.truncated ? { truncated: true, note: "an answer was over 5 MB; only the first 5 MB were compared" } : {}
+          });
+        } catch (err) {
+          out.push({ ...b2, result: "ERROR", why: failed(err) });
+        }
+      }
+    } finally {
+      await adapters.closeAll();
+    }
+    const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), modelCalls: models.tally, excludedDrafts: cases.excluded, surfaces: { [ref.name]: ref.surfaces, [cand.name]: cand.surfaces }, ...fired.size ? { scrubFired: Object.fromEntries(fired) } : {} });
+    writeJson(path17.join(dir, "REPORT.json"), report);
+    fs18.writeFileSync(path17.join(dir, "REPORT.md"), renderReport(report), "utf8");
+    ev.commit();
+    return report;
+  } finally {
+    ev.release();
+  }
+}
+
+// packages/core/dist/shadow.js
+var SHADOW_FORMATS = ["auto", "clf", "w3c", "jsonl"];
+var DEFAULT_HEADERS = /* @__PURE__ */ new Set(["accept", "accept-language"]);
+var OVERRIDE_HEADERS = /* @__PURE__ */ new Set(["x-http-method-override", "x-http-method", "x-method-override"]);
+var OVERRIDE_QUERY = /^(_method|\$method|x-http-method(-override)?|x-method-override)$/i;
+var NO_ANSWER2 = /^(ETIMEDOUT|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENETUNREACH|ENOTFOUND|EAI_AGAIN)\b/;
+var MAX_PATH = 8e3;
+var MAX_PLACES = 200;
+function looksPersonal(name) {
+  const n3 = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return /^(name|forename|givenname|familyname|displayname|username|user|login|mail|telephone|tel|msisdn|address|addressline\d?|street|postalcode|zip|zipcode|dob|birthdate|birthday|ssn|nino|licencenumber|licensenumber|iban|sortcode|accountnumber|cardholder|ip|ipaddress|clientip|contact)$/.test(n3) || /(email|phone|mobile|surname|lastname|firstname|fullname|postcode|dateofbirth|passport|nationalinsurance)/.test(n3);
+}
+var luhn = (digits) => {
+  let sum = 0;
+  for (let i8 = 0; i8 < digits.length; i8++) {
+    let d4 = Number(digits[digits.length - 1 - i8]);
+    if (i8 % 2 === 1) {
+      d4 *= 2;
+      if (d4 > 9)
+        d4 -= 9;
+    }
+    sum += d4;
+  }
+  return sum % 10 === 0;
+};
+var SHAPES = [
+  ["email", /[^\s@/?&=;,"'<>]+@[^\s@/?&=;,"'<>]+\.[A-Za-z]{2,}/g],
+  ["token", /\beyJ[\w-]{4,}\.[\w-]{4,}\.[\w-]*/g],
+  ["token", /\b(?:sk|pk|rk)_(?:live|test)_\w+/g],
+  ["token", /\b[A-Fa-f0-9]{32,}\b/g],
+  ["token", /[A-Za-z0-9+_-]{40,}={0,2}/g],
+  ["card number", /\b\d(?:[ -]?\d){12,18}\b/g, (m4) => luhn(m4.replace(/\D/g, ""))],
+  ["national number", /\b[A-CEGHJ-PR-TW-Z]{2}\s?\d{2}\s?\d{2}\s?\d{2}\s?[A-D]\b/gi],
+  ["national number", /\b\d{3}-\d{2}-\d{4}\b/g],
+  ["bank account", /\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b/g],
+  ["postcode", /\b[A-PR-UWYZ][A-HK-Y]?\d[A-Z\d]?[ +]?\d[ABD-HJLNP-UW-Z]{2}\b/gi],
+  ["phone number", /(?:\+|\b00)\d[\d ()-]{7,16}\d\b/g],
+  ["phone number", /\b0\d{9,10}\b/g],
+  ["IP address", /\b\d{1,3}(?:\.\d{1,3}){3}\b/g]
+];
+function redactText(text2, own = []) {
+  const kinds = [];
+  let out = text2;
+  for (const rx of own)
+    out = out.replace(rx, () => {
+      kinds.push("your --redact rule");
+      return REDACTED;
+    });
+  for (const [kind, rx, keep2] of SHAPES) {
+    out = out.replace(rx, (m4) => {
+      if (keep2 && !keep2(m4))
+        return m4;
+      kinds.push(kind);
+      return REDACTED;
+    });
+  }
+  return { text: out, kinds };
+}
+var decoded = (s4) => {
+  try {
+    return decodeURIComponent(s4.replace(/\+/g, " "));
+  } catch {
+    return s4;
+  }
+};
+function cleanValue(raw, name, own, kinds) {
+  if (looksSecret(name)) {
+    kinds.push("credential");
+    return REDACTED;
+  }
+  if (looksPersonal(name)) {
+    kinds.push("personal field");
+    return REDACTED;
+  }
+  const r6 = redactText(decoded(raw), own);
+  if (!r6.kinds.length)
+    return raw;
+  kinds.push(...r6.kinds);
+  return REDACTED;
+}
+function cleanTarget(target2, own = []) {
+  let t3 = target2.trim();
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(t3)) {
+    const slash = t3.indexOf("/", t3.indexOf("://") + 3);
+    t3 = slash < 0 ? "/" : t3.slice(slash);
+  }
+  t3 = t3.split("#")[0];
+  if (!t3.startsWith("/") || t3.startsWith("//") || t3.length > MAX_PATH || /[\s\u0000-\u001f\u007f]/.test(t3))
+    return void 0;
+  const q2 = t3.indexOf("?");
+  const pathPart = q2 < 0 ? t3 : t3.slice(0, q2);
+  const query = q2 < 0 ? void 0 : t3.slice(q2 + 1);
+  const kinds = [];
+  const segments = pathPart.split("/").map((seg) => {
+    const [head, ...params] = seg.split(";");
+    const r6 = redactText(decoded(head), own);
+    kinds.push(...r6.kinds);
+    const cleanParams = params.map((p4) => {
+      const eq = p4.indexOf("=");
+      return eq < 0 ? p4 : `${p4.slice(0, eq)}=${cleanValue(p4.slice(eq + 1), p4.slice(0, eq), own, kinds)}`;
+    });
+    return [r6.kinds.length ? REDACTED : head, ...cleanParams].join(";");
+  });
+  let out = segments.join("/");
+  if (query !== void 0) {
+    out += `?${query.split("&").map((pair) => {
+      const eq = pair.indexOf("=");
+      if (eq < 0) {
+        const r6 = redactText(decoded(pair), own);
+        kinds.push(...r6.kinds);
+        return r6.kinds.length ? REDACTED : pair;
+      }
+      const name = decoded(pair.slice(0, eq));
+      return `${pair.slice(0, eq)}=${cleanValue(pair.slice(eq + 1), name, own, kinds)}`;
+    }).join("&")}`;
+  }
+  return { path: out, kinds };
+}
+var CLF = /"([A-Za-z]+) (\S+)(?: HTTP\/[\d.]+)?"/;
+function fromJson(line2) {
+  let o4;
+  try {
+    o4 = JSON.parse(line2);
+  } catch {
+    return void 0;
+  }
+  if (!o4 || typeof o4 !== "object" || Array.isArray(o4))
+    return void 0;
+  const text2 = (...keys) => {
+    for (const k2 of keys)
+      if (typeof o4[k2] === "string" && o4[k2])
+        return o4[k2];
+    return void 0;
+  };
+  let method = text2("method", "request_method", "verb", "httpMethod", "cs-method");
+  let target2 = text2("uri", "url", "request_uri", "requestUri", "target", "path", "cs-uri-stem");
+  const line1 = text2("request");
+  if ((!method || !target2) && line1) {
+    const m4 = /^([A-Za-z]+) (\S+)/.exec(line1);
+    if (m4) {
+      method ??= m4[1];
+      target2 ??= m4[2];
+    }
+  }
+  if (!method || !target2)
+    return void 0;
+  const query = text2("query", "query_string", "args", "cs-uri-query");
+  if (query && query !== "-" && !target2.includes("?"))
+    target2 += `?${query.replace(/^\?/, "")}`;
+  const headers = {};
+  if (o4.headers && typeof o4.headers === "object" && !Array.isArray(o4.headers)) {
+    for (const [k2, v2] of Object.entries(o4.headers))
+      headers[k2] = Array.isArray(v2) ? v2.join(", ") : String(v2);
+  }
+  const body = o4.body ?? o4.request_body ?? o4.postData;
+  return { method, target: target2, headers, hasBody: body !== void 0 && body !== null && body !== "" && body !== "-" };
+}
+function lineReader(format) {
+  let fields;
+  return (line2) => {
+    if (!line2.trim())
+      return "skip";
+    if (line2.startsWith("#")) {
+      if (line2.startsWith("#Fields:"))
+        fields = line2.slice(8).trim().split(/\s+/);
+      return "skip";
+    }
+    const kind = format !== "auto" ? format : fields ? "w3c" : line2.trimStart().startsWith("{") ? "jsonl" : "clf";
+    if (kind === "jsonl")
+      return fromJson(line2);
+    if (kind === "w3c") {
+      const cols = line2.trim().split(/\s+/);
+      const at2 = (name) => {
+        const i8 = fields?.indexOf(name) ?? -1;
+        return i8 >= 0 ? cols[i8] : void 0;
+      };
+      const method = at2("cs-method"), stem = at2("cs-uri-stem"), query = at2("cs-uri-query");
+      if (!method || !stem)
+        return void 0;
+      return { method, target: query && query !== "-" ? `${stem}?${query}` : stem, headers: {}, hasBody: false };
+    }
+    const m4 = CLF.exec(line2);
+    return m4 ? { method: m4[1], target: m4[2], headers: {}, hasBody: false } : void 0;
+  };
+}
+function unsafeWhy(method, raw) {
+  if (!SAFE_METHODS.has(method))
+    return method;
+  if (raw.hasBody)
+    return `${method} with a body`;
+  for (const [k2, v2] of Object.entries(raw.headers)) {
+    if (OVERRIDE_HEADERS.has(k2.toLowerCase()) && !SAFE_METHODS.has(v2.trim().toUpperCase()))
+      return `${method} that overrides its method`;
+  }
+  const q2 = raw.target.indexOf("?");
+  if (q2 >= 0) {
+    for (const pair of raw.target.slice(q2 + 1).split("&")) {
+      const eq = pair.indexOf("=");
+      if (eq > 0 && OVERRIDE_QUERY.test(decoded(pair.slice(0, eq))) && !SAFE_METHODS.has(decoded(pair.slice(eq + 1)).trim().toUpperCase()))
+        return `${method} that overrides its method`;
+    }
+  }
+  return void 0;
+}
+function endpointOf(method, p4) {
+  const clean2 = p4.split("?")[0].split("/").map((s4) => /^\d+$/.test(s4) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s4) || /^[0-9a-f]{16,}$/i.test(s4) || s4 === REDACTED ? "{id}" : s4).join("/");
+  return `${method} ${clean2}`;
+}
+function regexOf(pattern, flag, flags = "") {
+  try {
+    return new RegExp(pattern, flags);
+  } catch (err) {
+    throw new ManifestError(`${flag}: ${JSON.stringify(pattern)} is not a valid regular expression: ${err.message}`);
+  }
+}
+function numberOption(v2, fallback, flag, ok, want) {
+  if (v2 === void 0)
+    return fallback;
+  if (!Number.isFinite(v2) || !ok(v2))
+    throw new ManifestError(`${flag} must be ${want}.`);
+  return v2;
+}
+async function captureRequests(sources, o4) {
+  const inc = o4.include ? regexOf(o4.include, "--include") : void 0;
+  const exc = o4.exclude ? regexOf(o4.exclude, "--exclude") : void 0;
+  const own = (o4.redact ?? []).map((r6) => regexOf(r6, "--redact", "g"));
+  const keep2 = new Set(DEFAULT_HEADERS);
+  for (const h4 of o4.keepHeaders ?? []) {
+    const n3 = h4.trim().toLowerCase();
+    if (!n3 || DROPPED_HEADERS.has(n3) || looksSecret(n3, "header") || OVERRIDE_HEADERS.has(n3))
+      throw new ManifestError(`--keep-header ${h4}: that header is never kept, because it can hold a credential or change the method. Credentials for a replay come from headers_from_env.`);
+    keep2.add(n3);
+  }
+  const stats = { lines: 0, unreadable: 0, dropped: {}, dropped_total: 0, filtered: 0, sampled_out: 0, over_limit: 0, kept: 0, redacted_requests: 0, redactions: {}, credential_headers_stripped: 0, sample: o4.sample, seed: o4.seed, max: o4.max, rate_per_second: 0 };
+  const requests = [];
+  let eligible = 0;
+  for (const file of sources) {
+    if (!fs19.existsSync(file) || !fs19.statSync(file).isFile())
+      throw new ManifestError(`${path18.basename(file)} does not exist or is not a file.`);
+    const read = lineReader(o4.format ?? "auto");
+    const lines = readline2.createInterface({ input: fs19.createReadStream(file, "utf8"), crlfDelay: Infinity });
+    for await (const line2 of lines) {
+      const raw = read(line2);
+      if (raw === "skip")
+        continue;
+      stats.lines++;
+      if (!raw) {
+        stats.unreadable++;
+        continue;
+      }
+      const method = raw.method.toUpperCase();
+      if (!/^[A-Z]{1,20}$/.test(method)) {
+        stats.unreadable++;
+        continue;
+      }
+      const unsafe2 = unsafeWhy(method, raw);
+      if (unsafe2) {
+        stats.dropped[unsafe2] = (stats.dropped[unsafe2] ?? 0) + 1;
+        stats.dropped_total++;
+        continue;
+      }
+      const clean2 = cleanTarget(raw.target, own);
+      if (!clean2) {
+        stats.unreadable++;
+        continue;
+      }
+      if (inc && !inc.test(clean2.path) || exc && exc.test(clean2.path)) {
+        stats.filtered++;
+        continue;
+      }
+      const ordinal = eligible++;
+      if (o4.sample < 1 && crypto11.createHash("sha256").update(`${o4.seed}:${ordinal}`).digest().readUInt32BE(0) / 2 ** 32 >= o4.sample) {
+        stats.sampled_out++;
+        continue;
+      }
+      if (requests.length >= o4.max) {
+        stats.over_limit++;
+        continue;
+      }
+      const headers = {};
+      for (const [k2, v2] of Object.entries(raw.headers)) {
+        const n3 = k2.toLowerCase();
+        if (looksSecret(k2, "header") || n3 === "cookie" || n3 === "authorization")
+          stats.credential_headers_stripped++;
+        else if (keep2.has(n3) && !/[\r\n]/.test(v2)) {
+          const r6 = redactText(v2, own);
+          headers[n3] = r6.text;
+          clean2.kinds.push(...r6.kinds);
+        }
+      }
+      const kinds = [...new Set(clean2.kinds)].sort();
+      for (const k2 of clean2.kinds)
+        stats.redactions[k2] = (stats.redactions[k2] ?? 0) + 1;
+      if (kinds.length)
+        stats.redacted_requests++;
+      requests.push({ n: requests.length + 1, method, path: clean2.path, ...Object.keys(headers).length ? { headers } : {}, ...kinds.length ? { redacted: kinds } : {} });
+    }
+  }
+  stats.kept = requests.length;
+  return { requests, stats };
+}
+var OPEN_WHERE = /^(status|header:content-type|body encoding)$/;
+function shownValue(v2, where2, keepValues) {
+  if (v2 === "(missing)" || OPEN_WHERE.test(where2))
+    return v2;
+  if (!keepValues)
+    return `(withheld: ${noiseKind(v2) ?? `${v2.length} characters`})`;
+  const last = where2.split(/[.:/[\]]+/).filter(Boolean).pop() ?? "";
+  if (looksSecret(where2) || looksSecret(last) || looksPersonal(last))
+    return REDACTED;
+  return redactText(v2).text;
+}
+var say = (n3, one, many = `${one}s`) => `${n3} ${n3 === 1 ? one : many}`;
+function decide2(c4, r6, captureOnly) {
+  const limit = `This covers only the ${say(r6.sent, "read-only request")} replayed, never the whole system.` + (c4.dropped_total ? ` ${say(c4.dropped_total, "request")} that could change data ${c4.dropped_total === 1 ? "was" : "were"} dropped and never sent.` : "") + (c4.sampled_out ? ` ${c4.sampled_out} left out by sampling.` : "") + (c4.over_limit ? ` ${c4.over_limit} left out by the limit of ${c4.max}.` : "");
+  const unexplainedNext = "for each one: scrub it if it is noise, approve it as drift (a named person, in the drift ledger), or fix the candidate. Then replay again.";
+  if (captureOnly)
+    return { verdict: "NO EVIDENCE", reason: `Capture only: ${say(c4.kept, "clean request")} written, and nothing sent.`, next: "read capture.jsonl for anything personal the shapes missed. Use --redact for a value of your own, then run again without --capture-only." };
+  if (!c4.kept)
+    return { verdict: "NO EVIDENCE", reason: `No request could be replayed: of ${say(c4.lines, "line")}, ${c4.dropped_total} could change data, ${c4.unreadable} could not be read and ${c4.filtered + c4.sampled_out} were left out.`, next: "check the file holds GET, HEAD or OPTIONS requests in a format cmtk reads, then run again." };
+  if (r6.different)
+    return { verdict: "UNEXPLAINED DIFFERENCES", reason: `${say(r6.different, "request")} answered differently, with no approved drift to explain ${r6.different === 1 ? "it" : "them"}. ${limit}`, next: unexplainedNext };
+  if (!r6.sent)
+    return { verdict: "NO EVIDENCE", reason: `No request got an answer from both systems: ${say(r6.errors, "error")}, ${r6.not_sent} not sent.`, next: "check both systems are up, then run again." };
+  if (r6.errors || r6.not_sent)
+    return { verdict: "INCOMPLETE", reason: `${say(r6.errors, "request")} could not be compared and ${r6.not_sent} ${r6.not_sent === 1 ? "was" : "were"} not sent. ${limit}`, next: "check both systems are up, then run again." };
+  if (r6.truncated)
+    return { verdict: "INCOMPLETE", reason: `${say(r6.truncated, "request")} had an answer over 5 MB, and only the first 5 MB were compared. ${limit}`, next: "a person checks those endpoints another way. The report's endpoints say which." };
+  return { verdict: "NO UNEXPLAINED DIFFERENCES", reason: `No unexplained difference. ${limit}`, next: "keep replaying for the agreed period. This is one kind of evidence, and it says nothing about requests that change data, which `cmtk compare` covers." };
+}
+var cell5 = (v2) => String(v2).replace(/\|/g, "\\|").replace(/\r?\n/g, " ").replace(/`/g, "'");
+function renderShadow(r6) {
+  const c4 = r6.capture, p4 = r6.replay;
+  const L2 = [`# Shadow traffic report: ${r6.system}`, "", `**Verdict: ${r6.verdict}**`, "", r6.reason, "", `Next: ${r6.next}`, "", `- Date: ${r6.date}`];
+  for (const [name, url] of Object.entries(r6.targets))
+    L2.push(`- ${name}: \`${url}\``);
+  L2.push(`- Read from: ${r6.sources.map(cell5).join(", ")}`, `- Values: ${r6.values === "withheld" ? "differing values are not stored (`--keep-values` stores them redacted, for test data only)" : "stored, with personal data redacted where its name or shape shows it"}`, "");
+  L2.push("## What was read", "", "| | Count |", "| --- | --- |", `| Lines read | ${c4.lines} |`, `| Could not be read (counted, never shown) | ${c4.unreadable} |`, `| Dropped and never sent, because they could change data | ${c4.dropped_total} |`, ...Object.entries(c4.dropped).sort().map(([m4, n3]) => `| - ${cell5(m4)} | ${n3} |`), `| Left out by --include or --exclude | ${c4.filtered} |`, `| Left out by sampling (${c4.sample}, seed ${c4.seed}) | ${c4.sampled_out} |`, `| Left out by the limit of ${c4.max} | ${c4.over_limit} |`, `| Kept for replay, at ${c4.rate_per_second} a second | ${c4.kept} |`, `| With something redacted | ${c4.redacted_requests} |`, `| Credential headers stripped | ${c4.credential_headers_stripped} |`, "");
+  const kinds = Object.entries(c4.redactions).sort();
+  if (kinds.length)
+    L2.push(`Redacted: ${kinds.map(([k2, n3]) => `${cell5(k2)} (${n3})`).join(", ")}. The values are gone, so these requests sent REDACTED to both systems.`, "");
+  L2.push("## Replay", "", "| Sent | Matched | Approved drift | Unexplained | Errors | Not sent | Over 5 MB |", "| --- | --- | --- | --- | --- | --- | --- |", `| ${p4.sent} | ${p4.matched} | ${p4.drift} | ${p4.different} | ${p4.errors} | ${p4.not_sent} | ${p4.truncated} |`, "");
+  L2.push("## Endpoints", "", "| Endpoint | Requests | Matched | Drift | Unexplained | Errors |", "| --- | --- | --- | --- | --- | --- |");
+  for (const e6 of r6.endpoints)
+    L2.push(`| \`${cell5(e6.endpoint)}\` | ${e6.requests} | ${e6.matched} | ${e6.drift} | ${e6.unexplained} | ${e6.errors} |`);
+  if (!r6.endpoints.length)
+    L2.push("| (none) | 0 | 0 | 0 | 0 | 0 |");
+  const open = r6.endpoints.flatMap((e6) => e6.differences.map((d4) => [e6, d4]));
+  if (open.length) {
+    const [a4, b2] = Object.keys(r6.targets);
+    L2.push("", "## Differences", "", `| Endpoint | Where | Requests | First request | ${a4} | ${b2} | Approved drift |`, "| --- | --- | --- | --- | --- | --- | --- |");
+    for (const [e6, d4] of open.slice(0, 500))
+      L2.push(`| \`${cell5(e6.endpoint)}\` | \`${cell5(d4.where)}\` | ${d4.requests} | ${d4.first_request} | ${cell5(d4.reference)} | ${cell5(d4.candidate)} | ${d4.drift ?? "\u2014"} |`);
+    if (open.length > 500)
+      L2.push("", `${open.length - 500} more are in REPORT.json.`);
+  }
+  if (r6.suggested_scrubs.length) {
+    L2.push("", "## Probably noise", "", "A person decides whether to scrub these: a scrub hides them from every later run.", "", "| Where | Requests | Why |", "| --- | --- | --- |");
+    for (const s4 of r6.suggested_scrubs)
+      L2.push(`| \`${cell5(s4.where)}\` | ${s4.cases} | ${s4.why} |`);
+  }
+  if (r6.unused_drift.length)
+    L2.push("", "## Drift that matched nothing", "", `No request needed these approved differences: ${r6.unused_drift.join(", ")}.`);
+  L2.push("", "The request file is `capture.jsonl` in this folder. It holds only cleaned requests, and it is all that was sent. Answers are not kept. This report and the capture stay in the client's environment.", "");
+  return L2.join("\n");
+}
+async function shadow(manifest, o4) {
+  if (!o4.from.length)
+    throw new ManifestError("`cmtk shadow` needs --from <file>: an access log or a mirror file.");
+  const ref = manifest.reference ? manifest.targets[manifest.reference] : void 0;
+  const cand = manifest.candidate ? manifest.targets[manifest.candidate] : void 0;
+  if (!ref || !cand)
+    throw new ManifestError("`cmtk shadow` needs a reference and a candidate in cmtk.yaml.");
+  if (ref.name === cand.name)
+    throw new ManifestError("The reference and the candidate are the same target; comparing needs two systems.");
+  for (const t3 of [ref, cand]) {
+    if (!t3.base_url)
+      throw new ManifestError(`Target ${t3.name} has no base_url. Shadow traffic is HTTP only.`);
+    if (t3.surfaces && !t3.surfaces.includes("http"))
+      throw new ManifestError(`Target ${t3.name} does not list the http surface. Shadow traffic is HTTP only.`);
+  }
+  const sample = numberOption(o4.sample, 1, "--sample", (n3) => n3 > 0 && n3 <= 1, "above 0 and up to 1, such as 0.1");
+  const seed = numberOption(o4.seed, 1, "--seed", Number.isInteger, "a whole number");
+  const rate = numberOption(o4.rate, 5, "--rate", (n3) => n3 > 0 && n3 <= 1e3, "above 0 and up to 1000 requests a second");
+  const max = numberOption(o4.max, 1e3, "--max", (n3) => Number.isInteger(n3) && n3 > 0, "a whole number above 0");
+  const drift = loadDrift(manifest);
+  scrubberOf(manifest);
+  const extra = envHeaders(manifest);
+  const { requests, stats } = await captureRequests(o4.from, { format: o4.format, sample, seed, max, include: o4.include, exclude: o4.exclude, keepHeaders: o4.keepHeaders, redact: o4.redact });
+  stats.rate_per_second = rate;
+  const ev = evidenceDir(manifest, "shadow", { dated: o4.dated, note: o4.note });
+  try {
+    const dir = ev.dir;
+    fs19.rmSync(path18.join(dir, "answers"), { recursive: true, force: true });
+    const captureFile = path18.join(dir, "capture.jsonl");
+    fs19.writeFileSync(captureFile, requests.map((q2) => JSON.stringify(q2)).join("\n") + (requests.length ? "\n" : ""), "utf8");
+    const replay = { sent: 0, matched: 0, drift: 0, different: 0, errors: 0, not_sent: 0, truncated: 0 };
+    const endpoints = /* @__PURE__ */ new Map();
+    const noise2 = /* @__PURE__ */ new Map();
+    const used = /* @__PURE__ */ new Set();
+    const fired = new Map(scrubRules(manifest.scrub).map((rule) => [rule, 0]));
+    const sleep = o4.sleep ?? ((ms) => new Promise((res) => setTimeout(res, ms)));
+    const now = o4.now ?? (() => performance.now());
+    if (!o4.captureOnly) {
+      const toSend = fs19.readFileSync(captureFile, "utf8").split("\n").filter(Boolean).map((l4) => JSON.parse(l4));
+      const http2 = httpAdapter({ timeoutS: manifest.timeout_s, insecureTls: manifest.insecure_tls, root: manifest.root });
+      const gap = 1e3 / rate;
+      let next2 = now();
+      let silent = 0;
+      for (const q2 of toSend) {
+        if (silent >= STOP_AFTER_NO_ANSWER) {
+          replay.not_sent++;
+          continue;
+        }
+        const wait = next2 - now();
+        if (wait > 0)
+          await sleep(wait);
+        next2 = Math.max(next2, now()) + gap;
+        const name = endpointOf(q2.method, q2.path);
+        const e6 = endpoints.get(name) ?? { endpoint: name, requests: 0, matched: 0, drift: 0, unexplained: 0, errors: 0, differences: [], places: /* @__PURE__ */ new Map() };
+        endpoints.set(name, e6);
+        e6.requests++;
+        const c4 = { id: `shadow-${q2.n}`, request: { method: q2.method, path: q2.path, headers: q2.headers ?? {}, body: null }, surface: "http" };
+        const ra = await http2.run(c4, ref, extra);
+        const rb = await http2.run(c4, cand, extra);
+        silent = [ra, rb].some((a4) => a4.error && NO_ANSWER2.test(a4.error)) ? silent + 1 : 0;
+        if (ra.error || rb.error) {
+          e6.errors++;
+          replay.errors++;
+          e6.first_error ??= [ra.error && `reference: ${ra.error}`, rb.error && `candidate: ${rb.error}`].filter(Boolean).join("; ");
+          continue;
+        }
+        replay.sent++;
+        if (ra.truncated || rb.truncated) {
+          e6.truncated = (e6.truncated ?? 0) + 1;
+          replay.truncated++;
+        }
+        const diffs = compareObservations(ra, rb, manifest, matchFor(c4, manifest), fired);
+        for (const d4 of diffs) {
+          const hit2 = coveringDrift(drift, `shadow:${name}`, d4.where);
+          if (hit2) {
+            d4.drift = hit2.id;
+            used.add(hit2.id);
+          }
+        }
+        if (diffs.some((d4) => !d4.drift)) {
+          e6.unexplained++;
+          replay.different++;
+        } else if (diffs.length) {
+          e6.drift++;
+          replay.drift++;
+        } else {
+          e6.matched++;
+          replay.matched++;
+        }
+        for (const d4 of diffs) {
+          const where2 = d4.where.replace(/\[\d+\]/g, "[*]");
+          const placeKey = `${where2}\0${d4.drift ?? ""}`;
+          const kept = e6.places.get(placeKey);
+          if (kept)
+            kept.requests++;
+          else if (e6.places.size >= MAX_PLACES)
+            e6.more_differences = (e6.more_differences ?? 0) + 1;
+          else
+            e6.places.set(placeKey, { where: where2, requests: 1, ...d4.drift ? { drift: d4.drift } : {}, first_request: q2.n, reference: shownValue(d4.reference, d4.where, !!o4.keepValues), candidate: shownValue(d4.candidate, d4.where, !!o4.keepValues) });
+          if (!d4.drift) {
+            const a4 = noiseKind(d4.reference), b2 = noiseKind(d4.candidate);
+            const seen = noise2.get(where2);
+            noise2.set(where2, { kind: a4 && a4 === b2 && (!seen || seen.kind === a4) ? a4 : void 0, count: (seen?.count ?? 0) + 1 });
+          }
+        }
+      }
+    }
+    const list = [...endpoints.values()].sort((a4, b2) => b2.unexplained - a4.unexplained || a4.endpoint.localeCompare(b2.endpoint)).map(({ places, ...e6 }) => ({ ...e6, differences: [...places.values()] }));
+    const { verdict, reason, next } = decide2(stats, replay, !!o4.captureOnly);
+    const relevant = drift.filter((d4) => d4.case === "*" || d4.case.startsWith("shadow:"));
+    const report = {
+      tool: "cmtk",
+      mode: "shadow",
+      system: manifest.system,
+      date: o4.date ?? (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+      verdict,
+      targets: { [ref.name]: cleanUrl(ref.base_url), [cand.name]: cleanUrl(cand.base_url) },
+      sources: o4.from.map((f4) => path18.basename(f4)),
+      // the file name only: a full path can name a person's folders
+      capture: stats,
+      replay,
+      endpoints: list,
+      values: o4.keepValues ? "redacted" : "withheld",
+      capture_only: !!o4.captureOnly,
+      unused_drift: o4.captureOnly ? [] : relevant.filter((d4) => !used.has(d4.id)).map((d4) => d4.id).sort(),
+      suggested_scrubs: [...noise2].filter(([, n3]) => n3.kind).map(([where2, n3]) => ({ where: where2, cases: n3.count, why: `both sides hold ${n3.kind} that changes on every call` })).sort((a4, b2) => a4.where.localeCompare(b2.where)),
+      settings: settingsOf(manifest, drift),
+      ...fired.size && !o4.captureOnly ? { scrub_fired: Object.fromEntries(fired) } : {},
+      reason,
+      next
+    };
+    fs19.writeFileSync(path18.join(dir, "REPORT.json"), JSON.stringify(report, null, 2) + "\n", "utf8");
+    fs19.writeFileSync(path18.join(dir, "REPORT.md"), renderShadow(report), "utf8");
+    ev.commit();
+    return report;
+  } finally {
+    ev.release();
+  }
+}
+
+// packages/core/dist/signoff.js
+import crypto12 from "node:crypto";
+import fs20 from "node:fs";
+import path19 from "node:path";
+var DECISIONS = ["accept", "accept with conditions", "reject"];
+var SignoffError = class extends Error {
+};
+var SKIP = /* @__PURE__ */ new Set(["SIGNOFF.json", "DEFECTS.md", "DEFECTS.json"]);
+function evidenceFingerprint(dir) {
+  const files = [];
+  const walk = (d4) => {
+    for (const e6 of fs20.readdirSync(d4, { withFileTypes: true })) {
+      const full = path19.join(d4, e6.name);
+      if (e6.isDirectory())
+        walk(full);
+      else if (e6.isFile() && !(d4 === dir && SKIP.has(e6.name)))
+        files.push(full);
+    }
+  };
+  walk(dir);
+  const h4 = crypto12.createHash("sha256");
+  for (const f4 of files.map((f5) => path19.relative(dir, f5).split(path19.sep).join("/")).sort()) {
+    let bytes = fs20.readFileSync(path19.join(dir, f4));
+    if (f4 === "REPORT.md")
+      bytes = Buffer.from(bytes.toString("utf8").split(/\r?\n## Sign-off\r?\n/)[0], "utf8");
+    h4.update(f4).update("\0").update(crypto12.createHash("sha256").update(bytes).digest("hex")).update("\n");
+  }
+  return h4.digest("hex");
+}
+function signoffState(dir) {
+  const file = path19.join(dir, "SIGNOFF.json");
+  if (!fs20.existsSync(file))
+    return { state: "none" };
+  let s4;
+  try {
+    s4 = JSON.parse(fs20.readFileSync(file, "utf8"));
+  } catch {
+    return { state: "none" };
+  }
+  return s4.evidence_sha256 === evidenceFingerprint(dir) ? { state: "signed", signoff: s4 } : { state: "stale", signoff: s4 };
+}
+function describeSignoff(st2) {
+  if (st2.state === "none")
+    return "not signed";
+  const s4 = st2.signoff;
+  const covers3 = s4.known_issues?.length ? `; known issues still failing: ${s4.known_issues.join(", ")}` : "";
+  return st2.state === "signed" ? `signed by ${s4.name} (${s4.role}): ${s4.decision}, ${s4.date}${covers3}${s4.scope ? `; for what was compared only. ${s4.scope}` : ""}` : `the signature by ${s4.name} is for different evidence, so it no longer counts`;
+}
+function recordSignoff(dir, who, date, manifest) {
+  const json = path19.join(dir, "REPORT.json"), md = path19.join(dir, "REPORT.md");
+  if (!fs20.existsSync(json) || !fs20.existsSync(md))
+    throw new SignoffError("There is no report in this folder yet.");
+  const report = JSON.parse(fs20.readFileSync(json, "utf8"));
+  if (report.verdict === "NO EVIDENCE")
+    throw new SignoffError("This report holds no evidence, so there is nothing to sign. Add cases and run again.");
+  if (manifest && report.settings) {
+    const named = path19.relative(manifest.root, manifest.file).split(path19.sep).join("/");
+    if (named !== report.settings.manifest) {
+      throw new SignoffError(`This report was produced from ${report.settings.manifest}, not ${named}. Read ${report.settings.manifest}, then sign with --manifest ${report.settings.manifest}, or run again with ${named}.`);
+    }
+  }
+  const name = who.name.trim(), role = who.role.trim(), decision = who.decision.trim().toLowerCase();
+  if (!name || !role || !DECISIONS.includes(decision))
+    throw new SignoffError(`Name, role and one of ${DECISIONS.join(" / ")} are all needed. Nothing was signed.`);
+  if (/[\u0000-\u001f\u007f-\u009f]/.test(name + role))
+    throw new SignoffError("Name and role must be plain text. Nothing was signed.");
+  const known = (report.known_issues ?? []).filter((k2) => k2.state === "still fails").map((k2) => `${k2.id} (accepted by ${k2.accepted_by})`);
+  const s4 = {
+    name,
+    role,
+    decision,
+    date,
+    verdict: report.verdict,
+    evidence_sha256: evidenceFingerprint(dir),
+    ...known.length ? { known_issues: known } : {},
+    ...report.scope && !report.scope.whole ? { scope: report.scope.statement } : {},
+    ...report.settings ? { manifest: report.settings.manifest, manifest_sha256: report.settings.manifest_sha256 } : {}
+  };
+  const cell6 = (v2) => v2.replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
+  const row = (label2, value) => (t3) => t3.replace(new RegExp(`^\\| ${label2} \\|.*\\|$`, "m"), () => `| ${label2} | ${value} |`);
+  const text2 = [row("Name", cell6(name)), row("Role", cell6(role)), row("Date", date), row("Decision", decision), row("Evidence", `sha256 ${s4.evidence_sha256}`)].reduce((t3, f4) => f4(t3), fs20.readFileSync(md, "utf8"));
+  fs20.writeFileSync(path19.join(dir, "SIGNOFF.json"), JSON.stringify(s4, null, 2) + "\n", "utf8");
+  fs20.writeFileSync(md, text2, "utf8");
+  return s4;
+}
+
+// packages/core/dist/check.js
+import fs21 from "node:fs";
+function check(manifest) {
+  const cases = loadCases(manifest);
+  loadDrift(manifest);
+  const known = loadKnownIssues(manifest);
+  scrubberOf(manifest);
+  const proposals = loadProposals(manifest);
+  const warnings = [];
+  for (const c4 of cases) {
+    const s4 = c4.surface ?? "http";
+    if (s4 !== "http" && !manifest.adapters[s4])
+      warnings.push(`${c4.id}: surface "${s4}" has no adapter in cmtk.yaml.`);
+    if (s4 === "http" && ["journey", "structure", "visual"].includes(c4.match ?? ""))
+      warnings.push(`${c4.id}: match \`${c4.match}\` needs an adapter that reports it, and http does not, so \`cmtk compare\` reports a difference.`);
+    if (c4.requirement === void 0)
+      warnings.push(`${c4.id}: names no requirement, so its result is not traced to a story.`);
+    if (!c4.expect && Object.keys(manifest.targets).length === 1)
+      warnings.push(`${c4.id}: has no \`expect:\` block, so \`cmtk run\` skips it.`);
+    if (typeof c4.journey?.script === "string" && !fs21.existsSync(inside(manifest, c4.journey.script)))
+      warnings.push(`${c4.id}: the script ${c4.journey.script} does not exist, so the case will error.`);
+    for (const f4 of [c4.request.body_file, typeof c4.request.body_form === "string" ? c4.request.body_form : void 0, ...(c4.request.files ?? []).map((x2) => x2.path)].filter((x2) => !!x2)) {
+      if (!fs21.existsSync(inside(manifest, f4)))
+        warnings.push(`${c4.id}: the input file ${f4} does not exist, so the case will error.`);
+    }
+  }
+  const pair = [manifest.targets[manifest.reference], manifest.targets[manifest.candidate]].filter((t3) => t3?.surfaces);
+  const counted = /* @__PURE__ */ new Map();
+  for (const c4 of cases)
+    counted.set(c4.surface ?? "http", (counted.get(c4.surface ?? "http") ?? 0) + 1);
+  for (const [s4, n3] of [...counted].sort()) {
+    const missing = pair.filter((t3) => !t3.surfaces.includes(s4)).map((t3) => t3.name);
+    if (missing.length)
+      warnings.push(`${n3} case${n3 === 1 ? "" : "s"} on ${s4}: ${missing.join(" and ")} ${missing.length > 1 ? "have" : "has"} no ${s4} surface, so \`cmtk compare\` reports ${n3 === 1 ? "it" : "them"} as not comparable.`);
+  }
+  const ids = new Set(cases.map((c4) => c4.id));
+  for (const k2 of known) {
+    if (!ids.has(k2.case))
+      warnings.push(`known issue ${k2.id}: there is no case ${k2.case}.`);
+    if (k2.fails.some((f4) => f4.actual === void 0 && f4.expected === void 0))
+      warnings.push(`known issue ${k2.id}: one of its failures accepts any answer at that check, so a new way of failing there would be hidden. Copy \`expected\` or \`actual\` from the report.`);
+  }
+  for (const k2 of manifest.contracts) {
+    if (!k2.assembly)
+      continue;
+    for (const f4 of [k2.assembly.legacy, k2.assembly.candidate])
+      if (!fs21.existsSync(inside(manifest, f4)))
+        warnings.push(`contract ${k2.name}: ${f4} does not exist, so the comparison will report an error.`);
+  }
+  if (!cases.length)
+    warnings.push(`No case files match ${manifest.cases.join(", ")}.`);
+  if (!fs21.existsSync(inside(manifest, manifest.evidence)))
+    warnings.push(`${manifest.evidence} does not exist yet: the first run creates it.`);
+  const d4 = loadDiscovery(manifest);
+  for (const b2 of d4?.boundaries.filter((x2) => !x2.covered_by) ?? [])
+    warnings.push(`boundary ${b2.name} (${b2.kind}) is uncovered: no adapter covers ${b2.kind}.`);
+  return {
+    cases: cases.length,
+    drafts: cases.filter((c4) => c4.draft).map((c4) => c4.id),
+    draftExpectations: cases.filter((c4) => c4.expect_draft).map((c4) => c4.id),
+    requirements: new Set(cases.flatMap((c4) => c4.requirement === void 0 ? [] : [c4.requirement].flat().map(String))).size,
+    pendingProposals: proposals.filter((p4) => p4.status === "pending").map((p4) => p4.id),
+    ...d4 ? { discovery: `Boundaries (cmtk discover, ${d4.date}): ${describeDiscovery(d4)}` } : {},
+    warnings
+  };
+}
+function describeCheck(r6) {
+  const lines = [
+    `Settings and case files are valid: ${r6.cases} cases for ${r6.requirements} requirements.`,
+    r6.drafts.length ? `${r6.drafts.length} draft cases wait for a person (\`cmtk review\`): ${r6.drafts.slice(0, 20).join(", ")}${r6.drafts.length > 20 ? ", \u2026" : ""}` : "No draft cases.",
+    ...r6.draftExpectations.length ? [`${r6.draftExpectations.length} drafted expectations wait for a person (\`cmtk review\`), and \`cmtk run\` skips those cases until then: ${r6.draftExpectations.slice(0, 20).join(", ")}${r6.draftExpectations.length > 20 ? ", \u2026" : ""}`] : [],
+    r6.pendingProposals.length ? `${r6.pendingProposals.length} proposals wait for a person (\`cmtk review\`): ${r6.pendingProposals.join(", ")}` : "No proposals waiting.",
+    ...r6.discovery ? [r6.discovery] : []
+  ];
+  for (const w2 of r6.warnings)
+    lines.push(`Warning: ${w2}`);
+  return lines.join("\n");
+}
+
+// packages/core/dist/init.js
+import fs22 from "node:fs";
+import path20 from "node:path";
+var EXAMPLE_CASES = `# Cases for \`cmtk run\` (one system, checked against expectations) and \`cmtk compare\`
+# (the same request to the reference and the candidate). Each case says which requirement it answers for.
+cases:
+  - id: EXAMPLE-001
+    name: the home page answers
+    requirement: REQ-1
+    request: GET /
+    expect:
+      status: 200
+`;
+var DRIFT_HEADER = `# Approved drift: differences between the reference and the candidate that a named person accepted.
+# Only a person adds an entry. Each needs id, where (from a report), reason and approved_by.
+#  - id: DRIFT-001
+#    case: "*"                      # or one case id
+#    where: "header:content-type"   # a where value from REPORT.md; JSON paths may use [*]
+#    reason: charset added to every JSON answer; consumers ignore it
+#    approved_by: Jane Smith
+#    date: 2026-10-16
+drift: []
+`;
+function initProject(manifestFile, o4) {
+  if (fs22.existsSync(manifestFile))
+    throw new ManifestError(`${path20.basename(manifestFile)} already exists; edit it instead.`);
+  if (!/\.ya?ml$/i.test(manifestFile))
+    throw new ManifestError("The settings file must be a .yaml file, such as cmtk.yaml.");
+  const root = path20.dirname(manifestFile);
+  if (!fs22.existsSync(root))
+    throw new ManifestError(`${root} does not exist. cmtk init only writes into an existing project folder.`);
+  for (const [k2, v2] of Object.entries({ candidate: o4.candidate, legacy: o4.legacy })) {
+    if (v2 !== void 0 && !isBaseUrl(v2))
+      throw new ManifestError(`--${k2} must be an http:// or https:// URL, such as http://localhost:5002.`);
+  }
+  const system = (o4.system ?? path20.basename(root)).replace(/[^A-Za-z0-9_.-]/g, "-").replace(/^[^A-Za-z0-9]+/, "") || "system";
+  fs22.mkdirSync(path20.join(root, "cmtk", "cases"), { recursive: true });
+  fs22.writeFileSync(manifestFile, STARTER_MANIFEST(system, o4.legacy, o4.candidate), "utf8");
+  const written = [manifestFile];
+  try {
+    loadManifest(manifestFile);
+  } catch (err) {
+    fs22.rmSync(manifestFile);
+    throw err;
+  }
+  const example = path20.join(root, "cmtk", "cases", "example.yaml");
+  if (!fs22.existsSync(example)) {
+    fs22.writeFileSync(example, EXAMPLE_CASES, "utf8");
+    written.push(example);
+  }
+  const drift = path20.join(root, "cmtk", "drift.yaml");
+  if (o4.legacy && !fs22.existsSync(drift)) {
+    fs22.writeFileSync(drift, DRIFT_HEADER, "utf8");
+    written.push(drift);
+  }
+  return written;
+}
+
+// packages/core/dist/data/compare.js
+import fs23 from "node:fs";
+function parseCsv(text2, delimiter = ",") {
+  const s4 = text2.replace(/^﻿/, "");
+  const all = [];
+  let row = [];
+  let cell6 = "";
+  let quoted = false;
+  let wasQuoted = false;
+  let i8 = 0;
+  const endCell = () => {
+    row.push(cell6);
+    cell6 = "";
+    wasQuoted = false;
+  };
+  const endRow = () => {
+    endCell();
+    if (row.length > 1 || row[0] !== "")
+      all.push(row);
+    row = [];
+  };
+  while (i8 < s4.length) {
+    const c4 = s4[i8];
+    if (quoted) {
+      if (c4 === '"') {
+        if (s4[i8 + 1] === '"') {
+          cell6 += '"';
+          i8 += 2;
+          continue;
+        }
+        quoted = false;
+        i8++;
+        continue;
+      }
+      cell6 += c4;
+      i8++;
+      continue;
+    }
+    if (c4 === '"' && cell6 === "" && !wasQuoted) {
+      quoted = true;
+      wasQuoted = true;
+      i8++;
+      continue;
+    }
+    if (s4.startsWith(delimiter, i8)) {
+      endCell();
+      i8 += delimiter.length;
+      continue;
+    }
+    if (c4 === "\r" && s4[i8 + 1] === "\n") {
+      endRow();
+      i8 += 2;
+      continue;
+    }
+    if (c4 === "\n" || c4 === "\r") {
+      endRow();
+      i8++;
+      continue;
+    }
+    cell6 += c4;
+    i8++;
+  }
+  if (cell6 !== "" || row.length || wasQuoted)
+    endRow();
+  return { header: all[0] ?? [], rows: all.slice(1) };
+}
+var GUID = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
+var DATE = /\b\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?\b|\b\d{1,2}\/\d{1,2}\/\d{4}\b/g;
+function scrubber(what) {
+  const dates = /* @__PURE__ */ new Map(), guids = /* @__PURE__ */ new Map();
+  const token = (m4, v2, name) => {
+    if (!m4.has(v2))
+      m4.set(v2, `${name}_${m4.size + 1}`);
+    return m4.get(v2);
+  };
+  return (s4) => {
+    let out = s4;
+    if (what.includes("guids"))
+      out = out.replace(GUID, (g3) => token(guids, g3.toLowerCase(), "GUID"));
+    if (what.includes("dates"))
+      out = out.replace(DATE, (d4) => token(dates, d4, "DATE"));
+    return out;
+  };
+}
+var NUMERIC = /^[+-]?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$|^[+-]?\.\d+$/;
+var asNumber = (s4) => NUMERIC.test(s4.trim()) ? Number(s4) : void 0;
+function equalCells(a4, b2, o4) {
+  const fold = o4.fold_empty !== false;
+  if (a4 === b2)
+    return true;
+  if (a4 === null || b2 === null)
+    return fold && (a4 ?? "") === (b2 ?? "");
+  const x2 = asNumber(a4), y2 = asNumber(b2);
+  if (x2 !== void 0 && y2 !== void 0)
+    return Math.abs(x2 - y2) <= (o4.epsilon ?? 0) + Number.EPSILON * Math.max(1, Math.abs(x2), Math.abs(y2));
+  return false;
+}
+function keyed2(t3, o4, side, dupes) {
+  for (const k2 of o4.key)
+    if (t3.columns.length && !t3.columns.includes(k2))
+      throw new ManifestError(`The key column ${k2} is not in ${t3.name} (columns: ${t3.columns.join(", ") || "none"}).`);
+  const rows = /* @__PURE__ */ new Map();
+  for (const r6 of t3.rows) {
+    const key2 = o4.key.map((k2) => r6[k2] ?? "").join(" | ");
+    if (rows.has(key2))
+      dupes.push({ table: t3.name, side, key: key2 });
+    else
+      rows.set(key2, r6);
+  }
+  return rows;
+}
+function compareTables(as, bs, o4) {
+  if (!o4.key?.length)
+    throw new ManifestError("Name the key column with --key: without one, the order of the rows would decide what a difference is.");
+  const out = {
+    same: true,
+    tables: [],
+    rows_compared: 0,
+    differences: [],
+    only_in_a: [],
+    only_in_b: [],
+    duplicate_keys: [],
+    columns_only_in_a: [],
+    columns_only_in_b: [],
+    tables_only_in_a: as.filter((t3) => !bs.some((x2) => x2.name === t3.name)).map((t3) => t3.name),
+    tables_only_in_b: bs.filter((t3) => !as.some((x2) => x2.name === t3.name)).map((t3) => t3.name),
+    problems: []
+  };
+  const ignore = new Set(o4.ignore ?? []);
+  for (const t3 of [...as, ...bs])
+    out.problems.push(...(t3.problems ?? []).map((p4) => `${t3.name}: ${p4}`));
+  for (const a4 of as) {
+    const b2 = bs.find((x2) => x2.name === a4.name);
+    if (!b2)
+      continue;
+    out.tables.push(a4.name);
+    const ra = keyed2(a4, o4, "a", out.duplicate_keys), rb = keyed2(b2, o4, "b", out.duplicate_keys);
+    const fold = o4.fold_empty !== false;
+    const hasValue = (t3, c4) => t3.rows.some((r6) => (r6[c4] ?? "") !== "");
+    for (const c4 of a4.columns.filter((c5) => !b2.columns.includes(c5) && !ignore.has(c5)))
+      if (!fold || hasValue(a4, c4))
+        out.columns_only_in_a.push({ table: a4.name, column: c4 });
+    for (const c4 of b2.columns.filter((c5) => !a4.columns.includes(c5) && !ignore.has(c5)))
+      if (!fold || hasValue(b2, c4))
+        out.columns_only_in_b.push({ table: a4.name, column: c4 });
+    const shared = a4.columns.filter((c4) => b2.columns.includes(c4) && !ignore.has(c4) && !o4.key.includes(c4));
+    const scrubA = scrubber(o4.scrub ?? []), scrubB = scrubber(o4.scrub ?? []);
+    const keys = [.../* @__PURE__ */ new Set([...ra.keys(), ...rb.keys()])].sort();
+    for (const key2 of keys) {
+      const x2 = ra.get(key2), y2 = rb.get(key2);
+      if (!x2) {
+        out.only_in_b.push({ table: a4.name, key: key2 });
+        continue;
+      }
+      if (!y2) {
+        out.only_in_a.push({ table: a4.name, key: key2 });
+        continue;
+      }
+      out.rows_compared++;
+      for (const c4 of shared) {
+        const p4 = x2[c4] ?? null, q2 = y2[c4] ?? null;
+        const sp = p4 === null ? null : scrubA(p4), sq = q2 === null ? null : scrubB(q2);
+        if (!equalCells(sp, sq, o4))
+          out.differences.push({ table: a4.name, key: key2, column: c4, a: p4, b: q2 });
+      }
+    }
+  }
+  out.same = !out.differences.length && !out.only_in_a.length && !out.only_in_b.length && !out.duplicate_keys.length && !out.columns_only_in_a.length && !out.columns_only_in_b.length && !out.tables_only_in_a.length && !out.tables_only_in_b.length && !out.problems.length;
+  return out;
+}
+function csvTable(text2, name = "csv", delimiter = ",") {
+  const { header, rows } = parseCsv(text2, delimiter);
+  return { name, columns: header, rows: rows.map((r6) => Object.fromEntries(header.map((h4, i8) => [h4, r6[i8] ?? null]))) };
+}
+var cellText = (c4) => c4 === null || c4 === void 0 ? null : String(c4);
+function xlsxTables(bytes, formulas = "value") {
+  return readXlsx(bytes, { formulas }).sheets.map((s4) => {
+    const head = (s4.rows[0] ?? []).map((c4, i8) => cellText(c4) ?? `column${i8 + 1}`);
+    const rows = s4.rows.slice(1).map((r6) => Object.fromEntries(head.map((h4, i8) => [h4, cellText(r6[i8])])));
+    return { name: s4.name, columns: head, rows };
+  });
+}
+function recordsTable(records, name, problems = []) {
+  const columns = /* @__PURE__ */ new Set();
+  const flat = (v2, at2, into) => {
+    if (Array.isArray(v2))
+      v2.forEach((x2, i8) => flat(x2, `${at2}[${i8}]`, into));
+    else if (v2 && typeof v2 === "object")
+      for (const [k2, x2] of Object.entries(v2))
+        flat(x2, at2 ? `${at2}.${k2}` : k2, into);
+    else {
+      into[at2] = v2 === null || v2 === void 0 ? null : String(v2);
+      columns.add(at2);
+    }
+  };
+  const rows = records.map((r6) => {
+    const o4 = {};
+    flat(r6, "", o4);
+    return o4;
+  });
+  return { name, columns: [...columns], rows, problems };
+}
+function readTables(file, o4 = {}) {
+  const bytes = fs23.readFileSync(file);
+  const as = o4.as ?? (/\.xlsx$/i.test(file) ? "xlsx" : /\.csv$/i.test(file) ? "csv" : /\.(dat|ebc|txt)$/i.test(file) && o4.copybook ? "fixed" : void 0);
+  if (as === "csv")
+    return [csvTable(bytes.toString(o4.encoding ?? "utf8"), "csv", o4.delimiter)];
+  if (as === "xlsx") {
+    try {
+      return xlsxTables(bytes, o4.formulas);
+    } catch (err) {
+      throw new ManifestError(`${file} can't be read as a workbook: ${err.message}`);
+    }
+  }
+  if (as === "fixed") {
+    if (!o4.copybook)
+      throw new ManifestError(`Reading ${file} as fixed-width records needs --copybook.`);
+    const layout = parseCopybook(fs23.readFileSync(o4.copybook, "utf8"), o4.copybook);
+    const { records, problems } = decodeFile(layout, bytes, o4.record_encoding ?? "cp037");
+    return [recordsTable(records, "records", problems)];
+  }
+  throw new ManifestError(`Say how to read ${file} with --as csv, xlsx or fixed.`);
+}
+function describeComparison(c4) {
+  const L2 = [`${c4.same ? "The same" : "DIFFERENT"}: ${c4.rows_compared} rows compared by key, across ${c4.tables.join(", ") || "no tables"}.`];
+  for (const p4 of c4.problems)
+    L2.push(`  can't be read: ${p4}`);
+  for (const t3 of c4.tables_only_in_a)
+    L2.push(`  only in the first file: sheet ${t3}`);
+  for (const t3 of c4.tables_only_in_b)
+    L2.push(`  only in the second file: sheet ${t3}`);
+  for (const x2 of c4.columns_only_in_a)
+    L2.push(`  column ${x2.column} only in the first file (${x2.table})`);
+  for (const x2 of c4.columns_only_in_b)
+    L2.push(`  column ${x2.column} only in the second file (${x2.table})`);
+  for (const x2 of c4.duplicate_keys)
+    L2.push(`  key ${x2.key} used twice in the ${x2.side === "a" ? "first" : "second"} file (${x2.table})`);
+  for (const x2 of c4.only_in_a)
+    L2.push(`  row ${x2.key} only in the first file (${x2.table})`);
+  for (const x2 of c4.only_in_b)
+    L2.push(`  row ${x2.key} only in the second file (${x2.table})`);
+  for (const d4 of c4.differences.slice(0, 50))
+    L2.push(`  row ${d4.key}, ${d4.column}: ${JSON.stringify(d4.a)} vs ${JSON.stringify(d4.b)} (${d4.table})`);
+  if (c4.differences.length > 50)
+    L2.push(`  and ${c4.differences.length - 50} more differences`);
+  return L2;
+}
+
+// packages/core/dist/data/seed.js
+var import_yaml6 = __toESM(require_dist(), 1);
+import crypto13 from "node:crypto";
+import fs24 from "node:fs";
+import path21 from "node:path";
+function stripComments(sql) {
+  return sql.replace(/'(?:[^']|'')*'|\[[^\]]*\]|"[^"]*"|--[^\n]*|\/\*[\s\S]*?\*\//g, (m4) => m4.startsWith("--") || m4.startsWith("/*") ? " " : m4);
+}
+function statements2(sql) {
+  const out = [];
+  let cur = "";
+  const clean2 = stripComments(sql).replace(/^\s*GO\s*\d*\s*$/gim, ";");
+  for (const m4 of clean2.matchAll(/'(?:[^']|'')*'|\[[^\]]*\]|"[^"]*"|;|[^'"[;]+|['"[]/g)) {
+    if (m4[0] === ";") {
+      if (cur.trim())
+        out.push(cur.trim());
+      cur = "";
+    } else
+      cur += m4[0];
+  }
+  if (cur.trim())
+    out.push(cur.trim());
+  return out;
+}
+var NAME2 = String.raw`(?:\[[^\]]+\]|"[^"]+"|[A-Za-z_#@][\w#@$]*)`;
+var QNAME = String.raw`${NAME2}(?:\s*\.\s*${NAME2})*`;
+var unq = (n3) => n3.trim().replace(/^[["]|[\]"]$/g, "");
+function tableName(q2) {
+  const parts = [...q2.matchAll(new RegExp(NAME2, "g"))].map((m4) => unq(m4[0]));
+  const last = parts.slice(-2);
+  return last.length === 1 ? `dbo.${last[0]}` : `${last[0]}.${last[1]}`;
+}
+function splitTop(s4) {
+  const out = [];
+  let depth = 0, cur = "";
+  for (const m4 of s4.matchAll(/'(?:[^']|'')*'|\[[^\]]*\]|"[^"]*"|[(),]|[^'"[(),]+|['"[]/g)) {
+    const t3 = m4[0];
+    if (t3 === "(")
+      depth++;
+    if (t3 === ")")
+      depth--;
+    if (t3 === "," && depth === 0) {
+      out.push(cur.trim());
+      cur = "";
+    } else
+      cur += t3;
+  }
+  if (cur.trim())
+    out.push(cur.trim());
+  return out;
+}
+function group(s4, open) {
+  let depth = 0, inStr = false, inBr = false;
+  for (let i8 = open; i8 < s4.length; i8++) {
+    const c4 = s4[i8];
+    if (inStr) {
+      if (c4 === "'")
+        inStr = false;
+      continue;
+    }
+    if (inBr) {
+      if (c4 === "]")
+        inBr = false;
+      continue;
+    }
+    if (c4 === "'")
+      inStr = true;
+    else if (c4 === "[")
+      inBr = true;
+    else if (c4 === "(")
+      depth++;
+    else if (c4 === ")") {
+      depth--;
+      if (depth === 0)
+        return { inner: s4.slice(open + 1, i8), end: i8 };
+    }
+  }
+  throw new ManifestError(`An opening parenthesis in the DDL is never closed: ${s4.slice(open, open + 60)}`);
+}
+var nameList = (s4) => splitTop(s4).map((x2) => unq(new RegExp(`^\\s*(${NAME2})`).exec(x2)?.[1] ?? x2));
+function readColumn(def, t3) {
+  const m4 = new RegExp(`^(${NAME2})\\s+`).exec(def);
+  if (!m4)
+    throw new ManifestError(`${t3.name}: this column is not understood: ${def.slice(0, 80)}`);
+  const name = unq(m4[1]);
+  const rest = def.slice(m4[0].length);
+  if (/^AS\b/i.test(rest)) {
+    t3.columns.push({ name, type: "computed", nullable: true, identity: false, computed: true, has_default: false });
+    return;
+  }
+  const ty = new RegExp(`^(${QNAME})\\s*(\\(\\s*(?:max|\\d+)(?:\\s*,\\s*\\d+)?\\s*\\))?`, "i").exec(rest);
+  if (!ty)
+    throw new ManifestError(`${t3.name}.${name}: the type is not understood: ${rest.slice(0, 60)}`);
+  const type = unq(ty[1].split(".").pop()).toLowerCase();
+  const col = { name, type, nullable: true, identity: false, computed: false, has_default: false };
+  const p4 = ty[2]?.replace(/[()\s]/g, "").split(",");
+  if (p4) {
+    if (["decimal", "numeric"].includes(type)) {
+      col.precision = Number(p4[0]);
+      col.scale = Number(p4[1] ?? 0);
+    } else if (!["datetime2", "time", "datetimeoffset", "float"].includes(type))
+      col.length = p4[0].toLowerCase() === "max" ? -1 : Number(p4[0]);
+  }
+  const tail = rest.slice(ty[0].length);
+  if (/\bNOT\s+NULL\b/i.test(tail))
+    col.nullable = false;
+  if (/\bIDENTITY\b/i.test(tail)) {
+    col.identity = true;
+    col.nullable = false;
+  }
+  if (/\bDEFAULT\b/i.test(tail))
+    col.has_default = true;
+  if (/\bPRIMARY\s+KEY\b/i.test(tail)) {
+    t3.primary_key = [name];
+    col.nullable = false;
+  }
+  if (/\bUNIQUE\b/i.test(tail))
+    t3.uniques.push([name]);
+  for (const c4 of tail.matchAll(/\bCHECK\s*\(/gi))
+    t3.checks.push(group(tail, c4.index + c4[0].length - 1).inner);
+  const ref = new RegExp(`\\bREFERENCES\\s+(${QNAME})\\s*(?:\\(([^)]*)\\))?`, "i").exec(tail);
+  if (ref)
+    t3.foreign_keys.push({ columns: [name], ref_table: tableName(ref[1]), ref_columns: ref[2] ? nameList(ref[2]) : [] });
+  t3.columns.push(col);
+}
+function readConstraint(def, t3) {
+  const m4 = new RegExp(`^(?:CONSTRAINT\\s+(${NAME2})\\s+)?(PRIMARY\\s+KEY|UNIQUE|FOREIGN\\s+KEY|CHECK)\\b`, "i").exec(def);
+  if (!m4)
+    return false;
+  const kind = m4[2].toUpperCase().replace(/\s+/g, " ");
+  const open = def.indexOf("(", m4[0].length);
+  if (open < 0)
+    return true;
+  const { inner, end } = group(def, open);
+  if (kind === "PRIMARY KEY")
+    t3.primary_key = nameList(inner);
+  else if (kind === "UNIQUE")
+    t3.uniques.push(nameList(inner));
+  else if (kind === "CHECK")
+    t3.checks.push(inner);
+  else {
+    const ref = new RegExp(`\\bREFERENCES\\s+(${QNAME})\\s*(?:\\(([^)]*)\\))?`, "i").exec(def.slice(end));
+    if (!ref)
+      throw new ManifestError(`${t3.name}: a foreign key with no REFERENCES: ${def.slice(0, 80)}`);
+    t3.foreign_keys.push({ ...m4[1] ? { name: unq(m4[1]) } : {}, columns: nameList(inner), ref_table: tableName(ref[1]), ref_columns: ref[2] ? nameList(ref[2]) : [] });
+  }
+  return true;
+}
+function parseDdl(sql) {
+  const tables = /* @__PURE__ */ new Map();
+  const notes = [];
+  for (const st2 of statements2(sql)) {
+    const create = new RegExp(`^CREATE\\s+TABLE\\s+(${QNAME})\\s*\\(`, "i").exec(st2);
+    if (create) {
+      const t3 = { name: tableName(create[1]), columns: [], primary_key: [], uniques: [], checks: [], foreign_keys: [] };
+      for (const def of splitTop(group(st2, create[0].length - 1).inner))
+        if (!readConstraint(def, t3))
+          readColumn(def, t3);
+      for (const k2 of t3.primary_key) {
+        const c4 = t3.columns.find((x2) => x2.name === k2);
+        if (c4)
+          c4.nullable = false;
+      }
+      tables.set(t3.name, t3);
+      continue;
+    }
+    const alter = new RegExp(`^ALTER\\s+TABLE\\s+(${QNAME})\\s+(?:WITH\\s+(?:NO)?CHECK\\s+)?ADD\\s+`, "i").exec(st2);
+    if (alter) {
+      const t3 = tables.get(tableName(alter[1]));
+      const rest = st2.slice(alter[0].length);
+      if (!t3) {
+        notes.push(`An ALTER TABLE on ${tableName(alter[1])}, which the script does not create, was left out.`);
+        continue;
+      }
+      if (/^(?:CONSTRAINT\s+\S+\s+)?DEFAULT\b/i.test(rest)) {
+        const on = new RegExp(`\\bFOR\\s+(${NAME2})`, "i").exec(rest);
+        const c4 = on ? t3.columns.find((x2) => x2.name === unq(on[1])) : void 0;
+        if (c4)
+          c4.has_default = true;
+        continue;
+      }
+      if (!readConstraint(rest, t3))
+        notes.push(`${t3.name}: this was not understood, so it is not honoured: ${rest.slice(0, 80)}`);
+      continue;
+    }
+    const index = new RegExp(`^CREATE\\s+UNIQUE\\s+(?:CLUSTERED\\s+|NONCLUSTERED\\s+)?INDEX\\s+${NAME2}\\s+ON\\s+(${QNAME})\\s*\\(`, "i").exec(st2);
+    if (index) {
+      const t3 = tables.get(tableName(index[1]));
+      const g3 = group(st2, index[0].length - 1);
+      if (t3) {
+        t3.uniques.push(nameList(g3.inner));
+        if (/\bWHERE\b/i.test(st2.slice(g3.end)))
+          notes.push(`${t3.name}: a filtered unique index on ${g3.inner.trim()} is treated as unique for every row.`);
+      }
+    }
+  }
+  if (!tables.size)
+    throw new ManifestError("The script holds no CREATE TABLE.");
+  for (const t3 of tables.values())
+    for (const f4 of t3.foreign_keys) {
+      const target2 = tables.get(f4.ref_table);
+      if (!target2) {
+        notes.push(`${t3.name}: its key to ${f4.ref_table} points at a table the script does not create, so it was left out.`);
+        continue;
+      }
+      if (!f4.ref_columns.length)
+        f4.ref_columns = [...target2.primary_key];
+    }
+  for (const t3 of tables.values())
+    t3.foreign_keys = t3.foreign_keys.filter((f4) => tables.has(f4.ref_table));
+  return { tables: [...tables.values()].sort((a4, b2) => a4.name.localeCompare(b2.name)), notes };
+}
+function applyVirtualKeys(c4, keys) {
+  const find2 = (n3, what) => {
+    const name = tableName(String(n3));
+    const t3 = c4.tables.find((x2) => x2.name.toLowerCase() === name.toLowerCase());
+    if (!t3)
+      throw new ManifestError(`${what}: there is no table ${String(n3)}.`);
+    return t3;
+  };
+  for (const [i8, k2] of keys.entries()) {
+    const at2 = `virtual_keys[${i8}]`;
+    if (!k2?.table || !Array.isArray(k2.columns) || !k2.columns.length || !k2.references?.table || !Array.isArray(k2.references.columns))
+      throw new ManifestError(`${at2} needs table, columns, and references: { table, columns }.`);
+    if (typeof k2.reason !== "string" || !k2.reason.trim())
+      throw new ManifestError(`${at2} needs a reason: why this is a key though the schema does not say so.`);
+    if (k2.columns.length !== k2.references.columns.length)
+      throw new ManifestError(`${at2}: ${k2.columns.length} columns can't refer to ${k2.references.columns.length}.`);
+    const t3 = find2(k2.table, at2), r6 = find2(k2.references.table, at2);
+    for (const col of k2.columns)
+      if (!t3.columns.some((x2) => x2.name === col))
+        throw new ManifestError(`${at2}: ${t3.name} has no column ${col}.`);
+    for (const col of k2.references.columns)
+      if (!r6.columns.some((x2) => x2.name === col))
+        throw new ManifestError(`${at2}: ${r6.name} has no column ${col}.`);
+    t3.foreign_keys.push({ columns: k2.columns, ref_table: r6.name, ref_columns: k2.references.columns, virtual: k2.reason });
+  }
+}
+function readVirtualKeys(file) {
+  const doc = import_yaml6.default.parse(fs24.readFileSync(file, "utf8"));
+  if (!Array.isArray(doc?.virtual_keys))
+    throw new ManifestError(`${path21.basename(file)} needs a list under virtual_keys.`);
+  return doc.virtual_keys;
+}
+var keyLabel = (t3, k2) => `${t3}(${k2.columns.join(",")}) -> ${k2.ref_table}(${k2.ref_columns.join(",")})`;
+function loadOrder(c4) {
+  const byName = new Map(c4.tables.map((t3) => [t3.name, t3]));
+  const nullable = (t3, k2) => k2.columns.every((n3) => t3.columns.find((x2) => x2.name === n3)?.nullable);
+  const deferred = [];
+  const isDeferred = (t3, k2) => deferred.some((d4) => d4.table === t3.name && d4.key === k2);
+  for (const t3 of c4.tables)
+    for (const k2 of t3.foreign_keys) {
+      if (k2.ref_table !== t3.name)
+        continue;
+      if (!nullable(t3, k2))
+        throw new ManifestError(`${keyLabel(t3.name, k2)} refers to its own table and can't be null, so the first row can't be loaded.`);
+      deferred.push({ table: t3.name, key: k2 });
+    }
+  const order = [];
+  const done = /* @__PURE__ */ new Set();
+  while (done.size < c4.tables.length) {
+    const ready = c4.tables.filter((t3) => !done.has(t3.name) && t3.foreign_keys.every((k2) => done.has(k2.ref_table) || isDeferred(t3, k2) || !byName.has(k2.ref_table))).map((t3) => t3.name).sort();
+    if (ready.length) {
+      for (const n3 of ready) {
+        order.push(n3);
+        done.add(n3);
+      }
+      continue;
+    }
+    const stuck = c4.tables.filter((t3) => !done.has(t3.name));
+    const stuckNames = new Set(stuck.map((t3) => t3.name));
+    const open = stuck.flatMap((t3) => t3.foreign_keys.filter((k2) => stuckNames.has(k2.ref_table) && !isDeferred(t3, k2) && nullable(t3, k2)).map((key2) => ({ table: t3.name, key: key2 })));
+    if (!open.length)
+      throw new ManifestError(`These tables refer to each other and no key among them can be null, so they can't be loaded in any order: ${[...stuckNames].sort().join(", ")}. Make a key nullable in the catalogue, or have a person decide how to load them.`);
+    open.sort((a4, b2) => keyLabel(a4.table, a4.key).localeCompare(keyLabel(b2.table, b2.key)));
+    deferred.push(open[0]);
+  }
+  return { order, deferred };
+}
+function readChecks(t3) {
+  const limits = /* @__PURE__ */ new Map();
+  const unread = [];
+  const lim = (c4) => {
+    const k2 = limits.get(c4) ?? {};
+    limits.set(c4, k2);
+    return k2;
+  };
+  const num = (s4) => Number(s4.replace(/[()\s]/g, ""));
+  const NUM = String.raw`\(*\s*(-?\d+(?:\.\d+)?)\s*\)*`;
+  for (const check2 of t3.checks) {
+    const flat = check2.replace(new RegExp(`(${NAME2})\\s+BETWEEN\\s+${NUM}\\s+AND\\s+${NUM}`, "gi"), "$1 >= $2 AND $1 <= $3");
+    for (const raw of flat.split(/\bAND\b/i)) {
+      const part = raw.trim().replace(/^\(+/, "").replace(/\)+$/, "");
+      let m4;
+      if (m4 = new RegExp(`^(${NAME2})\\s*(>=|>|<=|<|=)\\s*${NUM}$`, "i").exec(part)) {
+        const l4 = lim(unq(m4[1])), n3 = num(m4[3]);
+        if (m4[2] === ">=")
+          l4.min = n3;
+        else if (m4[2] === ">")
+          l4.minExclusive = n3;
+        else if (m4[2] === "<=")
+          l4.max = n3;
+        else if (m4[2] === "<")
+          l4.maxExclusive = n3;
+        else {
+          l4.min = n3;
+          l4.max = n3;
+        }
+      } else if (m4 = new RegExp(`^(${NAME2})\\s*>=\\s*(${NAME2})$`, "i").exec(part)) {
+        lim(unq(m4[1])).atLeast = unq(m4[2]);
+      } else if (m4 = new RegExp(`^(${NAME2})\\s+IN\\s*\\((.*)$`, "i").exec(part)) {
+        lim(unq(m4[1])).values = [...m4[2].matchAll(/N?'((?:[^']|'')*)'|(-?\d+(?:\.\d+)?)/g)].map((v2) => v2[1] !== void 0 ? v2[1].replace(/''/g, "'") : v2[2]);
+      } else if (m4 = new RegExp(`^LEN\\s*\\(\\s*(${NAME2})\\s*\\)\\s*(>=|>|<=)\\s*${NUM}$`, "i").exec(part)) {
+        const l4 = lim(unq(m4[1])), n3 = num(m4[3]);
+        if (m4[2] === ">=")
+          l4.lenMin = n3;
+        else if (m4[2] === ">")
+          l4.lenMin = n3 + 1;
+        else
+          l4.lenMax = n3;
+      } else
+        unread.push(part);
+    }
+  }
+  return { limits, unread };
+}
+var NULL = { sql: "NULL", text: null };
+var hashTo = (s4) => crypto13.createHash("sha256").update(s4).digest();
+var pick2 = (seed, key2, n3) => hashTo(`${seed}:${key2}`).readUInt32BE(0) % n3;
+var WORDS2 = ["Alder", "Birch", "Cedar", "Damson", "Elm", "Fir", "Ginkgo", "Hazel", "Ivy", "Juniper", "Larch", "Maple", "Oak", "Pine", "Rowan", "Spruce", "Willow", "Yew"];
+var INT_RANGE = { tinyint: [0n, 255n], smallint: [-32768n, 32767n], int: [-2147483648n, 2147483647n], bigint: [-(2n ** 63n), 2n ** 63n - 1n] };
+var decimalText = (n3, scale) => {
+  const neg = n3 < 0n;
+  const d4 = (neg ? -n3 : n3).toString().padStart(scale + 1, "0");
+  return `${neg ? "-" : ""}${scale ? `${d4.slice(0, -scale)}.${d4.slice(-scale)}` : d4}`;
+};
+var sqlText = (s4, unicode) => `${unicode ? "N" : ""}'${s4.replace(/'/g, "''")}'`;
+function stringValue(c4, l4, i8, seed, table, unique) {
+  const unicode = c4.type.startsWith("n");
+  const width = c4.length === void 0 ? c4.type.endsWith("char") ? 1 : 200 : c4.length === -1 ? 200 : c4.length;
+  const top = Math.min(width, l4?.lenMax ?? width);
+  const fixed = c4.type === "char" || c4.type === "nchar";
+  if (l4?.values?.length) {
+    const v3 = l4.values[i8 % l4.values.length];
+    return { sql: sqlText(v3, unicode), text: v3 };
+  }
+  const word = WORDS2[pick2(seed, `${table}.${c4.name}.${i8}`, WORDS2.length)];
+  let v2 = i8 === 1 ? "W".repeat(top) : i8 === 2 && unicode ? "\xD1and\xFA caf\xE9" : word;
+  if (unique) {
+    const tag = `${i8}`;
+    v2 = (v2 + "_" + tag).length > top ? (word.slice(0, Math.max(0, top - tag.length)) + tag).slice(-Math.max(top, 1)) : `${v2}_${tag}`;
+    if (i8 === 1 && top >= tag.length)
+      v2 = "W".repeat(top - tag.length) + tag;
+  }
+  v2 = v2.slice(0, top);
+  if ((l4?.lenMin ?? 0) > [...v2].length)
+    v2 = v2.padEnd(l4.lenMin, "x");
+  if (fixed)
+    v2 = v2.padEnd(width, " ");
+  return { sql: sqlText(v2, unicode), text: v2 };
+}
+function numberValue(c4, l4, i8, seed, table, unique) {
+  const scale = ["decimal", "numeric"].includes(c4.type) ? c4.scale ?? 0 : c4.type === "money" || c4.type === "smallmoney" ? 4 : 0;
+  const factor = 10n ** BigInt(scale);
+  const toUnits = (n4) => BigInt(Math.round(n4 * Number(factor)));
+  let lo, hi;
+  if (INT_RANGE[c4.type])
+    [lo, hi] = INT_RANGE[c4.type];
+  else if (c4.type === "money") {
+    lo = -(2n ** 63n);
+    hi = 2n ** 63n - 1n;
+  } else if (c4.type === "smallmoney") {
+    lo = -(2n ** 31n);
+    hi = 2n ** 31n - 1n;
+  } else {
+    const top = 10n ** BigInt(c4.precision ?? 18) - 1n;
+    lo = -top;
+    hi = top;
+  }
+  if (l4?.min !== void 0)
+    lo = toUnits(l4.min);
+  if (l4?.minExclusive !== void 0)
+    lo = toUnits(l4.minExclusive) + 1n;
+  if (l4?.max !== void 0)
+    hi = toUnits(l4.max);
+  if (l4?.maxExclusive !== void 0)
+    hi = toUnits(l4.maxExclusive) - 1n;
+  if (l4?.values?.length) {
+    const v2 = l4.values[i8 % l4.values.length];
+    return { sql: v2, text: v2, number: v2 };
+  }
+  let n3;
+  if (unique)
+    n3 = (lo > 0n ? lo : 1n * factor) + BigInt(i8) * factor;
+  else if (i8 === 3)
+    n3 = lo;
+  else if (i8 === 4)
+    n3 = hi;
+  else {
+    const small = 1000n * factor < hi ? 1000n * factor : hi;
+    const base2 = lo > 0n ? lo : 0n;
+    n3 = base2 + BigInt(pick2(seed, `${table}.${c4.name}.${i8}`, 1e5)) % (small - base2 + 1n > 0n ? small - base2 + 1n : 1n);
+  }
+  if (n3 < lo)
+    n3 = lo;
+  if (n3 > hi)
+    n3 = hi;
+  const text2 = decimalText(n3, scale);
+  return { sql: text2, text: text2, number: text2 };
+}
+var DATES = ["2024-02-29", "2026-03-29", "2025-12-31", "2026-01-01", "2026-06-15"];
+function valueFor(c4, l4, i8, seed, table, unique) {
+  switch (c4.type) {
+    case "int":
+    case "bigint":
+    case "smallint":
+    case "tinyint":
+    case "decimal":
+    case "numeric":
+    case "money":
+    case "smallmoney":
+      return numberValue(c4, l4, i8, seed, table, unique);
+    case "bit": {
+      const b2 = i8 % 2;
+      return { sql: String(b2), text: String(b2), number: String(b2) };
+    }
+    case "float":
+    case "real": {
+      const v2 = (pick2(seed, `${table}.${c4.name}.${i8}`, 1e5) / 100).toFixed(2);
+      return { sql: v2, text: v2, number: v2 };
+    }
+    case "char":
+    case "nchar":
+    case "varchar":
+    case "nvarchar":
+    case "text":
+    case "ntext":
+    case "sysname":
+      return stringValue(c4, l4, i8, seed, table, unique);
+    case "date": {
+      const d4 = DATES[i8 % DATES.length];
+      return { sql: `'${d4}'`, text: d4 };
+    }
+    case "datetime":
+    case "datetime2":
+    case "smalldatetime":
+    case "datetimeoffset": {
+      const d4 = `${DATES[i8 % DATES.length]}T${c4.type === "smalldatetime" ? "01:30:00" : "01:30:15"}`;
+      return { sql: `'${d4}'`, text: d4 };
+    }
+    case "time":
+      return { sql: "'01:30:15'", text: "01:30:15" };
+    case "uniqueidentifier": {
+      const h4 = hashTo(`${seed}:${table}.${c4.name}.${i8}`).toString("hex");
+      const g3 = `${h4.slice(0, 8)}-${h4.slice(8, 12)}-4${h4.slice(13, 16)}-a${h4.slice(17, 20)}-${h4.slice(20, 32)}`;
+      return { sql: `'${g3}'`, text: g3 };
+    }
+    case "binary":
+    case "varbinary":
+    case "image": {
+      const size = Math.min(c4.length === void 0 || c4.length === -1 ? 8 : c4.length, 32);
+      const h4 = hashTo(`${seed}:${table}.${c4.name}.${i8}`).toString("hex").slice(0, size * 2);
+      return { sql: `0x${h4}`, text: h4 };
+    }
+    default:
+      throw new EncodeUnknown(c4.type);
+  }
+}
+var EncodeUnknown = class extends Error {
+  type;
+  constructor(type) {
+    super(type);
+    this.type = type;
+  }
+};
+var br = (s4) => `[${s4.replace(/\]/g, "]]")}]`;
+var qn = (t3) => t3.split(".").map(br).join(".");
+function buildSeed(c4, o4 = {}) {
+  const seed = o4.seed ?? 20260115;
+  const order = loadOrder(c4);
+  const notes = [...c4.notes];
+  const byName = new Map(c4.tables.map((t3) => [t3.name, t3]));
+  const rows = /* @__PURE__ */ new Map();
+  const countOf = (n3) => o4.table_rows?.[n3] ?? o4.rows ?? 50;
+  const deferredColumns = (t3) => new Set(order.deferred.filter((d4) => d4.table === t3).flatMap((d4) => d4.key.columns));
+  const parentValue = (k2, i8, col) => {
+    const parents = rows.get(k2.ref_table);
+    if (!parents?.length)
+      return NULL;
+    const p4 = parents[i8 % parents.length];
+    const at2 = k2.columns.indexOf(col);
+    return p4.get(k2.ref_columns[at2]) ?? NULL;
+  };
+  const deferredUpdates = [];
+  for (const name of order.order) {
+    const t3 = byName.get(name);
+    const { limits, unread } = readChecks(t3);
+    for (const u4 of unread)
+      notes.push(`${name}: the check ${u4} was not understood, so the rows may break it, and the load would say so. A person checks it.`);
+    const deferred = deferredColumns(name);
+    const unique = /* @__PURE__ */ new Set([...t3.primary_key.length === 1 ? t3.primary_key : [], ...t3.uniques.filter((u4) => u4.length === 1).flat()]);
+    for (const u4 of [t3.primary_key, ...t3.uniques])
+      if (u4.length > 1 && !u4.some((n4) => t3.foreign_keys.some((k2) => k2.columns.includes(n4))))
+        unique.add(u4[u4.length - 1]);
+    const list = [];
+    const n3 = countOf(name);
+    for (let i8 = 0; i8 < n3; i8++) {
+      const row = /* @__PURE__ */ new Map();
+      for (const col of t3.columns) {
+        if (col.computed || col.type === "timestamp" || col.type === "rowversion")
+          continue;
+        const fk = t3.foreign_keys.find((k2) => k2.columns.includes(col.name));
+        if (deferred.has(col.name)) {
+          row.set(col.name, NULL);
+          continue;
+        }
+        if (fk) {
+          row.set(col.name, col.nullable && n3 > 1 && i8 === n3 - 1 ? NULL : parentValue(fk, i8, col.name));
+          continue;
+        }
+        if (col.identity) {
+          const v2 = String(i8 + 1);
+          row.set(col.name, { sql: v2, text: v2, number: v2 });
+          continue;
+        }
+        if (col.nullable && !unique.has(col.name) && i8 === n3 - 1 && n3 > 1 && !limits.get(col.name)?.values) {
+          row.set(col.name, NULL);
+          continue;
+        }
+        try {
+          row.set(col.name, valueFor(col, limits.get(col.name), i8, seed, name, unique.has(col.name)));
+        } catch (err) {
+          if (!(err instanceof EncodeUnknown))
+            throw err;
+          if (!col.nullable)
+            throw new ManifestError(`${name}.${col.name}: cmtk can't make a ${err.type}, and the column can't be null. Say what it should hold, or leave this table out.`);
+          notes.push(`${name}.${col.name}: cmtk can't make a ${err.type}, so it is left null.`);
+          row.set(col.name, NULL);
+        }
+      }
+      for (const [cname, l4] of limits) {
+        if (!l4.atLeast)
+          continue;
+        const a4 = row.get(cname), b2 = row.get(l4.atLeast);
+        if (a4?.text && b2?.text && (a4.number !== void 0 && b2.number !== void 0 ? Number(a4.number) < Number(b2.number) : a4.text < b2.text))
+          row.set(cname, b2);
+      }
+      list.push(row);
+    }
+    rows.set(name, list);
+  }
+  for (const d4 of order.deferred) {
+    const t3 = byName.get(d4.table);
+    const list = rows.get(d4.table);
+    const pk = t3.primary_key;
+    if (!pk.length)
+      throw new ManifestError(`${d4.table} has no primary key, so its deferred key can't be set by an UPDATE. Give it one in the catalogue.`);
+    const parents = rows.get(d4.key.ref_table);
+    list.forEach((row, i8) => {
+      if (list.length > 1 && i8 === list.length - 1)
+        return;
+      const p4 = parents[(d4.key.ref_table === d4.table ? i8 + 1 : i8) % parents.length];
+      if (!p4)
+        return;
+      const sets = d4.key.columns.map((col, at2) => {
+        const v2 = p4.get(d4.key.ref_columns[at2]) ?? NULL;
+        row.set(col, v2);
+        return `${br(col)} = ${v2.sql}`;
+      });
+      deferredUpdates.push(`UPDATE ${qn(d4.table)} SET ${sets.join(", ")} WHERE ${pk.map((k2) => `${br(k2)} = ${row.get(k2)?.sql ?? "NULL"}`).join(" AND ")};`);
+    });
+  }
+  const L2 = [
+    "-- A test-data seed, written by `cmtk data seed`. For disposable test databases only: cmtk never runs it.",
+    `-- Seed ${seed}. The same catalogue and seed give the same bytes.`,
+    "SET NOCOUNT ON;",
+    "SET XACT_ABORT ON;",
+    "BEGIN TRANSACTION;",
+    ""
+  ];
+  for (const name of order.order) {
+    const t3 = byName.get(name);
+    const list = rows.get(name);
+    if (!list.length)
+      continue;
+    const identity = t3.columns.some((c5) => c5.identity);
+    const cols = [...list[0].keys()];
+    L2.push(`-- ${name}: ${list.length} rows`);
+    if (identity)
+      L2.push(`SET IDENTITY_INSERT ${qn(name)} ON;`);
+    const deferred = deferredColumns(name);
+    for (const row of list)
+      L2.push(`INSERT INTO ${qn(name)} (${cols.map(br).join(", ")}) VALUES (${cols.map((col) => deferred.has(col) ? "NULL" : row.get(col).sql).join(", ")});`);
+    if (identity)
+      L2.push(`SET IDENTITY_INSERT ${qn(name)} OFF;`);
+    L2.push("");
+  }
+  if (deferredUpdates.length)
+    L2.push("-- Deferred keys: these close the cycles, once both ends are loaded.", ...deferredUpdates, "");
+  L2.push("COMMIT TRANSACTION;", "");
+  const reset = [
+    "-- Empties the seeded tables, children first, for reloading a disposable test database. cmtk never runs it.",
+    "SET NOCOUNT ON;",
+    "SET XACT_ABORT ON;",
+    "BEGIN TRANSACTION;",
+    ...order.deferred.map((d4) => `UPDATE ${qn(d4.table)} SET ${d4.key.columns.map((x2) => `${br(x2)} = NULL`).join(", ")};`),
+    ...[...order.order].reverse().map((n3) => `DELETE FROM ${qn(n3)};`),
+    "COMMIT TRANSACTION;",
+    ""
+  ].join("\n");
+  return { catalogue: c4, order, rows, script: L2.join("\n"), reset, totals: totalsSql(c4, order), notes };
+}
+var NUMERIC2 = /* @__PURE__ */ new Set(["int", "bigint", "smallint", "tinyint", "decimal", "numeric", "money", "smallmoney", "float", "real", "bit"]);
+function totalsSql(c4, order) {
+  const parts = [];
+  for (const n3 of order.order) {
+    const t3 = c4.tables.find((x2) => x2.name === n3);
+    parts.push(`SELECT '${n3}' AS [table], '*' AS [column], 'count' AS [measure], CAST(COUNT(*) AS varchar(50)) AS [value] FROM ${qn(n3)}`);
+    for (const col of t3.columns.filter((x2) => NUMERIC2.has(x2.type) && !x2.computed)) {
+      const v2 = col.type === "bit" ? `CASE WHEN ${br(col.name)} = 1 THEN 1 WHEN ${br(col.name)} = 0 THEN 0 END` : br(col.name);
+      for (const [m4, f4] of [["sum", "SUM"], ["min", "MIN"], ["max", "MAX"], ["avg", "AVG"]]) {
+        parts.push(`SELECT '${n3}', '${col.name.replace(/'/g, "''")}', '${m4}', CAST(${f4}(CAST(${v2} AS decimal(38,6))) AS varchar(50)) FROM ${qn(n3)}`);
+      }
+    }
+  }
+  return `-- Control totals: run this on each side after loading, save the result as CSV with a header, and compare:
+--   cmtk data reconcile <one.csv> <other.csv>
+SET NOCOUNT ON;
+${parts.join("\nUNION ALL ")};
+`;
+}
+function expectedTotals(s4) {
+  const out = [];
+  const SCALE = 6;
+  const units = (x2) => {
+    const m4 = /^(-?)(\d*)(?:\.(\d*))?$/.exec(x2);
+    const n3 = BigInt(`${m4[2] || "0"}${(m4[3] ?? "").padEnd(SCALE, "0").slice(0, SCALE)}`);
+    return m4[1] ? -n3 : n3;
+  };
+  for (const n3 of s4.order.order) {
+    const t3 = s4.catalogue.tables.find((x2) => x2.name === n3);
+    const rows = s4.rows.get(n3);
+    out.push({ table: n3, column: "*", measure: "count", value: String(rows.length) });
+    for (const col of t3.columns.filter((x2) => NUMERIC2.has(x2.type) && !x2.computed)) {
+      const vals = rows.map((r6) => r6.get(col.name)?.number).filter((v2) => v2 !== void 0).map(units);
+      const has = vals.length > 0;
+      const sum = vals.reduce((a4, b2) => a4 + b2, 0n);
+      const text2 = (v2) => decimalText(v2, SCALE);
+      const min = vals.reduce((a4, b2) => b2 < a4 ? b2 : a4, vals[0] ?? 0n), max = vals.reduce((a4, b2) => b2 > a4 ? b2 : a4, vals[0] ?? 0n);
+      out.push({ table: n3, column: col.name, measure: "sum", value: has ? text2(sum) : null });
+      out.push({ table: n3, column: col.name, measure: "min", value: has ? text2(min) : null });
+      out.push({ table: n3, column: col.name, measure: "max", value: has ? text2(max) : null });
+      out.push({ table: n3, column: col.name, measure: "avg", value: has ? text2(sum / BigInt(vals.length)) : null });
+    }
+  }
+  return out;
+}
+var ID2 = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+function writeSeed(m4, o4) {
+  const ddlFile = inside(m4, o4.ddl);
+  if (!fs24.existsSync(ddlFile))
+    throw new ManifestError(`${o4.ddl} does not exist.`);
+  const id = o4.id ?? path21.basename(o4.ddl).replace(/\.[^.]+$/, "");
+  if (!ID2.test(id))
+    throw new ManifestError(`The seed's name ${JSON.stringify(id)} must be letters, digits, '.', '-' and '_'.`);
+  const text2 = fs24.readFileSync(ddlFile);
+  const catalogue = parseDdl(text2.toString("utf8").replace(/^﻿/, ""));
+  let vkBytes;
+  if (o4.virtualKeys) {
+    const f4 = inside(m4, o4.virtualKeys);
+    if (!fs24.existsSync(f4))
+      throw new ManifestError(`${o4.virtualKeys} does not exist.`);
+    vkBytes = fs24.readFileSync(f4);
+    applyVirtualKeys(catalogue, readVirtualKeys(f4));
+  }
+  const result = buildSeed(catalogue, o4);
+  const dir = inside(m4, path21.join(path21.relative(m4.root, recipeFolder(m4)), `seed-${id}`));
+  fs24.rmSync(dir, { recursive: true, force: true });
+  fs24.mkdirSync(path21.join(dir, "golden"), { recursive: true });
+  const files = {};
+  const put = (name, bytes) => {
+    const b2 = typeof bytes === "string" ? Buffer.from(bytes, "utf8") : bytes;
+    fs24.writeFileSync(path21.join(dir, name), b2);
+    files[name.split(path21.sep).join("/")] = crypto13.createHash("sha256").update(b2).digest("hex");
+  };
+  put("seed.sql", result.script);
+  put("reset.sql", result.reset);
+  put("control-totals.sql", result.totals);
+  put("control-totals.expected.csv", csvBytes(["table", "column", "measure", "value"], expectedTotals(result), { bom: false, line_ending: "lf" }));
+  put("catalogue.json", JSON.stringify(catalogue, null, 2) + "\n");
+  for (const [name, rows] of result.rows) {
+    const t3 = catalogue.tables.find((x2) => x2.name === name);
+    const cols = rows[0] ? [...rows[0].keys()] : t3.columns.filter((c4) => !c4.computed).map((c4) => c4.name);
+    put(path21.join("golden", `${name}.csv`), csvBytes(cols, rows.map((r6) => Object.fromEntries(cols.map((c4) => [c4, r6.get(c4)?.text ?? null]))), { bom: false, line_ending: "lf" }));
+  }
+  const manifest = {
+    id,
+    source: { ddl: path21.relative(m4.root, ddlFile).split(path21.sep).join("/"), ddl_sha256: crypto13.createHash("sha256").update(text2).digest("hex"), ...o4.virtualKeys && vkBytes ? { virtual_keys: o4.virtualKeys, virtual_keys_sha256: crypto13.createHash("sha256").update(vkBytes).digest("hex") } : {} },
+    seed: o4.seed ?? 20260115,
+    tables: result.order.order.map((n3) => ({ table: n3, rows: result.rows.get(n3).length })),
+    load_order: result.order.order,
+    deferred_keys: result.order.deferred.map((d4) => keyLabel(d4.table, d4.key)),
+    virtual_keys: catalogue.tables.flatMap((t3) => t3.foreign_keys.filter((k2) => k2.virtual).map((k2) => `${keyLabel(t3.name, k2)}: ${k2.virtual}`)),
+    notes: result.notes,
+    files,
+    not_done: [
+      "Reading the catalogue from a live SQL Server (INFORMATION_SCHEMA and sys.*): use a DDL script for now.",
+      "The mapping step for a new side whose schema differs: this script fits the schema it was made from.",
+      "A masked profile or a Jailer subset for realism: these rows are synthetic."
+    ]
+  };
+  fs24.writeFileSync(path21.join(dir, "SEED-MANIFEST.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
+  return { folder: path21.relative(m4.root, dir).split(path21.sep).join("/"), manifest, result };
+}
+
+// packages/core/dist/data/cases.js
+import fs25 from "node:fs";
+import path22 from "node:path";
 function statuses(responses) {
   const codes = Object.keys(responses ?? {}).map(Number).filter((c4) => !Number.isNaN(c4)).sort((a4, b2) => a4 - b2);
   return { ok: codes.find((c4) => c4 >= 200 && c4 < 300), bad: codes.find((c4) => c4 === 400 || c4 === 422) };
@@ -22496,17 +26078,21 @@ function describeLeftOut(leftOut) {
 }
 function writeCases(m4, id, o4 = {}) {
   const { recipe } = loadRecipe(m4, id);
-  const rowsDir = path16.join(dataFolder(m4, id), "rows");
-  const rowsFile = path16.join(dataFolder(m4, id), "rows.json");
-  if (!fs18.existsSync(rowsDir) || !fs18.existsSync(rowsFile))
+  const rowsDir = path22.join(dataFolder(m4, id), "rows");
+  const rowsFile = path22.join(dataFolder(m4, id), "rows.json");
+  if (!fs25.existsSync(rowsDir) || !fs25.existsSync(rowsFile))
     throw new ManifestError(`There are no rows for ${id} yet: run \`cmtk data make ${id}\` first.`);
-  const made = new Map(JSON.parse(fs18.readFileSync(rowsFile, "utf8")).map((r6) => [r6.name, r6]));
+  const made = new Map(JSON.parse(fs25.readFileSync(rowsFile, "utf8")).map((r6) => [r6.name, r6]));
   const op = /^([A-Z]+)\s+(\S+)$/.exec(recipe.source.operation ?? "");
   const reqPath = o4.path ?? op?.[2];
   if (!reqPath || !reqPath.startsWith("/") || reqPath.startsWith("//"))
     throw new ManifestError("Give the request path with --path /api/..., a path and never a host.");
   const method = (o4.method ?? op?.[1] ?? "POST").toUpperCase();
   const encoding = o4.encoding ?? "json";
+  const isXml = recipe.source.format === "xsd";
+  if (isXml && encoding === "form")
+    throw new ManifestError(`Recipe ${id} makes XML documents, which aren't sent as a form.`);
+  const soapRows = isXml && recipe.soap;
   const which = o4.rows ?? "all";
   const names = new Set(recipe.rows.map((r6) => r6.name));
   for (const n3 of [...o4.onlyRows ?? [], ...o4.exceptRows ?? []])
@@ -22535,10 +26121,10 @@ function writeCases(m4, id, o4 = {}) {
       continue;
     if (only && !only.has(row.name) || except.has(row.name))
       continue;
-    const rowFile = path16.join(rowsDir, `${row.name}.json`);
+    const rowFile = path22.join(rowsDir, `${row.name}${!isXml ? ".json" : soapRows ? ".soap.xml" : ".xml"}`);
     const value = made.get(row.name)?.value;
     const hasBody = value !== void 0;
-    if (hasBody && !fs18.existsSync(rowFile))
+    if (hasBody && !fs25.existsSync(rowFile))
       throw new ManifestError(`Row ${row.name} has no file: run \`cmtk data make ${id}\` again.`);
     if (encoding === "form") {
       const why = notAForm(row, recipe.fields, value);
@@ -22549,15 +26135,17 @@ function writeCases(m4, id, o4 = {}) {
     }
     const query = made.get(row.name)?.query;
     const qs = query && Object.keys(query).length ? `?${new URLSearchParams(query).toString()}` : "";
-    const status = row.expect_valid ? ok : bad;
+    const status = row.oracle === "human" ? void 0 : row.expect_valid ? ok : bad;
     if (status === void 0)
       withoutExpect++;
-    const rel2 = path16.relative(m4.root, rowFile).split(path16.sep).join("/");
+    const rel2 = path22.relative(m4.root, rowFile).split(path22.sep).join("/");
     const notes = [
       `From recipe ${id}, row ${row.name} (${row.technique}): ${row.coverage_item}. The schema says the body is ${row.expect_valid ? "valid" : `invalid (${row.invalid_because?.path} ${row.invalid_because?.keyword})`}; the oracle is ${row.oracle}.`,
       encoding === "form" ? "Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields." : "",
+      soapRows ? `Sent in a SOAP ${recipe.soap.version} envelope.` : "",
       o4.before ? `Before it, ${o4.before.get} is read for ${Object.keys(o4.before.take ?? {}).join(", ") || "its cookies"}; the values taken are never written to evidence.` : "",
-      status === void 0 ? "No documented status for this answer, so no expect: a person adds one." : given(status, row.expect_valid ? documented.ok : documented.bad) ? `The expected status ${status} was given on the command line, not read from a document: the reviewer confirms it against the requirement.` : "",
+      row.oracle === "human" ? "Only a person can say what this row should get, so it has no expect, and none is added automatically." : "",
+      status === void 0 && row.oracle !== "human" ? "No documented status for this answer, so no expect: a person adds one." : status !== void 0 && given(status, row.expect_valid ? documented.ok : documented.bad) ? `The expected status ${status} was given on the command line, not read from a document: the reviewer confirms it against the requirement.` : "",
       !SAFE.has(method) ? "This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data." : ""
     ].filter(Boolean);
     cases.push({
@@ -22567,7 +26155,7 @@ function writeCases(m4, id, o4 = {}) {
       request: {
         method,
         path: reqPath + qs,
-        ...o4.headers ? { headers: o4.headers } : {},
+        ...o4.headers || isXml ? { headers: { ...soapRows ? soapHeaders(recipe.soap) : isXml ? { "Content-Type": "application/xml; charset=utf-8" } : {}, ...o4.headers ?? {} } } : {},
         ...hasBody ? encoding === "form" ? { body_form: rel2 } : { body_file: rel2 } : {},
         ...o4.before ? { before: structuredClone(o4.before) } : {}
       },
@@ -22576,30 +26164,30 @@ function writeCases(m4, id, o4 = {}) {
       draft_note: notes.join(" ")
     });
   }
-  const out = inside(m4, o4.out ?? path16.join("cmtk", "cases", `data-${id}.yaml`));
-  if (fs18.existsSync(out))
-    throw new ManifestError(`${path16.relative(m4.root, out)} already exists; choose another --out, or delete it.`);
-  fs18.mkdirSync(path16.dirname(out), { recursive: true });
+  const out = inside(m4, o4.out ?? path22.join("cmtk", "cases", `data-${id}.yaml`));
+  if (fs25.existsSync(out))
+    throw new ManifestError(`${path22.relative(m4.root, out)} already exists; choose another --out, or delete it.`);
+  fs25.mkdirSync(path22.dirname(out), { recursive: true });
   const how = encoding === "form" ? "as a form" : "as the body";
   const subset = which === "all" ? "one per row" : `one per ${which} row (the rows the schema calls ${which})`;
-  fs18.writeFileSync(out, casesToYaml(cases, `Draft cases from the test-data recipe ${id}: ${subset}, each sending its row from cmtk/data/${id}/rows/ ${how}. A person accepts them with \`cmtk review\`.`), "utf8");
-  return { file: path16.relative(m4.root, out).split(path16.sep).join("/"), cases, withoutExpect, leftOut };
+  fs25.writeFileSync(out, casesToYaml(cases, `Draft cases from the test-data recipe ${id}: ${subset}, each sending its row from cmtk/data/${id}/rows/ ${how}. A person accepts them with \`cmtk review\`.`), "utf8");
+  return { file: path22.relative(m4.root, out).split(path22.sep).join("/"), cases, withoutExpect, leftOut };
 }
 
 // packages/cli/dist/registry.js
-var import_yaml5 = __toESM(require_dist(), 1);
+var import_yaml7 = __toESM(require_dist(), 1);
 import { spawnSync as spawnSync2 } from "node:child_process";
-import crypto9 from "node:crypto";
-import fs19 from "node:fs";
+import crypto14 from "node:crypto";
+import fs26 from "node:fs";
 import os from "node:os";
-import path17 from "node:path";
+import path23 from "node:path";
 var RegistryError = class extends Error {
 };
 var LEVELS = ["experimental", "verified", "core"];
 var LEFT_OUT = /* @__PURE__ */ new Set(["bin", "obj", "node_modules"]);
 var MAX_FILES = 5e3;
 var MAX_BYTES = 100 * 1024 * 1024;
-var NAME2 = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
+var NAME3 = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
 var FULL_COMMIT = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
 var PIN = /^[A-Za-z0-9][A-Za-z0-9._/+-]{0,127}$/;
 var UNSHOWABLE = /[\u0000-\u001f\u007f-\u009f‎‏‪-‮⁦-⁩]/;
@@ -22648,7 +26236,7 @@ function sourceOf(raw, where2) {
 function parseRegistry(text2, label2, opts = {}) {
   let doc;
   try {
-    doc = import_yaml5.default.parse(text2);
+    doc = import_yaml7.default.parse(text2);
   } catch (err) {
     throw new RegistryError(`${label2} is not valid YAML: ${err.message.split("\n")[0]}`);
   }
@@ -22659,12 +26247,12 @@ function parseRegistry(text2, label2, opts = {}) {
     const where2 = `${label2}, entry ${i8 + 1}${typeof e6?.name === "string" && !UNSHOWABLE.test(e6.name) ? ` (${e6.name.slice(0, 64)})` : ""}`;
     if (!e6 || typeof e6 !== "object")
       throw new RegistryError(`${where2} must be a mapping.`);
-    if (typeof e6.name !== "string" || !NAME2.test(e6.name) || e6.name === "http" || RESERVED.test(e6.name))
+    if (typeof e6.name !== "string" || !NAME3.test(e6.name) || e6.name === "http" || RESERVED.test(e6.name))
       throw new RegistryError(`${where2}: \`name\` must be letters, digits, '.', '-' and '_', and not http, which is built in.`);
     if (seen.has(e6.name.toLowerCase()))
       throw new RegistryError(`${where2}: the name is listed twice.`);
     seen.add(e6.name.toLowerCase());
-    if (!Array.isArray(e6.kinds) || !e6.kinds.length || !e6.kinds.every((k2) => typeof k2 === "string" && NAME2.test(k2)))
+    if (!Array.isArray(e6.kinds) || !e6.kinds.length || !e6.kinds.every((k2) => typeof k2 === "string" && NAME3.test(k2)))
       throw new RegistryError(`${where2} needs \`kinds\`: a list such as [email].`);
     const language = shown(e6.language, "language", where2);
     if (!LEVELS.includes(e6.level))
@@ -22706,10 +26294,10 @@ function classifyLocation(location, base2) {
   }
   if (/^[\w.-]+@[\w.-]+:/.test(location))
     return { kind: "git", at: location };
-  const at2 = path17.resolve(base2, location);
-  if (!fs19.existsSync(at2) || !fs19.statSync(at2).isDirectory())
+  const at2 = path23.resolve(base2, location);
+  if (!fs26.existsSync(at2) || !fs26.statSync(at2).isDirectory())
     throw new RegistryError(`There is no folder at ${at2}, and it is not an https or ssh address.`);
-  const isGit = fs19.existsSync(path17.join(at2, ".git")) || fs19.existsSync(path17.join(at2, "HEAD")) && fs19.existsSync(path17.join(at2, "objects"));
+  const isGit = fs26.existsSync(path23.join(at2, ".git")) || fs26.existsSync(path23.join(at2, "HEAD")) && fs26.existsSync(path23.join(at2, "objects"));
   return { kind: isGit ? "git" : "folder", at: at2 };
 }
 function git(args, what) {
@@ -22744,9 +26332,9 @@ function resolveCommit(repo, ref, what) {
 }
 var keep = (rel2) => !rel2.split("/").some((p4) => LEFT_OUT.has(p4));
 function writeFile(stage, rel2, data, executable) {
-  const to = path17.join(stage, ...rel2.split("/"));
-  fs19.mkdirSync(path17.dirname(to), { recursive: true });
-  fs19.writeFileSync(to, data, { flag: "wx", mode: executable ? 493 : 420 });
+  const to = path23.join(stage, ...rel2.split("/"));
+  fs26.mkdirSync(path23.dirname(to), { recursive: true });
+  fs26.writeFileSync(to, data, { flag: "wx", mode: executable ? 493 : 420 });
 }
 function stageFromGit(repo, commit, sub, stage) {
   const prefix = sub === "." ? "" : `${sub}/`;
@@ -22777,24 +26365,24 @@ function stageFromGit(repo, commit, sub, stage) {
   return files;
 }
 function stageFromFolder(root, sub, stage) {
-  const from = path17.resolve(root, sub);
-  const realRoot = fs19.realpathSync(root);
-  if (!fs19.existsSync(from) || !fs19.statSync(from).isDirectory())
+  const from = path23.resolve(root, sub);
+  const realRoot = fs26.realpathSync(root);
+  if (!fs26.existsSync(from) || !fs26.statSync(from).isDirectory())
     throw new RegistryError(`The registry has no folder ${sub}.`);
-  const real = fs19.realpathSync(from);
-  if (real !== realRoot && !real.startsWith(realRoot + path17.sep))
+  const real = fs26.realpathSync(from);
+  if (real !== realRoot && !real.startsWith(realRoot + path23.sep))
     throw new RegistryError(`Refused: ${sub} leaves the registry.`);
   const files = [];
   let bytes = 0;
   const walk = (dir, prefix) => {
-    for (const e6 of fs19.readdirSync(dir, { withFileTypes: true }).sort((a4, b2) => a4.name < b2.name ? -1 : 1)) {
+    for (const e6 of fs26.readdirSync(dir, { withFileTypes: true }).sort((a4, b2) => a4.name < b2.name ? -1 : 1)) {
       if (e6.name === ".git" || LEFT_OUT.has(e6.name))
         continue;
       const rel2 = prefix + e6.name;
       const problem = pathProblem(rel2);
       if (problem)
         throw new RegistryError(`Refused: the adapter holds a file with a bad path: ${problem}.`);
-      const full = path17.join(dir, e6.name);
+      const full = path23.join(dir, e6.name);
       if (e6.isSymbolicLink())
         throw new RegistryError(`Refused: ${rel2} is a symbolic link. An adapter is plain files only, so what you approve is all you get.`);
       if (e6.isDirectory()) {
@@ -22805,11 +26393,11 @@ function stageFromFolder(root, sub, stage) {
         throw new RegistryError(`Refused: ${rel2} is not a plain file.`);
       if (files.length >= MAX_FILES)
         throw new RegistryError(`Refused: the adapter holds more than ${MAX_FILES} files.`);
-      const data = fs19.readFileSync(full);
+      const data = fs26.readFileSync(full);
       bytes += data.length;
       if (bytes > MAX_BYTES)
         throw new RegistryError(`Refused: the adapter is over ${MAX_BYTES / 1024 / 1024} MB.`);
-      writeFile(stage, rel2, data, process.platform !== "win32" && (fs19.statSync(full).mode & 73) !== 0);
+      writeFile(stage, rel2, data, process.platform !== "win32" && (fs26.statSync(full).mode & 73) !== 0);
       files.push(rel2);
     }
   };
@@ -22817,9 +26405,9 @@ function stageFromFolder(root, sub, stage) {
   return files;
 }
 function fingerprint2(dir) {
-  const hash2 = crypto9.createHash("sha256");
+  const hash2 = crypto14.createHash("sha256");
   const walk = (at2, prefix) => {
-    for (const e6 of fs19.readdirSync(at2, { withFileTypes: true }).sort((a4, b2) => a4.name < b2.name ? -1 : 1)) {
+    for (const e6 of fs26.readdirSync(at2, { withFileTypes: true }).sort((a4, b2) => a4.name < b2.name ? -1 : 1)) {
       if (LEFT_OUT.has(e6.name))
         continue;
       const rel2 = prefix + e6.name;
@@ -22829,13 +26417,13 @@ function fingerprint2(dir) {
         continue;
       }
       if (e6.isDirectory()) {
-        walk(path17.join(at2, e6.name), `${rel2}/`);
+        walk(path23.join(at2, e6.name), `${rel2}/`);
         continue;
       }
-      let data = fs19.readFileSync(path17.join(at2, e6.name));
+      let data = fs26.readFileSync(path23.join(at2, e6.name));
       if (!data.subarray(0, 8e3).includes(0))
         data = Buffer.from(data.toString("latin1").replace(/\r\n/g, "\n"), "latin1");
-      hash2.update(`${rel2}\0${crypto9.createHash("sha256").update(data).digest("hex")}
+      hash2.update(`${rel2}\0${crypto14.createHash("sha256").update(data).digest("hex")}
 `);
     }
   };
@@ -22847,14 +26435,14 @@ function openRegistry(location, base2, work, pin, toolkitAdapters) {
   if (kind === "folder") {
     if (pin)
       throw new RegistryError(`${at2} is a plain folder, which has no history to pin to. Leave --pin out; the fingerprint of the files is the pin.`);
-    const file = path17.join(at2, "registry.yaml");
-    if (!fs19.existsSync(file) || !fs19.lstatSync(file).isFile())
+    const file = path23.join(at2, "registry.yaml");
+    if (!fs26.existsSync(file) || !fs26.lstatSync(file).isFile())
       throw new RegistryError(`${at2} has no registry.yaml.`);
-    return { location, kind, at: at2, entries: parseRegistry(fs19.readFileSync(file, "utf8"), `${location}/registry.yaml`, { allowCore: !!toolkitAdapters && path17.resolve(at2) === path17.resolve(toolkitAdapters) }) };
+    return { location, kind, at: at2, entries: parseRegistry(fs26.readFileSync(file, "utf8"), `${location}/registry.yaml`, { allowCore: !!toolkitAdapters && path23.resolve(at2) === path23.resolve(toolkitAdapters) }) };
   }
   if (pin && !PIN.test(pin))
     throw new RegistryError("--pin must be a tag, a branch or a commit id.");
-  const repo = cloneBare(at2, fs19.mkdtempSync(path17.join(work, "registry-")), `Fetching registry ${location}`);
+  const repo = cloneBare(at2, fs26.mkdtempSync(path23.join(work, "registry-")), `Fetching registry ${location}`);
   const commit = resolveCommit(repo, pin ?? "HEAD", `Finding ${pin ?? "the latest commit"} in registry ${location}`);
   let text2;
   try {
@@ -22865,12 +26453,12 @@ function openRegistry(location, base2, work, pin, toolkitAdapters) {
   return { location, kind, at: at2, repo, commit, entries: parseRegistry(text2, `${location}/registry.yaml`) };
 }
 function prepareInstall(o4) {
-  const dir = path17.join(o4.root, "adapters");
-  if (fs19.existsSync(path17.join(dir, o4.name)))
+  const dir = path23.join(o4.root, "adapters");
+  if (fs26.existsSync(path23.join(dir, o4.name)))
     throw new RegistryError(`adapters/${o4.name} already exists. A person removes it first, then adds the version they want.`);
-  fs19.mkdirSync(dir, { recursive: true });
-  const work = fs19.mkdtempSync(path17.join(dir, ".cmtk-staging-"));
-  const cleanup = () => fs19.rmSync(work, { recursive: true, force: true, maxRetries: 3 });
+  fs26.mkdirSync(dir, { recursive: true });
+  const work = fs26.mkdtempSync(path23.join(dir, ".cmtk-staging-"));
+  const cleanup = () => fs26.rmSync(work, { recursive: true, force: true, maxRetries: 3 });
   try {
     const opened = o4.registries.map((r6) => openRegistry(r6, o4.base, work, o4.pin, o4.toolkitAdapters));
     const holders = opened.filter((r6) => r6.entries.some((e6) => e6.name === o4.name));
@@ -22880,8 +26468,8 @@ function prepareInstall(o4) {
       throw new RegistryError(`${o4.name} is not in ${o4.registries.join(", ")}.`);
     const reg = holders[0];
     const entry = reg.entries.find((e6) => e6.name === o4.name);
-    const stage = path17.join(work, "adapter");
-    fs19.mkdirSync(stage);
+    const stage = path23.join(work, "adapter");
+    fs26.mkdirSync(stage);
     let files, source, commit;
     if (typeof entry.source === "string") {
       source = `${reg.location}${entry.source === "." ? "" : `, folder ${entry.source}`}`;
@@ -22893,7 +26481,7 @@ function prepareInstall(o4) {
         throw new RegistryError(`${o4.name}: \`source.git\` is not a git repository.`);
       if (!sourceAllowed(entry.source.git, reg.location))
         throw new RegistryError(`${o4.name}: a remote registry may not point at a repository on this machine.`);
-      const repo = cloneBare(where2.at, fs19.mkdtempSync(path17.join(work, "source-")), `Fetching ${entry.source.git}`);
+      const repo = cloneBare(where2.at, fs26.mkdtempSync(path23.join(work, "source-")), `Fetching ${entry.source.git}`);
       commit = resolveCommit(repo, entry.source.commit, `Finding the commit the registry names in ${entry.source.git}`);
       source = `${entry.source.git}${entry.source.path === "." ? "" : `, folder ${entry.source.path}`}`;
       files = stageFromGit(repo, commit, entry.source.path, stage);
@@ -22912,7 +26500,7 @@ function notesOn(stage, files) {
     notes.push("It holds no LICENSE file, so only the registry's word says what the licence is.");
   if (files.includes("package.json")) {
     try {
-      const pkg = JSON.parse(fs19.readFileSync(path17.join(stage, "package.json"), "utf8"));
+      const pkg = JSON.parse(fs26.readFileSync(path23.join(stage, "package.json"), "utf8"));
       const hooks = ["preinstall", "install", "postinstall", "prepare"].filter((k2) => pkg.scripts?.[k2]);
       if (hooks.length)
         notes.push(`package.json has install scripts (${hooks.join(", ")}). cmtk does not run them, but npm install would.`);
@@ -22947,14 +26535,14 @@ function describeInstall(p4) {
     "Once installed, it runs with your rights whenever you run `cmtk adapter check`, `run` or `compare`."
   ];
 }
-var installedFile = (root) => path17.join(root, "adapters", "installed.yaml");
+var installedFile = (root) => path23.join(root, "adapters", "installed.yaml");
 function loadInstalled(root) {
   const f4 = installedFile(root);
-  if (!fs19.existsSync(f4))
+  if (!fs26.existsSync(f4))
     return {};
   let doc;
   try {
-    doc = import_yaml5.default.parse(fs19.readFileSync(f4, "utf8"));
+    doc = import_yaml7.default.parse(fs26.readFileSync(f4, "utf8"));
   } catch (err) {
     throw new RegistryError(`adapters/installed.yaml is not valid YAML: ${err.message.split("\n")[0]}`);
   }
@@ -22962,8 +26550,8 @@ function loadInstalled(root) {
 }
 function commitInstall(p4, root, approvedBy, date) {
   const e6 = p4.entry;
-  const to = path17.join(root, "adapters", e6.name);
-  if (fs19.existsSync(to))
+  const to = path23.join(root, "adapters", e6.name);
+  if (fs26.existsSync(to))
     throw new RegistryError(`adapters/${e6.name} appeared while you were reading. Nothing was changed.`);
   if (fingerprint2(p4.stage) !== p4.fingerprint)
     throw new RegistryError("The fetched files changed while you were reading. Nothing was installed.");
@@ -22984,24 +26572,24 @@ function commitInstall(p4, root, approvedBy, date) {
   const all = { ...loadInstalled(root), [e6.name]: record };
   const f4 = installedFile(root);
   const tmp = `${f4}.${process.pid}.tmp`;
-  fs19.writeFileSync(tmp, `# Written by \`cmtk adapter add\`, once a person said yes. Each entry pins what was installed.
-${import_yaml5.default.stringify({ adapters: all }, { lineWidth: 0 })}`, "utf8");
-  fs19.renameSync(p4.stage, to);
+  fs26.writeFileSync(tmp, `# Written by \`cmtk adapter add\`, once a person said yes. Each entry pins what was installed.
+${import_yaml7.default.stringify({ adapters: all }, { lineWidth: 0 })}`, "utf8");
+  fs26.renameSync(p4.stage, to);
   try {
-    fs19.renameSync(tmp, f4);
+    fs26.renameSync(tmp, f4);
   } catch (err) {
-    fs19.rmSync(to, { recursive: true, force: true });
-    fs19.rmSync(tmp, { force: true });
+    fs26.rmSync(to, { recursive: true, force: true });
+    fs26.rmSync(tmp, { force: true });
     throw err;
   }
   return record;
 }
 function listAdapters(root, registered) {
-  const dir = path17.join(root, "adapters");
+  const dir = path23.join(root, "adapters");
   const installed = loadInstalled(root);
-  const shippedFile = path17.join(dir, "registry.yaml");
-  const shipped = fs19.existsSync(shippedFile) ? parseRegistry(fs19.readFileSync(shippedFile, "utf8"), "adapters/registry.yaml", { allowCore: true }) : [];
-  const folders = fs19.existsSync(dir) ? fs19.readdirSync(dir, { withFileTypes: true }).filter((e6) => e6.isDirectory() && !e6.name.startsWith(".")).map((e6) => e6.name) : [];
+  const shippedFile = path23.join(dir, "registry.yaml");
+  const shipped = fs26.existsSync(shippedFile) ? parseRegistry(fs26.readFileSync(shippedFile, "utf8"), "adapters/registry.yaml", { allowCore: true }) : [];
+  const folders = fs26.existsSync(dir) ? fs26.readdirSync(dir, { withFileTypes: true }).filter((e6) => e6.isDirectory() && !e6.name.startsWith(".")).map((e6) => e6.name) : [];
   const rows = [{ name: "http", level: "core", state: "built in", registered: true, origin: "the toolkit" }];
   for (const name of [.../* @__PURE__ */ new Set([...folders, ...Object.keys(installed), ...Object.keys(registered)])].sort()) {
     const has = folders.includes(name);
@@ -23013,7 +26601,7 @@ function listAdapters(root, registered) {
         level: LEVELS.includes(rec.level) ? rec.level : "none",
         registered: reg,
         origin: `${rec.source}, approved by ${rec.approved_by} on ${rec.date}`,
-        state: !has ? "MISSING" : fingerprint2(path17.join(dir, name)) === rec.fingerprint ? "ok" : "CHANGED since install",
+        state: !has ? "MISSING" : fingerprint2(path23.join(dir, name)) === rec.fingerprint ? "ok" : "CHANGED since install",
         ...rec.commit ? { commit: rec.commit } : {},
         ...rec.version ? { version: rec.version } : {},
         licence: rec.licence,
@@ -23043,8 +26631,8 @@ process.on("warning", (w2) => {
   if (w2.name !== "ExperimentalWarning")
     console.error(`${w2.name}: ${w2.message}`);
 });
-var HERE = path18.dirname(fileURLToPath(import.meta.url));
-var VERSION = true ? "0.5.2" : JSON.parse(fs20.readFileSync(path18.join(HERE, "..", "package.json"), "utf8")).version;
+var HERE = path24.dirname(fileURLToPath(import.meta.url));
+var VERSION = true ? "0.6.0" : JSON.parse(fs27.readFileSync(path24.join(HERE, "..", "package.json"), "utf8")).version;
 var HELP = `cmtk ${VERSION}: test any system from its requirements, and prove a migrated system behaves like the old one.
 
 Usage:
@@ -23068,7 +26656,7 @@ Usage:
                                                                     remove old dated runs. Never follows a link
   cmtk status                                                       the latest verdicts
   cmtk check                                                        check settings and case files; sends nothing
-  cmtk discover [--assembly <dll>]... [--rea-json <file>]... [--config <file>]... [--har <file>]... [--topology <file>]... [--fresh]
+  cmtk discover [--assembly <dll>]... [--rea-json <file>]... [--routes-from <file or folder of C#>]... [--config <file>]... [--har <file>]... [--topology <file>]... [--fresh]
                                                                     list every boundary of the legacy system, and flag the uncovered ones
                                                                     (--assembly needs REA: npm install --global rea-agents)
   cmtk review                                                       a person accepts or rejects draft cases and proposals
@@ -23076,8 +26664,17 @@ Usage:
   cmtk probe <target> "GET /path" [--surface <name>]                send one read-only request and show the answer
   cmtk data plan --schema <file> [--operation "POST /path"] [--id <name>] [--seed <n>] [--clock <iso>] [--locale <loc>]
                                                                     compile a test-data recipe from a JSON Schema or an OpenAPI operation
-  cmtk data make <id> [--format json,csv,xlsx]                      regenerate the rows from the recipe, check them, write the files
+                       an XSD or a single-file WSDL works as the schema too, with --operation naming an element or an operation, [--soap 1.1|1.2] [--soap-action <uri>];
+                       a copybook (.cpy) too: [--record-encoding cp037|ascii]; CSV: [--csv-delimiter ;] [--csv-no-header] [--csv-no-bom] [--csv-lf]
+  cmtk data make <id> [--format json,csv,xlsx,fixed,edge-csv,edge-xlsx,edge-fixed]
+                                                                    regenerate the rows from the recipe, check them, write the files
+  cmtk data diff <a> <b> --key <col,col> [--as csv|xlsx|fixed] [--epsilon 0.01] [--scrub dates,guids] [--copybook <file>] [--csv-delimiter ;] [--formulas value|formula] [--ignore col,col] [--no-fold-empty]
+                                                                    compare two files by what they mean, never by their bytes
   cmtk data check <id>                                              check a recipe's rows and quotas without writing files
+  cmtk data seed --ddl <script.sql> [--virtual-keys <file>] [--id <name>] [--seed <n>] [--rows <n>]
+                                                                    one SQL script to seed both systems, with load order and control totals; cmtk never runs it
+  cmtk data reconcile <a.csv> <b.csv>                               compare control totals from two sides
+  cmtk data traffic <id> --har <file> [--path /x] [--method POST]   what recorded traffic says against the schema: paths and counts, never values
   cmtk data cases <id> [--path /api/x] [--requirement <id>] [--out <file>]
                        [--encoding form] [--before-get /page] [--take field=selector]...
                        [--expect-valid 302] [--expect-invalid 200] [--rows valid|invalid]
@@ -23120,13 +26717,13 @@ function printReport(r6, json, manifestRoot, evidence) {
   }
   for (const n3 of r6.no_adapter ?? [])
     console.log(`  No adapter for surface ${n3.surface}, so nothing was sent for: ${n3.cases.join(", ")}`);
-  const report = path18.relative(process.cwd(), path18.join(manifestRoot, evidence, r6.mode, "REPORT.md")) || "REPORT.md";
+  const report = path24.relative(process.cwd(), path24.join(manifestRoot, evidence, r6.mode, "REPORT.md")) || "REPORT.md";
   console.log(`Report: ${report}`);
   console.log(r6.reason);
   console.log(`Next: ${r6.next}`);
 }
 async function main(argv) {
-  const { values, positionals } = parseArgs({
+  const { values, positionals } = parseArgs2({
     args: argv,
     allowPositionals: true,
     options: {
@@ -23146,6 +26743,7 @@ async function main(argv) {
       surface: { type: "string" },
       assembly: { type: "string", multiple: true },
       "rea-json": { type: "string", multiple: true },
+      "routes-from": { type: "string", multiple: true },
       config: { type: "string", multiple: true },
       har: { type: "string", multiple: true },
       topology: { type: "string", multiple: true },
@@ -23165,7 +26763,6 @@ async function main(argv) {
       take: { type: "string", multiple: true },
       "expect-valid": { type: "string" },
       "expect-invalid": { type: "string" },
-      rows: { type: "string" },
       "only-rows": { type: "string" },
       "except-rows": { type: "string" },
       lang: { type: "string" },
@@ -23186,6 +26783,24 @@ async function main(argv) {
       redact: { type: "string", multiple: true },
       "keep-values": { type: "boolean", default: false },
       "capture-only": { type: "boolean", default: false },
+      "record-encoding": { type: "string" },
+      soap: { type: "string" },
+      ddl: { type: "string" },
+      "virtual-keys": { type: "string" },
+      rows: { type: "string" },
+      "soap-action": { type: "string" },
+      "csv-delimiter": { type: "string" },
+      "csv-no-header": { type: "boolean", default: false },
+      "csv-no-bom": { type: "boolean", default: false },
+      "csv-lf": { type: "boolean", default: false },
+      key: { type: "string" },
+      as: { type: "string" },
+      epsilon: { type: "string" },
+      scrub: { type: "string" },
+      copybook: { type: "string" },
+      formulas: { type: "string" },
+      ignore: { type: "string" },
+      "no-fold-empty": { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
       version: { type: "boolean", short: "v", default: false }
     }
@@ -23199,14 +26814,14 @@ async function main(argv) {
     console.log(HELP);
     return 0;
   }
-  const manifestFile = path18.resolve(values.manifest);
+  const manifestFile = path24.resolve(values.manifest);
   const only = values.only ? values.only.split(",").map((s4) => s4.trim()).filter(Boolean) : void 0;
   switch (cmd) {
     case "init": {
       if (!values.candidate)
         throw new UsageError("`cmtk init` needs --candidate <url> (and --legacy <url> to compare two systems).");
       const written = initProject(manifestFile, { candidate: values.candidate, legacy: values.legacy, system: values.system });
-      console.log(`Wrote ${written.map((f4) => path18.relative(process.cwd(), f4)).join(", ")}.`);
+      console.log(`Wrote ${written.map((f4) => path24.relative(process.cwd(), f4)).join(", ")}.`);
       console.log(`Next: edit the example case for your system, then \`cmtk run\`${values.legacy ? " and `cmtk compare`" : ""}.`);
       return 0;
     }
@@ -23215,13 +26830,13 @@ async function main(argv) {
         throw new UsageError("`cmtk import-har` needs at least one .har file.");
       const manifest = loadManifest(manifestFile);
       const existing = loadCases(manifest);
-      const res = importHar(rest.map((f4) => path18.resolve(f4)), { include: values.include, exclude: values.exclude, existing, draftExpect: values["draft-expect"] });
+      const res = importHar(rest.map((f4) => path24.resolve(f4)), { include: values.include, exclude: values.exclude, existing, draftExpect: values["draft-expect"] });
       const out = inside(manifest, values.out ?? "cmtk/cases/har.yaml");
-      if (fs20.existsSync(out))
-        throw new UsageError(`${path18.relative(process.cwd(), out)} already exists; pass --out <new file>.`);
-      fs20.mkdirSync(path18.dirname(out), { recursive: true });
-      fs20.writeFileSync(out, casesToYaml(res.cases, values["draft-expect"] ? "Imported from HAR recordings. Each drafted expect: is what the system answered, not the requirement: `cmtk review` confirms it, and `cmtk run` skips the case until then." : void 0), "utf8");
-      console.log(`Added ${res.cases.length} cases to ${path18.relative(process.cwd(), out)}; skipped ${res.skipped} (static files, filtered or duplicates).`);
+      if (fs27.existsSync(out))
+        throw new UsageError(`${path24.relative(process.cwd(), out)} already exists; pass --out <new file>.`);
+      fs27.mkdirSync(path24.dirname(out), { recursive: true });
+      fs27.writeFileSync(out, casesToYaml(res.cases, values["draft-expect"] ? "Imported from HAR recordings. Each drafted expect: is what the system answered, not the requirement: `cmtk review` confirms it, and `cmtk run` skips the case until then." : void 0), "utf8");
+      console.log(`Added ${res.cases.length} cases to ${path24.relative(process.cwd(), out)}; skipped ${res.skipped} (static files, filtered or duplicates).`);
       if (res.droppedHeaders.length)
         console.log(`Dropped these headers from every case: ${res.droppedHeaders.join(", ")}. Credentials come from headers_from_env at run time.`);
       if (res.redacted.length)
@@ -23251,18 +26866,18 @@ async function main(argv) {
       const manifest = loadManifest(manifestFile);
       let any = false;
       for (const mode of ["run", "compare"]) {
-        const dir = path18.join(manifest.root, manifest.evidence, mode);
-        const f4 = path18.join(dir, "REPORT.json");
-        if (!fs20.existsSync(f4))
+        const dir = path24.join(manifest.root, manifest.evidence, mode);
+        const f4 = path24.join(dir, "REPORT.json");
+        if (!fs27.existsSync(f4))
           continue;
         any = true;
-        const r6 = JSON.parse(fs20.readFileSync(f4, "utf8"));
+        const r6 = JSON.parse(fs27.readFileSync(f4, "utf8"));
         console.log(`${mode}: ${r6.verdict} on ${r6.date}${r6.settings ? ` from ${r6.settings.manifest}` : ""}, ${describeSignoff(signoffState(dir))}`);
       }
-      const shadowFile = path18.join(manifest.root, manifest.evidence, "shadow", "REPORT.json");
-      if (fs20.existsSync(shadowFile)) {
+      const shadowFile = path24.join(manifest.root, manifest.evidence, "shadow", "REPORT.json");
+      if (fs27.existsSync(shadowFile)) {
         any = true;
-        const r6 = JSON.parse(fs20.readFileSync(shadowFile, "utf8"));
+        const r6 = JSON.parse(fs27.readFileSync(shadowFile, "utf8"));
         console.log(`shadow: ${r6.verdict} on ${r6.date}`);
       }
       if (!any)
@@ -23283,14 +26898,14 @@ async function main(argv) {
         throw new UsageError("`cmtk defects` needs `run` or `compare`.");
       const m4 = loadManifest(manifestFile);
       const { file, drafts } = draftDefects(m4, mode);
-      console.log(drafts.length ? `Drafted ${drafts.length} defect${drafts.length === 1 ? "" : "s"} in ${path18.relative(process.cwd(), path18.join(m4.root, file))}.` : `Nothing failed, so there are no defects to draft (${file}).`);
+      console.log(drafts.length ? `Drafted ${drafts.length} defect${drafts.length === 1 ? "" : "s"} in ${path24.relative(process.cwd(), path24.join(m4.root, file))}.` : `Nothing failed, so there are no defects to draft (${file}).`);
       if (drafts.length)
         console.log("Next: a person checks each draft and files it in your tracker.");
       return 0;
     }
     case "discover": {
       const m4 = loadManifest(manifestFile);
-      const { file, discovery } = discover(m4, { assemblies: values.assembly, reaJson: values["rea-json"], configs: values.config, har: values.har, topology: values.topology, fresh: values.fresh });
+      const { file, discovery } = discover(m4, { assemblies: values.assembly, reaJson: values["rea-json"], routesFrom: values["routes-from"], configs: values.config, har: values.har, topology: values.topology, fresh: values.fresh });
       if (values.json) {
         console.log(JSON.stringify(discovery, null, 2));
         return 0;
@@ -23298,7 +26913,9 @@ async function main(argv) {
       console.log(`Boundaries for ${discovery.system}: ${describeDiscovery(discovery)}`);
       for (const b2 of discovery.boundaries.filter((x2) => !x2.covered_by))
         console.log(`  uncovered ${b2.kind} ${b2.direction}: ${b2.name}${b2.where ? ` (${b2.where})` : ""}`);
-      console.log(`Inventory: ${path18.relative(process.cwd(), path18.join(m4.root, file))}`);
+      for (const n3 of discovery.notes ?? [])
+        console.log(`Note: ${n3}`);
+      console.log(`Inventory: ${path24.relative(process.cwd(), path24.join(m4.root, file))}`);
       console.log(discovery.boundaries.some((x2) => !x2.covered_by) ? "Next: for each uncovered kind, add an adapter (`cmtk adapter new <name>` or `cmtk adapter add <name>`, then `covers:` in cmtk.yaml) or have a person record why it is out of scope." : "Next: write cases for each boundary, then `cmtk compare`.");
       return 0;
     }
@@ -23320,7 +26937,7 @@ async function shadowCommand(manifestFile, v2) {
   const num = (name) => v2[name] === void 0 ? void 0 : Number(v2[name]);
   const m4 = loadManifest(manifestFile);
   const r6 = await shadow(m4, {
-    from: v2.from.map((f4) => path18.resolve(f4)),
+    from: v2.from.map((f4) => path24.resolve(f4)),
     format: v2.format,
     sample: num("sample"),
     seed: num("seed"),
@@ -23343,7 +26960,7 @@ async function shadowCommand(manifestFile, v2) {
     console.log(`Sent ${r6.replay.sent} to both systems: ${r6.replay.matched} matched, ${r6.replay.drift} approved drift, ${r6.replay.different} unexplained, ${r6.replay.errors} errors, ${r6.replay.not_sent} not sent.`);
     for (const e6 of r6.endpoints.filter((x2) => x2.unexplained).slice(0, 20))
       console.log(`  ${e6.endpoint}: ${e6.unexplained} of ${e6.requests} unexplained, at ${e6.differences.filter((d4) => !d4.drift).slice(0, 3).map((d4) => d4.where).join(", ")}`);
-    console.log(`Report: ${path18.relative(process.cwd(), path18.join(m4.root, m4.evidence, "shadow", "REPORT.md"))}`);
+    console.log(`Report: ${path24.relative(process.cwd(), path24.join(m4.root, m4.evidence, "shadow", "REPORT.md"))}`);
     console.log(r6.reason);
     console.log(`Next: ${r6.next}`);
   }
@@ -23394,7 +27011,7 @@ async function trendCommand(manifestFile, args, v2) {
     console.log(`  drift that stopped matching: ${report.drift_stopped_matching.join(", ")}`);
   if (report.scrubs_never_fired.length)
     console.log(`  scrubs that never fired: ${report.scrubs_never_fired.join(", ")}`);
-  console.log(`Report: ${path18.relative(process.cwd(), path18.join(m4.root, file))}`);
+  console.log(`Report: ${path24.relative(process.cwd(), path24.join(m4.root, file))}`);
   return 0;
 }
 async function signoff(manifestFile, mode) {
@@ -23404,11 +27021,11 @@ async function signoff(manifestFile, mode) {
     throw new UsageError("Sign-off is for a person at a keyboard: run `cmtk signoff` in a terminal yourself. Agents and scripts do not sign.");
   }
   const manifest = loadManifest(manifestFile);
-  const dir = path18.join(manifest.root, manifest.evidence, mode);
-  const json = path18.join(dir, "REPORT.json");
-  if (!fs20.existsSync(json))
+  const dir = path24.join(manifest.root, manifest.evidence, mode);
+  const json = path24.join(dir, "REPORT.json");
+  if (!fs27.existsSync(json))
     throw new UsageError(`There is no ${mode} report yet. Run \`cmtk ${mode}\` first.`);
-  const report = JSON.parse(fs20.readFileSync(json, "utf8"));
+  const report = JSON.parse(fs27.readFileSync(json, "utf8"));
   console.log(`${mode} report for ${report.system}: ${report.verdict} (${report.date}). ${report.reason}`);
   if (report.settings) {
     const st2 = report.settings;
@@ -23421,7 +27038,7 @@ async function signoff(manifestFile, mode) {
   for (const k2 of report.known_issues ?? [])
     if (k2.state === "still fails")
       console.log(`Known issue ${k2.id} still fails on case ${k2.case}: accepted by ${k2.accepted_by}. Your signature covers this report with that failure in it. ${k2.reason}`);
-  console.log(`Read it first: ${path18.relative(process.cwd(), path18.join(dir, "REPORT.md"))}`);
+  console.log(`Read it first: ${path24.relative(process.cwd(), path24.join(dir, "REPORT.md"))}`);
   const rl = readline3.createInterface({ input: process.stdin, output: process.stdout });
   try {
     const name = await rl.question("Your full name: ");
@@ -23479,7 +27096,7 @@ async function review(manifestFile) {
         const { file: _file, draft: _d, ...shown2 } = c4;
         console.log(`
 Draft case ${c4.id} in ${c4.file}:
-${import_yaml6.default.stringify(shown2, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
+${import_yaml8.default.stringify(shown2, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
         const rest = drafts.filter((d4) => d4.file === c4.file && !done.has(d4.id) && !d4.expect_draft);
         let v2 = await ask(!c4.expect_draft && rest.length > 1);
         while (v2 === "A") {
@@ -23522,7 +27139,7 @@ ${import_yaml6.default.stringify(shown2, { lineWidth: 0 }).trimEnd().replace(/^/
         const { file: _file, expect_draft: _d, ...shown2 } = c4;
         console.log(`
 Drafted expectation for case ${c4.id} in ${c4.file}. It is what the system answered in the recording; accept it only if that is what should happen:
-${import_yaml6.default.stringify(shown2, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
+${import_yaml8.default.stringify(shown2, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
         const v2 = await ask();
         if (v2 === "q")
           return false;
@@ -23612,13 +27229,13 @@ async function probe(manifestFile, args, surface = "http") {
   }
 }
 function writeTemplate(tpl, dir, name) {
-  fs20.mkdirSync(dir, { recursive: true });
-  for (const e6 of fs20.readdirSync(tpl, { withFileTypes: true })) {
-    const to = path18.join(dir, e6.name === "gitignore" ? ".gitignore" : e6.name.replaceAll("__NAME__", name));
+  fs27.mkdirSync(dir, { recursive: true });
+  for (const e6 of fs27.readdirSync(tpl, { withFileTypes: true })) {
+    const to = path24.join(dir, e6.name === "gitignore" ? ".gitignore" : e6.name.replaceAll("__NAME__", name));
     if (e6.isDirectory())
-      writeTemplate(path18.join(tpl, e6.name), to, name);
+      writeTemplate(path24.join(tpl, e6.name), to, name);
     else
-      fs20.writeFileSync(to, fs20.readFileSync(path18.join(tpl, e6.name), "utf8").replaceAll("__NAME__", name), "utf8");
+      fs27.writeFileSync(to, fs27.readFileSync(path24.join(tpl, e6.name), "utf8").replaceAll("__NAME__", name), "utf8");
   }
 }
 async function adapterCommand(args, manifestFile, values) {
@@ -23631,14 +27248,14 @@ async function adapterCommand(args, manifestFile, values) {
   }
   if (!name || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(name) || name === "http")
     throw new UsageError("Give the adapter a name of letters, digits, '.', '-' and '_' (not http, which is built in).");
-  const root = path18.dirname(manifestFile);
-  const dir = path18.join(root, "adapters", name);
+  const root = path24.dirname(manifestFile);
+  const dir = path24.join(root, "adapters", name);
   if (sub === "new") {
     if (lang !== "node" && lang !== "csharp")
       throw new UsageError(`--lang must be node or csharp, not ${lang}.`);
-    if (fs20.existsSync(dir))
+    if (fs27.existsSync(dir))
       throw new UsageError(`adapters/${name} already exists.`);
-    writeTemplate(path18.join(HERE, "..", "templates", `adapter-${lang}`), dir, name);
+    writeTemplate(path24.join(HERE, "..", "templates", `adapter-${lang}`), dir, name);
     if (lang === "csharp") {
       console.log(`Wrote adapters/${name}/. Next: write Run() in Adapter.cs, then \`dotnet build -c Release adapters/${name}\` and \`cmtk adapter check ${name}\`.`);
       console.log(`Register it in cmtk.yaml:
@@ -23659,8 +27276,8 @@ async function adapterCommand(args, manifestFile, values) {
   throw new UsageError("`cmtk adapter` takes `new <name>`, `check <name>`, `add <name>` or `list`.");
 }
 function adapterList(manifestFile, json) {
-  const registered = fs20.existsSync(manifestFile) ? loadManifest(manifestFile).adapters : {};
-  const rows = listAdapters(path18.dirname(manifestFile), registered);
+  const registered = fs27.existsSync(manifestFile) ? loadManifest(manifestFile).adapters : {};
+  const rows = listAdapters(path24.dirname(manifestFile), registered);
   if (json) {
     console.log(JSON.stringify(rows, null, 2));
     return 0;
@@ -23673,9 +27290,9 @@ function adapterList(manifestFile, json) {
     console.log(`Warning: ${changed.join(", ")} no longer match what a person approved. Read the changes, or remove the folder and its entry in adapters/installed.yaml and add it again.`);
   return 0;
 }
-var TOOLKIT_ADAPTERS = path18.resolve(HERE, "..", "..", "..", "adapters");
+var TOOLKIT_ADAPTERS = path24.resolve(HERE, "..", "..", "..", "adapters");
 async function adapterAdd(name, root, manifestFile, registry, pin) {
-  const named = fs20.existsSync(manifestFile) ? loadManifest(manifestFile).adapter_registries : {};
+  const named = fs27.existsSync(manifestFile) ? loadManifest(manifestFile).adapter_registries : {};
   const chosen = registry === void 0 ? void 0 : Object.hasOwn(named, registry) ? { list: [named[registry]], base: root } : { list: [registry], base: process.cwd() };
   if (!chosen && !Object.keys(named).length)
     throw new UsageError("Name a registry: --registry <url or folder>, or list yours under `adapter_registries:` in cmtk.yaml. cmtk has no default registry, so it never fetches from somewhere you did not name.");
@@ -23717,46 +27334,46 @@ async function adapterAdd(name, root, manifestFile, registry, pin) {
   }
 }
 function builtCsharpAdapter(name, dir) {
-  const top = fs20.existsSync(dir) ? fs20.readdirSync(dir) : [];
+  const top = fs27.existsSync(dir) ? fs27.readdirSync(dir) : [];
   const project = top.find((f4) => f4.endsWith(".csproj"));
   if (!project)
     return void 0;
   const stem = project.slice(0, -".csproj".length);
-  const release = path18.join(dir, "bin", "Release");
-  const frameworks = fs20.existsSync(release) ? fs20.readdirSync(release) : [];
-  const built = frameworks.map((f4) => path18.join(release, f4, `${stem}.dll`)).find((f4) => fs20.existsSync(f4));
+  const release = path24.join(dir, "bin", "Release");
+  const frameworks = fs27.existsSync(release) ? fs27.readdirSync(release) : [];
+  const built = frameworks.map((f4) => path24.join(release, f4, `${stem}.dll`)).find((f4) => fs27.existsSync(f4));
   const build = `Run: dotnet build -c Release adapters/${name}`;
   if (!built)
     throw new UsageError(`adapters/${name} has not been built. ${build}`);
   const code = top.filter((f4) => f4.endsWith(".cs") || f4.endsWith(".csproj"));
-  const newer = code.find((f4) => fs20.statSync(path18.join(dir, f4)).mtimeMs > fs20.statSync(built).mtimeMs);
+  const newer = code.find((f4) => fs27.statSync(path24.join(dir, f4)).mtimeMs > fs27.statSync(built).mtimeMs);
   if (newer)
     throw new UsageError(`adapters/${name}/${newer} is newer than the build. ${build}`);
   return { command: "dotnet", args: [built] };
 }
 async function adapterCheck(name, dir, manifestFile, targetName) {
   let spec;
-  if (targetName !== void 0 && !fs20.existsSync(manifestFile))
+  if (targetName !== void 0 && !fs27.existsSync(manifestFile))
     throw new UsageError(`--target ${targetName} needs a cmtk.yaml that sets it; ${manifestFile} does not exist.`);
-  if (fs20.existsSync(manifestFile)) {
+  if (fs27.existsSync(manifestFile)) {
     const m4 = loadManifest(manifestFile);
     if (m4.adapters[name])
       spec = { command: m4.adapters[name].command, args: m4.adapters[name].args ?? [] };
   }
-  spec ??= builtCsharpAdapter(name, dir) ?? { command: process.execPath, args: [path18.join(dir, "index.mjs")] };
-  const samplesFile = path18.join(dir, "samples", "cases.yaml");
-  const doc = fs20.existsSync(samplesFile) ? readStructured(samplesFile) : {};
+  spec ??= builtCsharpAdapter(name, dir) ?? { command: process.execPath, args: [path24.join(dir, "index.mjs")] };
+  const samplesFile = path24.join(dir, "samples", "cases.yaml");
+  const doc = fs27.existsSync(samplesFile) ? readStructured(samplesFile) : {};
   const samples = doc.cases ?? [];
   const secret = `cmtk-check-${Math.random().toString(36).slice(2)}`;
   let target2 = { ...doc.check_target, name: "check", base_url: "http://127.0.0.1:9" };
   if (targetName !== void 0) {
     const named = loadManifest(manifestFile).targets[targetName];
     if (!named)
-      throw new UsageError(`--target ${targetName} is not in the targets of ${path18.basename(manifestFile)}.`);
+      throw new UsageError(`--target ${targetName} is not in the targets of ${path24.basename(manifestFile)}.`);
     target2 = named;
   }
   const checks = [];
-  const adapter = processAdapter(name, { ...spec, timeout_s: 60 }, path18.dirname(manifestFile));
+  const adapter = processAdapter(name, { ...spec, timeout_s: 60 }, path24.dirname(manifestFile));
   try {
     const d4 = await adapter.describe().catch((err) => ({ error: err.message }));
     checks.push(["answers describe with a name and its kinds", typeof d4?.name === "string" && Array.isArray(d4?.kinds), d4?.error ?? 'reply {"name":"\u2026","kinds":["\u2026"],"settings":[]}']);
@@ -23785,6 +27402,16 @@ main(process.argv.slice(2)).then((code) => process.exit(code), (err) => {
     console.error(`cmtk: ${err?.stack ?? err}`);
   process.exit(3);
 });
+function soapVersion(s4) {
+  if (s4 !== "1.1" && s4 !== "1.2")
+    throw new UsageError("--soap is 1.1 or 1.2.");
+  return s4;
+}
+function recordEncoding(s4) {
+  if (s4 !== "cp037" && s4 !== "ascii")
+    throw new UsageError("--record-encoding is cp037 or ascii.");
+  return s4;
+}
 async function dataCommand(args, manifestFile, v2) {
   const [sub, id] = args;
   const m4 = loadManifest(manifestFile);
@@ -23794,12 +27421,26 @@ async function dataCommand(args, manifestFile, v2) {
       if (!v2.schema)
         throw new UsageError("`cmtk data plan` needs --schema <file>: a JSON Schema or an OpenAPI document inside the project.");
       const seed = v2.seed === void 0 ? void 0 : Number(v2.seed);
-      const { file, recipe } = planRecipe(m4, { schema: v2.schema, operation: v2.operation, id: v2.id, seed, clock: v2.clock, locale: v2.locale, generators });
+      const { file, recipe } = planRecipe(m4, {
+        schema: v2.schema,
+        operation: v2.operation,
+        id: v2.id,
+        seed,
+        clock: v2.clock,
+        locale: v2.locale,
+        generators,
+        ...v2["record-encoding"] ? { recordEncoding: recordEncoding(v2["record-encoding"]) } : {},
+        ...v2.soap ? { soap: { version: soapVersion(v2.soap), ...v2["soap-action"] ? { action: v2["soap-action"] } : {} } } : {},
+        ...v2["csv-delimiter"] || v2["csv-no-header"] || v2["csv-no-bom"] || v2["csv-lf"] ? { csv: { ...v2["csv-delimiter"] ? { delimiter: v2["csv-delimiter"] } : {}, ...v2["csv-no-header"] ? { header: false } : {}, ...v2["csv-no-bom"] ? { bom: false } : {}, ...v2["csv-lf"] ? { line_ending: "lf" } : {} } } : {}
+      });
       const happy = recipe.rows.filter(isHappy).length;
       const byTechnique = Object.entries(recipe.rows.reduce((acc, r6) => ({ ...acc, [r6.technique]: (acc[r6.technique] ?? 0) + 1 }), {})).map(([k2, n3]) => `${n3} ${k2}`).join(", ");
       console.log(`Recipe ${recipe.id}: ${recipe.fields.length - 1} fields, ${recipe.rows.length} rows (${byTechnique}); ${happy} happy paths (${Math.round(happy / recipe.rows.length * 100)}%).`);
       for (const n3 of recipe.notes ?? [])
         console.log(`  ${n3}`);
+      const low = recipe.fields.filter((f4) => f4.low_confidence);
+      if (low.length)
+        console.log(`  Low confidence, because the schema says nothing about them: ${low.map((f4) => f4.path).join(", ")}.`);
       for (const f4 of recipe.fields.filter((x2) => x2.note && /can't be generated|not honoured/.test(x2.note)))
         console.log(`  ${f4.path}: ${f4.note}`);
       console.log(`Written: ${file}`);
@@ -23811,11 +27452,17 @@ async function dataCommand(args, manifestFile, v2) {
         throw new UsageError("`cmtk data make` needs the recipe id.");
       const formats = (v2.format ? String(v2.format).split(",") : ["json", "csv"]).map((f4) => f4.trim().toLowerCase());
       for (const f4 of formats)
-        if (!["json", "csv", "xlsx"].includes(f4))
-          throw new UsageError(`Unknown format ${f4}: use json, csv or xlsx.`);
+        if (!DATA_FORMATS.includes(f4))
+          throw new UsageError(`Unknown format ${f4}: use ${DATA_FORMATS.join(", ")}.`);
       const { folder, manifest } = await makeData(m4, id, { formats, generators });
       console.log(`Made ${manifest.rows} rows (${manifest.valid_rows} valid, ${Math.round(manifest.quotas.happy_share * 100)}% happy paths) in ${folder}/: ${Object.keys(manifest.files).filter((f4) => !f4.startsWith("rows/")).join(", ")}.`);
       console.log(`Every valid row validates against the schema, and every invalid row breaks it where it says.`);
+      if (manifest.edge_files?.length)
+        console.log(`${manifest.edge_files.length} edge files, each labelled in ${folder}/DATA.md.`);
+      if (manifest.fixed)
+        console.log(`${manifest.fixed.records} fixed-width records of ${manifest.fixed.record_size} bytes in ${manifest.fixed.encoding}; ${manifest.fixed.left_out.length} rows left out, listed in ${folder}/DATA.md.`);
+      for (const x2 of manifest.not_written ?? [])
+        console.log(`Not written: ${x2.format}: ${x2.why}.`);
       if (manifest.quotas.problems.length) {
         console.log(`Quotas not met: ${manifest.quotas.problems.join("; ")}.`);
         return 2;
@@ -23835,6 +27482,9 @@ async function dataCommand(args, manifestFile, v2) {
         return 2;
       }
       console.log("Quotas met.");
+      const open = loadDataFindings(m4, id);
+      if (open.length)
+        console.log(`${open.length} findings are open for a person, in cmtk/data/${id}.findings.yaml.`);
       return 0;
     }
     case "cases": {
@@ -23880,7 +27530,78 @@ async function dataCommand(args, manifestFile, v2) {
       console.log("Next: a person reviews them with `cmtk review`. They are skipped until then.");
       return 0;
     }
+    case "seed": {
+      if (!v2.ddl)
+        throw new UsageError("`cmtk data seed` needs --ddl <script.sql>: a T-SQL script of the legacy schema, inside the project.");
+      const seed = v2.seed === void 0 ? void 0 : Number(v2.seed);
+      if (seed !== void 0 && (!Number.isInteger(seed) || seed < 0))
+        throw new UsageError("--seed must be a whole number.");
+      const count2 = v2.rows === void 0 ? void 0 : Number(v2.rows);
+      if (count2 !== void 0 && (!Number.isInteger(count2) || count2 < 0))
+        throw new UsageError("--rows must be a whole number.");
+      const { folder, manifest } = writeSeed(m4, { ddl: v2.ddl, virtualKeys: v2["virtual-keys"], id: v2.id, ...seed !== void 0 ? { seed } : {}, ...count2 !== void 0 ? { rows: count2 } : {} });
+      console.log(`Seed for ${manifest.tables.length} tables, ${manifest.tables.reduce((n3, t3) => n3 + t3.rows, 0)} rows, in ${folder}/.`);
+      console.log(`Load order: ${manifest.load_order.join(", ")}.`);
+      for (const d4 of manifest.deferred_keys)
+        console.log(`Deferred, to break a cycle: ${d4}.`);
+      for (const k2 of manifest.virtual_keys)
+        console.log(`Virtual key: ${k2}.`);
+      for (const n3 of manifest.notes)
+        console.log(`Note: ${n3}`);
+      console.log("cmtk does not run it. Next: load seed.sql into both disposable test databases, run control-totals.sql on each, save each result as CSV, then `cmtk data reconcile`.");
+      return 0;
+    }
+    case "reconcile": {
+      const [a4, b2] = args.slice(1);
+      if (!a4 || !b2)
+        throw new UsageError("`cmtk data reconcile` needs two CSV files of control totals.");
+      const c4 = compareTables(readTables(inside(m4, a4), { as: "csv" }), readTables(inside(m4, b2), { as: "csv" }), { key: ["table", "column", "measure"], epsilon: 2e-6 });
+      if (v2.json)
+        console.log(JSON.stringify(c4, null, 2));
+      else
+        for (const line2 of describeComparison(c4))
+          console.log(line2);
+      return c4.same ? 0 : 1;
+    }
+    case "traffic": {
+      if (!id)
+        throw new UsageError("`cmtk data traffic` needs the recipe id.");
+      if (!v2.har?.length)
+        throw new UsageError("`cmtk data traffic` needs --har <file>.");
+      const { requests, disagreements } = trafficAgainstSchema(m4, id, v2.har[0], { path: v2.path, method: v2.method });
+      console.log(`${requests} recorded request${requests === 1 ? "" : "s"} read.`);
+      for (const d4 of disagreements)
+        console.log(`  ${d4.field}: ${d4.says} ${d4.requests} request${d4.requests === 1 ? "" : "s"}.`);
+      if (!disagreements.length)
+        console.log("The recording and the schema agree, for what the recording holds. That is not coverage.");
+      return 0;
+    }
+    case "diff": {
+      const [a4, b2] = args.slice(1);
+      if (!a4 || !b2)
+        throw new UsageError("`cmtk data diff` needs two files.");
+      const list = (s4) => s4 === void 0 ? [] : String(s4).split(",").map((x2) => x2.trim()).filter(Boolean);
+      if (v2.as !== void 0 && !["csv", "xlsx", "fixed"].includes(v2.as))
+        throw new UsageError("--as is csv, xlsx or fixed.");
+      if (v2.formulas !== void 0 && !["value", "formula"].includes(v2.formulas))
+        throw new UsageError("--formulas is value or formula.");
+      const scrub = list(v2.scrub);
+      for (const s4 of scrub)
+        if (s4 !== "dates" && s4 !== "guids")
+          throw new UsageError("--scrub takes dates and guids.");
+      const epsilon = v2.epsilon === void 0 ? void 0 : Number(v2.epsilon);
+      if (epsilon !== void 0 && !(epsilon >= 0))
+        throw new UsageError("--epsilon must be a number, zero or more.");
+      const read = { as: v2.as, delimiter: v2["csv-delimiter"], copybook: v2.copybook ? inside(m4, v2.copybook) : void 0, record_encoding: v2["record-encoding"] ? recordEncoding(v2["record-encoding"]) : void 0, formulas: v2.formulas };
+      const c4 = compareTables(readTables(inside(m4, a4), read), readTables(inside(m4, b2), read), { key: list(v2.key), ...epsilon !== void 0 ? { epsilon } : {}, scrub, ignore: list(v2.ignore), fold_empty: !v2["no-fold-empty"] });
+      if (v2.json)
+        console.log(JSON.stringify(c4, null, 2));
+      else
+        for (const line2 of describeComparison(c4))
+          console.log(line2);
+      return c4.same ? 0 : 1;
+    }
     default:
-      throw new UsageError("`cmtk data` needs plan, make, check or cases.");
+      throw new UsageError("`cmtk data` needs plan, make, check, cases, diff, traffic, seed or reconcile.");
   }
 }

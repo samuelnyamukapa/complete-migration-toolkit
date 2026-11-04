@@ -11,8 +11,7 @@ import { parsePath } from "./jsonpath.js";
 import { applyDataRule, checkDataRule, describeDataRule, type DataRule } from "./data/model.js";
 import type { Case, Expectation, KnownFailure, Manifest } from "./types.js";
 
-export const PROPOSAL_KINDS = ["scrub", "drift", "known_issue", "defect", "expectation", "locator"] as const;
-export const PROPOSAL_KINDS = ["scrub", "drift", "known_issue", "defect", "expectation", "data_rule"] as const;
+export const PROPOSAL_KINDS = ["scrub", "drift", "known_issue", "defect", "expectation", "locator", "data_rule"] as const;
 export type ProposalKind = (typeof PROPOSAL_KINDS)[number];
 
 export interface ScrubRule {
@@ -233,8 +232,7 @@ export function addProposal(manifest: Manifest, input: ProposalInput, date: stri
         p.locator = l;
     }
     const existing = loadProposals(manifest);
-    const key = (x: Proposal) => JSON.stringify([x.kind, x.case, x.where, x.rule, x.title, x.cases, x.expect, x.fails, x.target, x.step, x.locator]);
-    const key = (x: Proposal) => JSON.stringify([x.kind, x.case, x.where, x.rule, x.title, x.cases, x.expect, x.fails, x.target, x.data_rule]);
+    const key = (x: Proposal) => JSON.stringify([x.kind, x.case, x.where, x.rule, x.title, x.cases, x.expect, x.fails, x.target, x.step, x.locator, x.data_rule]);
     const same = existing.find((x) => x.status === "pending" && key(x) === key(p));
     if (same) throw new ManifestError(`The same proposal is already waiting for a person: ${same.id}.`);
     p.id = `P-${String(1 + Math.max(0, ...existing.map((x) => Number(/^P-(\d+)$/.exec(x.id)?.[1] ?? 0)))).padStart(3, "0")}`;

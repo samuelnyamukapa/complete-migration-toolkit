@@ -1,6 +1,6 @@
 {
   "name": "complete-migration-toolkit",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "The cmtk command: test any system from its requirements, and prove a migrated system behaves like the old one.",
   "license": "Apache-2.0",
   "type": "module",
@@ -28,7 +28,7 @@
     "NOTICE"
   ],
   "dependencies": {
-    "@cmtk/core": "^0.5.2",
+    "@cmtk/core": "^0.6.0",
     "yaml": "^2.9.1"
   }
 }

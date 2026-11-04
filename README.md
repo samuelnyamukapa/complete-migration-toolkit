@@ -2,7 +2,7 @@
 
 Test any system from its requirements, and prove a migrated system behaves like the old one, with every intended drift approved and signed.
 
-> **Status: 0.3.0, early.** The engine, the `cmtk` command, the MCP server and the plugin's six skills are tested on Windows and Linux. On the eShop sandbox:
+> **Status: 0.6.0, early.** The engine, the `cmtk` command, the MCP server and the plugin's nine skills are tested on Windows and Linux. The adapters, UI testing, shadow traffic and trends added in 0.6.0 are experimental: most have run only on local test systems. On the eShop sandbox:
 > - `cmtk run` passed 40 of 41 cases on legacy eShop; the one failure is a legacy defect.
 > - `cmtk compare` found parity with CatalogCore across 24 cases, and caught a planted defect. Both reports were signed and accepted on 18 October 2026.
 > - The AI tester ran from the GitHub Copilot desktop app: it drafted a plan and cases the owner accepted, explored, and drafted defects (0.2.1).

@@ -95,8 +95,13 @@ No tool can approve, sign, accept or decide anything. A new tool that could woul
 | `cmtk_compare` | Sends each case to both systems, and diffs the answers |
 | `cmtk_data_cases` | One draft case per row of a recipe |
 | `cmtk_data_check` | Checks a recipe without writing files |
+| `cmtk_data_diff` | Compares two data files by meaning, not bytes |
+| `cmtk_data_finding` | Records where the schema, the rules and the traffic disagree |
 | `cmtk_data_make` | Regenerates a recipe's rows, and checks them |
 | `cmtk_data_plan` | Compiles a test-data recipe from a schema |
+| `cmtk_data_propose` | Proposes a rule a schema can't say, for a person to review |
+| `cmtk_data_seed` | Writes one SQL script and a manifest to seed both systems. It never connects to them |
+| `cmtk_data_traffic` | Reads the fields a HAR recording shows, for the skill to compare with a schema |
 | `cmtk_defects` | Drafts defects from the latest report |
 | `cmtk_discover` | Lists every boundary of the legacy system |
 | `cmtk_explore_end` | Ends a session, and writes its report |
