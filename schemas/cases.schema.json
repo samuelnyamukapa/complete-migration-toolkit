@@ -129,6 +129,7 @@
     },
     "expect": {
       "type": "object",
+      "minProperties": 1,
       "properties": {
         "status": {
           "oneOf": [

@@ -24,7 +24,7 @@ export { renderReport, summarise } from "./report.js";
 export { send, httpAdapter, processAdapter, decodeBody, requestBody, takeFromPage, cookiesOf, MAX_BODY, MULTIPART_BOUNDARY, type Adapter } from "./adapters.js";
 export { parsePath, matches, render, select, PathError } from "./jsonpath.js";
 export { check, describeCheck, type CheckResult } from "./check.js";
-export { addProposal, decideProposal, describeProposal, loadProposals, acceptDraft, rejectDraft, confirmSafe, removeSafe, unconfirmedSafe, describeSafe, confirmExpectation, rejectExpectation, editYaml, PROPOSAL_KINDS, type Proposal, type ProposalInput, type ProposalKind, type ScrubRule } from "./proposals.js";
+export { plain, addProposal, decideProposal, describeProposal, loadProposals, acceptDraft, rejectDraft, confirmSafe, removeSafe, unconfirmedSafe, describeSafe, confirmExpectation, rejectExpectation, editYaml, PROPOSAL_KINDS, type Proposal, type ProposalInput, type ProposalKind, type ScrubRule } from "./proposals.js";
 export { startSession, exploreRequest, addFinding, endSession, type Session, type FindingInput, type Probe } from "./explore.js";
 export { draftDefects, redactor, type DefectDraft } from "./defects.js";
 export { initProject } from "./init.js";

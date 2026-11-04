@@ -7,12 +7,12 @@ import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline/promises";
 import { fileURLToPath } from "node:url";
-import { parseArgs } from "node:util";
+import { format, parseArgs } from "node:util";
 
 import YAML from "yaml";
 
 import {
-    acceptDraft, adapterPinProblem, adaptersFor, looksLikeAgent, confirmSafe, describeSafe, overrideIn, removeSafe, unconfirmedSafe, BOUNDARY_KINDS, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
+    plain, acceptDraft, adapterPinProblem, adaptersFor, looksLikeAgent, confirmSafe, describeSafe, overrideIn, removeSafe, unconfirmedSafe, BOUNDARY_KINDS, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
     initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target, shadow, SHADOW_FORMATS, type ShadowFormat, cleanHistory, HISTORY_MODES, trend, type HistoryMode, planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat, DATA_FORMATS, compareTables, readTables, describeComparison, type Scrubbing, trafficAgainstSchema, loadDataFindings, writeSeed,
 } from "@cmtk/core";
@@ -23,6 +23,14 @@ import { adaptersFolder, approveBuild, commitInstall, describeBuild, describeIns
 // on every run. They behave as documented, so keep that one warning out of what people read.
 process.removeAllListeners("warning");
 process.on("warning", (w) => { if (w.name !== "ExperimentalWarning") console.error(`${w.name}: ${w.message}`); });
+
+// Everything this command prints can hold text from a system or from a file an agent wrote: a report's JSON keys, a probe's
+// body, a draft's name. A terminal must show that text, never act on it, so control characters and text-direction marks are
+// shown as \\uXXXX on the way out. In --json that spelling is the same JSON string.
+for (const stream of ["log", "error"] as const) {
+    const write = console[stream].bind(console);
+    console[stream] = (...args: unknown[]) => write("%s", plain(format(...args).replace(/\r\n/g, "\n")));
+}
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 // A bundled copy (the plugin's server/cmtk.mjs) has the version built in; otherwise read it from package.json.

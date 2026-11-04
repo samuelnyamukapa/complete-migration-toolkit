@@ -6,11 +6,13 @@ Everything below passes its tests in CI on Windows and Linux unless it says othe
 
 ### Verdicts and scope
 
-- **Known issues (#40):** `cmtk/known-issues.yaml` records a legacy defect once, by a named person. New verdict PASS WITH KNOWN ISSUES, with exit code 4. New failures stay FAIL, and stale entries are reported.
+- **Known issues (#40):** `cmtk/known-issues.yaml` records a legacy defect once, by a named person. New verdict PASS WITH KNOWN ISSUES, with exit code 4. New failures stay FAIL, and stale entries are reported. An item in `fails` must give `actual` (a `check: body` may give `expected`), so it can't accept any failure.
 - **Surfaces (#42):** a target may list its `surfaces`. A case on a surface one system lacks is "not comparable", the report states the scope, and the verdict is PARTIAL COMPARISON, exit code 4, never PARITY. `compare_only_surfaces` lets `cmtk run` pass on the same manifest.
 - **HAR drafts (#41):** `cmtk import-har --draft-expect` drafts the status and media type. Cases stay SKIPPED until a person confirms them.
 - **A case whose surface has no adapter no longer stops the run.** The report names it and cannot pass (exit 2, was 3).
-- **An answer over 5 MB no longer reads as PASS or PARITY.** It is INCOMPLETE, or PARTIAL COMPARISON at best.
+- **An answer over 5 MB no longer reads as PASS or PARITY.** It is INCOMPLETE, or PARTIAL COMPARISON at best. A contract over 5 MB is an error, never IDENTICAL.
+- **An `expect:` that checks nothing is refused.** A misspelt key, an empty block or a JSON check with no test in it stops at load, so `cmtk check` reports it.
+- **`cmtk compare` resets only before a case that writes.** A read compares what each system holds now, and says so on the case. An adapter asks for the old behaviour with `reset_before_reads` in `describe`.
 
 ### Adapters
 
@@ -39,6 +41,18 @@ Everything below passes its tests in CI on Windows and Linux unless it says othe
 - **XSD and SOAP (#52):** rows from an XSD with patterns respected, XML negatives, and SOAP envelopes.
 - **Seeding (#51):** `cmtk data seed` and `reconcile`, from a DDL script, with virtual keys and load order. The live catalogue reader and the mapping step are not done.
 - **`/cmtk:data` (#53):** proposals wait for `cmtk review`, and disagreements are findings. `cmtk data traffic` compares a HAR with a schema.
+
+### Safety, from an independent review
+
+- **`safe: true` needs a person.** The mark alone does nothing: the case needs both switches, and an adapter isn't told. `cmtk review` shows it on its own, never in bulk, and records `safe_confirmed_by` with a fingerprint of the request and its files. **Existing cases marked `safe` need confirming once.**
+- **A read that asks to be a write needs both switches:** a method-override header, `_method` and its spellings in a query or after a `;`, and a body on an HTTP read. `cmtk run`, `compare`, `shadow`, `probe` and exploration share one check.
+- **Secrets in answers.** A `headers_from_env` value a system echoes is replaced in the evidence, in the forms it can spot, and so is a `Set-Cookie` value. Exploration logs REDACTED for what an agent passed.
+- **Names.** Both ledgers, review, sign-off and installs refuse a name that reads as an agent or a tool. The drift ledger refuses an entry that approves every difference in every case.
+- **Installed adapters.** One whose code, or `bin`, `obj` or `node_modules` files, no longer match what a person approved is not started, and its cases read ERROR. `cmtk adapter approve` lets a person accept their own build.
+- **Files.** A link that points nowhere and an `xs:include` that leaves the project are refused, `adapters/` as a link is refused, and table names are escaped in `control-totals.sql`.
+- **Redaction.** HAR import and `cmtk shadow` find more credentials and personal data, by shape and by name. It is still pattern matching, and [the test plan](docs/TEST-PLAN.md) states the limit.
+- **Terminals and agents.** `cmtk` shows control characters and text-direction marks as text. `cmtk_run` and `cmtk_compare` mark what a system sent as data.
+- **The terminal check is named for what it is.** It stops accidents and agents that follow the rules, not a determined script. [The test plan](docs/TEST-PLAN.md#what-the-terminal-check-does-and-does-not-stop) says what to require in CI where a decision must be binding.
 
 ### Shadow traffic, trends, release
 
