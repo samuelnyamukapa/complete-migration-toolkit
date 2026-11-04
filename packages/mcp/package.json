@@ -4,8 +4,28 @@
   "description": "Complete Migration Toolkit MCP server: the cmtk verbs as tools for AI agents. Sign-off is not one of them.",
   "license": "Apache-2.0",
   "type": "module",
-  "bin": { "cmtk-mcp": "dist/server.js" },
-  "files": ["dist"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samuelnyamukapa/complete-migration-toolkit.git",
+    "directory": "packages/mcp"
+  },
+  "homepage": "https://github.com/samuelnyamukapa/complete-migration-toolkit#readme",
+  "bugs": "https://github.com/samuelnyamukapa/complete-migration-toolkit/issues",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "bin": {
+    "cmtk-mcp": "dist/server.js"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "NOTICE"
+  ],
   "dependencies": {
     "@cmtk/core": "^0.5.2",
     "@modelcontextprotocol/sdk": "^1.32.1",

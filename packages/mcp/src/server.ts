@@ -26,7 +26,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 // A bundled copy (the plugin's server/cmtk-mcp.mjs) has the version built in; otherwise read it from package.json.
 declare const __CMTK_VERSION__: string | undefined;
 const VERSION = typeof __CMTK_VERSION__ === "string" ? __CMTK_VERSION__ : (JSON.parse(fs.readFileSync(path.join(HERE, "..", "package.json"), "utf8")).version as string);
-/** The cmtk command a person runs: beside this server in the plugin, or the CLI package in a clone. */
+/** The cmtk command a person runs: beside this server in the plugin, or the CLI package in a clone. From npm, neither is there. */
 const CLI = fs.existsSync(path.join(HERE, "cmtk.mjs")) ? path.join(HERE, "cmtk.mjs") : path.join(HERE, "..", "..", "cli", "dist", "main.js");
 
 const server = new McpServer({ name: "cmtk", version: VERSION }, {
@@ -125,7 +125,7 @@ server.registerTool("cmtk_commands_for_person", {
     // Single quotes work in PowerShell and POSIX shells alike, and nothing inside them is expanded.
     const win = process.platform === "win32";
     const q = (s: string) => (win ? `'${s.replace(/'/g, "''")}'` : `'${s.replace(/'/g, `'\\''`)}'`);
-    const base = `${win ? "& " : ""}node ${q(CLI)}`;
+    const base = fs.existsSync(CLI) ? `${win ? "& " : ""}node ${q(CLI)}` : `npx --yes -p complete-migration-toolkit@${VERSION} cmtk`;
     const m = `--manifest ${q(path.resolve(a.manifest))}`;
     return [
         `A person runs these in a terminal${win ? " (PowerShell)" : ""}. They ask for a name, and refuse to run from a script:`,

@@ -1,0 +1,31 @@
+{
+  "name": "cmtk",
+  "version": "0.5.2",
+  "description": "So that `npx cmtk` runs the Complete Migration Toolkit. This package holds only a pointer to complete-migration-toolkit.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samuelnyamukapa/complete-migration-toolkit.git",
+    "directory": "packages/npx-cmtk"
+  },
+  "homepage": "https://github.com/samuelnyamukapa/complete-migration-toolkit#readme",
+  "bugs": "https://github.com/samuelnyamukapa/complete-migration-toolkit/issues",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "bin": {
+    "cmtk": "cmtk.mjs"
+  },
+  "files": [
+    "cmtk.mjs",
+    "NOTICE"
+  ],
+  "dependencies": {
+    "complete-migration-toolkit": "0.5.2"
+  }
+}

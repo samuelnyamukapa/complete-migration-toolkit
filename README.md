@@ -46,6 +46,8 @@ npm run build
 npm link -w packages/cli        # puts `cmtk` on your PATH
 ```
 
+After the first release, you will not need a clone: `npx cmtk` will run it anywhere with Node.js 22.5 or later. [docs/RELEASING.md](docs/RELEASING.md) says what is published and how.
+
 Then, in the project you want to test:
 
 ```sh

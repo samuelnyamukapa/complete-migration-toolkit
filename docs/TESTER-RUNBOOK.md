@@ -14,6 +14,8 @@ You need Node.js 22.5 or later. You also need the `cmtk` command, which you can 
 - with the plugin installed, it is in the plugin's `server` folder (ask the agent for the exact commands: it gets them from `cmtk_commands_for_person`);
 - from a clone of the toolkit, run `npm install`, `npm run build`, then `npm link -w packages/cli`.
 
+After the first release there is a third way: `npx cmtk`, with nothing to install first.
+
 The commands below are written as `cmtk`.
 
 ## 1. Set up the project

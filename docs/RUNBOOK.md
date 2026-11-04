@@ -2,6 +2,8 @@
 
 Follow these steps in order. Each one says what to do, what you should see, and what to do if you don't. You need Node.js 22.5 or later.
 
+You also need the `cmtk` command. Today, from a clone of the toolkit, run `npm install`, `npm run build`, then `npm link -w packages/cli`. After the first release, write `npx cmtk` wherever these steps say `cmtk`, with nothing to install first.
+
 ## Part 1: test one system against its requirements
 
 1. **Start the system you want to test.** Note its address, for example `http://localhost:5002`.
