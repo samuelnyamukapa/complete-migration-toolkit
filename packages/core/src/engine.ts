@@ -8,6 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { httpAdapter, processAdapter, type Adapter } from "./adapters.js";
+import { checkAssemblyContract } from "./assembly.js";
 import { checkContract } from "./contracts.js";
 import { cleanUrl } from "./defects.js";
 import { keepDated, type HistoryMode } from "./history.js";
@@ -335,6 +336,16 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
         try {
             const http = adapters.get("http");
             for (const k of manifest.contracts) {
+                if (k.kind === "assembly") {
+                    // Read from files through REA, so neither system needs to be up, and neither is run.
+                    const outcome = checkAssemblyContract(manifest, k);
+                    for (const f of outcome.findings) {
+                        const hit = f.where ? coveringDrift(drift, `contract-${k.name}`, f.where) : undefined;
+                        if (hit) { f.drift = hit.id; used.add(hit.id); }
+                    }
+                    contracts.push(outcome);
+                    continue;
+                }
                 const missing = lacking("http", ref, cand);
                 if (missing.length) { contracts.push({ name: k.name, kind: k.kind, result: "NOT COMPARABLE", findings: [{ breaking: null, what: `not comparable: ${hasNo(missing, "http")}` }] }); continue; }
                 const probe: Case = { id: `contract-${k.name}`, request: { method: "GET", path: k.path } };

@@ -12,6 +12,7 @@ export { diffJourney } from "./journey.js";
 export { decodePng, diffScreens, diffStructure, type Pixels } from "./structure.js";
 export { loadKnownIssues, markKnown, knownInReport } from "./known.js";
 export { checkContract, diffOpenApi, diffWsdl } from "./contracts.js";
+export { checkAssemblyContract, diffAssemblies, readInventory, proveTypeNames, nameDigest, mapName, type Inventory } from "./assembly.js";
 export { coveringDrift, covers } from "./drift.js";
 export { importHar, casesToYaml, draftExpectation, looksSecret, redactBody, REDACTED, DROPPED_HEADERS } from "./har.js";
 export { renderReport, summarise } from "./report.js";

@@ -245,7 +245,7 @@ export function renderReport(r: Report): string {
         L.push("", "## Contracts", "");
         if (r.contracts.length) {
             L.push("| Contract | Kind | Result | Findings |", "| --- | --- | --- | --- |");
-            for (const k of r.contracts) L.push(`| ${cell(k.name)} | ${cell(k.kind)} | ${k.result} | ${cell(k.findings.map((f) => `${f.what}${f.drift ? ` (approved: ${f.drift})` : ""}`).join("; ") || "none")} |`);
+            for (const k of r.contracts) L.push(`| ${cell(k.name)} | ${cell(k.kind)} | ${k.result} | ${cell(k.findings.map((f) => `${f.what}${f.drift ? ` (approved: ${f.drift})` : ""}`).join("; ") || "none")}${k.note ? ` (${cell(k.note)})` : ""} |`);
         } else L.push("No contracts are listed in cmtk.yaml, so none were checked.");
     }
 

@@ -31,8 +31,23 @@ export interface Contract {
     name: string;
     /** openapi (JSON), wsdl, xsd, or text. */
     kind: string;
-    /** Served by each target at this path. */
+    /** Served by each target at this path. Not used by kind `assembly`. */
     path: string;
+    /** kind `assembly`: the two builds, read through REA. */
+    assembly?: AssemblyContract;
+}
+
+/** A class library's public surface, compared across two builds without running either. */
+export interface AssemblyContract {
+    /** An assembly, or REA's saved output for it (`rea inspect-managed-members <dll> --json`), inside the project. */
+    legacy: string;
+    candidate: string;
+    /** The types that form the contract: full names, or `Namespace.*`. */
+    types: string[];
+    /** Legacy namespace to candidate namespace. The longest match wins. */
+    namespace_map?: Record<string, string>;
+    /** Names of referenced types to try when proving a signature, beyond the common ones. */
+    known_types?: string[];
 }
 
 export interface Scrub {
@@ -391,6 +406,8 @@ export interface ContractOutcome {
     kind: string;
     result: "IDENTICAL" | "EQUIVALENT" | "COMPATIBLE" | "BREAKING" | "REVIEW" | "ERROR" | "NOT COMPARABLE";
     findings: ContractFinding[];
+    /** What was compared, in words. */
+    note?: string;
 }
 
 export type Verdict =

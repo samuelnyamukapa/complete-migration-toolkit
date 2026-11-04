@@ -21,7 +21,7 @@ The formats here are frozen by [FORMATS.md](FORMATS.md), and `schemas/` lets an 
 | `scrub.xml_ignore` | `[]` | XML element names whose content is not compared |
 | `scrub.regex` | `[]` | `{ pattern, replace? }` applied to text on both sides |
 | `compare_headers` | `[content-type]` | Response headers compared |
-| `contracts` | `[]` | `{ name, kind: openapi \| wsdl \| xsd \| text, path }`, served by both systems |
+| `contracts` | `[]` | `{ name, kind: openapi \| wsdl \| xsd \| text, path }`, served by both systems; or `{ name, kind: assembly, legacy, candidate, types, namespace_map }`, read from files through REA ([below](#assembly-contracts)) |
 | `cases` | `[cmtk/cases/*.yaml]` | A glob, or a list of globs, of case files |
 | `drift` | `cmtk/drift.yaml` | The drift ledger |
 | `known_issues` | `cmtk/known-issues.yaml` | The known-issues ledger: failures of `cmtk run` a named person accepted |
@@ -178,6 +178,33 @@ The word PARITY is left out of PARTIAL COMPARISON on purpose, so that nobody rea
 **Use one manifest** when both systems are the same migration, and the difference is only how far the rebuild has reached. You get one report that shows the gap, and the gap closes as the candidate adds surfaces.
 
 **Use two manifests** when the settings must differ: another match level, other scrubs or another drift ledger for each part, or two comparisons with different reference systems. Then each report covers its own part, and neither says what the other left out, so list the gap in your pilot's write-up. A target with no `surfaces` in such a manifest reads PARITY for what its cases cover: list `surfaces` if it covers only part of the system.
+
+
+## Assembly contracts
+
+A class library has no URL, so its contract is read from the files. Neither build is run.
+
+```yaml
+contracts:
+  - name: catalog-service
+    kind: assembly
+    legacy: legacy/bin/eShopLegacyMVC.dll     # or REA's saved output, ending .json
+    candidate: rebuilt/bin/CatalogCore.dll
+    types: [eShopLegacyMVC.Services.ICatalogService, eShopLegacyMVC.Models.*]
+    namespace_map: { eShopLegacyMVC: CatalogCore }
+```
+
+`cmtk compare` runs `rea inspect-managed-members` on each build (`npm install --global rea-agents`), or reads the saved output. It compares the public and protected methods and fields of the listed types, after the map. The longest match in the map wins.
+
+| Finding | Result |
+|---|---|
+| A type or member removed, or a signature changed | `BREAKING` |
+| A type or member added | `COMPATIBLE`. It still needs approval, like every contract change |
+| A signature that can't be proved unchanged | `REVIEW`, for a person |
+
+REA writes a referenced type (`IList<T>`) as a number that means nothing in another build, and it does not list what the number stands for. So cmtk tries likely names against REA's digest of the signature, and uses a name only when the digest matches. Add names of your own under `known_types`. A signature it still can't prove is a `REVIEW` finding, never "unchanged".
+
+Findings are approved like drift: `contract:<name>: <finding>` in the drift ledger. If REA is missing or a file can't be read, the contract's result is `ERROR` and the verdict is `INCOMPLETE`.
 
 ## Where values in a report come from
 

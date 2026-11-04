@@ -52,6 +52,10 @@ export function check(manifest: Manifest): CheckResult {
         if (!ids.has(k.case)) warnings.push(`known issue ${k.id}: there is no case ${k.case}.`);
         if (k.fails.some((f) => f.actual === undefined && f.expected === undefined)) warnings.push(`known issue ${k.id}: one of its failures accepts any answer at that check, so a new way of failing there would be hidden. Copy \`expected\` or \`actual\` from the report.`);
     }
+    for (const k of manifest.contracts) {
+        if (!k.assembly) continue;
+        for (const f of [k.assembly.legacy, k.assembly.candidate]) if (!fs.existsSync(inside(manifest, f))) warnings.push(`contract ${k.name}: ${f} does not exist, so the comparison will report an error.`);
+    }
     if (!cases.length) warnings.push(`No case files match ${manifest.cases.join(", ")}.`);
     if (!fs.existsSync(inside(manifest, manifest.evidence))) warnings.push(`${manifest.evidence} does not exist yet: the first run creates it.`);
     const d = loadDiscovery(manifest);

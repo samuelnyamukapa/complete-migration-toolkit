@@ -76,6 +76,15 @@ export function loadManifest(file: string): Manifest {
         return { path: o.path, match: level(o.match, `overrides[${i}]`) };
     });
     const contracts = ((raw.contracts ?? []) as any[]).map((c, i) => {
+        if (String(c?.kind ?? "").toLowerCase() === "assembly") {
+            const list = (v: unknown) => Array.isArray(v) && v.length > 0 && v.every((x) => typeof x === "string" && x.trim());
+            if (typeof c.legacy !== "string" || typeof c.candidate !== "string") throw new ManifestError(`contracts[${i}] is kind assembly, so it needs \`legacy\` and \`candidate\`: each an assembly or REA's saved output, inside the project.`);
+            if (!list(c.types)) throw new ManifestError(`contracts[${i}] is kind assembly, so it needs \`types\`: the types that form the contract, such as [MyApp.Services.ICatalogService].`);
+            if (c.namespace_map !== undefined && (typeof c.namespace_map !== "object" || c.namespace_map === null || Array.isArray(c.namespace_map) || !Object.values(c.namespace_map).every((v) => typeof v === "string"))) throw new ManifestError(`contracts[${i}].namespace_map maps a legacy namespace to a candidate namespace, such as { MyApp: MyApp.Core }.`);
+            if (c.known_types !== undefined && !list(c.known_types)) throw new ManifestError(`contracts[${i}].known_types is a list of type names.`);
+            const name = String(c.name ?? c.legacy);
+            return { name, kind: "assembly", path: "", assembly: { legacy: c.legacy, candidate: c.candidate, types: c.types as string[], ...(c.namespace_map ? { namespace_map: c.namespace_map as Record<string, string> } : {}), ...(c.known_types ? { known_types: c.known_types as string[] } : {}) } };
+        }
         if (!c || typeof c.path !== "string" || !c.path.startsWith("/")) throw new ManifestError(`contracts[${i}] needs a \`path\` starting with '/', served by every target.`);
         return { name: String(c.name ?? c.path), kind: String(c.kind ?? "text"), path: c.path };
     });
