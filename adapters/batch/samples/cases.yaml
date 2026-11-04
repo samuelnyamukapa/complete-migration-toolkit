@@ -1,0 +1,20 @@
+# The golden samples. `cmtk adapter check batch` replays them twice with node, on Windows and Linux.
+# The expected reports are in golden/.
+cases:
+  - id: BATCH-INPUTS
+    name: a read-only method fingerprints the inputs and does not run the job
+    surface: batch
+    request: { method: GET, path: /jobs/post }
+    inputs: [input/trans.txt]
+
+  - id: BATCH-POST
+    name: fixed-width text, matched on the account
+    surface: batch
+    request: { method: POST, path: /jobs/post }
+    inputs: [input/trans.txt]
+
+  - id: BATCH-LEDGER
+    name: EBCDIC with zoned and packed numbers, matched on the account
+    surface: batch
+    request: { method: POST, path: /jobs/ledger }
+    inputs: [input/ledger.ebc]

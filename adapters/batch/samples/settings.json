@@ -1,0 +1,24 @@
+{
+  "*": {
+    "time_limit_s": 30,
+    "layouts": { "balances.dat": "layouts/balances.json", "ledger.ebc": "layouts/ledger.json" }
+  },
+  "check": {
+    "jobs": {
+      "post": { "command": "node", "script": "jobs/post.mjs" },
+      "ledger": { "command": "node", "script": "jobs/ledger.mjs" }
+    }
+  },
+  "legacy": {
+    "jobs": {
+      "post": { "command": "node", "script": "jobs/post.mjs" },
+      "ledger": { "command": "node", "script": "jobs/ledger.mjs" }
+    }
+  },
+  "candidate": {
+    "jobs": {
+      "post": { "command": "node", "script": "jobs/post.mjs", "args": ["--descending"] },
+      "ledger": { "command": "node", "script": "jobs/ledger.mjs", "args": ["--reverse"] }
+    }
+  }
+}
