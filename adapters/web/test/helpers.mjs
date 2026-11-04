@@ -125,6 +125,28 @@ export function site(routes, seen = []) {
     return s.then((x) => ({ ...x, seen }));
 }
 
+// A certificate made for these tests alone, valid only for this machine's own address. It protects nothing.
+export const TLS = {
+    key: `-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg9NIE94weXQcPiCR8
+VQRG0eaFSu7KgvDvcEKj2XfZFQqhRANCAATS36W1ydi4mftd1KbCFhNCe4k1GQeA
+9GIvJo6aMrr2fsj7/9bRAZ3+sVK9kl9Dqb8330c/zyhZ+AgnTj/1k9dZ
+-----END PRIVATE KEY-----
+`,
+    cert: `-----BEGIN CERTIFICATE-----
+MIIBnDCCAUGgAwIBAgIUAXh2s07fsshncd2LM2tEIQ/0chswCgYIKoZIzj0EAwIw
+FDESMBAGA1UEAwwJbG9jYWxob3N0MCAXDTI2MTEwNDEyNDg1MloYDzIxMjYxMDEx
+MTI0ODUyWjAUMRIwEAYDVQQDDAlsb2NhbGhvc3QwWTATBgcqhkjOPQIBBggqhkjO
+PQMBBwNCAATS36W1ydi4mftd1KbCFhNCe4k1GQeA9GIvJo6aMrr2fsj7/9bRAZ3+
+sVK9kl9Dqb8330c/zyhZ+AgnTj/1k9dZo28wbTAdBgNVHQ4EFgQUsN3IfVhdMvZD
+z+xlqiXp6s9HfMYwHwYDVR0jBBgwFoAUsN3IfVhdMvZDz+xlqiXp6s9HfMYwDwYD
+VR0TAQH/BAUwAwEB/zAaBgNVHREEEzARhwR/AAABgglsb2NhbGhvc3QwCgYIKoZI
+zj0EAwIDSQAwRgIhANZFAg1rYhYUAWSWEeHOaWvb6aPvMxiaj8cjdYYL/DkhAiEA
+p9N/Q5ffY45m8gliSdWaxrvKYiqKlf+w1eox/v+6LgU=
+-----END CERTIFICATE-----
+`,
+};
+
 const html = (res, body, status = 200, extra = {}) => { res.writeHead(status, { "content-type": "text/html; charset=utf-8", ...extra }); res.end(`<!doctype html><html lang="en">${body}</html>`); };
 const cookieOf = (req) => /sid=(\w+)/.exec(req.headers.cookie ?? "")?.[1];
 

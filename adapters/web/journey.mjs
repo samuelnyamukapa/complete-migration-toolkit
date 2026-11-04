@@ -458,6 +458,20 @@ async function guardRequests(context, report, allowedOrigins, writes, targetOrig
             report.stop(`the target redirected a request holding credentials to ${to}, which is in allow_origins. Over http they were removed on the way. Over https they cannot be, so treat them as exposed`, `REDIRECT ${to}`);
         });
     }
+    // A worker's socket passes neither the route below nor, on https, anything the fence can tell from a page. So a case that only reads refuses the worker.
+    if (!writes) {
+        await context.exposeBinding("__cmtkWorkerRefused", (_source, kind) => { block("a worker can open a web socket, and this case only reads: mark the case safe if a person has confirmed it changes nothing", `${kind === "SharedWorker" ? "SharedWorker" : "Worker"}`); });
+        await context.addInitScript(() => {
+            for (const kind of ["Worker", "SharedWorker"]) {
+                if (!(kind in self)) continue;
+                const refuse = function () {
+                    self.__cmtkWorkerRefused?.(kind);
+                    throw new DOMException("this case only reads, so it starts no worker", "SecurityError");
+                };
+                Object.defineProperty(self, kind, { value: refuse, writable: false, configurable: false });
+            }
+        });
+    }
     await context.routeWebSocket(/.*/, (ws) => {
         const url = new URL(ws.url());
         const http = url.origin.replace(/^ws/, "http");
