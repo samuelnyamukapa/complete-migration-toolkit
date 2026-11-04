@@ -5,6 +5,7 @@ import YAML from "yaml";
 
 import { expectProblem } from "./expect-shape.js";
 import { historyOf } from "./history.js";
+import { looksLikeAgent } from "./people.js";
 import { BOUNDARY_KINDS, MATCH_LEVELS, type Case, type Drift, type Manifest, type MatchLevel, type Request, type Target } from "./types.js";
 
 export class ManifestError extends Error {}
@@ -329,6 +330,8 @@ export function loadDrift(manifest: Manifest): Drift[] {
         for (const k of ["id", "where", "reason", "approved_by"]) {
             if (typeof d?.[k] !== "string" || !d[k].trim()) throw new ManifestError(`${manifest.drift} entry ${i + 1}: \`${k}\` is required. Only a named person approves drift.`);
         }
+        if (looksLikeAgent(d.approved_by)) throw new ManifestError(`${manifest.drift} entry ${i + 1}: \`approved_by\` must name a person, not an agent. An agent proposes with cmtk_propose, and a person approves with \`cmtk review\`.`);
+        if ((d.case ?? "*") === "*" && d.where.replace(/[*$.[\]\s:]/g, "").length < 2) throw new ManifestError(`${manifest.drift} entry ${i + 1}: this would approve every difference in every case. Name a case, or a place from a report such as $.items[*].price.`);
         return { id: d.id, case: d.case ?? "*", where: d.where, reason: d.reason, approved_by: d.approved_by, ...(d.date ? { date: String(d.date) } : {}) };
     });
 }

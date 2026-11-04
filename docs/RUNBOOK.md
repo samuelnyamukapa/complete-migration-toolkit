@@ -116,7 +116,7 @@ You also need the `cmtk` command. Today, from a clone of the toolkit, run `npm i
 
 Use this for a failure that must stay for now, such as a legacy defect a migration has to match. Never change the case to hide it.
 
-1. **Copy what fails** from the Failures table in `cmtk/evidence/run/REPORT.md`: the `check`, `expected` and `actual` of each failure of that case.
+1. **Copy what fails** from the Failures table in `cmtk/evidence/run/REPORT.md`: the `check`, `expected` and `actual` of each failure of that case. The ledger refuses an item with no `actual`, except `check: body`, which may give `expected` instead.
 2. **Add the entry to `cmtk/known-issues.yaml`** yourself, with your name, as in [MANIFEST.md](MANIFEST.md#known-issues-ledger-cmtkknown-issuesyaml). An agent can propose it instead, with `cmtk_propose`; you then accept it in `cmtk review`, which adds your name.
 3. **Run `cmtk run`.** You should see PASS WITH KNOWN ISSUES, and `FAIL (known issue <id>)` beside that case. If you still see FAIL, read the failures: one is not in the entry.
 4. **When the defect is fixed,** the report lists the entry under "No longer failing". Remove it, so that a later return of the failure is reported as new.

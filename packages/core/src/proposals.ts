@@ -114,6 +114,13 @@ const text = (v: unknown, what: string, max = 2000): string => {
     return v.trim();
 };
 
+/** The name a decision is recorded under. A name is only a name, but one that says it is an agent is never accepted. */
+const personName = (v: unknown): string => {
+    const who = text(v, "Your name", 100);
+    if (looksLikeAgent(who)) throw new ManifestError(`${JSON.stringify(who)} reads as an agent or a tool. Only a person decides this, under their own name.`);
+    return who;
+};
+
 /** Any text shown to a person, made safe for a terminal. */
 export const plain = (v: unknown): string => String(v ?? "").replace(new RegExp(CONTROL.source, "g"), (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`);
 
@@ -185,12 +192,12 @@ export function addProposal(manifest: Manifest, input: ProposalInput, date: stri
     }
     if (input.kind === "known_issue") {
         p.case = known(input.case, "case");
-        p.fails = knownFails(input.fails, "A known issue proposal").map((f) => ({ check: text(f.check, "fails.check", 500), ...(f.expected !== undefined ? { expected: text(f.expected, "fails.expected", 500) } : {}), ...(f.actual !== undefined ? { actual: text(f.actual, "fails.actual", 500) } : {}) }));
         if (input.issue_id !== undefined) {
             if (!KNOWN_ISSUE_ID.test(input.issue_id)) throw new ManifestError("issue_id must be letters, digits, '.', '-' and '_', such as LEG-1.");
             if (loadKnownIssues(manifest).some((k) => k.id === input.issue_id)) throw new ManifestError(`The ledger already holds ${input.issue_id}.`);
             p.issue_id = input.issue_id;
         }
+        p.fails = knownFails(input.fails, "A known issue proposal").map((f) => ({ check: text(f.check, "fails.check", 500), ...(f.expected !== undefined ? { expected: text(f.expected, "fails.expected", 500) } : {}), ...(f.actual !== undefined ? { actual: text(f.actual, "fails.actual", 500) } : {}) }));
         if (input.target !== undefined) {
             if (!manifest.targets[input.target]) throw new ManifestError(`target: there is no target ${input.target}.`);
             p.target = input.target;
@@ -249,7 +256,7 @@ export function describeProposal(p: Proposal): string {
     const lines = [`${plain(p.id)}  ${plain(p.kind)}, proposed by ${plain(p.proposed_by)} on ${plain(p.proposed_on)}`];
     if (p.kind === "scrub") lines.push(`  hide on every run: ${q(p.rule)}`);
     if (p.kind === "drift") lines.push(`  approve the difference at ${q(p.where)} for ${p.case === "*" ? "EVERY case" : `case ${q(p.case)}`}`);
-    if (p.kind === "known_issue") lines.push(`  record known issue ${p.issue_id ? q(p.issue_id) : "(the next free id)"}: case ${q(p.case)}${p.target ? ` on target ${q(p.target)}` : ""} may keep failing like this: ${q(p.fails)}`, "  it still shows as a failure, and the run can read PASS WITH KNOWN ISSUES, with your name on it");
+    if (p.kind === "known_issue") lines.push(`  record known issue ${p.issue_id ? q(p.issue_id) : "(the next free id)"}: case ${q(p.case)}${p.target ? ` on target ${q(p.target)}` : ""} may keep failing like this: ${q(p.fails)}`, "  it still shows as a failure, and the run can read PASS WITH KNOWN ISSUES, with your name on it", ...(p.fails ?? []).filter((f) => f.actual === undefined).map((f) => `  WARNING: ${q(f)} gives no actual answer, so it accepts any answer that fails ${f.check} in this way, including one you have not seen`));
     if (p.kind === "defect") lines.push(`  defect: ${q(p.title)}`, `  cases: ${q(p.cases)}`, ...(p.summary ? [`  summary: ${plain(p.summary)}`] : []));
     if (p.kind === "expectation") lines.push(`  change what case ${q(p.case)} expects to: ${q(p.expect)}`);
     if (p.kind === "locator") lines.push(`  repair step ${q(p.step)} of ${q(p.script)} (case ${q(p.case)}) on target ${q(p.target)}`, `  it finds its element by: ${q(p.was)}`, `  it would find it by:    ${q(p.locator)}`, "  this changes how the step finds an element, never what the case expects. Check it is the same element: the new name came from the page");
@@ -288,7 +295,7 @@ export function decideProposal(manifest: Manifest, id: string, accept: boolean, 
     if (!p) throw new ManifestError(`There is no proposal ${id}.`);
     if (p.status !== "pending") throw new ManifestError(`${id} was already ${p.status}.`);
     if (shown && JSON.stringify(p) !== JSON.stringify(shown)) throw new ManifestError(`${id} changed after it was shown to you. Nothing was applied; run \`cmtk review\` again.`);
-    const who = text(person, "Your name", 100);
+    const who = personName(person);
     if (!accept) {
         setStatus(manifest, id, { status: "rejected", decided_by: who, decided_on: date, ...(note ? { decision_note: note } : {}) });
         return { ...p, status: "rejected", decided_by: who, decided_on: date };
@@ -316,6 +323,7 @@ export function decideProposal(manifest: Manifest, id: string, accept: boolean, 
         applied = `${next} in ${manifest.drift}`;
     }
     if (p.kind === "known_issue") {
+        knownFails(p.fails, `Proposal ${id}`); // one written before this rule, or edited by hand, gets the same check
         const ledger = loadKnownIssues(manifest);
         const next = p.issue_id ?? `KNOWN-${String(1 + Math.max(0, ...ledger.map((k) => Number(/^KNOWN-(\d+)$/.exec(k.id)?.[1] ?? 0)))).padStart(3, "0")}`;
         if (ledger.some((k) => k.id === next)) throw new ManifestError(`The ledger already holds ${next}. Nothing was applied.`);
@@ -357,7 +365,7 @@ export function decideProposal(manifest: Manifest, id: string, accept: boolean, 
 // ---------------------------------------------------------------- draft cases
 
 export function acceptDraft(manifest: Manifest, caseId: string, person: string, date: string, shown?: Case): void {
-    const who = text(person, "Your name", 100);
+    const who = personName(person);
     const { c, file } = caseFileOf(manifest, caseId);
     if (!c.draft) throw new ManifestError(`${caseId} is not a draft.`);
     if (shown && JSON.stringify(c) !== JSON.stringify(shown)) throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was accepted; run \`cmtk review\` again.`);
@@ -394,8 +402,7 @@ export const describeSafe = (c: Case): string => `${plain(c.id)} is marked safe:
 
 /** A person saw exactly this case, and says it changes nothing. Only `cmtk review` calls this. */
 export function confirmSafe(manifest: Manifest, caseId: string, person: string, date: string, shown: Case): void {
-    const who = text(person, "Your name", 100);
-    if (looksLikeAgent(who)) throw new ManifestError(`${JSON.stringify(who)} reads as an agent or a tool. Only a person confirms \`safe: true\`.`);
+    const who = personName(person);
     const { c, file } = caseFileOf(manifest, caseId);
     if (c.safe !== true) throw new ManifestError(`${caseId} is not marked safe: true.`);
     if (JSON.stringify(c) !== JSON.stringify(shown)) throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was confirmed; run \`cmtk review\` again.`);
@@ -414,7 +421,7 @@ export function removeSafe(manifest: Manifest, caseId: string, shown: Case): voi
 
 /** A person confirms an expectation drafted from a recording: from now on it counts. */
 export function confirmExpectation(manifest: Manifest, caseId: string, person: string, date: string, shown?: Case): void {
-    const who = text(person, "Your name", 100);
+    const who = personName(person);
     const { c, file } = caseFileOf(manifest, caseId);
     if (!c.expect_draft) throw new ManifestError(`${caseId} has no drafted expectation.`);
     if (shown && JSON.stringify(c) !== JSON.stringify(shown)) throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was confirmed; run \`cmtk review\` again.`);
@@ -430,7 +437,7 @@ export function confirmExpectation(manifest: Manifest, caseId: string, person: s
 
 /** A person rejects a drafted expectation. The case stays, with no `expect:`, and the draft is kept with the reason in rejected.yaml. */
 export function rejectExpectation(manifest: Manifest, caseId: string, person: string, date: string, reason: string, shown?: Case): void {
-    const who = text(person, "Your name", 100);
+    const who = personName(person);
     const why = text(reason, "A reason", 1000);
     const { c, file } = caseFileOf(manifest, caseId);
     if (!c.expect_draft) throw new ManifestError(`${caseId} has no drafted expectation.`);
@@ -449,7 +456,7 @@ export function rejectExpectation(manifest: Manifest, caseId: string, person: st
 
 /** Take a rejected draft out of its file, and keep it with the reason in cmtk/rejected.yaml. */
 export function rejectDraft(manifest: Manifest, caseId: string, person: string, date: string, reason: string): void {
-    const who = text(person, "Your name", 100);
+    const who = personName(person);
     const why = text(reason, "A reason", 1000);
     const { c, file } = caseFileOf(manifest, caseId);
     if (!c.draft) throw new ManifestError(`${caseId} is not a draft.`);

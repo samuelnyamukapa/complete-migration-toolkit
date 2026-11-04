@@ -68,6 +68,14 @@ test("on a draft carrying safe the bulk answer is not even offered", async () =>
     assert.equal(read(dir).D1.draft, true);
 });
 
+test("review refuses a name that reads as an agent, and changes nothing", async () => {
+    const dir = project([{ id: "D1", request: "GET /a", draft: true }]);
+    const r = await review(dir, ["agent: claude", "a"]);
+    assert.notEqual(r.status, 0, r.stdout);
+    assert.match(r.stderr, /A person's name/);
+    assert.equal(read(dir).D1.draft, true);
+});
+
 test("safe written into an accepted case is shown on its own, and a person confirms or removes it", async () => {
     const dir = project([
         { id: "K", request: "POST /read", safe: true },

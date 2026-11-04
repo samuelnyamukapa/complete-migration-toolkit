@@ -51,7 +51,6 @@ export function check(manifest: Manifest): CheckResult {
     const ids = new Set(cases.map((c) => c.id));
     for (const k of known) {
         if (!ids.has(k.case)) warnings.push(`known issue ${k.id}: there is no case ${k.case}.`);
-        if (k.fails.some((f) => f.actual === undefined && f.expected === undefined)) warnings.push(`known issue ${k.id}: one of its failures accepts any answer at that check, so a new way of failing there would be hidden. Copy \`expected\` or \`actual\` from the report.`);
     }
     for (const k of manifest.contracts) {
         if (!k.assembly) continue;

@@ -27,7 +27,7 @@
           "type": "string",
           "description": "A person's name. An agent never approves or accepts anything.",
           "minLength": 1,
-          "pattern": "^(?!\\s*[Aa][Gg][Ee][Nn][Tt]\\b)"
+          "pattern": "^(?!.*\\b[Aa][Gg][Ee][Nn][Tt][Ss]?\\b)"
         },
         "date": {
           "type": [

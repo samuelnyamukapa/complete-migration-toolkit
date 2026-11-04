@@ -4,12 +4,10 @@
 import fs from "node:fs";
 
 import { inside, ManifestError, readStructured } from "./manifest.js";
+import { looksLikeAgent } from "./people.js";
 import type { CaseOutcome, Failure, KnownFailure, KnownIssue, KnownIssueInReport, Manifest } from "./types.js";
 
 export const KNOWN_ISSUE_ID = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
-
-/** Who an agent is recorded as when it proposes. Such a name never accepts anything. */
-const isAgent = (name: string) => /^agent\b/i.test(name.trim());
 
 /** What fails, as a report words it. Numbers are accepted, so `actual: 404` needs no quotes. */
 export function knownFails(raw: unknown, where: string): KnownFailure[] {
@@ -22,6 +20,10 @@ export function knownFails(raw: unknown, where: string): KnownFailure[] {
             if (!["string", "number", "boolean"].includes(typeof f[k])) throw new ManifestError(`${where}: fails[${i}].${k} must be text, copied from the report.`);
             out[k] = String(f[k]);
         }
+        // Without this an entry accepts any failure at that check, and "a failure the entry does not describe is still FAIL" stops being true.
+        // A body's text can't be copied whole, so `check: body` may say what it wanted instead.
+        const says = (v: string | undefined) => v !== undefined && !!v.trim();
+        if (!says(out.actual) && !(out.check === "body" && says(out.expected))) throw new ManifestError(`${where}: fails[${i}] must say how it fails: copy \`actual\` from the report${out.check === "body" ? ", or for a body give `expected`" : ""}. Without it the entry would accept any failure at ${out.check}.`);
         return out;
     });
 }
@@ -42,7 +44,7 @@ export function loadKnownIssues(manifest: Manifest): KnownIssue[] {
         if (seen.has(k.id)) throw new ManifestError(`${where}: the id ${k.id} is used twice.`);
         seen.add(k.id);
         if (k.case.includes("*")) throw new ManifestError(`${where}: \`case\` must name one case. A known issue never covers every case.`);
-        if (isAgent(k.accepted_by)) throw new ManifestError(`${where}: \`accepted_by\` must name a person, not an agent. An agent proposes with cmtk_propose, and a person accepts with \`cmtk review\`.`);
+        if (looksLikeAgent(k.accepted_by)) throw new ManifestError(`${where}: \`accepted_by\` must name a person, not an agent. An agent proposes with cmtk_propose, and a person accepts with \`cmtk review\`.`);
         if (k.target !== undefined && !manifest.targets[k.target]) throw new ManifestError(`${where}: \`target\` names ${JSON.stringify(k.target)}, which is not in targets (${Object.keys(manifest.targets).join(", ")}).`);
         return {
             id: k.id, case: k.case, fails: knownFails(k.fails, where), reason: k.reason, accepted_by: k.accepted_by,

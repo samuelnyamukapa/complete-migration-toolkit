@@ -12,7 +12,7 @@ import { parseArgs } from "node:util";
 import YAML from "yaml";
 
 import {
-    acceptDraft, adaptersFor, confirmSafe, describeSafe, overrideIn, removeSafe, unconfirmedSafe, BOUNDARY_KINDS, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
+    acceptDraft, adaptersFor, looksLikeAgent, confirmSafe, describeSafe, overrideIn, removeSafe, unconfirmedSafe, BOUNDARY_KINDS, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
     initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target, shadow, SHADOW_FORMATS, type ShadowFormat, cleanHistory, HISTORY_MODES, trend, type HistoryMode, planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat, DATA_FORMATS, compareTables, readTables, describeComparison, type Scrubbing, trafficAgainstSchema, loadDataFindings, writeSeed,
 } from "@cmtk/core";
@@ -417,7 +417,7 @@ async function review(manifestFile: string): Promise<number> {
     rl.on("close", () => { stopped = true; });
     try {
         const name = (await rl.question("Your full name: ")).trim();
-        if (!name || name.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(name)) throw new UsageError("A name of up to 100 characters is needed: it goes on everything you accept or reject. Nothing was changed.");
+        if (!name || name.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(name) || looksLikeAgent(name)) throw new UsageError("A person's name of up to 100 characters is needed: it goes on everything you accept or reject. Nothing was changed.");
         const ask = async (all = false): Promise<"a" | "A" | "r" | "s" | "q"> => {
             for (;;) {
                 const raw = (await rl.question(`Accept, reject, skip or quit? [a/${all ? "A/" : ""}r/s/q] `)).trim();

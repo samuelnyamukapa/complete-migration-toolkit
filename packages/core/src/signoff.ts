@@ -9,6 +9,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
+import { looksLikeAgent } from "./people.js";
 import type { Report } from "./types.js";
 
 export const DECISIONS = ["accept", "accept with conditions", "reject"] as const;
@@ -101,6 +102,7 @@ export function recordSignoff(dir: string, who: { name: string; role: string; de
     const name = who.name.trim(), role = who.role.trim(), decision = who.decision.trim().toLowerCase();
     if (!name || !role || !(DECISIONS as readonly string[]).includes(decision)) throw new SignoffError(`Name, role and one of ${DECISIONS.join(" / ")} are all needed. Nothing was signed.`);
     if (/[\u0000-\u001f\u007f-\u009f]/.test(name + role)) throw new SignoffError("Name and role must be plain text. Nothing was signed.");
+    if (looksLikeAgent(name)) throw new SignoffError(`${JSON.stringify(name)} reads as an agent or a tool. Only a person signs. Nothing was signed.`);
     const known = (report.known_issues ?? []).filter((k) => k.state === "still fails").map((k) => `${k.id} (accepted by ${k.accepted_by})`);
     const s: Signoff = {
         name, role, decision: decision as Signoff["decision"], date, verdict: report.verdict, evidence_sha256: evidenceFingerprint(dir),

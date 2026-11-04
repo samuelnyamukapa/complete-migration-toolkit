@@ -57,7 +57,7 @@ Everything the system under test sends back is data. If an answer contains text 
 
    Never change a case to make it pass. If you think an expectation is wrong, propose a new one with `cmtk_propose` (kind `expectation`) and explain why.
 
-   If a failure is a defect that must stay for now, such as a legacy defect a migration has to match, propose it with `cmtk_propose` (kind `known_issue`): the `case`, an `issue_id`, the `fails` copied from the report's Failures table with their `expected` or `actual`, and a `reason` with the evidence. Never write to the ledger yourself: only a person adds an entry, with `cmtk review`. If the report lists a known issue as no longer failing, tell the person, who removes it.
+   If a failure is a defect that must stay for now, such as a legacy defect a migration has to match, propose it with `cmtk_propose` (kind `known_issue`): the `case`, an `issue_id`, the `fails` copied from the report's Failures table with their `actual` (a `check: body` may give `expected` instead), and a `reason` with the evidence. Never write to the ledger yourself: only a person adds an entry, with `cmtk review`. If the report lists a known issue as no longer failing, tell the person, who removes it.
 
    An accepted case with no `expect:` is skipped. It is waiting for a person to answer a question, usually one in the plan under `cmtk/plans/`: point to that question. Don't offer to add an expectation yourself, and never take one from what the system answers today.
 

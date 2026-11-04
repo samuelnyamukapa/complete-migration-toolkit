@@ -152,7 +152,7 @@ test("real output validates, and every field it writes is in its schema", async 
         fs.mkdirSync(path.join(dir, "cmtk/cases"), { recursive: true });
         fs.writeFileSync(path.join(dir, "cmtk.yaml"), `system: s\ntargets:\n  legacy: { base_url: "${a.url}", surfaces: [http] }\n  candidate: { base_url: "${b.url}", surfaces: [http] }\nscrub:\n  json_paths: ["$.at"]\n`);
         fs.writeFileSync(path.join(dir, "cmtk/cases/a.yaml"), "cases:\n  - { id: A-1, requirement: R, request: GET /x, expect: { status: 200 } }\n  - { id: A-2, requirement: R, request: GET /y, expect: { status: 500 } }\n  - { id: A-3, request: POST /y }\n");
-        fs.writeFileSync(path.join(dir, "cmtk/known-issues.yaml"), 'known_issues:\n  - { id: LEG-1, case: A-2, fails: [{ check: status, expected: "500" }], reason: r, accepted_by: Jane Smith }\n');
+        fs.writeFileSync(path.join(dir, "cmtk/known-issues.yaml"), 'known_issues:\n  - { id: LEG-1, case: A-2, fails: [{ check: status, expected: "500", actual: 200 }], reason: r, accepted_by: Jane Smith }\n');
         valid("known-issues.schema.json", read(path.join(dir, "cmtk/known-issues.yaml")), "the ledger");
 
         const reportFields = Object.keys(schemaOf["report.schema.json"].doc.properties);
@@ -257,7 +257,7 @@ test("each exit code in FORMATS.md is what the command does", async () => {
         await expect(project({ "cmtk/cases/a.yaml": "cases:\n  - { id: A, request: GET /ok }\n  - { id: B, request: POST /ok }\n" }), 2, "INCOMPLETE", "compare");
         await expect(project({}), 2, "NO EVIDENCE", "run");
         await expect(project(ok), 3, undefined, "no-such-command");
-        await expect(project({ ...ok, "cmtk/known-issues.yaml": 'known_issues:\n  - { id: K, case: B, fails: [{ check: status, expected: "201" }], reason: r, accepted_by: Jane Smith }\n', "cmtk/cases/a.yaml": "cases:\n  - { id: A, request: GET /ok, expect: { status: 200 } }\n  - { id: B, request: GET /ok, expect: { status: 201 } }\n" }), 4, "PASS WITH KNOWN ISSUES", "run");
+        await expect(project({ ...ok, "cmtk/known-issues.yaml": 'known_issues:\n  - { id: K, case: B, fails: [{ check: status, expected: "201", actual: 200 }], reason: r, accepted_by: Jane Smith }\n', "cmtk/cases/a.yaml": "cases:\n  - { id: A, request: GET /ok, expect: { status: 200 } }\n  - { id: B, request: GET /ok, expect: { status: 201 } }\n" }), 4, "PASS WITH KNOWN ISSUES", "run");
         await expect(project(ok, `targets:\n  legacy: { base_url: "${s.url}", surfaces: [http, more] }\n  candidate: { base_url: "${s.url}", surfaces: [http] }\nadapters:\n  more: { command: node }\n`), 4, "PARTIAL COMPARISON", "compare");
         await expect(project({ "t.log": '"GET /ok HTTP/1.1"\n' }), 4, "NO UNEXPLAINED DIFFERENCES", "shadow", "--from", "t.log", "--rate", "1000");
         await expect(project(ok), 2, undefined, "trend");

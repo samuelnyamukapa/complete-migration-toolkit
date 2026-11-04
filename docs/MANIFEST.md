@@ -128,9 +128,9 @@ known_issues:
     target: legacy               # optional: only on this target
 ```
 
-Every entry needs `id`, `case`, `fails`, `reason` and `accepted_by`. Each item in `fails` needs `check`; `expected` and `actual` are matched exactly when given, and `cmtk check` warns about an item with neither, because it would accept any answer at that check.
+Every entry needs `id`, `case`, `fails`, `reason` and `accepted_by`. Each item in `fails` needs `check` and `actual`, both copied from the report, because without `actual` it would accept any failure at that check. `expected` is optional. A failure at `check: body` may give `expected` instead of `actual`, because a body's text is not stable enough to copy; `cmtk review` warns about that when the entry is proposed. All of them are matched exactly.
 
-- **Only a person adds an entry.** The ledger refuses an entry with no `accepted_by`, or one that names an agent. An agent proposes one with `cmtk_propose` (kind `known_issue`), and a person accepts it with `cmtk review`, which writes the entry with their name.
+- **Only a person adds an entry.** The ledger refuses an entry with no `accepted_by`, or one that reads as an agent or a tool, such as `The agent claude` or `gpt-5`. That catches honest mistakes. It is a name in a file, not proof of who wrote it. An agent proposes one with `cmtk_propose` (kind `known_issue`), and a person accepts it with `cmtk review`, which writes the entry with their name.
 - **It never hides a failure.** The case still reads `FAIL (known issue LEG-1)`, its requirement still shows a failure, and the report lists the ledger. It is not counted as passed, and `cmtk defects` does not draft it again.
 - **It covers only what it describes.** A case fails as a known issue only when every one of its failures is in the ledger. If `GET /api` starts to answer 500 where the entry says 404, that is an ordinary FAIL.
 - **Stale entries are reported.** An entry whose case passes, or fails some other way, or no longer exists, is listed under "No longer failing". A case that did not run, or that `--only` left out, says nothing about its entry.

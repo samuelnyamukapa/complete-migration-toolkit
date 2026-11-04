@@ -277,7 +277,7 @@ test("the eShop example holds LEG-1 as a proposal waiting for a person, not as a
     assert.equal(p.decided_by, undefined);
 });
 
-test("cmtk check warns about an entry that accepts any answer", () => {
+test("cmtk check refuses an entry that accepts any answer", () => {
     const dir = project("http://127.0.0.1:9", LEG_1.replace('{ check: body, expected: JSON }', "{ check: body }"));
-    assert.match(check(manifestOf(dir)).warnings.join("\n"), /known issue LEG-1: one of its failures accepts any answer/);
+    assert.throws(() => check(manifestOf(dir)), /must say how it fails/);
 });
