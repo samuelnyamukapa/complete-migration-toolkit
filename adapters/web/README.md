@@ -82,11 +82,40 @@ A journey needs at least one check. A step that finds nothing makes the case an 
 
 ### What it reports
 
-The answer holds what happened: the checks, the key values, the pages reached with their status, and the API calls each page made. Query strings are left out, because they can hold keys. A screenshot is kept at each milestone and at the end, as evidence: the `journey` level never looks at one.
+The answer holds what happened: the checks, the key values, the pages reached with their status, and the API calls each page made. Query strings are left out, because they can hold keys. A screenshot is kept at each milestone and at the end, as evidence: only the `visual` level looks at one.
 
-## A page visit
+## A page visit, and comparing a reskin
 
-A case with no `journey` opens `request.path` and reports the page.
+A case with no `journey` opens `request.path` and only reads. Its answer holds the page's elements, from the accessibility tree (what a screen reader uses), and a screenshot.
+
+```yaml
+cases:
+  - id: SHOP-PAGE
+    surface: web
+    match: structure     # the same elements, labels and order; styling may differ
+    request: GET /shop
+```
+
+Two levels use this:
+
+- **`structure`:** a reskin. Reported differences have a `where` a person can approve as drift, such as `structure:/shop button "Add to basket"`. Containers with no name, such as a `div` or a plain paragraph, are not elements here, so a reskin may rearrange them.
+- **`visual`:** an upgrade where the look must stay too. It compares `structure` and each screenshot.
+
+A journey is captured the same way at each `reach`, each `capture` and at its end, so these levels also work on a page behind a journey.
+
+**Content that changes:** add a `scrub.regex` rule in `cmtk.yaml` for dates or prices. It applies to names and values. A screenshot needs a mask as well:
+
+```yaml
+    match: visual
+    mask:
+      - { testid: clock }
+```
+
+The mask paints over the same place on both systems. Set `visual_tolerance` in `cmtk.yaml` if a small share of pixels may change.
+
+**What it can't see:** text a stylesheet changes, such as `text-transform: uppercase`, reaches the accessibility tree and reads as a difference; approve it as drift or scrub it. Pages inside frames are not read.
+
+Screenshots can hold personal data, so use test data only.
 
 ## Safety
 

@@ -3,6 +3,7 @@
 import { DOMParser } from "@xmldom/xmldom";
 
 import { diffJourney } from "./journey.js";
+import { diffScreens, diffStructure } from "./structure.js";
 import { entriesOf, isJsonObject, JsonNumber, JsonObject, parseJsonExact } from "./json.js";
 import { matches, parsePath, render, type Location, type Token } from "./jsonpath.js";
 import type { Difference, MatchLevel, Manifest, Observation } from "./types.js";
@@ -207,11 +208,15 @@ export function bodyKind(contentType: string | undefined, body: string): "json" 
 const mediaType = (v: string | undefined) => (v ?? "").split(";")[0]!.trim().toLowerCase();
 
 export function compareObservations(ref: Observation, cand: Observation, manifest: Pick<Manifest, "scrub" | "compare_headers">, level: MatchLevel, hits?: Map<string, number>): Difference[] {
+export function compareObservations(ref: Observation, cand: Observation, manifest: Pick<Manifest, "scrub" | "compare_headers"> & Partial<Pick<Manifest, "visual_tolerance">>, level: MatchLevel): Difference[] {
     const out: Difference[] = [];
     // A journey's status only says whether its checks held, and the checks themselves are compared.
     if (level === "journey") return diffJourney(ref.journey, cand.journey, scrubberOf(manifest));
     if (ref.status !== cand.status) out.push({ where: "status", reference: String(ref.status ?? "(none)"), candidate: String(cand.status ?? "(none)") });
     if (level === "contract") return out;
+    // Styling may differ at `structure`, so only the status and the elements count. `visual` adds the look.
+    if (level === "structure") return out.concat(diffStructure(ref.structure, cand.structure, scrubberOf(manifest)));
+    if (level === "visual") return out.concat(diffStructure(ref.structure, cand.structure, scrubberOf(manifest)), diffScreens(ref.screenshots, cand.screenshots, manifest.visual_tolerance));
     const exact = level === "exact";
     const sc = scrubberOf(manifest, hits);
     for (const name of manifest.compare_headers ?? []) {

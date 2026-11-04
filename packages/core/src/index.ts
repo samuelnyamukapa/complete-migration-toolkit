@@ -10,6 +10,7 @@ export { parseJsonExact, JsonNumber, JsonObject, jsonEqual } from "./json.js";
 export { recordSignoff, signoffState, describeSignoff, evidenceFingerprint, SignoffError, DECISIONS, type Signoff, type SignoffState } from "./signoff.js";
 export { checkExpectation } from "./expect.js";
 export { diffJourney } from "./journey.js";
+export { decodePng, diffScreens, diffStructure, type Pixels } from "./structure.js";
 export { loadKnownIssues, markKnown, knownInReport } from "./known.js";
 export { checkContract, diffOpenApi, diffWsdl } from "./contracts.js";
 export { coveringDrift, covers } from "./drift.js";

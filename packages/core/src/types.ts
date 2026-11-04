@@ -2,12 +2,12 @@
 // every file the toolkit writes, and an adapter in any language can produce them.
 
 /** How strict a comparison is. Set for the whole system, then loosened per path or per case. */
-export type MatchLevel = "exact" | "semantic" | "contract" | "journey";
+export type MatchLevel = "exact" | "semantic" | "contract" | "journey" | "structure" | "visual";
 /** The kinds of boundary `cmtk discover` lists, and an adapter's `covers` names. */
 export const BOUNDARY_KINDS = ["http", "soap", "outbound-http", "database", "files", "email", "sms", "queue", "payments", "worker", "ui", "logs"] as const;
 export type BoundaryKind = (typeof BOUNDARY_KINDS)[number];
 
-export const MATCH_LEVELS: readonly MatchLevel[] = ["exact", "semantic", "contract", "journey"];
+export const MATCH_LEVELS: readonly MatchLevel[] = ["exact", "semantic", "contract", "journey", "structure", "visual"];
 
 /**
  * One system the toolkit can send cases to. `base_url` is needed for HTTP cases; any other
@@ -70,6 +70,8 @@ export interface Manifest {
     scrub: Scrub;
     compare_headers: string[];
     contracts: Contract[];
+    /** At `visual`: the share of a screenshot's pixels that may change, from 0 to 1. */
+    visual_tolerance: number;
     /** Globs, relative to the manifest, of the case files. */
     cases: string[];
     drift: string;
@@ -228,6 +230,24 @@ export interface JourneyOutcome {
     blocked?: { why: string; request: string }[];
 }
 
+/** One element of a page, from its accessibility tree: what a screen reader would announce. */
+export interface PageElement {
+    role: string;
+    name: string;
+    value?: string;
+    level?: number;
+    required?: boolean;
+    disabled?: boolean;
+    checked?: string;
+    readonly?: boolean;
+}
+
+/** A page's elements in reading order, under the page's path or a milestone's name. */
+export interface PageStructure {
+    page: string;
+    elements: PageElement[];
+}
+
 /** A screenshot an adapter took. The engine writes it to the evidence folder. It is evidence, never the test. */
 export interface Screenshot {
     /** The page or milestone it shows. */
@@ -260,6 +280,8 @@ export interface Observation {
     effects?: Record<string, unknown>;
     /** A UI journey's outcome: what the `journey` level compares. */
     journey?: JourneyOutcome;
+    /** Each page's structure: what the `structure` level compares. */
+    structure?: { pages: PageStructure[] };
     /** Screenshots, sent as base64. The engine writes them as files and keeps only their names and fingerprints in the answer. */
     screenshots?: Screenshot[];
     /** How many calls to a model this answer took. An adapter that has no model reports 0. */
@@ -382,6 +404,7 @@ export interface ReportSettings {
     match: MatchLevel;
     overrides: Override[];
     scrub: Scrub;
+    visual_tolerance?: number;
     drift_file: string;
     drift_entries: number;
     known_issues_file?: string;

@@ -29,6 +29,12 @@ export function readStructured(file: string): unknown {
     }
 }
 
+const share = (v: unknown, where: string): number => {
+    if (v === undefined) return 0;
+    if (typeof v !== "number" || !(v >= 0 && v <= 1)) throw new ManifestError(`\`${where}\` must be a number from 0 to 1: the share of a screenshot's pixels that may change.`);
+    return v;
+};
+
 const level = (v: unknown, where: string): MatchLevel => {
     if (v === undefined) return "exact";
     if (!MATCH_LEVELS.includes(v as MatchLevel)) throw new ManifestError(`${where}: match must be one of ${MATCH_LEVELS.join(", ")}.`);
@@ -93,6 +99,7 @@ export function loadManifest(file: string): Manifest {
         match: level(raw.match, "match"),
         overrides,
         scrub: { json_paths: scrub.json_paths ?? [], xml_ignore: scrub.xml_ignore ?? [], regex: scrub.regex ?? [] },
+        visual_tolerance: share(raw.visual_tolerance, "visual_tolerance"),
         compare_headers: (raw.compare_headers ?? ["content-type"]).map((h: string) => String(h).toLowerCase()),
         contracts,
         cases: globsOf(raw.cases),
@@ -341,7 +348,7 @@ targets:
 
 # A target reached only in part can list what it offers: surfaces: [catalog]. See docs/MANIFEST.md.
 
-# How strict \`cmtk compare\` is: exact | semantic | contract, or journey for a UI adapter. Loosen per path with overrides.
+# How strict \`cmtk compare\` is: exact | semantic | contract, or journey, structure or visual for a UI adapter. Loosen per path with overrides.
 match: exact
 overrides: []
 #  - { path: "/api/admin/*", match: semantic }

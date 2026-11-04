@@ -14,8 +14,9 @@ The formats here are frozen by [FORMATS.md](FORMATS.md), and `schemas/` lets an 
 | `default_target` | `candidate`, or the first | The target `cmtk run` uses |
 | `reference` | `legacy`, if present | `cmtk compare`'s reference: today's system |
 | `candidate` | `candidate`, if present | `cmtk compare`'s system under test |
-| `match` | `exact` | `exact`, `semantic`, `contract` or `journey`, for every case (see [Match levels](#match-levels)) |
+| `match` | `exact` | `exact`, `semantic`, `contract`, `journey`, `structure` or `visual`, for every case (see [Match levels](#match-levels)) |
 | `overrides` | `[]` | `{ path: "/api/admin/*", match: semantic }`: a level for the paths a glob matches |
+| `visual_tolerance` | `0` | At `visual`: the share of a screenshot's pixels that may change, from 0 to 1 |
 | `scrub.json_paths` | `[]` | JSON paths replaced before comparing, such as `$..generatedAt` |
 | `scrub.xml_ignore` | `[]` | XML element names whose content is not compared |
 | `scrub.regex` | `[]` | `{ pattern, replace? }` applied to text on both sides |
@@ -50,6 +51,7 @@ A case file holds `cases:`, a list. Each case:
 | `expect` | for `cmtk run` | What the answer must hold (below) |
 | `surface` | no | The adapter that runs it. Default `http` |
 | `journey` | no | For the [web adapter](../adapters/web/README.md): a task written as steps, with checks in code |
+| `mask` | no | For the web adapter: locators of areas painted over in screenshots, such as a clock |
 | `match` | no | This case's level, overriding everything else |
 | `safe` | no | `true` when a person has confirmed a non-GET request changes nothing, such as a read-only SOAP call |
 | `draft` | no | `true` for a case an agent wrote that no person has accepted yet. It is reported as SKIPPED until `cmtk review` accepts it |
@@ -87,8 +89,10 @@ A check on a path that matches several values (with `[*]` or `..`) must hold for
 | `semantic` | The same, ignoring number format, key order and whitespace | A rebuild that may format its answers differently |
 | `contract` | Status only | A rough check, with the contract files doing the rest |
 | `journey` | The goal, each check's result, the key values and the named pages, from an adapter's `journey` report. Paths, status, styling and screenshots may differ. API calls are compared only when the journey sets `compare_api: true` | A new UI: the same goals reached with the same outcomes, whatever the screens look like |
+| `structure` | Status, and each page's accessibility tree: the same elements, labels and order. Styling may differ. `scrub.regex` applies to names and values, for content that changes such as dates and prices | A reskin |
+| `visual` | `structure`, and each screenshot pixel by pixel, with masks painted over changing areas. Compare on one machine with one browser version: fonts and drawing differ between machines | An upgrade where the look must stay the same |
 
-A level that finds nothing to compare never reads as a match. An adapter that reports no journey at `journey`, or a journey with no checks, values or named pages, reads as a difference at `journey`.
+A level that finds nothing to compare never reads as a match. An adapter that reports no journey at `journey`, or a journey with no checks, values or named pages, reads as a difference at `journey`. No structure at `structure` reads as a difference at `structure`, and no screenshot at `visual` as a difference at `visual`.
 
 ## Drift ledger (cmtk/drift.yaml)
 
@@ -190,6 +194,11 @@ The word PARITY is left out of PARTIAL COMPARISON on purpose, so that nobody rea
 | `journey:value:<name>` | A key value a journey read |
 | `journey:page:<name>`, `journey:pages` | A named page reached on one system only, or reached in another order |
 | `journey:api:<method> <path> <status>` | An API call made a different number of times, when the journey asks to compare them |
+| `structure:/shop button "Buy"` | An element on one system only, by page, role and name. A repeated element reads `button "Buy" [2]` |
+| `structure:/shop button "Buy" (moved)` | The element is on both systems, in another order |
+| `structure:/shop textbox "Email" required` | A fact about an element: `level`, `value`, `required`, `disabled`, `checked` or `readonly` |
+| `structure:/shop` | A page reached on one system only |
+| `visual:/shop`, `visual:/shop size` | A screenshot that differs after its masks, or by size |
 | `journey:goal`, `journey` | The journeys have different goals, or an adapter reported nothing to compare |
 | `body encoding` | One system sent UTF-8 and the other did not (checked at `exact`) |
 | `not comparable: <target> has no <surface> surface` | Not a `where`, but a result: a target lacks the case's surface, so nothing was sent |

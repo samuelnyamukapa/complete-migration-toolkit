@@ -51,6 +51,47 @@ function locatorOf(page, l) {
     return l.nth === undefined ? found : found.nth(Number(l.nth));
 }
 
+/** Roles that say nothing to a reader unless they carry a name: a reskin may swap them freely. */
+const CONTAINER = new Set(["generic", "none", "presentation", "paragraph", "list", "listitem", "group", "Section", "div", "Pre", "blockquote", "figure", "Details", "LayoutTable", "LayoutTableRow", "LayoutTableCell", "time", "strong", "emphasis", "code", "subscript", "superscript", "mark", "DescriptionList", "term", "definition"]);
+/** Parts of drawing text, not elements. */
+const NEVER = new Set(["InlineTextBox", "LineBreak", "ListMarker", "ignored", "RootWebArea", "WebArea"]);
+
+/** The page's accessibility tree in reading order, flat: what a screen reader would announce, whatever the styling. */
+export async function pageElements(page) {
+    const cdp = await page.context().newCDPSession(page);
+    try {
+        const { nodes } = await cdp.send("Accessibility.getFullAXTree");
+        const byId = new Map(nodes.map((n) => [n.nodeId, n]));
+        const out = [];
+        const fact = (n, name) => n.properties?.find((p) => p.name === name)?.value?.value;
+        const walk = (n, parent) => {
+            if (!n) return;
+            const role = n.role?.value ?? "none";
+            const name = clean(n.name?.value);
+            let here = parent;
+            const text = role === "StaticText";
+            // Text inside a button or a label is already that element's name.
+            const repeats = text && (parent.role === "LabelText" || (parent.name && parent.name.includes(name)));
+            const shown = !n.ignored && !NEVER.has(role) && role !== "LabelText" && !repeats && (name || !CONTAINER.has(role)) && !(text && !name);
+            if (shown) {
+                const e = { role, name };
+                const value = n.value?.value;
+                if (value !== undefined && value !== "" && role !== "image") e.value = clean(value);
+                for (const f of ["level", "required", "disabled", "readonly"]) { const v = fact(n, f); if (v !== undefined && v !== false) e[f] = v; }
+                const checked = fact(n, "checked");
+                if (checked !== undefined) e.checked = String(checked);
+                out.push(e);
+            }
+            if (!n.ignored && (name || role === "LabelText")) here = { role, name };
+            for (const id of n.childIds ?? []) walk(byId.get(id), here);
+        };
+        walk(nodes.find((n) => !n.parentId), { role: "", name: "" });
+        return out;
+    } finally {
+        await cdp.detach().catch(() => {});
+    }
+}
+
 const ACTIONS = ["click", "fill", "select", "tick"];
 const STEP_KINDS = ["goto", ...ACTIONS, "press", "reach", "read", "check", "capture"];
 
@@ -64,6 +105,7 @@ class Session {
         this.values = {};
         this.checks = [];
         this.shots = [];
+        this.structure = [];
         this.inflight = new Set();
         this.lastStatus = undefined;
         page.on("request", (r) => this.inflight.add(r));
@@ -105,11 +147,17 @@ class Session {
 
     async shoot(label) {
         const png = await this.page.screenshot({ fullPage: true, animations: "disabled", caret: "hide", mask: this.masks(), maskColor: "#808080" }).catch((err) => { process.stderr.write(`no screenshot of ${label}: ${err.message.split("\n")[0]}\n`); return undefined; });
-        if (png) this.shots.push({ page: label, png_base64: png.toString("base64") });
+        if (png) {
+            this.shots = this.shots.filter((s) => s.page !== label);
+            this.shots.push({ page: label, png_base64: png.toString("base64") });
+        }
     }
 
     async capture(label) {
         await this.shoot(label);
+        const elements = await pageElements(this.page).catch((err) => { process.stderr.write(`no structure for ${label}: ${String(err.message).split("\n")[0]}\n`); return []; });
+        this.structure = this.structure.filter((p) => p.page !== label);
+        this.structure.push({ page: label, elements });
     }
 
     /** An element that is on the screen now, or a StepError saying why not. */
@@ -357,15 +405,15 @@ export async function runCase(browser, written, target, headers, baseUrl, secret
     const journey = c.journey;
     const stepMs = Number(journey?.step_timeout_ms ?? target.step_timeout_ms ?? 5000);
     const page = await context.newPage();
-    const session = new Session(page, { stepMs, navMs: Number(target.navigation_timeout_ms ?? 30000), secrets, mask: journey?.mask ?? c.mask, target });
+    const session = new Session(page, { stepMs, navMs: Number(target.navigation_timeout_ms ?? 30000), secrets, mask: c.mask ?? journey?.mask, target });
     await guardRequests(context, session, allowed, writes);
-    const finish = async (obs) => ({ ...obs, ...(session.shots.length ? { screenshots: session.shots } : {}), model_calls: session.modelCalls });
+    const finish = async (obs) => ({ ...obs, ...(session.structure.length ? { structure: { pages: session.structure } } : {}), ...(session.shots.length ? { screenshots: session.shots } : {}), model_calls: session.modelCalls });
     try {
         if (!journey) {
             try {
                 const res = await open(session, c.request.path);
                 await session.capture(session.current());
-                return await finish({ status: res?.status(), headers: { "content-type": "application/json" }, body: JSON.stringify(pageBody(session)) });
+                return await finish({ status: res?.status(), headers: { "content-type": "application/json" }, body: JSON.stringify({ ...pageBody(session), elements: session.structure[0]?.elements ?? [] }) });
             } catch (err) {
                 if (err instanceof StepError) return await finish({ error: err.message });
                 throw err;

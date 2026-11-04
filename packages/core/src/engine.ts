@@ -206,6 +206,7 @@ export function settingsOf(manifest: Manifest, drift: Drift[], known?: KnownIssu
         match: manifest.match,
         overrides: manifest.overrides,
         scrub: manifest.scrub,
+        ...(manifest.visual_tolerance ? { visual_tolerance: manifest.visual_tolerance } : {}),
         drift_file: manifest.drift,
         drift_entries: drift.length,
         ...(known ? { known_issues_file: manifest.known_issues, known_issues_entries: known.length } : {}),

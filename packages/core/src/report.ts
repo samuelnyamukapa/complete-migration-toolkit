@@ -218,6 +218,7 @@ export function renderReport(r: Report): string {
             ...(r.mode === "compare" ? [
                 `- Match level: ${s.match}${s.overrides.length ? `; overrides: ${s.overrides.map((o) => `\`${o.path}\` ${o.match}`).join(", ")}` : ""}`,
                 `- Scrubbed (hidden from every comparison): ${scrubs.length ? scrubs.join(", ") : "nothing"}`,
+                ...(s.visual_tolerance ? [`- Screenshots: up to ${(s.visual_tolerance * 100).toFixed(2)}% of pixels may change (visual_tolerance)`] : []),
                 `- Approved drift: ${s.drift_entries} entr${s.drift_entries === 1 ? "y" : "ies"} in \`${s.drift_file}\``,
             ] : []),
             ...(s.known_issues_file && s.known_issues_entries ? [`- Known issues: ${s.known_issues_entries} entr${s.known_issues_entries === 1 ? "y" : "ies"} for this target in \`${s.known_issues_file}\``] : []), "");
