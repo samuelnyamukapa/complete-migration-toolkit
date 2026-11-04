@@ -6913,14 +6913,14 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs16 = this.flowScalar(this.type);
+              const fs17 = this.flowScalar(this.type);
               if (atNextItem || it2.value) {
-                map.items.push({ start, key: fs16, sep: [] });
+                map.items.push({ start, key: fs17, sep: [] });
                 this.onKeyLine = true;
               } else if (it2.sep) {
-                this.stack.push(fs16);
+                this.stack.push(fs17);
               } else {
-                Object.assign(it2, { key: fs16, sep: [] });
+                Object.assign(it2, { key: fs17, sep: [] });
                 this.onKeyLine = true;
               }
               return;
@@ -7048,13 +7048,13 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs16 = this.flowScalar(this.type);
+              const fs17 = this.flowScalar(this.type);
               if (!it2 || it2.value)
-                fc.items.push({ start: [], key: fs16, sep: [] });
+                fc.items.push({ start: [], key: fs17, sep: [] });
               else if (it2.sep)
-                this.stack.push(fs16);
+                this.stack.push(fs17);
               else
-                Object.assign(it2, { key: fs16, sep: [] });
+                Object.assign(it2, { key: fs17, sep: [] });
               return;
             }
             case "flow-map-end":
@@ -13843,7 +13843,7 @@ var require_lib = __commonJS({
 
 // packages/cli/dist/main.js
 var import_yaml5 = __toESM(require_dist(), 1);
-import fs15 from "node:fs";
+import fs16 from "node:fs";
 import path14 from "node:path";
 import readline2 from "node:readline/promises";
 import { fileURLToPath } from "node:url";
@@ -13904,6 +13904,10 @@ function loadManifest(file) {
     for (const [k2, v2] of Object.entries(spec)) {
       if (k2 === "name")
         throw new ManifestError(`targets.${name}: \`name\` is set from the key; remove it.`);
+      if (k2 === "surfaces") {
+        target2.surfaces = surfaceList(v2, `targets.${name}.surfaces`);
+        continue;
+      }
       if (!["string", "number", "boolean"].includes(typeof v2))
         throw new ManifestError(`targets.${name}.${k2} must be text, a number or true/false.`);
       target2[k2] = v2;
@@ -13935,6 +13939,20 @@ function loadManifest(file) {
     return { name: String(c4.name ?? c4.path), kind: String(c4.kind ?? "text"), path: c4.path };
   });
   const scrub = raw.scrub ?? {};
+  const adapters = adaptersOf(raw.adapters);
+  const known = (surface, where2) => {
+    if (surface !== "http" && !adapters[surface])
+      throw new ManifestError(`${where2} names ${JSON.stringify(surface)}, which has no adapter. Add it under \`adapters:\` in cmtk.yaml, or use http.`);
+  };
+  for (const t3 of Object.values(targets)) {
+    for (const s4 of t3.surfaces ?? [])
+      known(s4, `targets.${t3.name}.surfaces`);
+    if (t3.surfaces?.includes("http") && !t3.base_url)
+      throw new ManifestError(`targets.${t3.name}.surfaces lists http, so it needs a base_url.`);
+  }
+  const compareOnly = raw.compare_only_surfaces === void 0 ? [] : surfaceList(raw.compare_only_surfaces, "compare_only_surfaces");
+  for (const s4 of compareOnly)
+    known(s4, "compare_only_surfaces");
   return {
     system: raw.system,
     targets,
@@ -13948,6 +13966,7 @@ function loadManifest(file) {
     contracts,
     cases: globsOf(raw.cases),
     drift: pathOf(raw.drift, "drift", "cmtk/drift.yaml"),
+    known_issues: pathOf(raw.known_issues, "known_issues", "cmtk/known-issues.yaml"),
     proposals: pathOf(raw.proposals, "proposals", "cmtk/proposals.yaml"),
     explore_requests_per_day: positive(raw.explore_requests_per_day, "explore_requests_per_day", 1e3),
     evidence: pathOf(raw.evidence, "evidence", "cmtk/evidence"),
@@ -13955,10 +13974,16 @@ function loadManifest(file) {
     headers_from_env: raw.headers_from_env ?? {},
     timeout_s: positive(raw.timeout_s, "timeout_s", 30),
     insecure_tls: raw.insecure_tls === true,
-    adapters: adaptersOf(raw.adapters),
+    compare_only_surfaces: compareOnly,
+    adapters,
     root: path.dirname(path.resolve(file)),
     file: path.resolve(file)
   };
+}
+function surfaceList(v2, where2) {
+  if (!Array.isArray(v2) || v2.length === 0 || !v2.every((s4) => typeof s4 === "string" && NAME.test(s4)))
+    throw new ManifestError(`${where2} must be a list of surface names, such as [http, catalog].`);
+  return [...new Set(v2)];
 }
 function globsOf(v2) {
   if (v2 === void 0 || v2 === null)
@@ -14057,6 +14082,10 @@ function loadCases(manifest) {
         level(c4.match, where2);
       if (c4.draft !== void 0 && typeof c4.draft !== "boolean")
         throw new ManifestError(`${where2}: \`draft\` must be true or false.`);
+      if (c4.expect_draft !== void 0 && typeof c4.expect_draft !== "boolean")
+        throw new ManifestError(`${where2}: \`expect_draft\` must be true or false.`);
+      if (c4.expect_draft && !c4.expect)
+        throw new ManifestError(`${where2}: \`expect_draft\` marks a drafted \`expect:\` block, and this case has none.`);
       const method = String(req.method ?? "GET").toUpperCase();
       if (!/^[A-Z]+$/.test(method))
         throw new ManifestError(`${where2}: the method ${JSON.stringify(req.method)} must be letters only, such as GET or POST.`);
@@ -14170,6 +14199,7 @@ targets:
   candidate: { base_url: ${JSON.stringify(candidate)} }   # the system under test
 
 cases: [cmtk/cases/*.yaml]    # one case per acceptance criterion; agents' drafts wait for \`cmtk review\`
+# known_issues: cmtk/known-issues.yaml   # failures a named person accepted; only a person adds an entry
 evidence: cmtk/evidence
 
 allow_unsafe_methods: false   # POST, PUT, PATCH, DELETE only against disposable test data
@@ -14184,6 +14214,8 @@ system: ${system}
 targets:
   legacy:    { base_url: ${JSON.stringify(reference)} }   # the reference: today's system
   candidate: { base_url: ${JSON.stringify(candidate)} }   # the system under test
+
+# A target reached only in part can list what it offers: surfaces: [catalog]. See docs/MANIFEST.md.
 
 # How strict \`cmtk compare\` is: exact | semantic | contract. Loosen per path with overrides.
 match: exact
@@ -14203,6 +14235,7 @@ contracts: []
 
 cases: [cmtk/cases/*.yaml]
 drift: cmtk/drift.yaml        # approved differences, each with a named approver
+# known_issues: cmtk/known-issues.yaml   # failures a named person accepted; only a person adds an entry
 evidence: cmtk/evidence
 
 allow_unsafe_methods: false   # POST, PUT, PATCH, DELETE only against disposable test data
@@ -14212,7 +14245,7 @@ timeout_s: 30
 
 // packages/core/dist/engine.js
 import crypto3 from "node:crypto";
-import fs6 from "node:fs";
+import fs7 from "node:fs";
 import path6 from "node:path";
 
 // packages/core/dist/adapters.js
@@ -15249,7 +15282,7 @@ function checkContract(c4, ref, cand) {
 }
 
 // packages/core/dist/defects.js
-import fs5 from "node:fs";
+import fs6 from "node:fs";
 import path5 from "node:path";
 
 // packages/core/dist/har.js
@@ -15359,6 +15392,24 @@ function redactBody(text2, contentType) {
   }
   return /passw|token|secret|api[-_]?key/i.test(text2) ? [REDACTED, true] : [text2, false];
 }
+var EXPECT_NOTE = "Expectation drafted from the recording: the status and content type legacy answered. That is legacy's behaviour, not the requirement. A person confirms it, or writes what the requirement says.";
+var CACHED_NOTE = "The browser had its own copy, so the recording says 304. A replay sends no If-None-Match, so it gets the page: the draft allows 200 or 304. Keep the one you mean.";
+var NO_ANSWER_NOTE = "The recording holds no answer for this request (the browser cancelled or blocked it), so no expectation was drafted. A person writes one.";
+var MEDIA_TYPE = /^[A-Za-z0-9!#$&^_.+-]+\/[A-Za-z0-9!#$&^_.+-]+$/;
+function draftExpectation(response) {
+  const r6 = response ?? {};
+  const status = Number(r6.status);
+  if (!Number.isInteger(status) || status < 100 || status > 599)
+    return { note: NO_ANSWER_NOTE };
+  if (status === 304)
+    return { expect: { status: [200, 304] }, note: `${EXPECT_NOTE} ${CACHED_NOTE}` };
+  const header = Array.isArray(r6.headers) ? r6.headers.find((h4) => String(h4?.name ?? "").toLowerCase() === "content-type")?.value : void 0;
+  const media = String(header ?? r6.content?.mimeType ?? "").split(";")[0].trim();
+  const expect = { status };
+  if (MEDIA_TYPE.test(media))
+    expect.headers = { "Content-Type": { matches: `^${media.replace(/[.*+?^${}()|[\]\\/]/g, (c4) => c4 === "/" ? c4 : `\\${c4}`)}\\s*(;|$)` } };
+  return { expect, note: EXPECT_NOTE };
+}
 var key = (c4) => crypto2.createHash("sha256").update(JSON.stringify([c4.request.method, c4.request.path, c4.request.body ?? ""])).digest("hex");
 function importHar(files, opts = {}) {
   const inc = opts.include ? new RegExp(opts.include) : void 0;
@@ -15369,6 +15420,8 @@ function importHar(files, opts = {}) {
   const cases = [];
   const dropped = /* @__PURE__ */ new Set();
   const redacted = [];
+  const drafted = [];
+  const noAnswer2 = [];
   let skipped = 0;
   for (const file of files) {
     const har = JSON.parse(fs3.readFileSync(file, "utf8"));
@@ -15429,11 +15482,21 @@ function importHar(files, opts = {}) {
       seen.add(k2);
       if (hidden)
         redacted.push(id);
+      if (opts.draftExpect) {
+        const d4 = draftExpectation(e6?.response);
+        if (d4.expect) {
+          c4.expect = d4.expect;
+          c4.expect_draft = true;
+          drafted.push(id);
+        } else
+          noAnswer2.push(id);
+        c4.draft_note = [c4.draft_note, d4.note].filter(Boolean).join(" ");
+      }
       cases.push(c4);
       n3++;
     }
   }
-  return { cases, skipped, droppedHeaders: [...dropped].sort(), redacted };
+  return { cases, skipped, droppedHeaders: [...dropped].sort(), redacted, drafted, noAnswer: noAnswer2 };
 }
 function casesToYaml(cases, header = "Imported from HAR recordings. Add `requirement:` and `expect:` to turn them into tests.") {
   const plain2 = cases.map(({ file: _f, ...c4 }) => c4);
@@ -15443,11 +15506,93 @@ function casesToYaml(cases, header = "Imported from HAR recordings. Add `require
 
 // packages/core/dist/proposals.js
 var import_yaml3 = __toESM(require_dist(), 1);
-import fs4 from "node:fs";
+import fs5 from "node:fs";
 import path4 from "node:path";
+
+// packages/core/dist/known.js
+import fs4 from "node:fs";
+var KNOWN_ISSUE_ID = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
+var isAgent = (name) => /^agent\b/i.test(name.trim());
+function knownFails(raw, where2) {
+  if (!Array.isArray(raw) || raw.length === 0)
+    throw new ManifestError(`${where2}: \`fails\` must list what fails, each as { check, expected?, actual? } copied from the report.`);
+  return raw.map((f4, i8) => {
+    if (typeof f4?.check !== "string" || !f4.check.trim() || f4.check.includes("*"))
+      throw new ManifestError(`${where2}: fails[${i8}] needs \`check\`, copied from the report, such as status or $.count. A wildcard is not allowed: an entry names one failure.`);
+    const out = { check: f4.check };
+    for (const k2 of ["expected", "actual"]) {
+      if (f4[k2] === void 0 || f4[k2] === null)
+        continue;
+      if (!["string", "number", "boolean"].includes(typeof f4[k2]))
+        throw new ManifestError(`${where2}: fails[${i8}].${k2} must be text, copied from the report.`);
+      out[k2] = String(f4[k2]);
+    }
+    return out;
+  });
+}
+function loadKnownIssues(manifest) {
+  const file = inside(manifest, manifest.known_issues);
+  if (!fs4.existsSync(file))
+    return [];
+  const doc = readStructured(file);
+  const list = Array.isArray(doc) ? doc : doc?.known_issues ?? [];
+  if (!Array.isArray(list))
+    throw new ManifestError(`${manifest.known_issues} must hold \`known_issues:\` with a list.`);
+  const seen = /* @__PURE__ */ new Set();
+  return list.map((k2, i8) => {
+    const where2 = `${manifest.known_issues} entry ${i8 + 1}`;
+    for (const f4 of ["id", "case", "reason", "accepted_by"]) {
+      if (typeof k2?.[f4] !== "string" || !k2[f4].trim())
+        throw new ManifestError(`${where2}: \`${f4}\` is required. Only a named person accepts a known issue.`);
+    }
+    if (!KNOWN_ISSUE_ID.test(k2.id))
+      throw new ManifestError(`${where2}: \`id\` must be letters, digits, '.', '-' and '_'.`);
+    if (seen.has(k2.id))
+      throw new ManifestError(`${where2}: the id ${k2.id} is used twice.`);
+    seen.add(k2.id);
+    if (k2.case.includes("*"))
+      throw new ManifestError(`${where2}: \`case\` must name one case. A known issue never covers every case.`);
+    if (isAgent(k2.accepted_by))
+      throw new ManifestError(`${where2}: \`accepted_by\` must name a person, not an agent. An agent proposes with cmtk_propose, and a person accepts with \`cmtk review\`.`);
+    if (k2.target !== void 0 && !manifest.targets[k2.target])
+      throw new ManifestError(`${where2}: \`target\` names ${JSON.stringify(k2.target)}, which is not in targets (${Object.keys(manifest.targets).join(", ")}).`);
+    return {
+      id: k2.id,
+      case: k2.case,
+      fails: knownFails(k2.fails, where2),
+      reason: k2.reason,
+      accepted_by: k2.accepted_by,
+      ...k2.date ? { date: String(k2.date) } : {},
+      ...k2.target ? { target: k2.target } : {}
+    };
+  });
+}
+var covers = (k2, f4) => k2.check === f4.check && (k2.expected === void 0 || k2.expected === f4.expected) && (k2.actual === void 0 || k2.actual === f4.actual);
+function markKnown(caseId, failures, entries) {
+  const mine = entries.filter((k2) => k2.case === caseId);
+  for (const f4 of failures) {
+    const hit = mine.find((k2) => k2.fails.some((x2) => covers(x2, f4)));
+    if (hit)
+      f4.known_issue = hit.id;
+  }
+  return failures.length && failures.every((f4) => f4.known_issue) ? [...new Set(failures.map((f4) => f4.known_issue))].sort() : void 0;
+}
+function knownInReport(entries, outcomes, allCaseIds) {
+  return entries.map((k2) => {
+    const o4 = outcomes.find((c4) => c4.id === k2.case);
+    if (!o4)
+      return { ...k2, state: allCaseIds.has(k2.case) ? "not checked" : "no longer fails" };
+    if (o4.result !== "PASS" && o4.result !== "FAIL")
+      return { ...k2, state: "not checked" };
+    return { ...k2, state: o4.failures?.some((f4) => f4.known_issue === k2.id) ? "still fails" : "no longer fails" };
+  });
+}
+
+// packages/core/dist/proposals.js
 var HEADER = "# Proposals from agents. Each one waits for a person: only `cmtk review` accepts or rejects it.\n";
+var KNOWN_ISSUES_HEADER = "# Known issues: failures of `cmtk run` a named person accepted. Only a person adds an entry.\n# Each still shows as a failure, and anything an entry does not describe is an ordinary FAIL.\nknown_issues: []\n";
 function editYaml(file, fallback, fn) {
-  const text2 = fs4.existsSync(file) ? fs4.readFileSync(file, "utf8") : fallback;
+  const text2 = fs5.existsSync(file) ? fs5.readFileSync(file, "utf8") : fallback;
   const crlf = text2.includes("\r\n");
   const doc = import_yaml3.default.parseDocument(text2);
   if (doc.errors.length)
@@ -15456,8 +15601,8 @@ function editYaml(file, fallback, fn) {
   let out = doc.toString({ lineWidth: 0 });
   if (crlf)
     out = out.replace(/\r?\n/g, "\r\n");
-  fs4.mkdirSync(path4.dirname(file), { recursive: true });
-  fs4.writeFileSync(file, out, "utf8");
+  fs5.mkdirSync(path4.dirname(file), { recursive: true });
+  fs5.writeFileSync(file, out, "utf8");
 }
 function seqAt(doc, key2) {
   const block = (s5) => {
@@ -15479,9 +15624,9 @@ function seqAt(doc, key2) {
 }
 function loadProposals(manifest) {
   const file = inside(manifest, manifest.proposals);
-  if (!fs4.existsSync(file))
+  if (!fs5.existsSync(file))
     return [];
-  const doc = import_yaml3.default.parse(fs4.readFileSync(file, "utf8"));
+  const doc = import_yaml3.default.parse(fs5.readFileSync(file, "utf8"));
   const list = Array.isArray(doc) ? doc : doc?.proposals ?? [];
   return list.filter((p4) => p4 && typeof p4.id === "string");
 }
@@ -15503,6 +15648,8 @@ function describeProposal(p4) {
     lines.push(`  hide on every run: ${q2(p4.rule)}`);
   if (p4.kind === "drift")
     lines.push(`  approve the difference at ${q2(p4.where)} for ${p4.case === "*" ? "EVERY case" : `case ${q2(p4.case)}`}`);
+  if (p4.kind === "known_issue")
+    lines.push(`  record known issue ${p4.issue_id ? q2(p4.issue_id) : "(the next free id)"}: case ${q2(p4.case)}${p4.target ? ` on target ${q2(p4.target)}` : ""} may keep failing like this: ${q2(p4.fails)}`, "  it still shows as a failure, and the run can read PASS WITH KNOWN ISSUES, with your name on it");
   if (p4.kind === "defect")
     lines.push(`  defect: ${q2(p4.title)}`, `  cases: ${q2(p4.cases)}`, ...p4.summary ? [`  summary: ${plain(p4.summary)}`] : []);
   if (p4.kind === "expectation")
@@ -15571,6 +15718,16 @@ function decideProposal(manifest, id, accept, person, date, note, shown) {
     });
     applied = `${next} in ${manifest.drift}`;
   }
+  if (p4.kind === "known_issue") {
+    const ledger = loadKnownIssues(manifest);
+    const next = p4.issue_id ?? `KNOWN-${String(1 + Math.max(0, ...ledger.map((k2) => Number(/^KNOWN-(\d+)$/.exec(k2.id)?.[1] ?? 0)))).padStart(3, "0")}`;
+    if (ledger.some((k2) => k2.id === next))
+      throw new ManifestError(`The ledger already holds ${next}. Nothing was applied.`);
+    editYaml(inside(manifest, manifest.known_issues), KNOWN_ISSUES_HEADER, (doc) => {
+      seqAt(doc, "known_issues").add(doc.createNode({ id: next, case: p4.case, fails: p4.fails, reason: p4.reason, accepted_by: who, date, ...p4.target ? { target: p4.target } : {} }));
+    });
+    applied = `${next} in ${manifest.known_issues}`;
+  }
   if (p4.kind === "defect")
     applied = "listed by `cmtk defects compare`";
   if (p4.kind === "expectation") {
@@ -15578,6 +15735,7 @@ function decideProposal(manifest, id, accept, person, date, note, shown) {
     editYaml(file, "", (doc) => {
       const { node } = caseNode(doc, p4.case);
       node.set("expect", doc.createNode(p4.expect));
+      node.delete("expect_draft");
       node.set("expect_changed_by", who);
       node.set("expect_changed_on", date);
     });
@@ -15601,6 +15759,47 @@ function acceptDraft(manifest, caseId, person, date, shown) {
       node.set("note", c4.draft_note);
     node.set("accepted_by", who);
     node.set("accepted_on", date);
+    if (c4.expect_draft) {
+      node.delete("expect_draft");
+      node.set("expect_confirmed_by", who);
+      node.set("expect_confirmed_on", date);
+    }
+  });
+}
+function confirmExpectation(manifest, caseId, person, date, shown) {
+  const who = text(person, "Your name", 100);
+  const { c: c4, file } = caseFileOf(manifest, caseId);
+  if (!c4.expect_draft)
+    throw new ManifestError(`${caseId} has no drafted expectation.`);
+  if (shown && JSON.stringify(c4) !== JSON.stringify(shown))
+    throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was confirmed; run \`cmtk review\` again.`);
+  editYaml(file, "", (doc) => {
+    const { node } = caseNode(doc, caseId);
+    node.delete("expect_draft");
+    node.delete("draft_note");
+    if (c4.draft_note)
+      node.set("note", c4.draft_note);
+    node.set("expect_confirmed_by", who);
+    node.set("expect_confirmed_on", date);
+  });
+}
+function rejectExpectation(manifest, caseId, person, date, reason, shown) {
+  const who = text(person, "Your name", 100);
+  const why = text(reason, "A reason", 1e3);
+  const { c: c4, file } = caseFileOf(manifest, caseId);
+  if (!c4.expect_draft)
+    throw new ManifestError(`${caseId} has no drafted expectation.`);
+  if (shown && JSON.stringify(c4) !== JSON.stringify(shown))
+    throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was changed; run \`cmtk review\` again.`);
+  const rejected = inside(manifest, path4.join(path4.dirname(manifest.proposals), "rejected.yaml"));
+  editYaml(rejected, "# Draft cases a person rejected, with the reason. Kept so the same draft is not proposed again.\nrejected: []\n", (doc) => {
+    seqAt(doc, "rejected").add(doc.createNode({ id: c4.id, expect: c4.expect, rejected_by: who, rejected_on: date, rejected_because: why }));
+  });
+  editYaml(file, "", (doc) => {
+    const { node } = caseNode(doc, caseId);
+    node.delete("expect");
+    node.delete("expect_draft");
+    node.delete("draft_note");
   });
 }
 function rejectDraft(manifest, caseId, person, date, reason) {
@@ -15680,16 +15879,16 @@ var fieldOf = (c4) => /^(\$(?:\.[A-Za-z_][\w]*|\[\d+\]|\[\*\])*)\b/.exec(c4?.nam
 function draftDefects(manifest, mode) {
   const dir = inside(manifest, path5.join(manifest.evidence, mode));
   const reportFile = path5.join(dir, "REPORT.json");
-  if (!fs5.existsSync(reportFile))
+  if (!fs6.existsSync(reportFile))
     throw new ManifestError(`There is no ${mode} report yet. Run \`cmtk ${mode}\` first.`);
-  const report = JSON.parse(fs5.readFileSync(reportFile, "utf8"));
+  const report = JSON.parse(fs6.readFileSync(reportFile, "utf8"));
   const clean2 = redactor(manifest);
   const cases = new Map(loadCases(manifest).map((c4) => [c4.id, c4]));
   const [targetName, targetWhere] = Object.entries(report.targets).at(-1) ?? ["the target", ""];
   const target2 = `${targetName}${targetWhere ? ` (${clean2(cleanUrl(targetWhere))})` : ""}`;
   const groups = /* @__PURE__ */ new Map();
   for (const c4 of report.cases) {
-    if (mode === "run" && c4.result === "FAIL") {
+    if (mode === "run" && c4.result === "FAIL" && !c4.known_issues) {
       const f4 = c4.failures ?? [];
       const key2 = f4.map((x2) => `${norm(x2.check)}|${x2.expected}|${x2.actual}`).join("\n") + (fieldOf(cases.get(c4.id)) ? `
 field:${fieldOf(cases.get(c4.id))}` : "");
@@ -15765,16 +15964,16 @@ field:${fieldOf(cases.get(c4.id))}` : "");
   }
   if (!drafts.length)
     L2.push("No defects: nothing failed.", "");
-  fs5.writeFileSync(path5.join(dir, "DEFECTS.md"), L2.join("\n"), "utf8");
-  fs5.writeFileSync(path5.join(dir, "DEFECTS.json"), JSON.stringify(drafts, null, 2) + "\n", "utf8");
+  fs6.writeFileSync(path5.join(dir, "DEFECTS.md"), L2.join("\n"), "utf8");
+  fs6.writeFileSync(path5.join(dir, "DEFECTS.json"), JSON.stringify(drafts, null, 2) + "\n", "utf8");
   return { file: path5.relative(manifest.root, path5.join(dir, "DEFECTS.md")), drafts };
 }
 
 // packages/core/dist/drift.js
 function coveringDrift(ledger, caseId, where2) {
-  return ledger.find((d4) => (d4.case === "*" || d4.case === caseId) && covers(d4.where, where2));
+  return ledger.find((d4) => (d4.case === "*" || d4.case === caseId) && covers2(d4.where, where2));
 }
-function covers(pattern, where2) {
+function covers2(pattern, where2) {
   for (const prefix of ["", "effects:"]) {
     if (pattern.startsWith(prefix + "$") && where2.startsWith(prefix + "$")) {
       try {
@@ -15886,14 +16085,53 @@ function noise(cases) {
   }
   return out;
 }
+var RAN = /* @__PURE__ */ new Set(["MATCH", "DRIFT", "DIFFERENT"]);
+function scopeOf(cases, contracts, surfaces) {
+  const lists = Object.entries(surfaces);
+  if (!lists.some(([, l4]) => l4))
+    return void 0;
+  const listed = [...new Set(lists.flatMap(([, l4]) => l4 ?? []))].sort();
+  const lacks = (s4) => lists.filter(([, l4]) => l4 && !l4.includes(s4)).map(([n3]) => n3);
+  const words = (names, s4) => `${names.join(" and ")} ${names.length > 1 ? "have" : "has"} no ${s4} surface`;
+  const count = /* @__PURE__ */ new Map();
+  for (const c4 of cases)
+    if (RAN.has(c4.result))
+      count.set(c4.surface, (count.get(c4.surface) ?? 0) + 1);
+  const compared = [...count].sort().map(([surface, n3]) => ({ surface, cases: n3 }));
+  const out = /* @__PURE__ */ new Map();
+  for (const c4 of cases)
+    if (c4.result === "NOT COMPARABLE")
+      out.set(c4.surface, (out.get(c4.surface) ?? 0) + 1);
+  for (const s4 of listed)
+    if (lacks(s4).length && !out.has(s4))
+      out.set(s4, 0);
+  const not_compared = [...out].sort().map(([surface, n3]) => ({ surface, cases: n3, why: words(lacks(surface), surface) }));
+  const no_cases = listed.filter((s4) => !lacks(s4).length && !count.has(s4));
+  const contracts_not_compared = contracts.filter((k2) => k2.result === "NOT COMPARABLE").map((k2) => k2.name);
+  const whole = !not_compared.length && !no_cases.length && !contracts_not_compared.length;
+  const statement = whole ? `Every surface the targets list was compared: ${compared.map((c4) => c4.surface).join(", ")}.` : `This comparison covers only ${compared.map((c4) => c4.surface).join(", ") || "no surface at all"}, not the whole system. Not compared: ${[
+    ...not_compared.map((n3) => `${n3.cases ? `${plural(n3.cases, "case")} on ${n3.surface}` : n3.surface} (${n3.why})`),
+    ...no_cases.map((s4) => `${s4} (no case compared it)`),
+    ...contracts_not_compared.map((k2) => `contract ${k2}`)
+  ].join("; ")}.`;
+  return { whole, statement, compared, not_compared, no_cases, contracts_not_compared };
+}
 function summarise(x2) {
   const counts = {};
   const keys = x2.mode === "run" ? ["PASS", "FAIL", "SKIPPED", "ERROR"] : ["MATCH", "DRIFT", "DIFFERENT", "SKIPPED", "ERROR"];
   for (const k2 of keys)
-    counts[k2] = x2.cases.filter((c4) => c4.result === k2).length;
-  const decided = decide(x2, counts);
+    counts[k2] = x2.cases.filter((c4) => c4.result === k2 && !c4.known_issues).length;
+  const knownFailing = x2.cases.filter((c4) => c4.known_issues).length;
+  if (knownFailing)
+    counts["KNOWN ISSUE"] = knownFailing;
+  const notComparable = x2.cases.filter((c4) => c4.result === "NOT COMPARABLE").length;
+  if (notComparable)
+    counts["NOT COMPARABLE"] = notComparable;
+  const scope = x2.mode === "compare" && x2.surfaces ? scopeOf(x2.cases, x2.contracts, x2.surfaces) : void 0;
+  const stale = (x2.known ?? []).filter((k2) => k2.state === "no longer fails").map((k2) => k2.id).sort();
+  const decided = decide({ ...x2, scope }, counts);
   const { verdict, next } = decided;
-  const reason = decided.reason + (x2.excludedDrafts ? ` ${x2.excludedDrafts} draft case${x2.excludedDrafts === 1 ? " was" : "s were"} left out (--accepted-only).` : "");
+  const reason = decided.reason + (scope && !scope.whole ? ` ${scope.statement}` : "") + (x2.excludedCompareOnly ? ` ${plural(x2.excludedCompareOnly, "case")} on a compare-only surface (${x2.compareOnlySurfaces.join(", ")}) ${x2.excludedCompareOnly === 1 ? "was" : "were"} left out: \`cmtk compare\` covers ${x2.excludedCompareOnly === 1 ? "it" : "them"}.` : "") + (stale.length ? ` ${stale.length === 1 ? "A known issue no longer fails" : "Known issues no longer fail"} (${stale.join(", ")}): a person removes ${stale.length === 1 ? "it" : "them"} from the ledger.` : "") + (x2.excludedDrafts ? ` ${x2.excludedDrafts} draft case${x2.excludedDrafts === 1 ? " was" : "s were"} left out (--accepted-only).` : "");
   const reqs = /* @__PURE__ */ new Map();
   for (const c4 of x2.cases) {
     for (const r6 of c4.requirement.length ? c4.requirement : ["(no requirement named)"]) {
@@ -15919,22 +16157,25 @@ function summarise(x2) {
     cases: x2.cases,
     contracts: x2.contracts,
     requirements: [...reqs].map(([requirement, v2]) => ({ requirement, ...v2 })).sort((a4, b2) => a4.requirement.localeCompare(b2.requirement)),
-    unused_drift: unusedDrift(x2),
+    unused_drift: unusedDrift({ ...x2, partial: x2.partial || !!(scope && !scope.whole) }),
+    ...x2.known?.length ? { known_issues: x2.known, stale_known_issues: stale } : {},
     suggested_scrubs: x2.mode === "compare" ? noise(x2.cases) : [],
     partial: x2.partial,
     ...x2.excludedDrafts ? { excluded_drafts: x2.excludedDrafts } : {},
+    ...x2.excludedCompareOnly ? { excluded_compare_only: x2.excludedCompareOnly } : {},
+    ...scope ? { scope } : {},
     ...x2.settings ? { settings: x2.settings } : {},
     reason,
     next
   };
 }
 function unusedDrift(x2) {
-  const ran = new Set(x2.cases.map((c4) => c4.id));
+  const ran = new Set(x2.cases.filter((c4) => c4.result !== "NOT COMPARABLE").map((c4) => c4.id));
   return x2.drift.filter((d4) => !x2.usedDrift.has(d4.id) && (!x2.partial || ran.has(d4.case))).map((d4) => d4.id).sort();
 }
 var plural = (n3, one, many = `${one}s`) => `${n3} ${n3 === 1 ? one : many}`;
 function decide(x2, counts) {
-  const ran = x2.cases.filter((c4) => c4.result !== "SKIPPED" && c4.result !== "ERROR").length;
+  const ran = x2.cases.filter((c4) => c4.result !== "SKIPPED" && c4.result !== "ERROR" && c4.result !== "NOT COMPARABLE").length;
   const errored = x2.cases.filter((c4) => c4.result === "ERROR");
   const skipped = x2.cases.filter((c4) => c4.result === "SKIPPED");
   const again = `\`cmtk ${x2.mode}\` again`;
@@ -15947,16 +16188,21 @@ function decide(x2, counts) {
   };
   const notRun = () => [errored.length && `${plural(errored.length, "case")} could not run`, skipped.length && `${plural(skipped.length, "case")} were skipped`].filter(Boolean).join(" and ");
   if (x2.mode === "run") {
+    const stillFailing = (x2.known ?? []).filter((k2) => x2.cases.some((c4) => c4.known_issues?.includes(k2.id)));
+    const known = counts["KNOWN ISSUE"] ?? 0;
+    const knownWords = known ? ` ${plural(known, "case")} failed only as known issues (${stillFailing.map((k2) => `${k2.id}, accepted by ${k2.accepted_by}`).join("; ")}).` : "";
     if (x2.cases.length === 0)
       return { verdict: "NO EVIDENCE", reason: "There are no cases.", next: "add cases (cmtk/cases/*.yaml, or `cmtk import-har`), then `cmtk run`." };
     if (counts.FAIL)
-      return { verdict: "FAIL", reason: `${plural(counts.FAIL, "case")} failed.`, next: "fix what failed (or correct an expectation with the person who owns the requirement), then `cmtk run` again." };
+      return { verdict: "FAIL", reason: `${plural(counts.FAIL, "case")} failed.${knownWords}`, next: "fix what failed (or correct an expectation with the person who owns the requirement), then `cmtk run` again." };
     if (ran === 0)
       return { verdict: "NO EVIDENCE", reason: `No case ran: ${notRun()}.`, next: why() };
     if (errored.length || skipped.length)
-      return { verdict: "INCOMPLETE", reason: `${notRun()}.`, next: why() };
+      return { verdict: "INCOMPLETE", reason: `${notRun()}.${knownWords}`, next: why() };
     if (x2.partial)
-      return { verdict: "INCOMPLETE", reason: `Only the ${plural(ran, "case")} named with --only ran, and all passed.`, next: "run every case with `cmtk run` before anyone signs." };
+      return { verdict: "INCOMPLETE", reason: `Only the ${plural(ran, "case")} named with --only ran, ${known ? "with no new failures" : "and all passed"}.${knownWords}`, next: "run every case with `cmtk run` before anyone signs." };
+    if (known)
+      return { verdict: "PASS WITH KNOWN ISSUES", reason: `${plural(ran - known, "case")} passed.${knownWords} These still fail: they are accepted, not fixed.`, next: "a person reviews the report, known issues included, and signs it with `cmtk signoff run`." };
     return { verdict: "PASS", reason: `All ${plural(ran, "case")} passed.`, next: "a person reviews the report and signs it with `cmtk signoff run`." };
   }
   const openFindings = x2.contracts.flatMap((k2) => k2.findings.filter((f4) => f4.where && !f4.drift));
@@ -15969,8 +16215,9 @@ function decide(x2, counts) {
   if (x2.cases.length === 0) {
     return { verdict: "NO EVIDENCE", reason: x2.contracts.length ? "Only the contracts were checked; there are no cases to compare behaviour." : "There are no cases and no contracts.", next: "add cases (cmtk/cases/*.yaml, or `cmtk import-har`), then `cmtk compare`." };
   }
+  const notComparable = counts["NOT COMPARABLE"] ?? 0;
   if (ran === 0)
-    return { verdict: "NO EVIDENCE", reason: `No case ran: ${notRun()}.`, next: why() };
+    return { verdict: "NO EVIDENCE", reason: `No case ran: ${[notRun(), notComparable && `${plural(notComparable, "case")} not comparable`].filter(Boolean).join(" and ")}.`, next: why() || "add cases on a surface both targets offer, then `cmtk compare`." };
   if (errored.length || skipped.length || contractErrors.length) {
     const parts = [notRun(), contractErrors.length && `${plural(contractErrors.length, "contract")} could not be checked`].filter(Boolean);
     return { verdict: "INCOMPLETE", reason: `${parts.join(" and ")}.`, next: why() || `see the contracts table (${contractErrors[0]?.findings[0]?.what ?? ""}), fix that, then \`cmtk compare\` again.` };
@@ -15978,13 +16225,15 @@ function decide(x2, counts) {
   const drifted = counts.DRIFT || approvedFindings.length;
   if (x2.partial)
     return { verdict: "INCOMPLETE", reason: `Only the ${plural(ran, "case")} named with --only ran, with no unapproved differences.`, next: "compare every case with `cmtk compare` before anyone signs." };
+  if (x2.scope && !x2.scope.whole)
+    return { verdict: "PARTIAL COMPARISON", reason: drifted ? "On what was compared, every difference is approved drift." : "On what was compared, there are no differences.", next: "a person reads the scope and signs with `cmtk signoff compare` for what was compared. The rest of the system still has to be compared." };
   return drifted ? { verdict: "DRIFT ONLY", reason: "Every difference is approved drift.", next: "a person reviews the report and signs it with `cmtk signoff compare`." } : { verdict: "PARITY", reason: "No differences at all.", next: "a person reviews the report and signs it with `cmtk signoff compare`." };
 }
 var cell = (v2) => String(v2).replace(/\|/g, "\\|").replace(/\r?\n/g, " ").replace(/`/g, "'");
 function renderReport(r6) {
   const L2 = [];
   const title = r6.mode === "run" ? "Test report" : "Comparison report";
-  L2.push(`# ${title}: ${r6.system}`, "", `**Verdict: ${r6.verdict}**${r6.partial ? " (partial run: only some cases)" : ""}`, "", r6.reason, "", `Next: ${r6.next}`, "");
+  L2.push(`# ${title}: ${r6.system}`, "", `**Verdict: ${r6.verdict}**${r6.partial ? " (partial run: only some cases)" : ""}${r6.scope && !r6.scope.whole ? " (only part of the system: see Scope)" : ""}`, "", r6.reason, "", `Next: ${r6.next}`, "");
   L2.push(`- Date: ${r6.date}`);
   for (const [name, url] of Object.entries(r6.targets))
     L2.push(`- ${name}: \`${url}\``);
@@ -15997,7 +16246,19 @@ function renderReport(r6) {
       `- Match level: ${s4.match}${s4.overrides.length ? `; overrides: ${s4.overrides.map((o4) => `\`${o4.path}\` ${o4.match}`).join(", ")}` : ""}`,
       `- Scrubbed (hidden from every comparison): ${scrubs.length ? scrubs.join(", ") : "nothing"}`,
       `- Approved drift: ${s4.drift_entries} entr${s4.drift_entries === 1 ? "y" : "ies"} in \`${s4.drift_file}\``
-    ] : [], "");
+    ] : [], ...s4.known_issues_file && s4.known_issues_entries ? [`- Known issues: ${s4.known_issues_entries} entr${s4.known_issues_entries === 1 ? "y" : "ies"} for this target in \`${s4.known_issues_file}\``] : [], "");
+  }
+  if (r6.scope) {
+    L2.push("## Scope", "", r6.scope.statement, "");
+    for (const c4 of r6.scope.compared)
+      L2.push(`- Compared: ${c4.surface}, ${c4.cases} case${c4.cases === 1 ? "" : "s"}`);
+    for (const n3 of r6.scope.not_compared)
+      L2.push(`- Not compared: ${n3.surface}, ${n3.cases} case${n3.cases === 1 ? "" : "s"}: ${cell(n3.why)}`);
+    for (const s4 of r6.scope.no_cases)
+      L2.push(`- Not compared: ${s4}: both targets offer it, and no case compared it`);
+    for (const k2 of r6.scope.contracts_not_compared)
+      L2.push(`- Not compared: contract ${cell(k2)}`);
+    L2.push("");
   }
   L2.push("## Requirements", "", "| Requirement | Cases | Passed | Failed | Not run |", "| --- | --- | --- | --- | --- |");
   for (const q2 of r6.requirements)
@@ -16016,7 +16277,8 @@ function renderReport(r6) {
   L2.push("", "## Cases", "", r6.mode === "compare" ? "| Case | Request | Level | Result |" : "| Case | Request | Requirement | Result |", "| --- | --- | --- | --- |");
   for (const c4 of r6.cases) {
     const mid = r6.mode === "compare" ? c4.match ?? "" : c4.requirement.join(", ") || "\u2014";
-    L2.push(`| ${c4.id} | ${cell(c4.name)} | ${cell(mid)} | ${c4.result}${c4.why ? ` \u2014 ${cell(c4.why)}` : ""} |`);
+    const shown = c4.known_issues ? `FAIL (known issue ${c4.known_issues.join(", ")})` : c4.result;
+    L2.push(`| ${c4.id} | ${cell(c4.name)} | ${cell(mid)} | ${c4.result === "NOT COMPARABLE" ? cell(c4.why) : `${shown}${c4.why ? ` \u2014 ${cell(c4.why)}` : ""}`} |`);
   }
   const sent = r6.cases.filter((c4) => c4.inputs?.length);
   if (sent.length) {
@@ -16033,9 +16295,19 @@ function renderReport(r6) {
   }
   const fails = r6.cases.flatMap((c4) => (c4.failures ?? []).map((f4) => [c4.id, f4]));
   if (fails.length) {
-    L2.push("", "## Failures", "", "| Case | Check | Expected | Actual |", "| --- | --- | --- | --- |");
+    const anyKnown = fails.some(([, f4]) => f4.known_issue);
+    L2.push("", "## Failures", "", `| Case | Check | Expected | Actual |${anyKnown ? " Known issue |" : ""}`, `| --- | --- | --- | --- |${anyKnown ? " --- |" : ""}`);
     for (const [id, f4] of fails.slice(0, 500))
-      L2.push(`| ${id} | \`${cell(f4.check)}\` | ${cell(f4.expected)} | ${cell(f4.actual)} |`);
+      L2.push(`| ${id} | \`${cell(f4.check)}\` | ${cell(f4.expected)} | ${cell(f4.actual)} |${anyKnown ? ` ${f4.known_issue ?? "\u2014"} |` : ""}`);
+  }
+  if (r6.known_issues?.length) {
+    L2.push("", "## Known issues", "", "Failures a named person accepted. Each still fails: it is accepted, not fixed. Anything an entry does not describe is an ordinary failure.", "", "| Id | Case | What fails | Reason | Accepted by | Date | This run |", "| --- | --- | --- | --- | --- | --- | --- |");
+    for (const k2 of r6.known_issues) {
+      const what = k2.fails.map((f4) => [f4.check, f4.expected !== void 0 && `expected ${f4.expected}`, f4.actual !== void 0 && `actual ${f4.actual}`].filter(Boolean).join(", ")).join("; ");
+      L2.push(`| ${k2.id} | ${cell(k2.case)} | ${cell(what)} | ${cell(k2.reason)} | ${cell(k2.accepted_by)} | ${cell(k2.date ?? "")} | ${k2.state} |`);
+    }
+    if (r6.stale_known_issues?.length)
+      L2.push("", `No longer failing: ${r6.stale_known_issues.join(", ")}. A person checks each one and removes it from the ledger, so a later return of the failure is reported as new.`);
   }
   const diffs = r6.cases.flatMap((c4) => (c4.differences ?? []).map((d4) => [c4.id, d4]));
   if (diffs.length) {
@@ -16101,11 +16373,12 @@ function adaptersFor(manifest) {
     }
   };
 }
-function selectCases(manifest, only, acceptedOnly = false) {
+function selectCases(manifest, mode, only, acceptedOnly = false) {
   const picked = pick(manifest, only);
   if (!acceptedOnly)
     return Object.assign(picked, { excluded: 0 });
-  return Object.assign(picked.filter((c4) => !c4.draft), { excluded: picked.filter((c4) => c4.draft).length });
+  const held = (c4) => c4.draft || mode === "run" && c4.expect_draft;
+  return Object.assign(picked.filter((c4) => !held(c4)), { excluded: picked.filter(held).length });
 }
 function pick(manifest, only) {
   const all = loadCases(manifest);
@@ -16130,7 +16403,10 @@ function unsafe(c4, manifest, opts) {
   const safe = SAFE_METHODS.has(c4.request.method) || c4.safe === true;
   return !safe && !(manifest.allow_unsafe_methods && opts.allowUnsafe);
 }
+var lacking = (surface, ...targets) => targets.filter((t3) => t3.surfaces && !t3.surfaces.includes(surface)).map((t3) => t3.name);
+var hasNo = (names, surface) => `${names.join(" and ")} ${names.length > 1 ? "have" : "has"} no ${surface} surface`;
 var DRAFT_WHY = "a draft: a person accepts it with `cmtk review` before it counts";
+var EXPECT_DRAFT_WHY = "draft expectation: review it with `cmtk review`. It records what the system answered, which a person confirms before it counts";
 var UNSAFE_WHY = "changes data: needs allow_unsafe_methods in cmtk.yaml and --allow-unsafe on this run";
 var NO_ANSWER = /^(ETIMEDOUT|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENETUNREACH|ENOTFOUND|EAI_AGAIN)\b/;
 var STOP_AFTER_NO_ANSWER = 3;
@@ -16150,32 +16426,32 @@ function evidenceDir(manifest, mode) {
   const final = ownedFolder(manifest, path6.join(manifest.evidence, mode));
   const work = ownedFolder(manifest, path6.join(manifest.evidence, `.${mode}.partial`));
   const lock = ownedFolder(manifest, path6.join(manifest.evidence, `.${mode}.lock`));
-  fs6.mkdirSync(path6.dirname(lock), { recursive: true });
+  fs7.mkdirSync(path6.dirname(lock), { recursive: true });
   const mine = JSON.stringify({ pid: process.pid, started: (/* @__PURE__ */ new Date()).toISOString() });
   try {
-    fs6.writeFileSync(lock, mine, { flag: "wx" });
+    fs7.writeFileSync(lock, mine, { flag: "wx" });
   } catch {
     let held = {};
     try {
-      held = JSON.parse(fs6.readFileSync(lock, "utf8"));
+      held = JSON.parse(fs7.readFileSync(lock, "utf8"));
     } catch {
     }
     const age = held.started ? Date.now() - Date.parse(held.started) : Infinity;
     if (typeof held.pid === "number" && alive(held.pid) && age < LOCK_STALE_MS) {
       throw new ManifestError(`Another \`cmtk ${mode}\` is writing ${path6.relative(manifest.root, final)} (process ${held.pid}, started ${held.started}). Wait for it to finish, then run again.`);
     }
-    fs6.writeFileSync(lock, mine);
+    fs7.writeFileSync(lock, mine);
   }
   const release = () => {
     try {
-      if (fs6.readFileSync(lock, "utf8") === mine)
-        fs6.rmSync(lock, { force: true });
+      if (fs7.readFileSync(lock, "utf8") === mine)
+        fs7.rmSync(lock, { force: true });
     } catch {
     }
   };
   try {
-    fs6.rmSync(work, { recursive: true, force: true });
-    fs6.mkdirSync(path6.join(work, "answers"), { recursive: true });
+    fs7.rmSync(work, { recursive: true, force: true });
+    fs7.mkdirSync(path6.join(work, "answers"), { recursive: true });
   } catch (err) {
     release();
     throw err;
@@ -16183,27 +16459,28 @@ function evidenceDir(manifest, mode) {
   return {
     dir: work,
     commit() {
-      fs6.rmSync(final, { recursive: true, force: true });
-      fs6.renameSync(work, final);
+      fs7.rmSync(final, { recursive: true, force: true });
+      fs7.renameSync(work, final);
       return final;
     },
     release
   };
 }
 var failed = (err) => err instanceof Error ? err.message : String(err);
-function settingsOf(manifest, drift) {
+function settingsOf(manifest, drift, known) {
   return {
     manifest: path6.relative(manifest.root, manifest.file).split(path6.sep).join("/"),
-    manifest_sha256: crypto3.createHash("sha256").update(fs6.readFileSync(manifest.file)).digest("hex"),
+    manifest_sha256: crypto3.createHash("sha256").update(fs7.readFileSync(manifest.file)).digest("hex"),
     match: manifest.match,
     overrides: manifest.overrides,
     scrub: manifest.scrub,
     drift_file: manifest.drift,
-    drift_entries: drift.length
+    drift_entries: drift.length,
+    ...known ? { known_issues_file: manifest.known_issues, known_issues_entries: known.length } : {}
   };
 }
-var where = (t3) => (t3.base_url ? cleanUrl(t3.base_url) : void 0) ?? Object.entries(t3).filter(([k2]) => k2 !== "name").map(([k2, v2]) => `${k2}=${v2}`).join(", ");
-var writeJson = (file, data) => fs6.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8");
+var where = (t3) => (t3.base_url ? cleanUrl(t3.base_url) : void 0) ?? Object.entries(t3).filter(([k2]) => k2 !== "name" && k2 !== "surfaces").map(([k2, v2]) => `${k2}=${v2}`).join(", ");
+var writeJson = (file, data) => fs7.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8");
 function target(manifest, name, role) {
   if (!name)
     throw new ManifestError(`cmtk.yaml names no ${role} target. Set \`${role}:\` to one of: ${Object.keys(manifest.targets).join(", ")}.`);
@@ -16214,7 +16491,11 @@ function target(manifest, name, role) {
 }
 async function run(manifest, opts = {}) {
   const t3 = target(manifest, opts.target ?? manifest.default_target, "default_target");
-  const cases = selectCases(manifest, opts.only, opts.acceptedOnly);
+  const selected = selectCases(manifest, "run", opts.only, opts.acceptedOnly);
+  const compareOnly = (c4) => manifest.compare_only_surfaces.includes(c4.surface ?? "http");
+  const cases = selected.filter((c4) => !compareOnly(c4));
+  const leftOut = selected.length - cases.length;
+  const known = loadKnownIssues(manifest).filter((k2) => !k2.target || k2.target === t3.name);
   const extra = envHeaders(manifest);
   const adapters = adaptersFor(manifest);
   const ev = evidenceDir(manifest, "run");
@@ -16225,6 +16506,15 @@ async function run(manifest, opts = {}) {
     try {
       for (const c4 of cases) {
         const b2 = base(c4);
+        const missing = lacking(b2.surface, t3);
+        if (missing.length) {
+          out.push({ ...b2, result: "SKIPPED", why: `not run: ${hasNo(missing, b2.surface)}` });
+          continue;
+        }
+        if (c4.expect_draft) {
+          out.push({ ...b2, result: "SKIPPED", why: EXPECT_DRAFT_WHY });
+          continue;
+        }
         if (c4.draft) {
           out.push({ ...b2, result: "SKIPPED", why: DRAFT_WHY });
           continue;
@@ -16251,7 +16541,8 @@ async function run(manifest, opts = {}) {
             continue;
           }
           const failures = checkExpectation(c4.expect, obs);
-          out.push({ ...b2, ...sent, result: failures.length ? "FAIL" : "PASS", ...failures.length ? { failures } : {}, ...obs.truncated ? { note: "the answer was over 5 MB; only the first 5 MB were checked" } : {} });
+          const accepted = markKnown(c4.id, failures, known);
+          out.push({ ...b2, ...sent, result: failures.length ? "FAIL" : "PASS", ...failures.length ? { failures } : {}, ...accepted ? { known_issues: accepted } : {}, ...obs.truncated ? { note: "the answer was over 5 MB; only the first 5 MB were checked" } : {} });
         } catch (err) {
           out.push({ ...b2, result: "ERROR", why: failed(err) });
         }
@@ -16259,9 +16550,9 @@ async function run(manifest, opts = {}) {
     } finally {
       await adapters.closeAll();
     }
-    const report = summarise({ mode: "run", manifest, targets: { [t3.name]: where(t3) }, cases: out, contracts: [], drift: [], usedDrift: /* @__PURE__ */ new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, []), excludedDrafts: cases.excluded });
+    const report = summarise({ mode: "run", manifest, targets: { [t3.name]: where(t3) }, cases: out, contracts: [], drift: [], usedDrift: /* @__PURE__ */ new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, [], known), excludedDrafts: selected.excluded, excludedCompareOnly: leftOut, compareOnlySurfaces: manifest.compare_only_surfaces, known: knownInReport(known, out, new Set(loadCases(manifest).map((c4) => c4.id))) });
     writeJson(path6.join(dir, "REPORT.json"), report);
-    fs6.writeFileSync(path6.join(dir, "REPORT.md"), renderReport(report), "utf8");
+    fs7.writeFileSync(path6.join(dir, "REPORT.md"), renderReport(report), "utf8");
     ev.commit();
     return report;
   } finally {
@@ -16273,7 +16564,7 @@ async function compare(manifest, opts = {}) {
   const cand = target(manifest, manifest.candidate, "candidate");
   if (ref.name === cand.name)
     throw new ManifestError("The reference and the candidate are the same target; comparing needs two systems.");
-  const cases = selectCases(manifest, opts.only, opts.acceptedOnly);
+  const cases = selectCases(manifest, "compare", opts.only, opts.acceptedOnly);
   const drift = loadDrift(manifest);
   scrubberOf(manifest);
   const extra = envHeaders(manifest);
@@ -16288,13 +16579,18 @@ async function compare(manifest, opts = {}) {
     try {
       const http2 = adapters.get("http");
       for (const k2 of manifest.contracts) {
+        const missing = lacking("http", ref, cand);
+        if (missing.length) {
+          contracts.push({ name: k2.name, kind: k2.kind, result: "NOT COMPARABLE", findings: [{ breaking: null, what: `not comparable: ${hasNo(missing, "http")}` }] });
+          continue;
+        }
         const probe2 = { id: `contract-${k2.name}`, request: { method: "GET", path: k2.path } };
         const [a4, b2] = [await http2.run(probe2, ref, extra), await http2.run(probe2, cand, extra)];
         const slug2 = k2.name.replace(/[^A-Za-z0-9_.-]/g, "_").slice(0, 64);
         if (a4.body !== void 0)
-          fs6.writeFileSync(path6.join(dir, "answers", `contract-${slug2}.reference.txt`), a4.body, "utf8");
+          fs7.writeFileSync(path6.join(dir, "answers", `contract-${slug2}.reference.txt`), a4.body, "utf8");
         if (b2.body !== void 0)
-          fs6.writeFileSync(path6.join(dir, "answers", `contract-${slug2}.candidate.txt`), b2.body, "utf8");
+          fs7.writeFileSync(path6.join(dir, "answers", `contract-${slug2}.candidate.txt`), b2.body, "utf8");
         const outcome = checkContract(k2, a4, b2);
         for (const f4 of outcome.findings) {
           const hit = f4.where ? coveringDrift(drift, `contract-${k2.name}`, f4.where) : void 0;
@@ -16309,6 +16605,11 @@ async function compare(manifest, opts = {}) {
         const b2 = { ...base(c4), match: matchFor(c4, manifest) };
         if (c4.draft) {
           out.push({ ...b2, result: "SKIPPED", why: DRAFT_WHY });
+          continue;
+        }
+        const missing = lacking(b2.surface, ref, cand);
+        if (missing.length) {
+          out.push({ ...b2, result: "NOT COMPARABLE", why: `not comparable: ${hasNo(missing, b2.surface)}` });
           continue;
         }
         if (unsafe(c4, manifest, opts)) {
@@ -16360,9 +16661,9 @@ async function compare(manifest, opts = {}) {
     } finally {
       await adapters.closeAll();
     }
-    const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), excludedDrafts: cases.excluded });
+    const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), excludedDrafts: cases.excluded, surfaces: { [ref.name]: ref.surfaces, [cand.name]: cand.surfaces } });
     writeJson(path6.join(dir, "REPORT.json"), report);
-    fs6.writeFileSync(path6.join(dir, "REPORT.md"), renderReport(report), "utf8");
+    fs7.writeFileSync(path6.join(dir, "REPORT.md"), renderReport(report), "utf8");
     ev.commit();
     return report;
   } finally {
@@ -16372,7 +16673,7 @@ async function compare(manifest, opts = {}) {
 
 // packages/core/dist/signoff.js
 import crypto4 from "node:crypto";
-import fs7 from "node:fs";
+import fs8 from "node:fs";
 import path7 from "node:path";
 var DECISIONS = ["accept", "accept with conditions", "reject"];
 var SignoffError = class extends Error {
@@ -16381,7 +16682,7 @@ var SKIP = /* @__PURE__ */ new Set(["SIGNOFF.json", "DEFECTS.md", "DEFECTS.json"
 function evidenceFingerprint(dir) {
   const files = [];
   const walk = (d4) => {
-    for (const e6 of fs7.readdirSync(d4, { withFileTypes: true })) {
+    for (const e6 of fs8.readdirSync(d4, { withFileTypes: true })) {
       const full = path7.join(d4, e6.name);
       if (e6.isDirectory())
         walk(full);
@@ -16392,7 +16693,7 @@ function evidenceFingerprint(dir) {
   walk(dir);
   const h4 = crypto4.createHash("sha256");
   for (const f4 of files.map((f5) => path7.relative(dir, f5).split(path7.sep).join("/")).sort()) {
-    let bytes = fs7.readFileSync(path7.join(dir, f4));
+    let bytes = fs8.readFileSync(path7.join(dir, f4));
     if (f4 === "REPORT.md")
       bytes = Buffer.from(bytes.toString("utf8").split(/\r?\n## Sign-off\r?\n/)[0], "utf8");
     h4.update(f4).update("\0").update(crypto4.createHash("sha256").update(bytes).digest("hex")).update("\n");
@@ -16401,11 +16702,11 @@ function evidenceFingerprint(dir) {
 }
 function signoffState(dir) {
   const file = path7.join(dir, "SIGNOFF.json");
-  if (!fs7.existsSync(file))
+  if (!fs8.existsSync(file))
     return { state: "none" };
   let s4;
   try {
-    s4 = JSON.parse(fs7.readFileSync(file, "utf8"));
+    s4 = JSON.parse(fs8.readFileSync(file, "utf8"));
   } catch {
     return { state: "none" };
   }
@@ -16415,13 +16716,14 @@ function describeSignoff(st2) {
   if (st2.state === "none")
     return "not signed";
   const s4 = st2.signoff;
-  return st2.state === "signed" ? `signed by ${s4.name} (${s4.role}): ${s4.decision}, ${s4.date}` : `the signature by ${s4.name} is for different evidence, so it no longer counts`;
+  const covers3 = s4.known_issues?.length ? `; known issues still failing: ${s4.known_issues.join(", ")}` : "";
+  return st2.state === "signed" ? `signed by ${s4.name} (${s4.role}): ${s4.decision}, ${s4.date}${covers3}${s4.scope ? `; for what was compared only. ${s4.scope}` : ""}` : `the signature by ${s4.name} is for different evidence, so it no longer counts`;
 }
 function recordSignoff(dir, who, date, manifest) {
   const json = path7.join(dir, "REPORT.json"), md = path7.join(dir, "REPORT.md");
-  if (!fs7.existsSync(json) || !fs7.existsSync(md))
+  if (!fs8.existsSync(json) || !fs8.existsSync(md))
     throw new SignoffError("There is no report in this folder yet.");
-  const report = JSON.parse(fs7.readFileSync(json, "utf8"));
+  const report = JSON.parse(fs8.readFileSync(json, "utf8"));
   if (report.verdict === "NO EVIDENCE")
     throw new SignoffError("This report holds no evidence, so there is nothing to sign. Add cases and run again.");
   if (manifest && report.settings) {
@@ -16435,6 +16737,7 @@ function recordSignoff(dir, who, date, manifest) {
     throw new SignoffError(`Name, role and one of ${DECISIONS.join(" / ")} are all needed. Nothing was signed.`);
   if (/[\u0000-\u001f\u007f-\u009f]/.test(name + role))
     throw new SignoffError("Name and role must be plain text. Nothing was signed.");
+  const known = (report.known_issues ?? []).filter((k2) => k2.state === "still fails").map((k2) => `${k2.id} (accepted by ${k2.accepted_by})`);
   const s4 = {
     name,
     role,
@@ -16442,22 +16745,24 @@ function recordSignoff(dir, who, date, manifest) {
     date,
     verdict: report.verdict,
     evidence_sha256: evidenceFingerprint(dir),
+    ...known.length ? { known_issues: known } : {},
+    ...report.scope && !report.scope.whole ? { scope: report.scope.statement } : {},
     ...report.settings ? { manifest: report.settings.manifest, manifest_sha256: report.settings.manifest_sha256 } : {}
   };
   const cell4 = (v2) => v2.replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
   const row = (label, value) => (t3) => t3.replace(new RegExp(`^\\| ${label} \\|.*\\|$`, "m"), () => `| ${label} | ${value} |`);
-  const text2 = [row("Name", cell4(name)), row("Role", cell4(role)), row("Date", date), row("Decision", decision), row("Evidence", `sha256 ${s4.evidence_sha256}`)].reduce((t3, f4) => f4(t3), fs7.readFileSync(md, "utf8"));
-  fs7.writeFileSync(path7.join(dir, "SIGNOFF.json"), JSON.stringify(s4, null, 2) + "\n", "utf8");
-  fs7.writeFileSync(md, text2, "utf8");
+  const text2 = [row("Name", cell4(name)), row("Role", cell4(role)), row("Date", date), row("Decision", decision), row("Evidence", `sha256 ${s4.evidence_sha256}`)].reduce((t3, f4) => f4(t3), fs8.readFileSync(md, "utf8"));
+  fs8.writeFileSync(path7.join(dir, "SIGNOFF.json"), JSON.stringify(s4, null, 2) + "\n", "utf8");
+  fs8.writeFileSync(md, text2, "utf8");
   return s4;
 }
 
 // packages/core/dist/check.js
-import fs9 from "node:fs";
+import fs10 from "node:fs";
 
 // packages/core/dist/discover.js
 import { spawnSync } from "node:child_process";
-import fs8 from "node:fs";
+import fs9 from "node:fs";
 import path8 from "node:path";
 var CONTROL2 = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f​-‏‪-‮⁦-⁩]/;
 var clean = (v2, what, max = 500) => {
@@ -16712,9 +17017,9 @@ function discoveryFolder(m4) {
 }
 function loadDiscovery(m4) {
   const f4 = path8.join(discoveryFolder(m4), "boundaries.json");
-  if (!fs8.existsSync(f4))
+  if (!fs9.existsSync(f4))
     return void 0;
-  const d4 = JSON.parse(fs8.readFileSync(f4, "utf8"));
+  const d4 = JSON.parse(fs9.readFileSync(f4, "utf8"));
   for (const b2 of d4.boundaries)
     b2.covered_by = coveredBy(b2, m4);
   return d4;
@@ -16724,7 +17029,7 @@ function discover(m4, input, date = (/* @__PURE__ */ new Date()).toISOString().s
   const sources = [];
   const file = (f4, what) => {
     const full = inside(m4, f4);
-    if (!fs8.existsSync(full) || !fs8.statSync(full).isFile())
+    if (!fs9.existsSync(full) || !fs9.statSync(full).isFile())
       throw new ManifestError(`${what} ${f4} does not exist.`);
     return full;
   };
@@ -16736,13 +17041,13 @@ function discover(m4, input, date = (/* @__PURE__ */ new Date()).toISOString().s
   }
   for (const f4 of input.reaJson ?? []) {
     const full = file(f4, "REA's output");
-    const { assembly, members } = readReaMembers(JSON.parse(fs8.readFileSync(full, "utf8")), rel(m4, full));
+    const { assembly, members } = readReaMembers(JSON.parse(fs9.readFileSync(full, "utf8")), rel(m4, full));
     found.push(...fromReaMembers(assembly, members, `REA: ${rel(m4, full)}`));
     sources.push(`REA's saved output ${rel(m4, full)}`);
   }
   for (const f4 of input.configs ?? []) {
     const full = file(f4, "The settings file");
-    const text2 = fs8.readFileSync(full, "utf8").replace(/^﻿/, "");
+    const text2 = fs9.readFileSync(full, "utf8").replace(/^﻿/, "");
     found.push(.../\.json$/i.test(full) ? fromJsonConfig(JSON.parse(text2), rel(m4, full)) : fromXmlConfig(text2, rel(m4, full)));
     sources.push(rel(m4, full));
   }
@@ -16755,12 +17060,12 @@ function discover(m4, input, date = (/* @__PURE__ */ new Date()).toISOString().s
   }));
   for (const f4 of input.har ?? []) {
     const full = file(f4, "The HAR file");
-    found.push(...fromHar(JSON.parse(fs8.readFileSync(full, "utf8")), rel(m4, full), ownHosts));
+    found.push(...fromHar(JSON.parse(fs9.readFileSync(full, "utf8")), rel(m4, full), ownHosts));
     sources.push(rel(m4, full));
   }
   for (const f4 of input.topology ?? []) {
     const full = file(f4, "The topology file");
-    found.push(...fromTopology(JSON.parse(fs8.readFileSync(full, "utf8")), rel(m4, full)));
+    found.push(...fromTopology(JSON.parse(fs9.readFileSync(full, "utf8")), rel(m4, full)));
     sources.push(rel(m4, full));
   }
   if (input.found?.length) {
@@ -16803,9 +17108,9 @@ function discover(m4, input, date = (/* @__PURE__ */ new Date()).toISOString().s
   const boundaries = [...byId.values()].map((b2) => ({ ...b2, covered_by: coveredBy(b2, m4) })).sort((a4, b2) => Number(!!a4.covered_by) - Number(!!b2.covered_by) || BOUNDARY_KINDS.indexOf(a4.kind) - BOUNDARY_KINDS.indexOf(b2.kind) || a4.name.localeCompare(b2.name));
   const discovery = { system: m4.system, date, sources: [.../* @__PURE__ */ new Set([...previous?.sources ?? [], ...sources])], boundaries };
   const dir = discoveryFolder(m4);
-  fs8.mkdirSync(dir, { recursive: true });
-  fs8.writeFileSync(path8.join(dir, "boundaries.json"), JSON.stringify(discovery, null, 2) + "\n", "utf8");
-  fs8.writeFileSync(path8.join(dir, "BOUNDARIES.md"), renderDiscovery(discovery), "utf8");
+  fs9.mkdirSync(dir, { recursive: true });
+  fs9.writeFileSync(path8.join(dir, "boundaries.json"), JSON.stringify(discovery, null, 2) + "\n", "utf8");
+  fs9.writeFileSync(path8.join(dir, "BOUNDARIES.md"), renderDiscovery(discovery), "utf8");
   return { file: rel(m4, path8.join(dir, "BOUNDARIES.md")), discovery };
 }
 var cell2 = (s4) => (s4 ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
@@ -16845,6 +17150,7 @@ function renderDiscovery(d4) {
 function check(manifest) {
   const cases = loadCases(manifest);
   loadDrift(manifest);
+  const known = loadKnownIssues(manifest);
   scrubberOf(manifest);
   const proposals = loadProposals(manifest);
   const warnings = [];
@@ -16857,13 +17163,29 @@ function check(manifest) {
     if (!c4.expect && Object.keys(manifest.targets).length === 1)
       warnings.push(`${c4.id}: has no \`expect:\` block, so \`cmtk run\` skips it.`);
     for (const f4 of [c4.request.body_file, typeof c4.request.body_form === "string" ? c4.request.body_form : void 0, ...(c4.request.files ?? []).map((x2) => x2.path)].filter((x2) => !!x2)) {
-      if (!fs9.existsSync(inside(manifest, f4)))
+      if (!fs10.existsSync(inside(manifest, f4)))
         warnings.push(`${c4.id}: the input file ${f4} does not exist, so the case will error.`);
     }
   }
+  const pair = [manifest.targets[manifest.reference], manifest.targets[manifest.candidate]].filter((t3) => t3?.surfaces);
+  const counted = /* @__PURE__ */ new Map();
+  for (const c4 of cases)
+    counted.set(c4.surface ?? "http", (counted.get(c4.surface ?? "http") ?? 0) + 1);
+  for (const [s4, n3] of [...counted].sort()) {
+    const missing = pair.filter((t3) => !t3.surfaces.includes(s4)).map((t3) => t3.name);
+    if (missing.length)
+      warnings.push(`${n3} case${n3 === 1 ? "" : "s"} on ${s4}: ${missing.join(" and ")} ${missing.length > 1 ? "have" : "has"} no ${s4} surface, so \`cmtk compare\` reports ${n3 === 1 ? "it" : "them"} as not comparable.`);
+  }
+  const ids = new Set(cases.map((c4) => c4.id));
+  for (const k2 of known) {
+    if (!ids.has(k2.case))
+      warnings.push(`known issue ${k2.id}: there is no case ${k2.case}.`);
+    if (k2.fails.some((f4) => f4.actual === void 0 && f4.expected === void 0))
+      warnings.push(`known issue ${k2.id}: one of its failures accepts any answer at that check, so a new way of failing there would be hidden. Copy \`expected\` or \`actual\` from the report.`);
+  }
   if (!cases.length)
     warnings.push(`No case files match ${manifest.cases.join(", ")}.`);
-  if (!fs9.existsSync(inside(manifest, manifest.evidence)))
+  if (!fs10.existsSync(inside(manifest, manifest.evidence)))
     warnings.push(`${manifest.evidence} does not exist yet: the first run creates it.`);
   const d4 = loadDiscovery(manifest);
   for (const b2 of d4?.boundaries.filter((x2) => !x2.covered_by) ?? [])
@@ -16871,6 +17193,7 @@ function check(manifest) {
   return {
     cases: cases.length,
     drafts: cases.filter((c4) => c4.draft).map((c4) => c4.id),
+    draftExpectations: cases.filter((c4) => c4.expect_draft).map((c4) => c4.id),
     requirements: new Set(cases.flatMap((c4) => c4.requirement === void 0 ? [] : [c4.requirement].flat().map(String))).size,
     pendingProposals: proposals.filter((p4) => p4.status === "pending").map((p4) => p4.id),
     ...d4 ? { discovery: `Boundaries (cmtk discover, ${d4.date}): ${describeDiscovery(d4)}` } : {},
@@ -16881,6 +17204,7 @@ function describeCheck(r6) {
   const lines = [
     `Settings and case files are valid: ${r6.cases} cases for ${r6.requirements} requirements.`,
     r6.drafts.length ? `${r6.drafts.length} draft cases wait for a person (\`cmtk review\`): ${r6.drafts.slice(0, 20).join(", ")}${r6.drafts.length > 20 ? ", \u2026" : ""}` : "No draft cases.",
+    ...r6.draftExpectations.length ? [`${r6.draftExpectations.length} drafted expectations wait for a person (\`cmtk review\`), and \`cmtk run\` skips those cases until then: ${r6.draftExpectations.slice(0, 20).join(", ")}${r6.draftExpectations.length > 20 ? ", \u2026" : ""}`] : [],
     r6.pendingProposals.length ? `${r6.pendingProposals.length} proposals wait for a person (\`cmtk review\`): ${r6.pendingProposals.join(", ")}` : "No proposals waiting.",
     ...r6.discovery ? [r6.discovery] : []
   ];
@@ -16890,7 +17214,7 @@ function describeCheck(r6) {
 }
 
 // packages/core/dist/init.js
-import fs10 from "node:fs";
+import fs11 from "node:fs";
 import path9 from "node:path";
 var EXAMPLE_CASES = `# Cases for \`cmtk run\` (one system, checked against expectations) and \`cmtk compare\`
 # (the same request to the reference and the candidate). Each case says which requirement it answers for.
@@ -16913,35 +17237,35 @@ var DRIFT_HEADER = `# Approved drift: differences between the reference and the 
 drift: []
 `;
 function initProject(manifestFile, o4) {
-  if (fs10.existsSync(manifestFile))
+  if (fs11.existsSync(manifestFile))
     throw new ManifestError(`${path9.basename(manifestFile)} already exists; edit it instead.`);
   if (!/\.ya?ml$/i.test(manifestFile))
     throw new ManifestError("The settings file must be a .yaml file, such as cmtk.yaml.");
   const root = path9.dirname(manifestFile);
-  if (!fs10.existsSync(root))
+  if (!fs11.existsSync(root))
     throw new ManifestError(`${root} does not exist. cmtk init only writes into an existing project folder.`);
   for (const [k2, v2] of Object.entries({ candidate: o4.candidate, legacy: o4.legacy })) {
     if (v2 !== void 0 && !isBaseUrl(v2))
       throw new ManifestError(`--${k2} must be an http:// or https:// URL, such as http://localhost:5002.`);
   }
   const system = (o4.system ?? path9.basename(root)).replace(/[^A-Za-z0-9_.-]/g, "-").replace(/^[^A-Za-z0-9]+/, "") || "system";
-  fs10.mkdirSync(path9.join(root, "cmtk", "cases"), { recursive: true });
-  fs10.writeFileSync(manifestFile, STARTER_MANIFEST(system, o4.legacy, o4.candidate), "utf8");
+  fs11.mkdirSync(path9.join(root, "cmtk", "cases"), { recursive: true });
+  fs11.writeFileSync(manifestFile, STARTER_MANIFEST(system, o4.legacy, o4.candidate), "utf8");
   const written = [manifestFile];
   try {
     loadManifest(manifestFile);
   } catch (err) {
-    fs10.rmSync(manifestFile);
+    fs11.rmSync(manifestFile);
     throw err;
   }
   const example = path9.join(root, "cmtk", "cases", "example.yaml");
-  if (!fs10.existsSync(example)) {
-    fs10.writeFileSync(example, EXAMPLE_CASES, "utf8");
+  if (!fs11.existsSync(example)) {
+    fs11.writeFileSync(example, EXAMPLE_CASES, "utf8");
     written.push(example);
   }
   const drift = path9.join(root, "cmtk", "drift.yaml");
-  if (o4.legacy && !fs10.existsSync(drift)) {
-    fs10.writeFileSync(drift, DRIFT_HEADER, "utf8");
+  if (o4.legacy && !fs11.existsSync(drift)) {
+    fs11.writeFileSync(drift, DRIFT_HEADER, "utf8");
     written.push(drift);
   }
   return written;
@@ -16949,7 +17273,7 @@ function initProject(manifestFile, o4) {
 
 // packages/core/dist/data/schema.js
 import crypto5 from "node:crypto";
-import fs11 from "node:fs";
+import fs12 from "node:fs";
 import path10 from "node:path";
 var SUPPORTED = /* @__PURE__ */ new Set([
   "type",
@@ -17073,7 +17397,7 @@ function modelFromSchema(file, raw, doc) {
   collect(schema, "$", `${path10.basename(file)}#`, true, fields);
   return { source: { file, sha256: fileSha(file) }, schema, fields };
 }
-var fileSha = (file) => fs11.existsSync(file) ? crypto5.createHash("sha256").update(fs11.readFileSync(file)).digest("hex") : "";
+var fileSha = (file) => fs12.existsSync(file) ? crypto5.createHash("sha256").update(fs12.readFileSync(file)).digest("hex") : "";
 function modelFromOpenApi(file, raw, operation) {
   const doc = raw;
   if (!doc?.openapi && !doc?.swagger)
@@ -17399,7 +17723,7 @@ function stringFromPattern(pattern, rng2, shortest = false) {
 // packages/core/dist/data/recipe.js
 var import_yaml4 = __toESM(require_dist(), 1);
 import crypto6 from "node:crypto";
-import fs12 from "node:fs";
+import fs13 from "node:fs";
 import path11 from "node:path";
 var isHappy = (r6) => r6.expect_valid && (r6.technique === "EP" || r6.technique === "pairwise");
 var DEFAULT_QUOTAS = { max_happy_share: 0.5, boundaries_on_every_ordered_field: true, negative_for_every_field: true };
@@ -17424,7 +17748,7 @@ var dataFolder = (m4, id) => path11.join(recipeFolder(m4), id);
 var ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 function planRecipe(m4, o4) {
   const schemaFile = inside(m4, o4.schema);
-  if (!fs12.existsSync(schemaFile))
+  if (!fs13.existsSync(schemaFile))
     throw new ManifestError(`${o4.schema} does not exist.`);
   const model = loadModel(schemaFile, o4.operation);
   const id = o4.id ?? (model.source.operation ? model.source.operation.replace(/^[A-Z]+\s+\/?/, "").replace(/[^A-Za-z0-9.-]+/g, "-").replace(/^-|-$/g, "") : path11.basename(o4.schema).replace(/\.[^.]+$/, "")).slice(0, 64);
@@ -17477,10 +17801,10 @@ function planRecipe(m4, o4) {
   if (problems.length)
     throw new ManifestError(`The plan breaks its own quotas: ${problems.join("; ")}`);
   const file = recipeFile(m4, id);
-  if (fs12.existsSync(file))
+  if (fs13.existsSync(file))
     throw new ManifestError(`${path11.relative(m4.root, file)} already exists. Choose another --id, or delete it.`);
-  fs12.mkdirSync(path11.dirname(file), { recursive: true });
-  fs12.writeFileSync(file, renderRecipe(recipe), "utf8");
+  fs13.mkdirSync(path11.dirname(file), { recursive: true });
+  fs13.writeFileSync(file, renderRecipe(recipe), "utf8");
   return { file: path11.relative(m4.root, file).split(path11.sep).join("/"), recipe };
 }
 var HEADER2 = `# A test-data recipe, written by \`cmtk data plan\`. Review this file, not the rows: \`cmtk data make\`
@@ -17494,9 +17818,9 @@ function loadRecipe(m4, id) {
   if (!ID.test(id))
     throw new ManifestError(`The recipe id ${JSON.stringify(id)} must be letters, digits, '.', '-' and '_'.`);
   const file = recipeFile(m4, id);
-  if (!fs12.existsSync(file))
+  if (!fs13.existsSync(file))
     throw new ManifestError(`There is no recipe ${id}: ${path11.relative(m4.root, file)} does not exist. Make one with \`cmtk data plan\`.`);
-  const text2 = fs12.readFileSync(file, "utf8");
+  const text2 = fs13.readFileSync(file, "utf8");
   const doc = import_yaml4.default.parse(text2);
   const r6 = doc?.recipe;
   if (!r6 || r6.id !== id || !Array.isArray(r6.rows) || !Array.isArray(r6.fields))
@@ -17851,7 +18175,7 @@ function zip(parts, when) {
 
 // packages/core/dist/data/make.js
 import crypto7 from "node:crypto";
-import fs13 from "node:fs";
+import fs14 from "node:fs";
 import path12 from "node:path";
 
 // node_modules/@faker-js/faker/dist/base-BpJm8uRb.js
@@ -20654,7 +20978,7 @@ function unsetAt(root, p4) {
 }
 function fieldsOf(m4, r6) {
   const file = inside(m4, r6.source.file);
-  if (!fs13.existsSync(file))
+  if (!fs14.existsSync(file))
     throw new ManifestError(`The recipe's schema ${r6.source.file} no longer exists.`);
   const raw = readStructured(file);
   const model = raw?.openapi || raw?.swagger ? modelFromOpenApi(file, raw, r6.source.operation ?? "") : modelFromSchema(file, raw);
@@ -20732,12 +21056,12 @@ async function makeData(m4, id, o4 = {}) {
   const problems = checkQuotas(recipe);
   const formats = o4.formats ?? ["json", "csv"];
   const dir = dataFolder(m4, id);
-  fs13.rmSync(dir, { recursive: true, force: true });
-  fs13.mkdirSync(path12.join(dir, "rows"), { recursive: true });
+  fs14.rmSync(dir, { recursive: true, force: true });
+  fs14.mkdirSync(path12.join(dir, "rows"), { recursive: true });
   const files = {};
   const put = (name, bytes) => {
     const b2 = typeof bytes === "string" ? Buffer.from(bytes, "utf8") : bytes;
-    fs13.writeFileSync(path12.join(dir, name), b2);
+    fs14.writeFileSync(path12.join(dir, name), b2);
     files[name] = crypto7.createHash("sha256").update(b2).digest("hex");
   };
   if (formats.includes("json")) {
@@ -20776,8 +21100,8 @@ async function makeData(m4, id, o4 = {}) {
     validation: { valid_rows_checked: valid, invalid_rows_checked: rows.length - valid },
     files
   };
-  fs13.writeFileSync(path12.join(dir, "MANIFEST.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
-  fs13.writeFileSync(path12.join(dir, "DATA.md"), renderData(recipe, rows, manifest), "utf8");
+  fs14.writeFileSync(path12.join(dir, "MANIFEST.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
+  fs14.writeFileSync(path12.join(dir, "DATA.md"), renderData(recipe, rows, manifest), "utf8");
   return { folder: path12.relative(m4.root, dir).split(path12.sep).join("/"), manifest, rows };
 }
 function tabulate(rows) {
@@ -20841,7 +21165,7 @@ function renderData(r6, rows, man) {
 }
 
 // packages/core/dist/data/cases.js
-import fs14 from "node:fs";
+import fs15 from "node:fs";
 import path13 from "node:path";
 function statuses(responses) {
   const codes = Object.keys(responses ?? {}).map(Number).filter((c4) => !Number.isNaN(c4)).sort((a4, b2) => a4 - b2);
@@ -20875,9 +21199,9 @@ function writeCases(m4, id, o4 = {}) {
   const { recipe } = loadRecipe(m4, id);
   const rowsDir = path13.join(dataFolder(m4, id), "rows");
   const rowsFile = path13.join(dataFolder(m4, id), "rows.json");
-  if (!fs14.existsSync(rowsDir) || !fs14.existsSync(rowsFile))
+  if (!fs15.existsSync(rowsDir) || !fs15.existsSync(rowsFile))
     throw new ManifestError(`There are no rows for ${id} yet: run \`cmtk data make ${id}\` first.`);
-  const made = new Map(JSON.parse(fs14.readFileSync(rowsFile, "utf8")).map((r6) => [r6.name, r6]));
+  const made = new Map(JSON.parse(fs15.readFileSync(rowsFile, "utf8")).map((r6) => [r6.name, r6]));
   const op = /^([A-Z]+)\s+(\S+)$/.exec(recipe.source.operation ?? "");
   const reqPath = o4.path ?? op?.[2];
   if (!reqPath || !reqPath.startsWith("/") || reqPath.startsWith("//"))
@@ -20915,7 +21239,7 @@ function writeCases(m4, id, o4 = {}) {
     const rowFile = path13.join(rowsDir, `${row.name}.json`);
     const value = made.get(row.name)?.value;
     const hasBody = value !== void 0;
-    if (hasBody && !fs14.existsSync(rowFile))
+    if (hasBody && !fs15.existsSync(rowFile))
       throw new ManifestError(`Row ${row.name} has no file: run \`cmtk data make ${id}\` again.`);
     if (encoding === "form") {
       const why = notAForm(row, recipe.fields, value);
@@ -20954,12 +21278,12 @@ function writeCases(m4, id, o4 = {}) {
     });
   }
   const out = inside(m4, o4.out ?? path13.join("cmtk", "cases", `data-${id}.yaml`));
-  if (fs14.existsSync(out))
+  if (fs15.existsSync(out))
     throw new ManifestError(`${path13.relative(m4.root, out)} already exists; choose another --out, or delete it.`);
-  fs14.mkdirSync(path13.dirname(out), { recursive: true });
+  fs15.mkdirSync(path13.dirname(out), { recursive: true });
   const how = encoding === "form" ? "as a form" : "as the body";
   const subset = which === "all" ? "one per row" : `one per ${which} row (the rows the schema calls ${which})`;
-  fs14.writeFileSync(out, casesToYaml(cases, `Draft cases from the test-data recipe ${id}: ${subset}, each sending its row from cmtk/data/${id}/rows/ ${how}. A person accepts them with \`cmtk review\`.`), "utf8");
+  fs15.writeFileSync(out, casesToYaml(cases, `Draft cases from the test-data recipe ${id}: ${subset}, each sending its row from cmtk/data/${id}/rows/ ${how}. A person accepts them with \`cmtk review\`.`), "utf8");
   return { file: path13.relative(m4.root, out).split(path13.sep).join("/"), cases, withoutExpect, leftOut };
 }
 
@@ -20970,13 +21294,15 @@ process.on("warning", (w2) => {
     console.error(`${w2.name}: ${w2.message}`);
 });
 var HERE = path14.dirname(fileURLToPath(import.meta.url));
-var VERSION = true ? "0.5.2" : JSON.parse(fs15.readFileSync(path14.join(HERE, "..", "package.json"), "utf8")).version;
+var VERSION = true ? "0.5.2" : JSON.parse(fs16.readFileSync(path14.join(HERE, "..", "package.json"), "utf8")).version;
 var HELP = `cmtk ${VERSION}: test any system from its requirements, and prove a migrated system behaves like the old one.
 
 Usage:
   cmtk init --candidate <url> [--legacy <url>] [--system <name>]   write cmtk.yaml and a first case file
-  cmtk import-har <file.har>... [--include <regex>] [--exclude <regex>] [--out <file>]
+  cmtk import-har <file.har>... [--include <regex>] [--exclude <regex>] [--out <file>] [--draft-expect]
                                                                     turn recorded traffic into cases
+                                                                    (--draft-expect drafts each expect: from the recorded status and
+                                                                    content type; \`cmtk run\` skips it until a person confirms it)
   cmtk run [--target <name>] [--only <id,id>] [--allow-unsafe] [--accepted-only]
                                                                     check one system against each case's expect: block
                                                                     (--accepted-only leaves draft cases out, as in CI)
@@ -20999,18 +21325,20 @@ Usage:
                        [--only-rows name,name] [--except-rows name,name]
                                                                     one draft case per row, each sending its row from a file
   cmtk signoff run|compare                                          a person signs a report, at a terminal (never an agent)
-  cmtk adapter new <name>                                           write a new adapter from the template
+  cmtk adapter new <name> [--lang node|csharp]                      write a new adapter from a template (default: node)
   cmtk adapter check <name>                                         the conformance kit for an adapter
 
 Options:
   --manifest <file>   default: cmtk.yaml in the current folder
   --json              print the report as JSON
 
-Exit codes: 0 PASS, PARITY or DRIFT ONLY \xB7 1 FAIL or NO PARITY \xB7 2 INCOMPLETE or NO EVIDENCE \xB7 3 usage or settings problem.
+Exit codes: 0 PASS, PARITY or DRIFT ONLY \xB7 1 FAIL or NO PARITY \xB7 2 INCOMPLETE or NO EVIDENCE \xB7 3 usage or settings problem
+            4 nothing new failed, but read the limit: PASS WITH KNOWN ISSUES or PARTIAL COMPARISON.
 Docs: https://github.com/samuelnyamukapa/complete-migration-toolkit`;
 var UsageError = class extends Error {
 };
-var exitFor = (v2) => v2 === "PASS" || v2 === "PARITY" || v2 === "DRIFT ONLY" ? 0 : v2 === "FAIL" || v2 === "NO PARITY" ? 1 : 2;
+var EXIT_QUALIFIED = 4;
+var exitFor = (v2) => v2 === "PASS" || v2 === "PARITY" || v2 === "DRIFT ONLY" ? 0 : v2 === "FAIL" || v2 === "NO PARITY" ? 1 : v2 === "PASS WITH KNOWN ISSUES" || v2 === "PARTIAL COMPARISON" ? EXIT_QUALIFIED : 2;
 function printReport(r6, json, manifestRoot, evidence) {
   if (json) {
     console.log(JSON.stringify(r6, null, 2));
@@ -21026,7 +21354,7 @@ function printReport(r6, json, manifestRoot, evidence) {
       const d4 = c4.differences.find((x2) => !x2.drift);
       return `${d4.where}: ${d4.reference} vs ${d4.candidate}`;
     })() : c4.why ?? "";
-    console.log(`  ${c4.result} ${c4.id} ${c4.name}: ${first}`);
+    console.log(`  ${c4.known_issues ? `FAIL (known issue ${c4.known_issues.join(", ")})` : c4.result} ${c4.id} ${c4.name}: ${first}`);
   }
   const report = path14.relative(process.cwd(), path14.join(manifestRoot, evidence, r6.mode, "REPORT.md")) || "REPORT.md";
   console.log(`Report: ${report}`);
@@ -21044,6 +21372,7 @@ async function main(argv) {
       only: { type: "string" },
       "allow-unsafe": { type: "boolean", default: false },
       "accepted-only": { type: "boolean", default: false },
+      "draft-expect": { type: "boolean", default: false },
       candidate: { type: "string" },
       legacy: { type: "string" },
       system: { type: "string" },
@@ -21075,6 +21404,7 @@ async function main(argv) {
       rows: { type: "string" },
       "only-rows": { type: "string" },
       "except-rows": { type: "string" },
+      lang: { type: "string" },
       help: { type: "boolean", short: "h", default: false },
       version: { type: "boolean", short: "v", default: false }
     }
@@ -21104,17 +21434,24 @@ async function main(argv) {
         throw new UsageError("`cmtk import-har` needs at least one .har file.");
       const manifest = loadManifest(manifestFile);
       const existing = loadCases(manifest);
-      const res = importHar(rest.map((f4) => path14.resolve(f4)), { include: values.include, exclude: values.exclude, existing });
+      const res = importHar(rest.map((f4) => path14.resolve(f4)), { include: values.include, exclude: values.exclude, existing, draftExpect: values["draft-expect"] });
       const out = inside(manifest, values.out ?? "cmtk/cases/har.yaml");
-      if (fs15.existsSync(out))
+      if (fs16.existsSync(out))
         throw new UsageError(`${path14.relative(process.cwd(), out)} already exists; pass --out <new file>.`);
-      fs15.mkdirSync(path14.dirname(out), { recursive: true });
-      fs15.writeFileSync(out, casesToYaml(res.cases), "utf8");
+      fs16.mkdirSync(path14.dirname(out), { recursive: true });
+      fs16.writeFileSync(out, casesToYaml(res.cases, values["draft-expect"] ? "Imported from HAR recordings. Each drafted expect: is what the system answered, not the requirement: `cmtk review` confirms it, and `cmtk run` skips the case until then." : void 0), "utf8");
       console.log(`Added ${res.cases.length} cases to ${path14.relative(process.cwd(), out)}; skipped ${res.skipped} (static files, filtered or duplicates).`);
       if (res.droppedHeaders.length)
         console.log(`Dropped these headers from every case: ${res.droppedHeaders.join(", ")}. Credentials come from headers_from_env at run time.`);
       if (res.redacted.length)
         console.log(`Replaced credential-like values with REDACTED in ${res.redacted.length} case${res.redacted.length === 1 ? "" : "s"} (${res.redacted.slice(0, 10).join(", ")}${res.redacted.length > 10 ? ", \u2026" : ""}). Give those cases test values before they run.`);
+      if (values["draft-expect"]) {
+        console.log(`Drafted an expectation for ${res.drafted.length} case${res.drafted.length === 1 ? "" : "s"}, from the recorded status and content type only. No body text and no other header was copied.`);
+        if (res.noAnswer.length)
+          console.log(`The recording holds no answer for ${res.noAnswer.join(", ")}: write those expectations by hand.`);
+        console.log("Next: a person confirms each one with `cmtk review`. `cmtk run` skips those cases until then.");
+        return 0;
+      }
       console.log("Next: name each case's requirement, add `expect:` checks for `cmtk run`, then run it.");
       return 0;
     }
@@ -21131,10 +21468,10 @@ async function main(argv) {
       for (const mode of ["run", "compare"]) {
         const dir = path14.join(manifest.root, manifest.evidence, mode);
         const f4 = path14.join(dir, "REPORT.json");
-        if (!fs15.existsSync(f4))
+        if (!fs16.existsSync(f4))
           continue;
         any = true;
-        const r6 = JSON.parse(fs15.readFileSync(f4, "utf8"));
+        const r6 = JSON.parse(fs16.readFileSync(f4, "utf8"));
         console.log(`${mode}: ${r6.verdict} on ${r6.date}${r6.settings ? ` from ${r6.settings.manifest}` : ""}, ${describeSignoff(signoffState(dir))}`);
       }
       if (!any)
@@ -21177,7 +21514,7 @@ async function main(argv) {
     case "probe":
       return probe(manifestFile, rest, values.surface);
     case "adapter":
-      return adapterCommand(rest, manifestFile);
+      return adapterCommand(rest, manifestFile, values.lang);
     case "data":
       return dataCommand(rest, manifestFile, values);
     default:
@@ -21193,9 +21530,9 @@ async function signoff(manifestFile, mode) {
   const manifest = loadManifest(manifestFile);
   const dir = path14.join(manifest.root, manifest.evidence, mode);
   const json = path14.join(dir, "REPORT.json");
-  if (!fs15.existsSync(json))
+  if (!fs16.existsSync(json))
     throw new UsageError(`There is no ${mode} report yet. Run \`cmtk ${mode}\` first.`);
-  const report = JSON.parse(fs15.readFileSync(json, "utf8"));
+  const report = JSON.parse(fs16.readFileSync(json, "utf8"));
   console.log(`${mode} report for ${report.system}: ${report.verdict} (${report.date}). ${report.reason}`);
   if (report.settings) {
     const st2 = report.settings;
@@ -21203,6 +21540,11 @@ async function signoff(manifestFile, mode) {
     console.log(`Produced from ${st2.manifest}.${mode === "compare" ? ` Hidden by scrubs: ${scrubs.length ? scrubs.join(", ") : "nothing"}. Approved drift: ${st2.drift_entries} entries in ${st2.drift_file}.` : ""}`);
   } else
     console.log("This report does not record which settings produced it (made by cmtk before 0.2.0).");
+  if (report.scope && !report.scope.whole)
+    console.log(`Your signature covers only what was compared. ${report.scope.statement}`);
+  for (const k2 of report.known_issues ?? [])
+    if (k2.state === "still fails")
+      console.log(`Known issue ${k2.id} still fails on case ${k2.case}: accepted by ${k2.accepted_by}. Your signature covers this report with that failure in it. ${k2.reason}`);
   console.log(`Read it first: ${path14.relative(process.cwd(), path14.join(dir, "REPORT.md"))}`);
   const rl = readline2.createInterface({ input: process.stdin, output: process.stdout });
   try {
@@ -21222,14 +21564,16 @@ async function review(manifestFile) {
   }
   const m4 = loadManifest(manifestFile);
   const drafts = loadCases(m4).filter((c4) => c4.draft);
+  const drafted = loadCases(m4).filter((c4) => c4.expect_draft && !c4.draft);
   const pending = loadProposals(m4).filter((p4) => p4.status === "pending");
-  if (!drafts.length && !pending.length) {
-    console.log("Nothing to review: no draft cases and no proposals.");
+  if (!drafts.length && !drafted.length && !pending.length) {
+    console.log("Nothing to review: no draft cases, no drafted expectations and no proposals.");
     return 0;
   }
-  console.log(`${drafts.length} draft case${drafts.length === 1 ? "" : "s"} and ${pending.length} proposal${pending.length === 1 ? "" : "s"} to review.`);
+  console.log(`${drafts.length} draft case${drafts.length === 1 ? "" : "s"}, ${drafted.length} drafted expectation${drafted.length === 1 ? "" : "s"} and ${pending.length} proposal${pending.length === 1 ? "" : "s"} to review.`);
   console.log("For each: a = accept, r = reject (you give a reason), s = skip for now, q = stop.");
-  console.log("A = accept this draft and every remaining draft in the same file (you confirm first): for the cases a recipe generated, once you have read the recipe.\n");
+  console.log("A = accept this draft and every remaining draft in the same file (you confirm first): for the cases a recipe generated, once you have read the recipe.");
+  console.log("A drafted expectation records what the system answered, not what the requirement says, so you confirm each one on its own.\n");
   const rl = readline2.createInterface({ input: process.stdin, output: process.stdout });
   const date = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
   const tally = { accepted: 0, rejected: 0, skipped: 0, failed: 0 };
@@ -21260,8 +21604,8 @@ async function review(manifestFile) {
         console.log(`
 Draft case ${c4.id} in ${c4.file}:
 ${import_yaml5.default.stringify(shown, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
-        const rest = drafts.filter((d4) => d4.file === c4.file && !done.has(d4.id));
-        let v2 = await ask(rest.length > 1);
+        const rest = drafts.filter((d4) => d4.file === c4.file && !done.has(d4.id) && !d4.expect_draft);
+        let v2 = await ask(!c4.expect_draft && rest.length > 1);
         while (v2 === "A") {
           const yes = (await rl.question(`Accept all ${rest.length} remaining drafts in ${c4.file}, ${c4.id} included? Type yes to confirm: `)).trim().toLowerCase();
           if (yes === "yes")
@@ -21292,6 +21636,26 @@ ${import_yaml5.default.stringify(shown, { lineWidth: 0 }).trimEnd().replace(/^/g
         }
         if (v2 === "r") {
           rejectDraft(m4, c4.id, name, date, (await rl.question("Why reject it? ")).trim() || "no reason given");
+          tally.rejected++;
+        }
+        if (v2 === "s")
+          tally.skipped++;
+        return true;
+      }),
+      ...drafted.map((c4) => async () => {
+        const { file: _file, expect_draft: _d, ...shown } = c4;
+        console.log(`
+Drafted expectation for case ${c4.id} in ${c4.file}. It is what the system answered in the recording; accept it only if that is what should happen:
+${import_yaml5.default.stringify(shown, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
+        const v2 = await ask();
+        if (v2 === "q")
+          return false;
+        if (v2 === "a") {
+          confirmExpectation(m4, c4.id, name, date, c4);
+          tally.accepted++;
+        }
+        if (v2 === "r") {
+          rejectExpectation(m4, c4.id, name, date, (await rl.question("Why reject it? The case stays, with no expectation. ")).trim() || "no reason given", c4);
           tally.rejected++;
         }
         if (v2 === "s")
@@ -21371,20 +21735,34 @@ async function probe(manifestFile, args, surface = "http") {
     await adapters.closeAll();
   }
 }
-async function adapterCommand(args, manifestFile) {
+function writeTemplate(tpl, dir, name) {
+  fs16.mkdirSync(dir, { recursive: true });
+  for (const e6 of fs16.readdirSync(tpl, { withFileTypes: true })) {
+    const to = path14.join(dir, e6.name === "gitignore" ? ".gitignore" : e6.name.replaceAll("__NAME__", name));
+    if (e6.isDirectory())
+      writeTemplate(path14.join(tpl, e6.name), to, name);
+    else
+      fs16.writeFileSync(to, fs16.readFileSync(path14.join(tpl, e6.name), "utf8").replaceAll("__NAME__", name), "utf8");
+  }
+}
+async function adapterCommand(args, manifestFile, lang = "node") {
   const [sub, name] = args;
   if (!name || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(name) || name === "http")
     throw new UsageError("Give the adapter a name of letters, digits, '.', '-' and '_' (not http, which is built in).");
   const root = path14.dirname(manifestFile);
   const dir = path14.join(root, "adapters", name);
   if (sub === "new") {
-    if (fs15.existsSync(dir))
+    if (lang !== "node" && lang !== "csharp")
+      throw new UsageError(`--lang must be node or csharp, not ${lang}.`);
+    if (fs16.existsSync(dir))
       throw new UsageError(`adapters/${name} already exists.`);
-    const tpl = path14.join(HERE, "..", "templates", "adapter-node");
-    fs15.cpSync(tpl, dir, { recursive: true });
-    for (const f4 of ["index.mjs", "README.md", path14.join("samples", "cases.yaml")]) {
-      const p4 = path14.join(dir, f4);
-      fs15.writeFileSync(p4, fs15.readFileSync(p4, "utf8").replaceAll("__NAME__", name), "utf8");
+    writeTemplate(path14.join(HERE, "..", "templates", `adapter-${lang}`), dir, name);
+    if (lang === "csharp") {
+      console.log(`Wrote adapters/${name}/. Next: write Run() in Adapter.cs, then \`dotnet build -c Release adapters/${name}\` and \`cmtk adapter check ${name}\`.`);
+      console.log(`Register it in cmtk.yaml:
+  adapters:
+    ${name}: { command: dotnet, args: [adapters/${name}/bin/Release/net8.0/${name}.dll] }`);
+      return 0;
     }
     console.log(`Wrote adapters/${name}/. Next: write run() in index.mjs, then \`cmtk adapter check ${name}\`.`);
     console.log(`Register it in cmtk.yaml:
@@ -21396,18 +21774,37 @@ async function adapterCommand(args, manifestFile) {
     return adapterCheck(name, dir, manifestFile);
   throw new UsageError("`cmtk adapter` takes `new <name>` or `check <name>`.");
 }
+function builtCsharpAdapter(name, dir) {
+  const top = fs16.existsSync(dir) ? fs16.readdirSync(dir) : [];
+  const project = top.find((f4) => f4.endsWith(".csproj"));
+  if (!project)
+    return void 0;
+  const stem = project.slice(0, -".csproj".length);
+  const release = path14.join(dir, "bin", "Release");
+  const frameworks = fs16.existsSync(release) ? fs16.readdirSync(release) : [];
+  const built = frameworks.map((f4) => path14.join(release, f4, `${stem}.dll`)).find((f4) => fs16.existsSync(f4));
+  const build = `Run: dotnet build -c Release adapters/${name}`;
+  if (!built)
+    throw new UsageError(`adapters/${name} has not been built. ${build}`);
+  const code = top.filter((f4) => f4.endsWith(".cs") || f4.endsWith(".csproj"));
+  const newer = code.find((f4) => fs16.statSync(path14.join(dir, f4)).mtimeMs > fs16.statSync(built).mtimeMs);
+  if (newer)
+    throw new UsageError(`adapters/${name}/${newer} is newer than the build. ${build}`);
+  return { command: "dotnet", args: [built] };
+}
 async function adapterCheck(name, dir, manifestFile) {
-  let spec = { command: process.execPath, args: [path14.join(dir, "index.mjs")] };
-  if (fs15.existsSync(manifestFile)) {
+  let spec;
+  if (fs16.existsSync(manifestFile)) {
     const m4 = loadManifest(manifestFile);
     if (m4.adapters[name])
       spec = { command: m4.adapters[name].command, args: m4.adapters[name].args ?? [] };
   }
+  spec ??= builtCsharpAdapter(name, dir) ?? { command: process.execPath, args: [path14.join(dir, "index.mjs")] };
   const samplesFile = path14.join(dir, "samples", "cases.yaml");
-  const doc = fs15.existsSync(samplesFile) ? readStructured(samplesFile) : {};
+  const doc = fs16.existsSync(samplesFile) ? readStructured(samplesFile) : {};
   const samples = doc.cases ?? [];
   const secret = `cmtk-check-${Math.random().toString(36).slice(2)}`;
-  const target2 = { name: "check", base_url: "http://127.0.0.1:9" };
+  const target2 = { ...doc.check_target, name: "check", base_url: "http://127.0.0.1:9" };
   const checks = [];
   const adapter = processAdapter(name, { ...spec, timeout_s: 60 }, path14.dirname(manifestFile));
   try {

@@ -27,3 +27,26 @@ jobs:
       - name: The plugin's bundled server is up to date
         if: runner.os == 'Linux'
         run: npm run bundle && git diff --exit-code -- plugin
+
+  dotnet:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    env:
+      CMTK_REQUIRE_DOTNET: "1"
+      DOTNET_NOLOGO: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: npm ci
+      - run: npm run build
+      - run: node --test packages/cli/test/csharp-adapter.test.mjs adapters/worker/test/worker.test.mjs
