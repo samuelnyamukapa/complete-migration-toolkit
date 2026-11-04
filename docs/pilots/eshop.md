@@ -54,7 +54,7 @@ It took about 25 minutes from the first script to the final reports, on the mach
 
 `API-2-01` expects `GET /api` to answer `{"Message":"Hello World!"}`, as its controller intends. Legacy answers 404. The controller class is named `CatalogController2`, and ASP.NET MVC only registers classes whose names end in `Controller`, so the route never exists.
 
-This is recorded as known legacy issue **LEG-1** (cmtk has no ledger for it yet: #40). The case was not changed to hide it. By the migration rule (match legacy first, fix later as approved drift), the new host must also answer 404 until the API's owner decides otherwise.
+This is recorded as known legacy issue **LEG-1** (cmtk had no ledger for it at the time; #40 added one, and `cmtk/proposals.yaml` in the example now holds a proposal for a person to accept). The case was not changed to hide it. By the migration rule (match legacy first, fix later as approved drift), the new host must also answer 404 until the API's owner decides otherwise.
 
 The run also confirmed these legacy quirks, so a migration has to keep them:
 - **RULE-006:** the pager says "Showing 10 of 12" on the last page, which holds two items.

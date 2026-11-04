@@ -68,6 +68,29 @@ test("the plugin: bundled server and command, one version everywhere, seven skil
     }
 });
 
+test("an agent can propose a known issue but never add one", async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cmtk-mcp-"));
+    const manifest = path.join(dir, "cmtk.yaml");
+    fs.writeFileSync(manifest, "system: s\ntargets:\n  candidate: { base_url: 'http://127.0.0.1:9' }\n");
+    fs.mkdirSync(path.join(dir, "cmtk/cases"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "cmtk/cases/a.yaml"), "cases:\n  - { id: A, request: GET /, expect: { status: 200 } }\n");
+    const client = new Client({ name: "test", version: "1" });
+    await client.connect(new StdioClientTransport({ command: process.execPath, args: [SERVER] }));
+    try {
+        const r = await client.callTool({ name: "cmtk_propose", arguments: { manifest, kind: "known_issue", issue_id: "LEG-1", case: "A", fails: [{ check: "status", actual: "404" }], reason: "legacy defect", agent: "triage", accepted_by: "Jane Smith" } });
+        assert.equal(r.isError, false, r.content[0].text);
+        assert.match(r.content[0].text, /record known issue "LEG-1"/);
+        assert.match(r.content[0].text, /waits for a person/);
+        assert.ok(!fs.existsSync(path.join(dir, "cmtk/known-issues.yaml")), "no entry is written");
+        const proposals = fs.readFileSync(path.join(dir, "cmtk/proposals.yaml"), "utf8");
+        assert.match(proposals, /status: pending/);
+        assert.match(proposals, /proposed_by: "agent: triage"/);
+        assert.doesNotMatch(proposals, /Jane Smith/, "a name an agent passes never reaches the proposal");
+    } finally {
+        await client.close();
+    }
+});
+
 test("an agent's HAR import is drafts, CI can leave drafts out, and the person's commands are quoted", async () => {
     const srv = http.createServer((req, res) => { res.writeHead(200, { "content-type": "application/json" }); res.end('{"ok":true}'); });
     await new Promise((r) => srv.listen(0, "127.0.0.1", r));

@@ -23,6 +23,8 @@ export interface Signoff {
     /** The settings file that produced the report, as the report records it. */
     manifest?: string;
     manifest_sha256?: string;
+    /** The known issues this signature accepts as still failing, each with the person who accepted it. */
+    known_issues?: string[];
 }
 
 export class SignoffError extends Error {}
@@ -73,7 +75,8 @@ export function signoffState(dir: string): SignoffState {
 export function describeSignoff(st: SignoffState): string {
     if (st.state === "none") return "not signed";
     const s = st.signoff;
-    return st.state === "signed" ? `signed by ${s.name} (${s.role}): ${s.decision}, ${s.date}` : `the signature by ${s.name} is for different evidence, so it no longer counts`;
+    const covers = s.known_issues?.length ? `; known issues still failing: ${s.known_issues.join(", ")}` : "";
+    return st.state === "signed" ? `signed by ${s.name} (${s.role}): ${s.decision}, ${s.date}${covers}` : `the signature by ${s.name} is for different evidence, so it no longer counts`;
 }
 
 /** Record a person's decision on the report in `dir`. */
@@ -96,8 +99,10 @@ export function recordSignoff(dir: string, who: { name: string; role: string; de
     const name = who.name.trim(), role = who.role.trim(), decision = who.decision.trim().toLowerCase();
     if (!name || !role || !(DECISIONS as readonly string[]).includes(decision)) throw new SignoffError(`Name, role and one of ${DECISIONS.join(" / ")} are all needed. Nothing was signed.`);
     if (/[\u0000-\u001f\u007f-\u009f]/.test(name + role)) throw new SignoffError("Name and role must be plain text. Nothing was signed.");
+    const known = (report.known_issues ?? []).filter((k) => k.state === "still fails").map((k) => `${k.id} (accepted by ${k.accepted_by})`);
     const s: Signoff = {
         name, role, decision: decision as Signoff["decision"], date, verdict: report.verdict, evidence_sha256: evidenceFingerprint(dir),
+        ...(known.length ? { known_issues: known } : {}),
         ...(report.settings ? { manifest: report.settings.manifest, manifest_sha256: report.settings.manifest_sha256 } : {}),
     };
     const cell = (v: string) => v.replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");

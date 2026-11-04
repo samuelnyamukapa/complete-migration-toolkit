@@ -85,6 +85,7 @@ export function loadManifest(file: string): Manifest {
         contracts,
         cases: globsOf(raw.cases),
         drift: pathOf(raw.drift, "drift", "cmtk/drift.yaml"),
+        known_issues: pathOf(raw.known_issues, "known_issues", "cmtk/known-issues.yaml"),
         proposals: pathOf(raw.proposals, "proposals", "cmtk/proposals.yaml"),
         explore_requests_per_day: positive(raw.explore_requests_per_day, "explore_requests_per_day", 1000),
         evidence: pathOf(raw.evidence, "evidence", "cmtk/evidence"),
@@ -286,6 +287,7 @@ targets:
   candidate: { base_url: ${JSON.stringify(candidate)} }   # the system under test
 
 cases: [cmtk/cases/*.yaml]    # one case per acceptance criterion; agents' drafts wait for \`cmtk review\`
+# known_issues: cmtk/known-issues.yaml   # failures a named person accepted; only a person adds an entry
 evidence: cmtk/evidence
 
 allow_unsafe_methods: false   # POST, PUT, PATCH, DELETE only against disposable test data
@@ -321,6 +323,7 @@ contracts: []
 
 cases: [cmtk/cases/*.yaml]
 drift: cmtk/drift.yaml        # approved differences, each with a named approver
+# known_issues: cmtk/known-issues.yaml   # failures a named person accepted; only a person adds an entry
 evidence: cmtk/evidence
 
 allow_unsafe_methods: false   # POST, PUT, PATCH, DELETE only against disposable test data

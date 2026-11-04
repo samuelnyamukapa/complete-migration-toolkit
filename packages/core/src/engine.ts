@@ -13,9 +13,10 @@ import { cleanUrl } from "./defects.js";
 import { compareObservations, scrubberOf } from "./diff.js";
 import { coveringDrift } from "./drift.js";
 import { checkExpectation } from "./expect.js";
+import { knownInReport, loadKnownIssues, markKnown } from "./known.js";
 import { loadCases, loadDrift, ManifestError, ownedFolder } from "./manifest.js";
 import { renderReport, summarise } from "./report.js";
-import type { Case, CaseOutcome, ContractOutcome, Drift, Manifest, MatchLevel, Report, ReportSettings, Target } from "./types.js";
+import type { Case, CaseOutcome, ContractOutcome, Drift, KnownIssue, Manifest, MatchLevel, Report, ReportSettings, Target } from "./types.js";
 
 export const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -170,7 +171,7 @@ function evidenceDir(manifest: Manifest, mode: string) {
 const failed = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
 /** What produced a report: the settings file and everything in it that hides or approves a difference. */
-export function settingsOf(manifest: Manifest, drift: Drift[]): ReportSettings {
+export function settingsOf(manifest: Manifest, drift: Drift[], known?: KnownIssue[]): ReportSettings {
     return {
         manifest: path.relative(manifest.root, manifest.file).split(path.sep).join("/"),
         manifest_sha256: crypto.createHash("sha256").update(fs.readFileSync(manifest.file)).digest("hex"),
@@ -179,6 +180,7 @@ export function settingsOf(manifest: Manifest, drift: Drift[]): ReportSettings {
         scrub: manifest.scrub,
         drift_file: manifest.drift,
         drift_entries: drift.length,
+        ...(known ? { known_issues_file: manifest.known_issues, known_issues_entries: known.length } : {}),
     };
 }
 
@@ -198,6 +200,8 @@ function target(manifest: Manifest, name: string | undefined, role: string): Tar
 export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Report> {
     const t = target(manifest, opts.target ?? manifest.default_target, "default_target");
     const cases = selectCases(manifest, opts.only, opts.acceptedOnly);
+    // A bad ledger stops the run here, before any evidence is touched. An entry for another target does not apply.
+    const known = loadKnownIssues(manifest).filter((k) => !k.target || k.target === t.name);
     const extra = envHeaders(manifest);
     const adapters = adaptersFor(manifest);
     const ev = evidenceDir(manifest, "run");
@@ -219,7 +223,8 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
                     const sent = { ...(obs.inputs?.length ? { inputs: obs.inputs } : {}), ...(obs.before ? { before: obs.before } : {}) };
                     if (obs.error) { out.push({ ...b, ...sent, result: "ERROR", why: obs.error }); continue; }
                     const failures = checkExpectation(c.expect, obs);
-                    out.push({ ...b, ...sent, result: failures.length ? "FAIL" : "PASS", ...(failures.length ? { failures } : {}), ...(obs.truncated ? { note: "the answer was over 5 MB; only the first 5 MB were checked" } : {}) });
+                    const accepted = markKnown(c.id, failures, known);
+                    out.push({ ...b, ...sent, result: failures.length ? "FAIL" : "PASS", ...(failures.length ? { failures } : {}), ...(accepted ? { known_issues: accepted } : {}), ...(obs.truncated ? { note: "the answer was over 5 MB; only the first 5 MB were checked" } : {}) });
                 } catch (err) {
                     out.push({ ...b, result: "ERROR", why: failed(err) });
                 }
@@ -227,7 +232,7 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
         } finally {
             await adapters.closeAll();
         }
-        const report = summarise({ mode: "run", manifest, targets: { [t.name]: where(t) }, cases: out, contracts: [], drift: [], usedDrift: new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, []), excludedDrafts: cases.excluded });
+        const report = summarise({ mode: "run", manifest, targets: { [t.name]: where(t) }, cases: out, contracts: [], drift: [], usedDrift: new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, [], known), excludedDrafts: cases.excluded, known: knownInReport(known, out, new Set(loadCases(manifest).map((c) => c.id))) });
         writeJson(path.join(dir, "REPORT.json"), report);
         fs.writeFileSync(path.join(dir, "REPORT.md"), renderReport(report), "utf8");
         ev.commit();

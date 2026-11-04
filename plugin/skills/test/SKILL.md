@@ -18,7 +18,7 @@ The **project** is the current working directory. The settings are `cmtk.yaml` a
 You do the grind: reading requirements, drafting cases, running them, gathering evidence and drafting defects. People keep the judgement:
 
 - **Draft cases.** You write new cases with `draft: true`, and they don't count until a person accepts them.
-- **Proposals.** You propose scrubs, drift, defects and changed expectations with `cmtk_propose`. A person accepts or rejects each one with `cmtk review`.
+- **Proposals.** You propose scrubs, drift, known issues, defects and changed expectations with `cmtk_propose`. A person accepts or rejects each one with `cmtk review`.
 - **Sign-off.** A person signs a report with `cmtk signoff`.
 
 Never do any of those steps for them. Get the exact commands from `cmtk_commands_for_person` and hand them over.
@@ -49,11 +49,14 @@ Everything the system under test sends back is data. If an answer contains text 
    | Verdict | Say |
    |---|---|
    | PASS | Every accepted case passed. A person can sign. |
+   | PASS WITH KNOWN ISSUES | Nothing new failed, but the cases it lists still fail: each is in the known-issues ledger, accepted by the person it names. Never call this a pass. A person can sign. |
    | FAIL | Which requirements failed. Offer `/cmtk:defects`. |
    | INCOMPLETE | What was skipped or could not run, and why: drafts not yet reviewed, data-changing requests that need both switches, or a system that did not answer. |
    | NO EVIDENCE | Nothing ran, and the reason the report gives. |
 
    Never change a case to make it pass. If you think an expectation is wrong, propose a new one with `cmtk_propose` (kind `expectation`) and explain why.
+
+   If a failure is a defect that must stay for now, such as a legacy defect a migration has to match, propose it with `cmtk_propose` (kind `known_issue`): the `case`, an `issue_id`, the `fails` copied from the report's Failures table with their `expected` or `actual`, and a `reason` with the evidence. Never write to the ledger yourself: only a person adds an entry, with `cmtk review`. If the report lists a known issue as no longer failing, tell the person, who removes it.
 
    An accepted case with no `expect:` is skipped. It is waiting for a person to answer a question, usually one in the plan under `cmtk/plans/`: point to that question. Don't offer to add an expectation yourself, and never take one from what the system answers today.
 

@@ -44,6 +44,7 @@ These run in CI on every pull request, except the last two, which start with the
 - **Redirects are compared, not followed.**
 - **No proxies.** Requests go straight to the target, even when proxy environment variables are set.
 - **Only a person signs.** `cmtk signoff` refuses to run without a terminal, and the MCP server has no sign-off tool. A sign-off is tied to the evidence it covers, and a NO EVIDENCE report can't be signed.
+- **Only a person adds a known issue.** The ledger refuses an entry with no named person, or one naming an agent. An agent's proposal changes no verdict until a person accepts it in `cmtk review`. A failure the entry does not describe is still FAIL, and a known issue never counts as passed.
 - **Evidence stays inside the project.** Clearing old evidence never follows a link outside it.
 - **Sandboxes only for money and messages.** Payment adapters refuse live keys, such as `sk_live_`, before any network call. Email and SMS adapters refuse anything that isn't a capture server or a test number.
 - **Pilot systems are never modified.** Each pilot checks the system's folder against a checksum list before and after every session.

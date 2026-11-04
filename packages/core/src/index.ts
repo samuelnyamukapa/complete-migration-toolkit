@@ -5,6 +5,7 @@ export { compareObservations, diffJson, diffXml, parseXml, parseJsonKeepingNumbe
 export { parseJsonExact, JsonNumber, JsonObject, jsonEqual } from "./json.js";
 export { recordSignoff, signoffState, describeSignoff, evidenceFingerprint, SignoffError, DECISIONS, type Signoff, type SignoffState } from "./signoff.js";
 export { checkExpectation } from "./expect.js";
+export { loadKnownIssues, markKnown, knownInReport } from "./known.js";
 export { checkContract, diffOpenApi, diffWsdl } from "./contracts.js";
 export { coveringDrift, covers } from "./drift.js";
 export { importHar, casesToYaml, looksSecret, redactBody, REDACTED, DROPPED_HEADERS } from "./har.js";

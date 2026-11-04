@@ -5,11 +5,12 @@ import fs from "node:fs";
 import path from "node:path";
 import YAML, { isMap, isSeq, type Document, YAMLMap, YAMLSeq } from "yaml";
 
+import { KNOWN_ISSUE_ID, knownFails, loadKnownIssues } from "./known.js";
 import { inside, loadCases, loadDrift, ManifestError } from "./manifest.js";
 import { parsePath } from "./jsonpath.js";
-import type { Case, Expectation, Manifest } from "./types.js";
+import type { Case, Expectation, KnownFailure, Manifest } from "./types.js";
 
-export const PROPOSAL_KINDS = ["scrub", "drift", "defect", "expectation"] as const;
+export const PROPOSAL_KINDS = ["scrub", "drift", "known_issue", "defect", "expectation"] as const;
 export type ProposalKind = (typeof PROPOSAL_KINDS)[number];
 
 export interface ScrubRule {
@@ -28,9 +29,13 @@ export interface Proposal {
     proposed_on: string;
     /** scrub */
     rule?: ScrubRule;
-    /** drift: a case id or "*", and a `where` from a report. expectation: the case to change. */
+    /** drift: a case id or "*", and a `where` from a report. expectation: the case to change. known_issue: the one case. */
     case?: string;
     where?: string;
+    /** known_issue: the id to record it under, such as LEG-1 (default: the next KNOWN-nnn), what fails, and the one target it is limited to. */
+    issue_id?: string;
+    fails?: KnownFailure[];
+    target?: string;
     /** defect */
     title?: string;
     cases?: string[];
@@ -47,6 +52,8 @@ export interface Proposal {
 export type ProposalInput = Omit<Proposal, "id" | "status" | "proposed_on" | "decided_by" | "decided_on" | "decision_note" | "applied">;
 
 const HEADER = "# Proposals from agents. Each one waits for a person: only `cmtk review` accepts or rejects it.\n";
+
+const KNOWN_ISSUES_HEADER = "# Known issues: failures of `cmtk run` a named person accepted. Only a person adds an entry.\n# Each still shows as a failure, and anything an entry does not describe is an ordinary FAIL.\nknown_issues: []\n";
 
 // ---------------------------------------------------------------- YAML files edited in place
 
@@ -119,7 +126,7 @@ const EXPECT_KEYS = new Set(["status", "headers", "json", "body_contains", "body
 
 export function addProposal(manifest: Manifest, input: ProposalInput, date: string): Proposal {
     if (!PROPOSAL_KINDS.includes(input.kind)) throw new ManifestError(`kind must be one of ${PROPOSAL_KINDS.join(", ")}.`);
-    if ("approved_by" in (input as object) || "decided_by" in (input as object)) throw new ManifestError("A proposal cannot carry an approval: only a person decides, with `cmtk review`.");
+    if (["approved_by", "accepted_by", "decided_by"].some((k) => k in (input as object))) throw new ManifestError("A proposal cannot carry an approval: only a person decides, with `cmtk review`.");
     const ids = new Set(loadCases(manifest).map((c) => c.id));
     const known = (id: unknown, what: string) => {
         const v = text(id, what, 100);
@@ -140,6 +147,19 @@ export function addProposal(manifest: Manifest, input: ProposalInput, date: stri
         p.where = text(input.where, "where", 500);
         if (p.where.replace(/[*$.[\]\s:]/g, "").length < 2) throw new ManifestError("`where` must name a place from a report, such as $.items[*].price or header:content-type; a wildcard alone would approve everything.");
     }
+    if (input.kind === "known_issue") {
+        p.case = known(input.case, "case");
+        p.fails = knownFails(input.fails, "A known issue proposal").map((f) => ({ check: text(f.check, "fails.check", 500), ...(f.expected !== undefined ? { expected: text(f.expected, "fails.expected", 500) } : {}), ...(f.actual !== undefined ? { actual: text(f.actual, "fails.actual", 500) } : {}) }));
+        if (input.issue_id !== undefined) {
+            if (!KNOWN_ISSUE_ID.test(input.issue_id)) throw new ManifestError("issue_id must be letters, digits, '.', '-' and '_', such as LEG-1.");
+            if (loadKnownIssues(manifest).some((k) => k.id === input.issue_id)) throw new ManifestError(`The ledger already holds ${input.issue_id}.`);
+            p.issue_id = input.issue_id;
+        }
+        if (input.target !== undefined) {
+            if (!manifest.targets[input.target]) throw new ManifestError(`target: there is no target ${input.target}.`);
+            p.target = input.target;
+        }
+    }
     if (input.kind === "defect") {
         p.title = text(input.title, "title", 200);
         if (!Array.isArray(input.cases) || input.cases.length === 0) throw new ManifestError("A defect proposal names at least one case in `cases`.");
@@ -155,7 +175,7 @@ export function addProposal(manifest: Manifest, input: ProposalInput, date: stri
         p.expect = e as Expectation;
     }
     const existing = loadProposals(manifest);
-    const key = (x: Proposal) => JSON.stringify([x.kind, x.case, x.where, x.rule, x.title, x.cases, x.expect]);
+    const key = (x: Proposal) => JSON.stringify([x.kind, x.case, x.where, x.rule, x.title, x.cases, x.expect, x.fails, x.target]);
     const same = existing.find((x) => x.status === "pending" && key(x) === key(p));
     if (same) throw new ManifestError(`The same proposal is already waiting for a person: ${same.id}.`);
     p.id = `P-${String(1 + Math.max(0, ...existing.map((x) => Number(/^P-(\d+)$/.exec(x.id)?.[1] ?? 0)))).padStart(3, "0")}`;
@@ -173,6 +193,7 @@ export function describeProposal(p: Proposal): string {
     const lines = [`${plain(p.id)}  ${plain(p.kind)}, proposed by ${plain(p.proposed_by)} on ${plain(p.proposed_on)}`];
     if (p.kind === "scrub") lines.push(`  hide on every run: ${q(p.rule)}`);
     if (p.kind === "drift") lines.push(`  approve the difference at ${q(p.where)} for ${p.case === "*" ? "EVERY case" : `case ${q(p.case)}`}`);
+    if (p.kind === "known_issue") lines.push(`  record known issue ${p.issue_id ? q(p.issue_id) : "(the next free id)"}: case ${q(p.case)}${p.target ? ` on target ${q(p.target)}` : ""} may keep failing like this: ${q(p.fails)}`, "  it still shows as a failure, and the run can read PASS WITH KNOWN ISSUES, with your name on it");
     if (p.kind === "defect") lines.push(`  defect: ${q(p.title)}`, `  cases: ${q(p.cases)}`, ...(p.summary ? [`  summary: ${plain(p.summary)}`] : []));
     if (p.kind === "expectation") lines.push(`  change what case ${q(p.case)} expects to: ${q(p.expect)}`);
     lines.push(`  why: ${plain(p.reason)}`);
@@ -235,6 +256,15 @@ export function decideProposal(manifest: Manifest, id: string, accept: boolean, 
             seqAt(doc, "drift").add(doc.createNode({ id: next, case: p.case, where: p.where, reason: p.reason, approved_by: who, date }));
         });
         applied = `${next} in ${manifest.drift}`;
+    }
+    if (p.kind === "known_issue") {
+        const ledger = loadKnownIssues(manifest);
+        const next = p.issue_id ?? `KNOWN-${String(1 + Math.max(0, ...ledger.map((k) => Number(/^KNOWN-(\d+)$/.exec(k.id)?.[1] ?? 0)))).padStart(3, "0")}`;
+        if (ledger.some((k) => k.id === next)) throw new ManifestError(`The ledger already holds ${next}. Nothing was applied.`);
+        editYaml(inside(manifest, manifest.known_issues), KNOWN_ISSUES_HEADER, (doc) => {
+            seqAt(doc, "known_issues").add(doc.createNode({ id: next, case: p.case, fails: p.fails, reason: p.reason, accepted_by: who, date, ...(p.target ? { target: p.target } : {}) }));
+        });
+        applied = `${next} in ${manifest.known_issues}`;
     }
     if (p.kind === "defect") applied = "listed by `cmtk defects compare`";
     if (p.kind === "expectation") {

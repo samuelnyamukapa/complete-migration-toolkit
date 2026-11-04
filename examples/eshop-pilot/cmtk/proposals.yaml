@@ -1,0 +1,17 @@
+# Proposals from agents. Each one waits for a person: only `cmtk review` accepts or rejects it.
+proposals:
+  - id: P-001
+    kind: known_issue
+    status: pending
+    reason: "Legacy eShop answers 404 for GET /api, so API-2-01 fails on status and body (reports/run-legacy.REPORT.md). CatalogController2 is never registered as a controller. The rule is to match legacy first, so the case stays as written. See docs/pilots/eshop.md, LEG-1."
+    proposed_by: "agent: claude"
+    proposed_on: 2026-11-04
+    case: API-2-01
+    issue_id: LEG-1
+    fails:
+      - check: status
+        expected: "200"
+        actual: "404"
+      - check: body
+        expected: JSON
+    target: legacy

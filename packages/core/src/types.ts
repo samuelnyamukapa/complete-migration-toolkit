@@ -59,7 +59,9 @@ export interface Manifest {
     /** Globs, relative to the manifest, of the case files. */
     cases: string[];
     drift: string;
-    /** Proposals from agents (scrubs, drift, defects, expectation changes) waiting for a person. */
+    /** The known-issues ledger: failures of `cmtk run` that a named person accepted. */
+    known_issues: string;
+    /** Proposals from agents (scrubs, drift, known issues, defects, expectation changes) waiting for a person. */
     proposals: string;
     /** The most requests exploration may send in one day, across all sessions. */
     explore_requests_per_day: number;
@@ -223,6 +225,31 @@ export interface Drift {
     date?: string;
 }
 
+/** One failure a known issue accepts, in the words of a report. Leave out `expected` or `actual` to accept any. */
+export interface KnownFailure {
+    check: string;
+    expected?: string;
+    actual?: string;
+}
+
+/** A failure that must stay for now, such as a legacy defect. Only a person adds one. */
+export interface KnownIssue {
+    id: string;
+    /** One case id, never a wildcard. */
+    case: string;
+    fails: KnownFailure[];
+    reason: string;
+    accepted_by: string;
+    date?: string;
+    /** Only on this target. Default: every target. */
+    target?: string;
+}
+
+/** A ledger entry as a report lists it: still failing, stale, or not checked by this run. */
+export interface KnownIssueInReport extends KnownIssue {
+    state: "still fails" | "no longer fails" | "not checked";
+}
+
 export type CaseResult =
     | "PASS" | "FAIL"            // cmtk run
     | "MATCH" | "DRIFT" | "DIFFERENT" // cmtk compare (DRIFT: only approved differences)
@@ -232,6 +259,8 @@ export interface Failure {
     check: string;
     expected: string;
     actual: string;
+    /** The known issue that accepts this failure, if any. */
+    known_issue?: string;
 }
 
 export interface CaseOutcome {
@@ -251,6 +280,8 @@ export interface CaseOutcome {
     failures?: Failure[];
     differences?: Difference[];
     note?: string;
+    /** Set when result is FAIL and every failure is accepted by these known issues. */
+    known_issues?: string[];
 }
 
 export interface ContractFinding {
@@ -271,7 +302,7 @@ export interface ContractOutcome {
 }
 
 export type Verdict =
-    | "PASS" | "FAIL"                       // cmtk run
+    | "PASS" | "PASS WITH KNOWN ISSUES" | "FAIL" // cmtk run
     | "PARITY" | "DRIFT ONLY" | "NO PARITY"  // cmtk compare
     | "INCOMPLETE" | "NO EVIDENCE";
 
@@ -284,6 +315,8 @@ export interface ReportSettings {
     scrub: Scrub;
     drift_file: string;
     drift_entries: number;
+    known_issues_file?: string;
+    known_issues_entries?: number;
 }
 
 export interface Report {
@@ -298,6 +331,10 @@ export interface Report {
     contracts: ContractOutcome[];
     requirements: { requirement: string; cases: number; passed: number; failed: number; other: number }[];
     unused_drift: string[];
+    /** cmtk run: the known-issues ledger as this run found it. */
+    known_issues?: KnownIssueInReport[];
+    /** cmtk run: ledger entries that no longer fail, for a person to remove. */
+    stale_known_issues?: string[];
     suggested_scrubs: { where: string; cases: number; why: string }[];
     /** Only some cases ran (--only), so the verdict cannot be a pass. */
     partial: boolean;

@@ -32,8 +32,9 @@ Follow these steps in order. Each one says what to do, what you should see, and 
    cmtk run
    ```
 
-   - **You should see:** a verdict (PASS, FAIL, INCOMPLETE or NO EVIDENCE), the counts, any failures, and the path of the report.
-   - **FAIL:** read the failures. Either the system is wrong (raise a defect), or the expectation is wrong. Only the person who owns the requirement changes an expectation.
+   - **You should see:** a verdict (PASS, PASS WITH KNOWN ISSUES, FAIL, INCOMPLETE or NO EVIDENCE), the counts, any failures, and the path of the report.
+   - **FAIL:** read the failures. Either the system is wrong (raise a defect), or the expectation is wrong. Only the person who owns the requirement changes an expectation. If it is a defect that must stay for now, such as a legacy defect during a migration, a named person can record it in the [known-issues ledger](MANIFEST.md#known-issues-ledger-cmtkknown-issuesyaml) instead of changing the case.
+   - **PASS WITH KNOWN ISSUES:** every failure is one a named person accepted, and everything else passed. Those cases still fail: the report lists each with who accepted it. The exit code is 4.
    - **INCOMPLETE:** some cases were skipped or could not run, or you ran only some cases with `--only`. The report says why for each one. A skipped POST, for example, needs step 6.
    - **NO EVIDENCE:** nothing could be checked. The line after the verdict says why: no cases yet, or the system did not answer.
 
@@ -101,10 +102,20 @@ Follow these steps in order. Each one says what to do, what you should see, and 
 
 9. **Sign it** with `cmtk signoff compare`.
 
+## Recording a known issue
+
+Use this for a failure that must stay for now, such as a legacy defect a migration has to match. Never change the case to hide it.
+
+1. **Copy what fails** from the Failures table in `cmtk/evidence/run/REPORT.md`: the `check`, `expected` and `actual` of each failure of that case.
+2. **Add the entry to `cmtk/known-issues.yaml`** yourself, with your name, as in [MANIFEST.md](MANIFEST.md#known-issues-ledger-cmtkknown-issuesyaml). An agent can propose it instead, with `cmtk_propose`; you then accept it in `cmtk review`, which adds your name.
+3. **Run `cmtk run`.** You should see PASS WITH KNOWN ISSUES, and `FAIL (known issue <id>)` beside that case. If you still see FAIL, read the failures: one is not in the entry.
+4. **When the defect is fixed,** the report lists the entry under "No longer failing". Remove it, so that a later return of the failure is reported as new.
+
 ## When something goes wrong
 
 | You see | Do this |
 |---|---|
+| `accepted_by must name a person, not an agent` | Only a person accepts a known issue. Run `cmtk review`, or add the entry yourself, with your name |
 | `cmtk: cmtk.yaml does not exist` | Run the command from the project folder, or pass `--manifest <path>` |
 | `ECONNREFUSED` in a case | The system is not running at that address. Start it, or correct `base_url` |
 | `the environment variable … is not set` | Set it in this terminal (step 4 of Part 1) |

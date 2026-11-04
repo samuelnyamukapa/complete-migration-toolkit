@@ -70,6 +70,7 @@ To run cmtk by hand from this folder:
 | `compare-catalogcore.yaml`, `cmtk\cases\catalogcore\` | `cmtk compare`: the catalog service on both builds |
 | `adapters\catalog\` | the adapter and the probe it runs: one C# source built for net472 (legacy) and net8.0 (CatalogCore) |
 | `cmtk\drift*.yaml` | approved drift; only a named person adds an entry |
+| `cmtk\proposals.yaml` | an agent's proposal, added 4 November 2026, to record legacy defect LEG-1 in the known-issues ledger. It changes nothing until a person accepts it in `cmtk review`. It has not been run against legacy with a ledger entry yet: that needs cmtk 0.6 in `tools\cmtk` |
 | `cmtk\evidence*\` | answers and reports from each run |
 | `compare-canary.yaml` | the same comparison with a planted defect, to prove it is caught |
 | `cmtk\cases\imported\har.yaml` | the raw HAR import, before review; the reviewed cases are `cmtk\cases\legacy\har-journeys.yaml` |

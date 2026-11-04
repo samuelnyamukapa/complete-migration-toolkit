@@ -4,6 +4,7 @@ import fs from "node:fs";
 
 import { describeDiscovery, loadDiscovery } from "./discover.js";
 import { scrubberOf } from "./diff.js";
+import { loadKnownIssues } from "./known.js";
 import { inside, loadCases, loadDrift } from "./manifest.js";
 import { loadProposals } from "./proposals.js";
 import type { Manifest } from "./types.js";
@@ -22,6 +23,7 @@ export interface CheckResult {
 export function check(manifest: Manifest): CheckResult {
     const cases = loadCases(manifest);
     loadDrift(manifest);
+    const known = loadKnownIssues(manifest);
     scrubberOf(manifest);
     const proposals = loadProposals(manifest);
     const warnings: string[] = [];
@@ -33,6 +35,11 @@ export function check(manifest: Manifest): CheckResult {
         for (const f of [c.request.body_file, typeof c.request.body_form === "string" ? c.request.body_form : undefined, ...(c.request.files ?? []).map((x) => x.path)].filter((x): x is string => !!x)) {
             if (!fs.existsSync(inside(manifest, f))) warnings.push(`${c.id}: the input file ${f} does not exist, so the case will error.`);
         }
+    }
+    const ids = new Set(cases.map((c) => c.id));
+    for (const k of known) {
+        if (!ids.has(k.case)) warnings.push(`known issue ${k.id}: there is no case ${k.case}.`);
+        if (k.fails.some((f) => f.actual === undefined && f.expected === undefined)) warnings.push(`known issue ${k.id}: one of its failures accepts any answer at that check, so a new way of failing there would be hidden. Copy \`expected\` or \`actual\` from the report.`);
     }
     if (!cases.length) warnings.push(`No case files match ${manifest.cases.join(", ")}.`);
     if (!fs.existsSync(inside(manifest, manifest.evidence))) warnings.push(`${manifest.evidence} does not exist yet: the first run creates it.`);

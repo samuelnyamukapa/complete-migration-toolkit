@@ -133,7 +133,10 @@ The exit code tells the pipeline the verdict:
 - `0`: PASS;
 - `1`: FAIL;
 - `2`: INCOMPLETE or NO EVIDENCE;
-- `3`: a settings problem.
+- `3`: a settings problem;
+- `4`: PASS WITH KNOWN ISSUES: nothing new failed, but a named person accepted some failures, and they still fail.
+
+Exit code 4 stops a pipeline until you decide it should not. To let a known issue through, say so in the pipeline. PowerShell: `cmtk run --accepted-only; if ($LASTEXITCODE -notin 0,4) { exit $LASTEXITCODE }`. bash: `cmtk run --accepted-only || [ $? -eq 4 ]`.
 
 Drafts never run in CI until a person accepts them; the report says how many were left out. Sign-off stays with a person, at a keyboard, after reading the report.
 

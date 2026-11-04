@@ -20,12 +20,13 @@
 | `contracts` | `[]` | `{ name, kind: openapi \| wsdl \| xsd \| text, path }`, served by both systems |
 | `cases` | `[cmtk/cases/*.yaml]` | A glob, or a list of globs, of case files |
 | `drift` | `cmtk/drift.yaml` | The drift ledger |
+| `known_issues` | `cmtk/known-issues.yaml` | The known-issues ledger: failures of `cmtk run` a named person accepted |
 | `evidence` | `cmtk/evidence` | Where answers and reports are written. Each run replaces its own folder once it has finished. It cannot be the project folder itself |
 | `allow_unsafe_methods` | `false` | Allow POST, PUT, PATCH and DELETE, with `--allow-unsafe` on the run |
 | `headers_from_env` | `{}` | Header name to environment variable name; read at run time, never written |
 | `timeout_s` | `30` | Per request: the whole answer must arrive within it |
 | `insecure_tls` | `false` | Accept self-signed certificates, for test systems only |
-| `proposals` | `cmtk/proposals.yaml` | Agents' proposals (scrubs, drift, defects, new expectations) waiting for a person. Only `cmtk review` decides them. Draft cases a person rejects are kept, with the reason, in `rejected.yaml` in the same folder |
+| `proposals` | `cmtk/proposals.yaml` | Agents' proposals (scrubs, drift, known issues, defects, new expectations) waiting for a person. Only `cmtk review` decides them. Draft cases a person rejects are kept, with the reason, in `rejected.yaml` in the same folder |
 | `explore_requests_per_day` | `1000` | The most requests exploration may send in one day (UTC), across all sessions. An open session counts its whole budget |
 | `adapters` | `{}` | Surface name to `{ command, args, timeout_s, covers }`. `timeout_s` (default 300) is the longest wait for one answer. `covers` lists the kinds of boundary it checks, for `cmtk discover`. See [ADAPTERS.md](ADAPTERS.md) |
 
@@ -85,6 +86,39 @@ drift:
 Every entry needs `id`, `where`, `reason` and `approved_by`. A `where` that starts with `$` (or `effects:$`) is a JSON path, so `[*]` and `..` work. Any other `where` is matched as written, with `*` matching any text: `/Envelope/Body/Item[*]/text()`, or `contract:catalog-api: operation added: *`.
 
 The report lists any entry that no longer matches anything, so stale approvals do not pile up. After a partial run (`--only`), it lists only entries for the cases that ran.
+
+## Known-issues ledger (cmtk/known-issues.yaml)
+
+Some failures must stay for now. A legacy defect is the usual one: the rule is to match legacy first, so the case must not be changed to hide it. The ledger records such a failure once, with the person who accepted it, so that `cmtk run` can tell it apart from a new failure.
+
+```yaml
+known_issues:
+  - id: LEG-1
+    case: API-2-01               # one case id, never a wildcard
+    fails:                       # copied from the report's Failures table
+      - { check: status, expected: "200", actual: 404 }
+      - { check: body, expected: JSON }
+    reason: the route was never registered; match legacy first
+    accepted_by: Jane Smith
+    date: 2026-10-18
+    target: legacy               # optional: only on this target
+```
+
+Every entry needs `id`, `case`, `fails`, `reason` and `accepted_by`. Each item in `fails` needs `check`; `expected` and `actual` are matched exactly when given, and `cmtk check` warns about an item with neither, because it would accept any answer at that check.
+
+- **Only a person adds an entry.** The ledger refuses an entry with no `accepted_by`, or one that names an agent. An agent proposes one with `cmtk_propose` (kind `known_issue`), and a person accepts it with `cmtk review`, which writes the entry with their name.
+- **It never hides a failure.** The case still reads `FAIL (known issue LEG-1)`, its requirement still shows a failure, and the report lists the ledger. It is not counted as passed, and `cmtk defects` does not draft it again.
+- **It covers only what it describes.** A case fails as a known issue only when every one of its failures is in the ledger. If `GET /api` starts to answer 500 where the entry says 404, that is an ordinary FAIL.
+- **Stale entries are reported.** An entry whose case passes, or fails some other way, or no longer exists, is listed under "No longer failing". A case that did not run, or that `--only` left out, says nothing about its entry.
+- **`cmtk run` only.** `cmtk compare` does not read this ledger. A difference between two systems is approved in the drift ledger.
+
+| Verdict | Means | Exit code |
+|---|---|---|
+| PASS WITH KNOWN ISSUES | Every failure is in the ledger, and every other case passed | 4 |
+| FAIL | At least one failure is not in the ledger | 1 |
+| INCOMPLETE | Some cases were skipped or could not run, or `--only` was used, and nothing new failed | 2 |
+
+Exit code 4 is on purpose not 0. A pipeline written before this verdict stops and a person looks; a pipeline that accepts it says so (see [TESTER-RUNBOOK.md](TESTER-RUNBOOK.md)). It is also not 1, so a known issue is told apart from a new failure. A person can sign the report, and the signature records which known issues still fail and who accepted them.
 
 ## Where values in a report come from
 

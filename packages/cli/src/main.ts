@@ -2,6 +2,7 @@
 // cmtk: the Complete Migration Toolkit command. Every command can be run again safely, prints the
 // next step, and exits with a code CI can use:
 //   0 PASS, PARITY or DRIFT ONLY · 1 FAIL or NO PARITY · 2 INCOMPLETE or NO EVIDENCE · 3 a usage or settings problem
+//   4 nothing new failed, but the result has a limit a person must read: PASS WITH KNOWN ISSUES
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline/promises";
@@ -62,12 +63,19 @@ Options:
   --manifest <file>   default: cmtk.yaml in the current folder
   --json              print the report as JSON
 
-Exit codes: 0 PASS, PARITY or DRIFT ONLY · 1 FAIL or NO PARITY · 2 INCOMPLETE or NO EVIDENCE · 3 usage or settings problem.
+Exit codes: 0 PASS, PARITY or DRIFT ONLY · 1 FAIL or NO PARITY · 2 INCOMPLETE or NO EVIDENCE · 3 usage or settings problem
+            4 nothing new failed, but read the limit: PASS WITH KNOWN ISSUES.
 Docs: https://github.com/samuelnyamukapa/complete-migration-toolkit`;
 
 class UsageError extends Error {}
 
-const exitFor = (v: Report["verdict"]) => (v === "PASS" || v === "PARITY" || v === "DRIFT ONLY" ? 0 : v === "FAIL" || v === "NO PARITY" ? 1 : 2);
+/**
+ * Nothing new failed, but the result is not a plain pass. Not 0: a pipeline written before this verdict
+ * stops and a person looks, and one that accepts it says so. Not 1: it is told apart from a new failure.
+ */
+const EXIT_QUALIFIED = 4;
+
+const exitFor = (v: Report["verdict"]) => (v === "PASS" || v === "PARITY" || v === "DRIFT ONLY" ? 0 : v === "FAIL" || v === "NO PARITY" ? 1 : v === "PASS WITH KNOWN ISSUES" ? EXIT_QUALIFIED : 2);
 
 function printReport(r: Report, json: boolean, manifestRoot: string, evidence: string) {
     if (json) {
@@ -82,7 +90,7 @@ function printReport(r: Report, json: boolean, manifestRoot: string, evidence: s
         const first = c.failures?.[0] ? `${c.failures[0].check}: expected ${c.failures[0].expected}, got ${c.failures[0].actual}`
             : c.differences?.find((d) => !d.drift) ? (() => { const d = c.differences!.find((x) => !x.drift)!; return `${d.where}: ${d.reference} vs ${d.candidate}`; })()
             : c.why ?? "";
-        console.log(`  ${c.result} ${c.id} ${c.name}: ${first}`);
+        console.log(`  ${c.known_issues ? `FAIL (known issue ${c.known_issues.join(", ")})` : c.result} ${c.id} ${c.name}: ${first}`);
     }
     const report = path.relative(process.cwd(), path.join(manifestRoot, evidence, r.mode, "REPORT.md")) || "REPORT.md";
     console.log(`Report: ${report}`);
@@ -238,6 +246,7 @@ async function signoff(manifestFile: string, mode: string | undefined): Promise<
         const scrubs = [...st.scrub.json_paths, ...st.scrub.xml_ignore.map((e) => `XML ${e}`), ...st.scrub.regex.map((x) => `regex ${x.pattern}`)];
         console.log(`Produced from ${st.manifest}.${mode === "compare" ? ` Hidden by scrubs: ${scrubs.length ? scrubs.join(", ") : "nothing"}. Approved drift: ${st.drift_entries} entries in ${st.drift_file}.` : ""}`);
     } else console.log("This report does not record which settings produced it (made by cmtk before 0.2.0).");
+    for (const k of report.known_issues ?? []) if (k.state === "still fails") console.log(`Known issue ${k.id} still fails on case ${k.case}: accepted by ${k.accepted_by}. Your signature covers this report with that failure in it. ${k.reason}`);
     console.log(`Read it first: ${path.relative(process.cwd(), path.join(dir, "REPORT.md"))}`);
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     try {

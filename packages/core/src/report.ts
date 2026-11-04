@@ -1,5 +1,5 @@
 // Verdicts and the report a person reads and signs. The numbers come from the run; nobody types them.
-import type { CaseOutcome, ContractOutcome, Drift, Manifest, Report, ReportSettings, Verdict } from "./types.js";
+import type { CaseOutcome, ContractOutcome, Drift, KnownIssueInReport, Manifest, Report, ReportSettings, Verdict } from "./types.js";
 
 const NOISE: [string, RegExp][] = [
     ["a GUID", /^"?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"?$/],
@@ -36,13 +36,18 @@ export function summarise(x: {
     partial: boolean;
     settings?: ReportSettings;
     excludedDrafts?: number;
+    known?: KnownIssueInReport[];
 }): Report {
     const counts: Record<string, number> = {};
     const keys = x.mode === "run" ? ["PASS", "FAIL", "SKIPPED", "ERROR"] : ["MATCH", "DRIFT", "DIFFERENT", "SKIPPED", "ERROR"];
-    for (const k of keys) counts[k] = x.cases.filter((c) => c.result === k).length;
+    // A case every one of whose failures a person accepted is not counted as a new failure, and it is never counted as passed.
+    for (const k of keys) counts[k] = x.cases.filter((c) => c.result === k && !c.known_issues).length;
+    const knownFailing = x.cases.filter((c) => c.known_issues).length;
+    if (knownFailing) counts["KNOWN ISSUE"] = knownFailing;
+    const stale = (x.known ?? []).filter((k) => k.state === "no longer fails").map((k) => k.id).sort();
     const decided = decide(x, counts);
     const { verdict, next } = decided;
-    const reason = decided.reason + (x.excludedDrafts ? ` ${x.excludedDrafts} draft case${x.excludedDrafts === 1 ? " was" : "s were"} left out (--accepted-only).` : "");
+    const reason = decided.reason + (stale.length ? ` ${stale.length === 1 ? "A known issue no longer fails" : "Known issues no longer fail"} (${stale.join(", ")}): a person removes ${stale.length === 1 ? "it" : "them"} from the ledger.` : "") + (x.excludedDrafts ? ` ${x.excludedDrafts} draft case${x.excludedDrafts === 1 ? " was" : "s were"} left out (--accepted-only).` : "");
 
     const reqs = new Map<string, { cases: number; passed: number; failed: number; other: number }>();
     for (const c of x.cases) {
@@ -67,6 +72,7 @@ export function summarise(x: {
         contracts: x.contracts,
         requirements: [...reqs].map(([requirement, v]) => ({ requirement, ...v })).sort((a, b) => a.requirement.localeCompare(b.requirement)),
         unused_drift: unusedDrift(x),
+        ...(x.known?.length ? { known_issues: x.known, stale_known_issues: stale } : {}),
         suggested_scrubs: x.mode === "compare" ? noise(x.cases) : [],
         partial: x.partial,
         ...(x.excludedDrafts ? { excluded_drafts: x.excludedDrafts } : {}),
@@ -84,7 +90,7 @@ function unusedDrift(x: { cases: CaseOutcome[]; drift: Drift[]; usedDrift: Set<s
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-function decide(x: { mode: "run" | "compare"; cases: CaseOutcome[]; contracts: ContractOutcome[]; targets: Record<string, string>; partial: boolean }, counts: Record<string, number>) {
+function decide(x: { mode: "run" | "compare"; cases: CaseOutcome[]; contracts: ContractOutcome[]; targets: Record<string, string>; partial: boolean; known?: KnownIssueInReport[] }, counts: Record<string, number>) {
     const ran = x.cases.filter((c) => c.result !== "SKIPPED" && c.result !== "ERROR").length;
     const errored = x.cases.filter((c) => c.result === "ERROR");
     const skipped = x.cases.filter((c) => c.result === "SKIPPED");
@@ -99,11 +105,15 @@ function decide(x: { mode: "run" | "compare"; cases: CaseOutcome[]; contracts: C
     const notRun = () => [errored.length && `${plural(errored.length, "case")} could not run`, skipped.length && `${plural(skipped.length, "case")} were skipped`].filter(Boolean).join(" and ");
 
     if (x.mode === "run") {
+        const stillFailing = (x.known ?? []).filter((k) => x.cases.some((c) => c.known_issues?.includes(k.id)));
+        const known = counts["KNOWN ISSUE"] ?? 0;
+        const knownWords = known ? ` ${plural(known, "case")} failed only as known issues (${stillFailing.map((k) => `${k.id}, accepted by ${k.accepted_by}`).join("; ")}).` : "";
         if (x.cases.length === 0) return { verdict: "NO EVIDENCE" as Verdict, reason: "There are no cases.", next: "add cases (cmtk/cases/*.yaml, or `cmtk import-har`), then `cmtk run`." };
-        if (counts.FAIL) return { verdict: "FAIL" as Verdict, reason: `${plural(counts.FAIL, "case")} failed.`, next: "fix what failed (or correct an expectation with the person who owns the requirement), then `cmtk run` again." };
+        if (counts.FAIL) return { verdict: "FAIL" as Verdict, reason: `${plural(counts.FAIL, "case")} failed.${knownWords}`, next: "fix what failed (or correct an expectation with the person who owns the requirement), then `cmtk run` again." };
         if (ran === 0) return { verdict: "NO EVIDENCE" as Verdict, reason: `No case ran: ${notRun()}.`, next: why() };
-        if (errored.length || skipped.length) return { verdict: "INCOMPLETE" as Verdict, reason: `${notRun()}.`, next: why() };
-        if (x.partial) return { verdict: "INCOMPLETE" as Verdict, reason: `Only the ${plural(ran, "case")} named with --only ran, and all passed.`, next: "run every case with `cmtk run` before anyone signs." };
+        if (errored.length || skipped.length) return { verdict: "INCOMPLETE" as Verdict, reason: `${notRun()}.${knownWords}`, next: why() };
+        if (x.partial) return { verdict: "INCOMPLETE" as Verdict, reason: `Only the ${plural(ran, "case")} named with --only ran, ${known ? "with no new failures" : "and all passed"}.${knownWords}`, next: "run every case with `cmtk run` before anyone signs." };
+        if (known) return { verdict: "PASS WITH KNOWN ISSUES" as Verdict, reason: `${plural(ran - known, "case")} passed.${knownWords} These still fail: they are accepted, not fixed.`, next: "a person reviews the report, known issues included, and signs it with `cmtk signoff run`." };
         return { verdict: "PASS" as Verdict, reason: `All ${plural(ran, "case")} passed.`, next: "a person reviews the report and signs it with `cmtk signoff run`." };
     }
 
@@ -148,7 +158,8 @@ export function renderReport(r: Report): string {
                 `- Match level: ${s.match}${s.overrides.length ? `; overrides: ${s.overrides.map((o) => `\`${o.path}\` ${o.match}`).join(", ")}` : ""}`,
                 `- Scrubbed (hidden from every comparison): ${scrubs.length ? scrubs.join(", ") : "nothing"}`,
                 `- Approved drift: ${s.drift_entries} entr${s.drift_entries === 1 ? "y" : "ies"} in \`${s.drift_file}\``,
-            ] : []), "");
+            ] : []),
+            ...(s.known_issues_file && s.known_issues_entries ? [`- Known issues: ${s.known_issues_entries} entr${s.known_issues_entries === 1 ? "y" : "ies"} for this target in \`${s.known_issues_file}\``] : []), "");
     }
 
     L.push("## Requirements", "", "| Requirement | Cases | Passed | Failed | Not run |", "| --- | --- | --- | --- | --- |");
@@ -166,7 +177,8 @@ export function renderReport(r: Report): string {
     L.push("", "## Cases", "", r.mode === "compare" ? "| Case | Request | Level | Result |" : "| Case | Request | Requirement | Result |", "| --- | --- | --- | --- |");
     for (const c of r.cases) {
         const mid = r.mode === "compare" ? c.match ?? "" : c.requirement.join(", ") || "—";
-        L.push(`| ${c.id} | ${cell(c.name)} | ${cell(mid)} | ${c.result}${c.why ? ` — ${cell(c.why)}` : ""} |`);
+        const shown = c.known_issues ? `FAIL (known issue ${c.known_issues.join(", ")})` : c.result;
+        L.push(`| ${c.id} | ${cell(c.name)} | ${cell(mid)} | ${shown}${c.why ? ` — ${cell(c.why)}` : ""} |`);
     }
     const sent = r.cases.filter((c) => c.inputs?.length);
     if (sent.length) {
@@ -181,8 +193,18 @@ export function renderReport(r: Report): string {
 
     const fails = r.cases.flatMap((c) => (c.failures ?? []).map((f) => [c.id, f] as const));
     if (fails.length) {
-        L.push("", "## Failures", "", "| Case | Check | Expected | Actual |", "| --- | --- | --- | --- |");
-        for (const [id, f] of fails.slice(0, 500)) L.push(`| ${id} | \`${cell(f.check)}\` | ${cell(f.expected)} | ${cell(f.actual)} |`);
+        const anyKnown = fails.some(([, f]) => f.known_issue);
+        L.push("", "## Failures", "", `| Case | Check | Expected | Actual |${anyKnown ? " Known issue |" : ""}`, `| --- | --- | --- | --- |${anyKnown ? " --- |" : ""}`);
+        for (const [id, f] of fails.slice(0, 500)) L.push(`| ${id} | \`${cell(f.check)}\` | ${cell(f.expected)} | ${cell(f.actual)} |${anyKnown ? ` ${f.known_issue ?? "—"} |` : ""}`);
+    }
+    if (r.known_issues?.length) {
+        L.push("", "## Known issues", "", "Failures a named person accepted. Each still fails: it is accepted, not fixed. Anything an entry does not describe is an ordinary failure.", "",
+            "| Id | Case | What fails | Reason | Accepted by | Date | This run |", "| --- | --- | --- | --- | --- | --- | --- |");
+        for (const k of r.known_issues) {
+            const what = k.fails.map((f) => [f.check, f.expected !== undefined && `expected ${f.expected}`, f.actual !== undefined && `actual ${f.actual}`].filter(Boolean).join(", ")).join("; ");
+            L.push(`| ${k.id} | ${cell(k.case)} | ${cell(what)} | ${cell(k.reason)} | ${cell(k.accepted_by)} | ${cell(k.date ?? "")} | ${k.state} |`);
+        }
+        if (r.stale_known_issues?.length) L.push("", `No longer failing: ${r.stale_known_issues.join(", ")}. A person checks each one and removes it from the ledger, so a later return of the failure is reported as new.`);
     }
     const diffs = r.cases.flatMap((c) => (c.differences ?? []).map((d) => [c.id, d] as const));
     if (diffs.length) {
