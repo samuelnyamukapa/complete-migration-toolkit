@@ -93,7 +93,7 @@ test("an exploration sends what the agent gave, and logs neither its headers nor
     write(dir, "cmtk.yaml", `system: s\ntargets:\n  candidate: { base_url: "${s.url}" }\n`);
     try {
         const session = startSession(m(dir), { charter: "look around" });
-        const p = await exploreRequest(m(dir), session.id, { method: "GET", path: `/items?api_key=${TOKEN}&page=2`, headers: { Authorization: `Bearer ${TOKEN}`, "X-Custom-Id": "keep-me", "X-Api-Secret": "hunter2hunter2" } });
+        const p = await exploreRequest(m(dir), session.id, { method: "GET", path: `/items?api_key=${TOKEN}&page=2`, headers: { Authorization: `Bearer ${TOKEN}`, "X-Custom-Id": "keep-me", "X-Api-Secret": "hunter2hunter2", "X-Custom": `Bearer ${TOKEN}` } });
         assert.equal(got.auth, `Bearer ${TOKEN}`, "the system gets the header");
         assert.ok(got.url.includes(TOKEN), "and the query");
         assert.doesNotMatch(JSON.stringify(p.observation), new RegExp(TOKEN), "the agent's own secret is not handed back either");
@@ -102,6 +102,7 @@ test("an exploration sends what the agent gave, and logs neither its headers nor
         noneHolds(dir, [TOKEN, "hunter2hunter2"]);
         const logged = JSON.parse(fs.readFileSync(path.join(dir, "cmtk/evidence/explore", session.id, "answers/001.json"), "utf8"));
         assert.equal(logged.request.headers.Authorization, "REDACTED");
+        assert.equal(logged.request.headers["X-Custom"], "REDACTED", "a credential under an ordinary name");
         assert.equal(logged.request.headers["X-Custom-Id"], "keep-me");
         assert.match(logged.request.path, /api_key=REDACTED&page=2/);
     } finally {

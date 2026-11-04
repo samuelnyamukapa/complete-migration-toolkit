@@ -18,6 +18,7 @@ export { loadKnownIssues, markKnown, knownInReport } from "./known.js";
 export { checkContract, diffOpenApi, diffWsdl } from "./contracts.js";
 export { checkAssemblyContract, diffAssemblies, readInventory, proveTypeNames, nameDigest, mapName, type Inventory } from "./assembly.js";
 export { coveringDrift, covers } from "./drift.js";
+export { holdsToken, redactTokens } from "./redact.js";
 export { importHar, casesToYaml, draftExpectation, looksSecret, redactBody, REDACTED, DROPPED_HEADERS } from "./har.js";
 export { renderReport, summarise } from "./report.js";
 export { send, httpAdapter, processAdapter, decodeBody, requestBody, takeFromPage, cookiesOf, MAX_BODY, MULTIPART_BOUNDARY, type Adapter } from "./adapters.js";

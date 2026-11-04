@@ -59,7 +59,7 @@ A request with something redacted sends `REDACTED` to both systems. Both should 
 
 A line cmtk cannot read is counted, and never shown, because it can hold anything.
 
-**The limit:** cmtk spots personal data by its name or its shape. A surname alone in a path, such as `/customers/smith`, has neither. That is why you read the capture first, and use `--redact` for values you know about.
+**The limit:** cmtk spots personal data by its name or its shape. A segment after a collection of people, such as `/customers/smith`, is replaced, but a surname anywhere else, such as `/orders/smith/invoice`, has neither. That is why you read the capture first, and use `--redact` for values you know about.
 
 ## The answers
 

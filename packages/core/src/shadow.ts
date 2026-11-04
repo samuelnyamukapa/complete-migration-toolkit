@@ -13,11 +13,14 @@ import { compareObservations, scrubberOf } from "./diff.js";
 import { coveringDrift } from "./drift.js";
 import { evidenceDir, envHeaders, matchFor, SAFE_METHODS, settingsOf, STOP_AFTER_NO_ANSWER } from "./engine.js";
 import { DROPPED_HEADERS, looksSecret, REDACTED } from "./har.js";
+import { redactText } from "./redact.js";
 import { loadDrift, ManifestError } from "./manifest.js";
 import { OVERRIDE_HEADERS, overrideIn } from "./methods.js";
 import { noiseKind } from "./report.js";
 import { scrubRules } from "./trend.js";
 import type { Case, Difference, Manifest, ReportSettings, Target } from "./types.js";
+
+export { redactText };
 
 export type ShadowVerdict = "NO UNEXPLAINED DIFFERENCES" | "UNEXPLAINED DIFFERENCES" | "INCOMPLETE" | "NO EVIDENCE";
 export const SHADOW_FORMATS = ["auto", "clf", "w3c", "jsonl"] as const;
@@ -140,50 +143,15 @@ const MAX_PLACES = 200;
 /** Query and field names that usually hold personal data. */
 export function looksPersonal(name: string): boolean {
     const n = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-    return /^(name|forename|givenname|familyname|displayname|username|user|login|mail|telephone|tel|msisdn|address|addressline\d?|street|postalcode|zip|zipcode|dob|birthdate|birthday|ssn|nino|licencenumber|licensenumber|iban|sortcode|accountnumber|cardholder|ip|ipaddress|clientip|contact)$/.test(n)
+    return /^(name|forename|givenname|familyname|displayname|username|user|login|mail|telephone|tel|msisdn|address|addressline\d?|street|postalcode|zip|zipcode|dob|birthdate|birthday|ssn|nino|licencenumber|licensenumber|iban|sortcode|accountnumber|cardholder|ip|ipaddress|clientip|contact|guest|customer|patient|recipient|person|employee)$/.test(n)
+        || /^(guest|customer|client|patient|member|person|employee|recipient|sender|tenant|landlord|owner)(full)?name$/.test(n)
         || /(email|phone|mobile|surname|lastname|firstname|fullname|postcode|dateofbirth|passport|nationalinsurance)/.test(n);
 }
 
-const luhn = (digits: string) => {
-    let sum = 0;
-    for (let i = 0; i < digits.length; i++) {
-        let d = Number(digits[digits.length - 1 - i]);
-        if (i % 2 === 1) { d *= 2; if (d > 9) d -= 9; }
-        sum += d;
-    }
-    return sum % 10 === 0;
-};
-
-const SHAPES: [string, RegExp, ((match: string) => boolean)?][] = [
-    ["email", /[^\s@/?&=;,"'<>]+@[^\s@/?&=;,"'<>]+\.[A-Za-z]{2,}/g],
-    ["token", /\beyJ[\w-]{4,}\.[\w-]{4,}\.[\w-]*/g],
-    ["token", /\b(?:sk|pk|rk)_(?:live|test)_\w+/g],
-    ["token", /\b[A-Fa-f0-9]{32,}\b/g],
-    ["token", /[A-Za-z0-9+_-]{40,}={0,2}/g],
-    ["card number", /\b\d(?:[ -]?\d){12,18}\b/g, (m) => luhn(m.replace(/\D/g, ""))],
-    ["national number", /\b[A-CEGHJ-PR-TW-Z]{2}\s?\d{2}\s?\d{2}\s?\d{2}\s?[A-D]\b/gi],
-    ["national number", /\b\d{3}-\d{2}-\d{4}\b/g],
-    ["bank account", /\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b/g],
-    ["postcode", /\b[A-PR-UWYZ][A-HK-Y]?\d[A-Z\d]?[ +]?\d[ABD-HJLNP-UW-Z]{2}\b/gi],
-    ["phone number", /(?:\+|\b00)\d[\d ()-]{7,16}\d\b/g],
-    ["phone number", /\b0\d{9,10}\b/g],
-    ["IP address", /\b\d{1,3}(?:\.\d{1,3}){3}\b/g],
-];
-
-/** Text with every value shaped like personal data or a credential replaced. Returns the kinds it found. */
-export function redactText(text: string, own: RegExp[] = []): { text: string; kinds: string[] } {
-    const kinds: string[] = [];
-    let out = text;
-    for (const rx of own) out = out.replace(rx, () => { kinds.push("your --redact rule"); return REDACTED; });
-    for (const [kind, rx, keep] of SHAPES) {
-        out = out.replace(rx, (m) => {
-            if (keep && !keep(m)) return m;
-            kinds.push(kind);
-            return REDACTED;
-        });
-    }
-    return { text: out, kinds };
-}
+/** A segment after one of these names a person, unless it is a number or an ordinary route. */
+const PEOPLE = new Set(["users", "user", "customers", "customer", "members", "member", "people", "persons", "person", "profiles", "profile", "guests", "guest", "clients", "client", "employees", "employee", "staff", "patients", "patient", "tenants", "tenant", "landlords", "landlord", "contacts", "contact"]);
+const ROUTES = /^(me|self|current|search|new|list|all|count|export|import|login|logout|register|settings|profile|orders|\{.*\}|:.*)$/i;
+const IDENTIFIER = /^(\d+|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 
 const decoded = (s: string) => {
     try { return decodeURIComponent(s.replace(/\+/g, " ")); } catch { return s; }
@@ -213,9 +181,11 @@ export function cleanTarget(target: string, own: RegExp[] = []): { path: string;
     const pathPart = q < 0 ? t : t.slice(0, q);
     const query = q < 0 ? undefined : t.slice(q + 1);
     const kinds: string[] = [];
-    const segments = pathPart.split("/").map((seg) => {
+    const segments = pathPart.split("/").map((seg, i, all) => {
         const [head, ...params] = seg.split(";");
         const r = redactText(decoded(head!), own);
+        const before = decoded(all[i - 1]?.split(";")[0] ?? "").toLowerCase();
+        if (head && !r.kinds.length && PEOPLE.has(before) && !IDENTIFIER.test(head) && !ROUTES.test(decoded(head))) r.kinds.push("personal field");
         kinds.push(...r.kinds);
         const cleanParams = params.map((p) => {
             const eq = p.indexOf("=");
@@ -225,7 +195,8 @@ export function cleanTarget(target: string, own: RegExp[] = []): { path: string;
     });
     let out = segments.join("/");
     if (query !== undefined) {
-        out += `?${query.split("&").map((pair) => {
+        out += `?${query.split(/([&;])/).map((pair, i) => {
+            if (i % 2) return pair; // the separator, as the log wrote it
             const eq = pair.indexOf("=");
             if (eq < 0) {
                 const r = redactText(decoded(pair), own);
@@ -234,7 +205,7 @@ export function cleanTarget(target: string, own: RegExp[] = []): { path: string;
             }
             const name = decoded(pair.slice(0, eq));
             return `${pair.slice(0, eq)}=${cleanValue(pair.slice(eq + 1), name, own, kinds)}`;
-        }).join("&")}`;
+        }).join("")}`;
     }
     return { path: out, kinds };
 }
@@ -507,7 +478,8 @@ export async function shadow(manifest: Manifest, o: ShadowOptions): Promise<Shad
                 else if (diffs.length) { e.drift++; replay.drift++; }
                 else { e.matched++; replay.matched++; }
                 for (const d of diffs) {
-                    const where = d.where.replace(/\[\d+\]/g, "[*]");
+                    // A JSON key can hold an email or a phone number, and `where` is printed.
+                    const where = redactText(d.where.replace(/\[\d+\]/g, "[*]")).text;
                     const placeKey = `${where}\0${d.drift ?? ""}`;
                     const kept = e.places.get(placeKey);
                     if (kept) kept.requests++;

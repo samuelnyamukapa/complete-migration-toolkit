@@ -6,7 +6,8 @@ import path from "node:path";
 
 import { hideValues } from "./adapters.js";
 import { adaptersFor, envHeaders, evidenceOf, SAFE_METHODS } from "./engine.js";
-import { DROPPED_HEADERS, looksSecret, REDACTED } from "./har.js";
+import { CREDENTIAL_VALUE, DROPPED_HEADERS, looksSecret, REDACTED } from "./har.js";
+import { holdsToken } from "./redact.js";
 import { expectProblem } from "./expect-shape.js";
 import { inside, ManifestError, ownedFolder } from "./manifest.js";
 import { overrideIn } from "./methods.js";
@@ -103,16 +104,16 @@ export interface Probe { n: number; observation: Observation; left: number }
 
 /** The path as a log may hold it. An agent may send a secret, and the system gets it, but it stays out of what is kept. */
 const loggedPath = (p: string) => cleanTarget(p)?.path ?? "/(withheld)";
-const secretHeader = (name: string) => DROPPED_HEADERS.has(name.toLowerCase()) || looksSecret(name, "header");
+const secretHeader = (name: string, value: string) => DROPPED_HEADERS.has(name.toLowerCase()) || looksSecret(name, "header") || CREDENTIAL_VALUE.test(value) || holdsToken(value);
 const loggedRequest = (r: Case["request"]): Case["request"] => ({
     ...r,
     path: loggedPath(r.path),
-    headers: Object.fromEntries(Object.entries(r.headers ?? {}).map(([k, v]) => [k, secretHeader(k) ? REDACTED : v])),
+    headers: Object.fromEntries(Object.entries(r.headers ?? {}).map(([k, v]) => [k, secretHeader(k, v) ? REDACTED : v])),
 });
 
 /** The secrets in a request, so an answer that echoes one can be cleaned. */
 function secretsIn(r: Case["request"]): string[] {
-    const out = Object.entries(r.headers ?? {}).filter(([k]) => secretHeader(k)).map(([, v]) => v);
+    const out = Object.entries(r.headers ?? {}).filter(([k, v]) => secretHeader(k, v)).map(([, v]) => v);
     const q = r.path.indexOf("?");
     if (q >= 0) for (const [k, v] of new URLSearchParams(r.path.slice(q + 1).replace(/;/g, "&"))) if (looksSecret(k)) out.push(v);
     return out;
