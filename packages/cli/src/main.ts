@@ -268,6 +268,7 @@ async function main(argv: string[]): Promise<number> {
             if (values.json) { console.log(JSON.stringify(discovery, null, 2)); return 0; }
             console.log(`Boundaries for ${discovery.system}: ${describeDiscovery(discovery)}`);
             for (const b of discovery.boundaries.filter((x) => !x.covered_by)) console.log(`  uncovered ${b.kind} ${b.direction}: ${b.name}${b.where ? ` (${b.where})` : ""}`);
+            for (const n of discovery.notes ?? []) console.log(`Note: ${n}`);
             console.log(`Inventory: ${path.relative(process.cwd(), path.join(m.root, file))}`);
             console.log(discovery.boundaries.some((x) => !x.covered_by) ? "Next: for each uncovered kind, add an adapter (`cmtk adapter new <name>` or `cmtk adapter add <name>`, then `covers:` in cmtk.yaml) or have a person record why it is out of scope." : "Next: write cases for each boundary, then `cmtk compare`.");
             return 0;

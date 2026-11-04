@@ -37,6 +37,8 @@ export interface Boundary {
     found_in: { source: string; detail: string }[];
     /** The adapter that covers it, or undefined when none does. */
     covered_by?: string;
+    /** What a test of it would need that a general adapter for its kind may not give. */
+    needs?: string;
 }
 
 export interface FoundInput {
@@ -68,6 +70,8 @@ export interface Discovery {
     date: string;
     sources: string[];
     boundaries: Boundary[];
+    /** What a source held that is not listed as a boundary, so a reader can see nothing was dropped silently. */
+    notes?: string[];
 }
 
 const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f​-‏‪-‮⁦-⁩]/;
@@ -320,19 +324,56 @@ function fromHar(raw: any, source: string, ownHosts: Set<string>): Finding[] {
     });
 }
 
-function fromTopology(raw: any, source: string): Finding[] {
+/** The words of a map's node that say how it is stored or run. Maps vary, so every likely field is read. */
+function describing(n: any): string {
+    return ["name", "id", "type", "subtype", "kind_detail", "technology", "tech", "format", "storage", "access", "organization", "dsn", "platform", "runtime"].map((k) => (typeof n?.[k] === "string" ? n[k] : "")).join(" ");
+}
+
+const NEEDS = {
+    vsam: "VSAM keeps records by key, so a test unloads it to a flat file (IDCAMS REPRO, or the emulator's own unload) and compares decoded records, using the copybook. A files adapter alone can't read it.",
+    sequential: "A flat file: a files adapter compares it, and `cmtk data` can write it from a copybook.",
+    db2: "A database adapter with a DB2 driver: the read-only database adapter must be told which driver to use.",
+    ims: "IMS is hierarchical: no adapter reads it yet, so it needs its own.",
+    jcl: "A batch adapter that submits this JCL on the legacy side and starts the rebuilt job on the other, then compares its output files and return code. It needs a mainframe or an emulator such as AWS Mainframe Modernization or GnuCOBOL with a JCL runner: none is written.",
+    cics: "A 3270 terminal adapter that drives the BMS map (for example through s3270) and reports its fields. A web or desktop adapter can't reach it: none is written.",
+    mq: "A queue adapter with an IBM MQ client: the Service Bus and RabbitMQ adapters don't speak it.",
+};
+
+function fromTopology(raw: any, source: string): { found: Finding[]; note?: string } {
     const out: Finding[] = [];
-    if (!raw?.root) throw new ManifestError(`${source} is not modernize's topology.json: it has no root.`);
+    if (!raw?.root && !Array.isArray(raw?.nodes)) throw new ManifestError(`${source} is not modernize's topology.json: it has no root.`);
+    const ignored = new Map<string, number>();
     const walk = (n: any) => {
         if (!n || typeof n !== "object") return;
         const name = String(n.name ?? n.id ?? "");
-        if (n.kind === "datastore") out.push({ kind: /file|folder|share|csv|vsam|dataset/i.test(name) ? "files" : "database", direction: "out", name, found_in: [{ source, detail: `data store ${n.id ?? name}` }] });
-        if (n.kind === "job") out.push({ kind: "worker", direction: "in", name, found_in: [{ source, detail: `job ${n.id ?? name}` }] });
-        if (n.kind === "screen") out.push({ kind: "ui", direction: "in", name, found_in: [{ source, detail: `screen ${n.id ?? name}` }] });
+        const words = describing(n);
+        const detail = (what: string) => [{ source, detail: `${what} ${n.id ?? name}${typeof n.type === "string" ? ` (${n.type})` : ""}` }];
+        if (n.kind === "datastore") {
+            const isDb = /\b(db2|sql|rdbms|table|database|oracle|postgres|ims)\b/i.test(words);
+            const isFile = /vsam|ksds|esds|rrds|\bfile|folder|share|csv|dataset|sequential|flat|\bgdg\b|\bps\b/i.test(words);
+            const needs = /vsam|ksds|esds|rrds/i.test(words) ? NEEDS.vsam : /\bdb2\b/i.test(words) ? NEEDS.db2 : /\bims\b/i.test(words) ? NEEDS.ims : isFile && !isDb ? NEEDS.sequential : undefined;
+            out.push({
+                kind: isFile && !isDb ? "files" : "database", direction: "out", name, ...(typeof n.dsn === "string" ? { where: n.dsn } : {}),
+                ...(needs ? { needs } : !isDb ? { needs: "The map does not say how this is stored, so calling it a database is a guess: a person checks it." } : {}),
+                found_in: detail("data store"),
+            });
+        } else if (n.kind === "job") {
+            out.push({ kind: "worker", direction: "in", name, ...(/\bjcl\b|\.jcl$/i.test(words) ? { needs: NEEDS.jcl } : {}), found_in: detail("job") });
+        } else if (n.kind === "screen" || n.kind === "transaction") {
+            out.push({ kind: "ui", direction: "in", name, ...(/cics|bms|3270/i.test(words) ? { needs: NEEDS.cics } : {}), found_in: detail(n.kind) });
+        } else if (n.kind === "queue") {
+            out.push({ kind: "queue", direction: "out", name, ...(/\bmq\b|mqseries/i.test(words) ? { needs: NEEDS.mq } : {}), found_in: detail("queue") });
+        } else if (n.kind === "external" || n.kind === "service") {
+            out.push({ kind: "outbound-http", direction: "out", name, found_in: detail(n.kind) });
+        } else if (typeof n.kind === "string" && !Array.isArray(n.children)) {
+            ignored.set(n.kind, (ignored.get(n.kind) ?? 0) + 1); // a program calls and is called; what it touches is listed
+        }
         for (const c of Array.isArray(n.children) ? n.children : []) walk(c);
     };
-    walk(raw.root);
-    return out;
+    if (raw.root) walk(raw.root);
+    for (const n of Array.isArray(raw.nodes) ? raw.nodes : []) walk(n);
+    const note = ignored.size ? `${source} also holds ${[...ignored].sort().map(([k, c]) => `${c} ${k} node${c === 1 ? "" : "s"}`).join(", ")}, not listed as boundaries because each is inside the system.` : undefined;
+    return { found: out, ...(note ? { note } : {}) };
 }
 
 // ---------------------------------------------------------------- the inventory
@@ -358,6 +399,7 @@ export function loadDiscovery(m: Manifest): Discovery | undefined {
 export function discover(m: Manifest, input: DiscoverInput, date = new Date().toISOString().slice(0, 10)): { file: string; discovery: Discovery } {
     const found: Finding[] = [];
     const sources: string[] = [];
+    const notes: string[] = [];
     const file = (f: string, what: string) => {
         const full = inside(m, f);
         if (!fs.existsSync(full) || !fs.statSync(full).isFile()) throw new ManifestError(`${what} ${f} does not exist.`);
@@ -420,7 +462,9 @@ export function discover(m: Manifest, input: DiscoverInput, date = new Date().to
     }
     for (const f of input.topology ?? []) {
         const full = file(f, "The topology file");
-        found.push(...fromTopology(JSON.parse(fs.readFileSync(full, "utf8")), rel(m, full)));
+        const t = fromTopology(JSON.parse(fs.readFileSync(full, "utf8")), rel(m, full));
+        found.push(...t.found);
+        if (t.note) notes.push(t.note);
         sources.push(rel(m, full));
     }
     if (input.found?.length) {
@@ -450,12 +494,13 @@ export function discover(m: Manifest, input: DiscoverInput, date = new Date().to
         const id = `${f.kind}:${slug(f.name)}`;
         const b = byId.get(id) ?? { id, kind: f.kind, direction: f.direction, name: f.name, found_in: [] };
         if (!b.where && f.where) b.where = f.where;
+        if (!b.needs && f.needs) b.needs = f.needs;
         for (const e of f.found_in) if (!b.found_in.some((x) => x.source === e.source && x.detail === e.detail)) b.found_in.push(e);
         byId.set(id, b);
     }
     const boundaries = [...byId.values()].map((b) => ({ ...b, covered_by: coveredBy(b, m) }))
         .sort((a, b) => Number(!!a.covered_by) - Number(!!b.covered_by) || BOUNDARY_KINDS.indexOf(a.kind) - BOUNDARY_KINDS.indexOf(b.kind) || a.name.localeCompare(b.name));
-    const discovery: Discovery = { system: m.system, date, sources: [...new Set([...(previous?.sources ?? []), ...sources])], boundaries };
+    const discovery: Discovery = { system: m.system, date, sources: [...new Set([...(previous?.sources ?? []), ...sources])], boundaries, ...(notes.length || previous?.notes?.length ? { notes: [...new Set([...(previous?.notes ?? []), ...notes])] } : {}) };
     const dir = discoveryFolder(m);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, "boundaries.json"), JSON.stringify(discovery, null, 2) + "\n", "utf8");
@@ -488,9 +533,17 @@ export function renderDiscovery(d: Discovery): string {
         for (const k of [...new Set(open.map((b) => b.kind))]) L.push(`- **${k}**: ${open.filter((b) => b.kind === k).map((b) => cell(b.name)).join(", ")}`);
         L.push("");
     }
+    const needs = [...new Set(d.boundaries.flatMap((b) => (b.needs ? [b.needs] : [])))];
+    if (needs.length) {
+        L.push("## What these need", "");
+        for (const n of needs) L.push(`- **${d.boundaries.filter((b) => b.needs === n).length}**: ${cell(n)} (${d.boundaries.filter((b) => b.needs === n).slice(0, 6).map((b) => cell(b.name)).join(", ")}${d.boundaries.filter((b) => b.needs === n).length > 6 ? ", …" : ""})`);
+        L.push("");
+    }
+    for (const n of d.notes ?? []) L.push(`Note: ${cell(n)}`, "");
     L.push("## Limits", "",
         "- Assemblies are read by REA, never run. Calls made through reflection, dependency injection resolved at run time, or configuration may be missed.",
         "- A controller's route comes from its [Route] attributes, read from its source with `--routes-from` and proved against the build by REA's sha256. REA does not give an attribute's value, so without the source a controller with an attribute says so, and only a controller with no attribute keeps a guess from its name.",
+        "- An adapter covers a kind, not a technology: an adapter listed for `ui` covers a CICS screen here even if it only drives a browser. Read \"What these need\".",
         "- Discovery lists what its sources show. It never proves that nothing else exists: add sources (configuration, recordings, the map) until the list stops growing.", "");
     return L.join("\n");
 }
