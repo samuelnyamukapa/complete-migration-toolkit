@@ -25,6 +25,29 @@ const RECIPIENT_PLACES = {
     "a query string": { path: `/send-code?to=${encodeURIComponent(REAL_LOOKING)}` },
     "a list of recipients": { body: { recipients: ["+15005550006", REAL_LOOKING] } },
     "a number written with spaces": { body: { phone: "+44 7911 123456" } },
+    "a channel prefix": { body: { to: `whatsapp:${REAL_LOOKING}` } },
+    "a tel: address": { body: { to: `tel:${REAL_LOOKING}` } },
+    "an sms: address outside a recipient field": { body: { note: `sms:${REAL_LOOKING}` } },
+    "numbers joined by a comma": { body: { to: `+15005550006,${REAL_LOOKING}` } },
+    "numbers joined by a semicolon": { body: { recipients: `+15005550006; ${REAL_LOOKING}` } },
+    "joined numbers outside a recipient field": { body: { note: `+15005550006,${REAL_LOOKING}` } },
+    "numbers joined by a word": { body: { to: `+15005550006 or ${REAL_LOOKING}` } },
+    "numbers with no separator but the plus": { body: { to: `+15005550006${REAL_LOOKING}` } },
+    "full-width digits": { body: { to: "＋４４７９１１１２３４５６" } },
+    "a zero-width space inside": { body: { to: "+15005550006\u200b,\u200b+447911123456" } },
+    "the international prefix 00": { body: { to: "00447911123456" } },
+    "no plus at all": { body: { to: "447911123456" } },
+    "a whole number as JSON": { body: { to: 447911123456 } },
+    "a form with the field twice": { body: `To=${encodeURIComponent(REAL_LOOKING)}&To=%2B15005550006&Body=hi` },
+    "a query string with the field twice": { path: `/send-code?to=${encodeURIComponent(REAL_LOOKING)}&to=%2B15005550006` },
+    "the path": { path: `/send/${encodeURIComponent(REAL_LOOKING)}/now` },
+    "a header": { headers: { "x-recipient": REAL_LOOKING } },
+    "a key": { body: { messages: { [REAL_LOOKING]: "hi" } } },
+    "a field named to_number": { body: { to_number: "447911123456" } },
+    "a field named toNumbers": { body: { toNumbers: ["447911123456"] } },
+    "a field named bcc": { body: { bcc: "447911123456" } },
+    "JSON inside a string": { body: { payload: JSON.stringify({ to: REAL_LOOKING }) } },
+    "XML": { body: `<message><to>${REAL_LOOKING}</to></message>` },
 };
 
 for (const [where, request] of Object.entries(RECIPIENT_PLACES)) {
@@ -44,6 +67,49 @@ for (const [where, request] of Object.entries(RECIPIENT_PLACES)) {
         } finally { await a.close(); await provider.close(); await sys.close(); }
     });
 }
+
+test("safety: a number on the list is still the number on the list, written any way", async () => {
+    const cap = await started();
+    const sys = await listen((_q, res) => json(res, 202, {}));
+    const a = adapter();
+    try {
+        for (const to of ["+15005550006", "+1 500 555 0006", "+1 (500) 555-0006", "tel:+15005550006", "whatsapp:+15005550006", "+15005550006,+1 500 555 0006", "００１５００５５５０００６"]) {
+            const { reply } = await a.call({ op: "run", case: { id: "X", request: { method: "POST", path: "/send", body: { to } } }, target: { name: "x", base_url: sys.url, capture_url: cap.url, allow_numbers: "+15005550006", quiet_ms: 20 }, headers: {} });
+            assert.equal(reply.error, undefined, `${to}: ${reply.error}`);
+        }
+    } finally { await a.close(); await sys.close(); await cap.close(); }
+});
+
+test("safety: the message's text and the sender are not recipients, and neither is a short id", async () => {
+    const cap = await started();
+    const sys = await listen((_q, res) => json(res, 202, {}));
+    const a = adapter();
+    try {
+        const bodies = [{ to: "+15005550006", from: "+447911123456" }, { to: "+15005550006", text: "Call +447911123456 about order 12" }, { customer: "c-42", to: "customer-42" }, { order_number: "12345678" }];
+        for (const body of bodies) {
+            const { reply } = await a.call({ op: "run", case: { id: "X", request: { method: "POST", path: "/send", body } }, target: { name: "x", base_url: sys.url, capture_url: cap.url, allow_numbers: "+15005550006", quiet_ms: 20 }, headers: {} });
+            assert.equal(reply.error, undefined, `${JSON.stringify(body)}: ${reply.error}`);
+        }
+    } finally { await a.close(); await sys.close(); await cap.close(); }
+});
+
+test("safety: in Twilio mode only a plain number on the list goes to Twilio, whatever else it could be read as", async () => {
+    const api = await twilio({ sid: SID, token: TOKEN });
+    const a = adapter(twilioEnv);
+    const target = { name: "t", allow_numbers: "+15005550006", twilio_api: api.url, twilio_sid_env: "TEST_SID", twilio_token_env: "TEST_TOKEN" };
+    const send = (to) => ({ id: "T", request: { method: "POST", path: "/m", body: { to, text: "hi" } } });
+    try {
+        for (const to of ["whatsapp:+15005550006", "sms:+15005550006", "+15005550006,+15005550006", "+15005550006;", `whatsapp:${REAL_LOOKING}`, `+15005550006,${REAL_LOOKING}`, "customer-42", "+15005550006 x"]) {
+            const { reply, raw } = await a.call({ op: "run", case: send(to), target, headers: {} });
+            assert.match(reply.error ?? "", /allow_numbers/, to);
+            assert.doesNotMatch(raw, /7911/);
+        }
+        assert.equal(api.state.connections, 0, "nothing was sent to Twilio");
+        const ok = await a.call({ op: "run", case: send("+1 500 555 0006"), target, headers: {} });
+        assert.equal(ok.reply.error, undefined);
+        assert.equal(new URLSearchParams(api.state.requests[0].body).get("To"), "+15005550006");
+    } finally { await a.close(); await api.close(); }
+});
 
 test("safety: with no allow-list, every recipient is refused before any network call", async () => {
     const provider = await listen((_q, res) => json(res, 201, {}));

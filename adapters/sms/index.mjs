@@ -20,7 +20,14 @@ const maskCodes = (text) => String(text ?? "").replace(AFTER_WORD, (_m, word) =>
 
 // ---- The allow-list ----
 
-const normal = (n) => String(n ?? "").replace(/[\s().-]/g, "");
+/** Text as it would reach a provider: full-width digits become digits, and invisible characters go. */
+const tidy = (v) => String(v ?? "").normalize("NFKC").replace(/\p{Cf}/gu, "");
+
+/** One number in one form: no spaces or dashes, no channel such as whatsapp: or tel:, and + for a leading 00. */
+const normal = (n) => {
+    const bare = tidy(n).replace(/[\s().-]/g, "").replace(/^[a-z][a-z0-9+.-]*:/i, "");
+    return bare.startsWith("00") ? `+${bare.slice(2)}` : bare;
+};
 
 /** The target's test numbers. With none, nothing is allowed. */
 function allowList(target) {
@@ -29,30 +36,74 @@ function allowList(target) {
     return new Set(raw.split(",").map(normal).filter(Boolean));
 }
 
-const PHONE = /^\+?\d[\d\s().-]{5,}\d$/;
-const PHONE_FIELD = /^(to|recipients?|destination|phone|phone_?number|mobile|msisdn|tel)$/i;
 const E164 = /^\+\d{7,15}$/;
-const SENDER_FIELD = /^(from|sender|originator)$/i;
+const PLAIN_NUMBER = /^\+?[\d\s().-]+$/;
+const RECIPIENT_WORDS = new Set(["to", "tos", "recipient", "recipients", "destination", "destinations", "dest", "dst", "phone", "phones", "phonenumber", "phonenumbers", "mobile", "mobiles", "msisdn", "msisdns", "tel", "cell", "cc", "bcc"]);
+const SENDER_WORDS = new Set(["from", "sender", "originator"]);
+/** `to_date` and `date_to` hold no phone number, whatever the word "to" suggests. */
+const NOT_A_NUMBER_WORDS = new Set(["date", "time", "datetime", "day", "month", "year", "amount", "price", "url", "path", "file", "id"]);
 
-/** Every recipient a case names: a field with a recipient's name, or anything written as +447700900123. */
+const wordsOf = (key) => String(key).replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase().split(/[^a-z0-9]+/);
+const isSenderField = (key) => wordsOf(key).some((w) => SENDER_WORDS.has(w));
+const isRecipientField = (key) => { const w = wordsOf(key); return w.some((x) => RECIPIENT_WORDS.has(x)) && !w.some((x) => NOT_A_NUMBER_WORDS.has(x)); };
+
+/** A value's parts: numbers can be joined by a comma, a semicolon, a bar, a new line, or just the next plus. */
+const partsOf = (value) => tidy(value).split(/[,;|\r\n\t]+|(?<!:)(?=\+)/).map((p) => p.trim()).filter(Boolean);
+
+/**
+ * Every recipient a case names. In a field with a recipient's name, any part with three or more digits counts, so a
+ * form this can't read is refused rather than passed. Anywhere else, a value counts when all of it is international numbers.
+ */
 function recipientsIn(value, key, out) {
     if (Array.isArray(value)) { for (const v of value) recipientsIn(v, key, out); return out; }
-    if (value && typeof value === "object") { for (const [k, v] of Object.entries(value)) recipientsIn(v, k, out); return out; }
-    if (key && SENDER_FIELD.test(key)) return out;
-    if (typeof value === "number" && key && PHONE_FIELD.test(key)) out.push(String(value));
-    if (typeof value === "string" && (E164.test(normal(value)) || (key && PHONE_FIELD.test(key) && PHONE.test(value)))) out.push(value);
+    if (value && typeof value === "object") {
+        for (const [k, v] of Object.entries(value)) {
+            if (E164.test(normal(k))) out.push(k);
+            recipientsIn(v, k, out);
+        }
+        return out;
+    }
+    if (key && isSenderField(key)) return out;
+    if (typeof value === "number" && key && isRecipientField(key)) out.push(String(value));
+    if (typeof value !== "string") return out;
+    const trimmed = value.trim();
+    if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+        try { return recipientsIn(JSON.parse(trimmed), key, out); } catch { /* it is only text */ }
+    }
+    const parts = partsOf(value);
+    if (key && isRecipientField(key)) out.push(...parts.filter((p) => (p.match(/\d/g) ?? []).length >= 3));
+    else if (parts.length && parts.every((p) => E164.test(normal(p)))) out.push(...parts);
+    return out;
+}
+
+/** A body that is XML: each element by its name, and anything in it written as an international number. */
+function recipientsInMarkup(body, out) {
+    for (const m of tidy(body).matchAll(/<([\w:.-]+)[^>]*>([^<]*)<\/\1>/g)) recipientsIn(m[2], m[1].split(":").pop(), out);
+    for (const m of tidy(body).matchAll(/\+\d[\d\s().-]{5,}\d/g)) out.push(m[0]);
     return out;
 }
 
 function caseRecipients(c) {
     const found = [];
-    let body = c.request.body;
+    const { body, body_form: form, headers, path: where } = c.request;
     if (typeof body === "string") {
-        try { body = JSON.parse(body); } catch { body = Object.fromEntries(new URLSearchParams(body)); }
+        const text = body.trim();
+        if (text.startsWith("<")) recipientsInMarkup(text, found);
+        else {
+            let parsed;
+            try { parsed = JSON.parse(text); } catch { /* a form */ }
+            if (parsed !== undefined) recipientsIn(parsed, undefined, found);
+            else for (const [k, v] of new URLSearchParams(text)) recipientsIn(v, k, found);
+        }
+    } else recipientsIn(body, undefined, found);
+    recipientsIn(form, undefined, found);
+    for (const [k, v] of Object.entries(headers ?? {})) recipientsIn(v, k, found);
+    const [route, query] = String(where ?? "").split("?");
+    for (const segment of route.split("/")) {
+        let part = segment;
+        try { part = decodeURIComponent(segment); } catch { /* left as written */ }
+        recipientsIn(part, undefined, found);
     }
-    recipientsIn(body, undefined, found);
-    recipientsIn(c.request.body_form, undefined, found);
-    const query = String(c.request.path ?? "").split("?")[1];
     if (query) for (const [k, v] of new URLSearchParams(query)) recipientsIn(v, k, found);
     return found;
 }
@@ -134,6 +185,8 @@ async function runTwilio(c, target, allowed) {
     let body = c.request.body;
     if (typeof body === "string") { try { body = JSON.parse(body); } catch { body = null; } }
     if (!body || typeof body !== "object" || typeof body.to !== "string" || typeof (body.text ?? body.body) !== "string") throw new Refusal("in Twilio mode a case's body needs `to` and `text`");
+    // What goes to Twilio is built here, so it must be one plain number on the list: not a channel, and not a list of numbers.
+    if (!PLAIN_NUMBER.test(tidy(body.to)) || !allowed.has(normal(body.to))) throw new Refusal("in Twilio mode a recipient must be one plain number on the target's allow_numbers, so this case is refused before any network call");
     const from = body.from ?? VALID_SENDER;
     if (!TWILIO_MAGIC.test(normal(from))) throw new Refusal("in Twilio mode the sender must be one of Twilio's test numbers, which start +1500555");
     const api = address(target, "twilio_api");

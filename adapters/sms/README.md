@@ -52,11 +52,12 @@ It doesn't observe your system, and it doesn't read messages back. A GET case is
 ## Safety
 
 - **`allow_numbers` is required.** With no list, everything is refused.
-- **Refused before any network call.** A recipient off the list is refused before the system, the capture or Twilio is contacted. The adapter looks in the body, the form and the query string, at fields such as `to`, `phone` and `mobile`, and at anything written as an international number.
-- **It can't see every recipient in advance.** A system might look the number up itself. Then the capture catches it: a message to someone off the list makes the case an error.
+- **Refused before any network call.** A recipient off the list is refused before the system, the capture or Twilio is contacted. The adapter looks in the body (JSON, form or XML), the form, the query string, the path and the headers, at fields with a name such as `to`, `to_number`, `phone`, `mobile` or `bcc`, and at anything written as an international number, including a key.
+- **Every form is made one form first.** `whatsapp:` and `tel:`, numbers joined by commas or semicolons, `00` for `+`, full-width digits and invisible characters are all read as the numbers they hold. Each number must be on the list. In a recipient field, anything with three or more digits that isn't a number on the list is refused, so a form this can't read does not pass.
+- **What it can't see in advance.** A system might look the number up itself, and a case can hide a number in a field whose name says nothing, written without a `+`, or in the message text. An ordinary text can't be told apart from an instruction. For the capture, this is caught afterwards: a message to someone off the list makes the case an error. The capture only sees what the system sends to it, so a system that talks to a real provider directly is not protected: point its provider address at the capture.
 - **The number isn't printed** in a refusal.
 - **Only the capture.** An address that doesn't answer as this capture is refused.
-- **Twilio mode takes only Twilio's test numbers,** starting `+1500555`, as sender and as recipient. Twilio's test and live credentials look the same, so this adapter can't tell them apart. The numbers are what keep it safe: no real phone has one.
+- **Twilio mode takes only Twilio's test numbers,** starting `+1500555`, as sender and as recipient. The recipient must be one plain number on the list: a channel or a joined list is refused, and the adapter builds what it sends from that one number. Twilio's test and live credentials look the same, so this adapter can't tell them apart. The numbers are what keep it safe: no real phone has one.
 - **Credentials come only from environment variables,** named in the settings. They go only over https or to this machine, and never appear in what the adapter reports.
 - Requests go only to the addresses in the settings. Redirects aren't followed and proxies aren't used.
 
