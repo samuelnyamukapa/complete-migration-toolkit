@@ -83,6 +83,8 @@ The install is pinned. Use `--pin <tag, branch or commit>` to choose a version f
 
 This stops accidents and agents that follow the rules. It does not stop a determined script, and it cannot prove a person is there: something driving a fake terminal could type `yes`, as it could for `cmtk signoff`. So the name goes on the install, in `adapters/installed.yaml`. Keep that file under version control, and require a reviewed commit to change it.
 
+An installed adapter is checked each time something would start it: `cmtk run`, `cmtk compare`, `cmtk probe`, exploration and `cmtk adapter check`. If its code no longer matches what was approved, it isn't started, and each of its cases reads ERROR. The same goes for anything in its `bin`, `obj` or `node_modules` folders, at any depth, because those files run too. After you run `npm install` or `dotnet build` yourself, read what it wrote and run `cmtk adapter approve <name>` in a terminal. That records a fingerprint of those files with your name. It covers build files only: changed code needs a fresh install. This pins an adapter under `adapters/<name>`. Anyone who can edit `cmtk.yaml` can change the command an adapter runs, so review that file too.
+
 ## Private registries
 
 For adapters a client keeps to itself, list the registry in `cmtk.yaml`:

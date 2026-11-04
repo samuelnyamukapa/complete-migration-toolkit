@@ -4,6 +4,7 @@ export { shadow, captureRequests, cleanTarget, redactText, looksPersonal, endpoi
 export { keepDated, cleanHistory, datedRuns, sizeOf, stampOf, stampTime, historyFolder, DEFAULT_HISTORY, HISTORY_MODES, type HistoryMode, type CleanOptions } from "./history.js";
 export { trend, trendOf, renderTrend, scrubRules, type TrendReport, type TrendRun, type TrendDifference, type TrendFlaky } from "./trend.js";
 export { run, compare, matchFor, envHeaders, adaptersFor, evidenceOf, SAFE_METHODS, type RunOptions } from "./engine.js";
+export { adapterPinProblem, buildFiles, BUILD_FOLDERS, fingerprint, pinState, readInstalled, type PinState } from "./adapter-pin.js";
 export { overrideIn, writes, safeConfirmed, safePrint } from "./methods.js";
 export { looksLikeAgent } from "./people.js";
 export { compareObservations, diffJson, diffXml, parseXml, parseJsonKeepingNumbers, scrubberOf, scrubJson, shortPair, ConfigError, SCRUBBED } from "./diff.js";

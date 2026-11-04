@@ -12,12 +12,12 @@ import { parseArgs } from "node:util";
 import YAML from "yaml";
 
 import {
-    acceptDraft, adaptersFor, looksLikeAgent, confirmSafe, describeSafe, overrideIn, removeSafe, unconfirmedSafe, BOUNDARY_KINDS, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
+    acceptDraft, adapterPinProblem, adaptersFor, looksLikeAgent, confirmSafe, describeSafe, overrideIn, removeSafe, unconfirmedSafe, BOUNDARY_KINDS, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
     initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target, shadow, SHADOW_FORMATS, type ShadowFormat, cleanHistory, HISTORY_MODES, trend, type HistoryMode, planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat, DATA_FORMATS, compareTables, readTables, describeComparison, type Scrubbing, trafficAgainstSchema, loadDataFindings, writeSeed,
 } from "@cmtk/core";
 
-import { commitInstall, describeInstall, describeList, listAdapters, prepareInstall, RegistryError } from "./registry.js";
+import { adaptersFolder, approveBuild, commitInstall, describeBuild, describeInstall, describeList, listAdapters, prepareInstall, RegistryError } from "./registry.js";
 
 // Node 22 before 22.17 flags fs.globSync and path.matchesGlob as experimental and prints a warning
 // on every run. They behave as documented, so keep that one warning out of what people read.
@@ -55,6 +55,7 @@ Usage:
   cmtk discover [--assembly <dll>]... [--rea-json <file>]... [--routes-from <file or folder of C#>]... [--config <file>]... [--har <file>]... [--topology <file>]... [--fresh]
                                                                     list every boundary of the legacy system, and flag the uncovered ones
                                                                     (--assembly needs REA: npm install --global rea-agents)
+  cmtk adapter approve <name>                                       a person approves what their own build or install wrote into an installed adapter
   cmtk review                                                       a person accepts or rejects draft cases and proposals
   cmtk defects run|compare                                          draft defects from the latest report
   cmtk probe <target> "GET /path" [--surface <name>]                send one read-only request and show the answer
@@ -551,14 +552,15 @@ async function adapterCommand(args: string[], manifestFile: string, values: { la
     const lang = values.lang ?? "node";
     if (sub === "list") return adapterList(manifestFile, values.json === true);
     // Before anything else, the name included: a script learns nothing and fetches nothing.
-    if (sub === "add" && (!process.stdin.isTTY || !process.stdout.isTTY)) {
-        throw new UsageError("Installing an adapter runs someone else's code, so a person says yes at a keyboard: run `cmtk adapter add` in a terminal yourself. Only a person installs.");
+    if ((sub === "add" || sub === "approve") && (!process.stdin.isTTY || !process.stdout.isTTY)) {
+        throw new UsageError(`Installing an adapter runs someone else's code, so a person says yes at a keyboard: run \`cmtk adapter ${sub}\` in a terminal yourself. Only a person installs.`);
     }
     if (!name || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(name) || name === "http") throw new UsageError("Give the adapter a name of letters, digits, '.', '-' and '_' (not http, which is built in).");
     const root = path.dirname(manifestFile);
     const dir = path.join(root, "adapters", name);
     if (sub === "new") {
         if (lang !== "node" && lang !== "csharp") throw new UsageError(`--lang must be node or csharp, not ${lang}.`);
+        adaptersFolder(root);
         if (fs.existsSync(dir)) throw new UsageError(`adapters/${name} already exists.`);
         writeTemplate(path.join(HERE, "..", "templates", `adapter-${lang}`), dir, name);
         if (lang === "csharp") {
@@ -570,9 +572,14 @@ async function adapterCommand(args: string[], manifestFile: string, values: { la
         console.log(`Register it in cmtk.yaml:\n  adapters:\n    ${name}: { command: node, args: [adapters/${name}/index.mjs] }`);
         return 0;
     }
-    if (sub === "check") return adapterCheck(name, dir, manifestFile, values.target);
+    if (sub === "check") {
+        const problem = adapterPinProblem(root, name);
+        if (problem) throw new UsageError(problem);
+        return adapterCheck(name, dir, manifestFile, values.target);
+    }
+    if (sub === "approve") return adapterApprove(name, root);
     if (sub === "add") return adapterAdd(name, root, manifestFile, values.registry, values.pin);
-    throw new UsageError("`cmtk adapter` takes `new <name>`, `check <name>`, `add <name>` or `list`.");
+    throw new UsageError("`cmtk adapter` takes `new <name>`, `check <name>`, `add <name>`, `approve <name>` or `list`.");
 }
 
 function adapterList(manifestFile: string, json: boolean): number {
@@ -582,8 +589,34 @@ function adapterList(manifestFile: string, json: boolean): number {
     for (const line of describeList(rows)) console.log(line);
     console.log("\nLevels: experimental passes the conformance kit; verified was used on one real project; core ships with the toolkit and has real use behind it. For an adapter from a registry, the level is what that registry says: `cmtk adapter check <name>` proves the kit here.");
     const changed = rows.filter((r) => r.state === "CHANGED since install" || r.state === "MISSING").map((r) => r.name);
-    if (changed.length) console.log(`Warning: ${changed.join(", ")} no longer match what a person approved. Read the changes, or remove the folder and its entry in adapters/installed.yaml and add it again.`);
+    if (changed.length) console.log(`Warning: ${changed.join(", ")} no longer match what a person approved, so \`cmtk run\` and \`cmtk compare\` will not start them. Read the changes, or remove the folder and its entry in adapters/installed.yaml and add it again.`);
+    const built = rows.filter((r) => r.state === "BUILD FILES not approved").map((r) => r.name);
+    if (built.length) console.log(`Warning: ${built.join(", ")} hold bin, obj or node_modules files no person approved, so they will not be started. If you built them yourself, read them, then run \`cmtk adapter approve <name>\` in a terminal.`);
     return 0;
+}
+
+/** A person approves what their own build or install wrote into an installed adapter. There is no flag or variable for this. */
+async function adapterApprove(name: string, root: string): Promise<number> {
+    for (const line of describeBuild(root, name)) console.log(line);
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const ask = (q: string) => new Promise<string | null>((resolve) => {
+        rl.once("close", () => resolve(null));
+        rl.question(q).then((a) => resolve(a), () => resolve(null));
+    });
+    try {
+        const person = (await ask("\nYour full name: "))?.trim();
+        if (!person || person.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(person) || looksLikeAgent(person)) {
+            console.log("A person's name of up to 100 characters is needed. Nothing was approved.");
+            return 3;
+        }
+        const yes = (await ask(`Type yes to approve these files for ${name}, anything else to stop: `))?.trim().toLowerCase();
+        if (yes !== "yes") { console.log("Nothing was approved."); return 0; }
+        approveBuild(root, name, person, new Date().toISOString().slice(0, 10));
+        console.log(`Approved. Recorded in adapters/installed.yaml. If the files change, ${name} stops starting until a person approves them again.`);
+        return 0;
+    } finally {
+        rl.close();
+    }
 }
 
 /** The toolkit's own adapters folder, in a clone. Only this registry may list a core adapter. */
@@ -603,7 +636,7 @@ async function adapterAdd(name: string, root: string, manifestFile: string, regi
     try {
         for (const line of describeInstall(prepared)) console.log(line);
         const person = (await ask("\nYour full name: "))?.trim();
-        if (!person || person.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(person) || /^agent\b/i.test(person)) {
+        if (!person || person.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(person) || looksLikeAgent(person)) {
             console.log("A person's name of up to 100 characters is needed: it goes beside this install. Nothing was installed.");
             return 3;
         }
@@ -614,7 +647,7 @@ async function adapterAdd(name: string, root: string, manifestFile: string, regi
         const covers = prepared.entry.kinds.filter((k) => (BOUNDARY_KINDS as readonly string[]).includes(k));
         const also = covers.length ? `, covers: [${covers.join(", ")}]` : "";
         if (prepared.files.some((f) => f.endsWith(".csproj") && !f.includes("/"))) {
-            console.log(`Next: read the code, then \`dotnet build -c Release adapters/${name}\` and \`cmtk adapter check ${name}\`. Register the built program in cmtk.yaml; its README shows how.`);
+            console.log(`Next: read the code, then \`dotnet build -c Release adapters/${name}\`, \`cmtk adapter approve ${name}\` and \`cmtk adapter check ${name}\`. Register the built program in cmtk.yaml; its README shows how.`);
         } else if (prepared.files.includes("index.mjs")) {
             console.log(`Next: read the code, then \`cmtk adapter check ${name}\`. Register it in cmtk.yaml:\n  adapters:\n    ${name}: { command: node, args: [adapters/${name}/index.mjs]${also} }`);
         } else console.log(`Next: read the code and its README, register it in cmtk.yaml, then \`cmtk adapter check ${name}\`.`);

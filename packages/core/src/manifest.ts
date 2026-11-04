@@ -166,7 +166,7 @@ function registriesOf(raw: unknown): Record<string, string> {
         if (!NAME.test(name)) throw new ManifestError(`adapter_registries: the name ${JSON.stringify(name)} must be letters, digits, '.', '-' and '_'.`);
         if (typeof at !== "string" || !at.trim()) throw new ManifestError(`adapter_registries.${name} must be a git address or a folder.`);
         // The value is not repeated: it may be the very secret this refuses. Git's credential helper or an ssh key carries it instead.
-        if (/^https?:\/\/[^/]*@|^[a-z][a-z0-9+.-]*:\/\/[^/@]*:[^/@]*@/i.test(at)) throw new ManifestError(`adapter_registries.${name} holds a credential. Remove it from cmtk.yaml, and let git's credential helper or your ssh key supply it.`);
+        if (/^https?:\/\/[^/]*@|^[a-z][a-z0-9+.-]*:\/\/[^/@]*:[^/@]*@|^[^/\s@]*:[^/\s@]*@/i.test(at)) throw new ManifestError(`adapter_registries.${name} holds a credential. Remove it from cmtk.yaml, and let git's credential helper or your ssh key supply it.`);
     }
     return raw as Record<string, string>;
 }

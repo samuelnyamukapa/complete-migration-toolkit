@@ -7,6 +7,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
+import { adapterPinProblem } from "./adapter-pin.js";
 import { httpAdapter, processAdapter, type Adapter } from "./adapters.js";
 import { checkAssemblyContract } from "./assembly.js";
 import { checkContract } from "./contracts.js";
@@ -69,7 +70,11 @@ export function adaptersFor(manifest: Manifest) {
             const s = surface || "http";
             if (!cache.has(s)) {
                 if (s === "http") cache.set(s, httpAdapter({ timeoutS: manifest.timeout_s, insecureTls: manifest.insecure_tls, root: manifest.root }));
-                else if (manifest.adapters[s]) cache.set(s, processAdapter(s, manifest.adapters[s]!, manifest.root));
+                else if (manifest.adapters[s]) {
+                    const problem = adapterPinProblem(manifest.root, s);
+                    if (problem) throw new ManifestError(problem);
+                    cache.set(s, processAdapter(s, manifest.adapters[s]!, manifest.root));
+                }
                 else throw new ManifestError(`No adapter for surface "${s}". Add it under \`adapters:\` in cmtk.yaml, or run \`cmtk adapter new ${s}\`.`);
             }
             return cache.get(s)!;

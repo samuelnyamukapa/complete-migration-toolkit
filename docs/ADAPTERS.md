@@ -118,7 +118,7 @@ cmtk adapter check mailbox
 cmtk adapter list
 ```
 
-Installing one runs someone else's code later, so only a person does it, at a terminal. It shows the source and the licence, pins the commit, and asks for a yes. No script, flag or MCP tool can do it. [ADAPTER-CONTRIBUTING.md](ADAPTER-CONTRIBUTING.md) covers registries, private registries, and how to publish your own.
+Installing one runs someone else's code later, so only a person does it, at a terminal. If its code changes afterwards, or its `bin`, `obj` or `node_modules` files do, it is not started until a person looks: `cmtk adapter approve <name>` covers build files, as [the guide](ADAPTER-CONTRIBUTING.md) explains. It shows the source and the licence, pins the commit, and asks for a yes. No script, flag or MCP tool can do it. [ADAPTER-CONTRIBUTING.md](ADAPTER-CONTRIBUTING.md) covers registries, private registries, and how to publish your own.
 
 A case whose surface has no adapter does not stop the run. Nothing is sent for it, it counts as an error so the report can't pass, and the report lists it under "Cases with no adapter".
 

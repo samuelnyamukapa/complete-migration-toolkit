@@ -3,20 +3,21 @@
 // It lives in the command and not in @cmtk/core so that the MCP server, which only imports core, has
 // no way to reach it. Only a person at a terminal installs. See docs/ADAPTER-CONTRIBUTING.md.
 import { spawnSync } from "node:child_process";
-import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
 import YAML from "yaml";
 
+import { buildFiles, BUILD_FOLDERS as LEFT_OUT, fingerprint, ManifestError, pinState, readInstalled, type PinState } from "@cmtk/core";
+
+export { fingerprint };
+
 export class RegistryError extends Error {}
 
 export const LEVELS = ["experimental", "verified", "core"] as const;
 export type Level = (typeof LEVELS)[number];
 
-/** What a build or an install writes. Never copied, and never part of the fingerprint. */
-const LEFT_OUT = new Set(["bin", "obj", "node_modules"]);
 const MAX_FILES = 5000;
 const MAX_BYTES = 100 * 1024 * 1024;
 const NAME = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
@@ -43,6 +44,10 @@ export interface InstalledRecord {
     /** Absent only when the source was a plain folder, which has no history; the fingerprint is then the pin. */
     commit?: string;
     fingerprint: string;
+    /** What `npm install` or `dotnet build` wrote, once a person read it and said yes. */
+    build_fingerprint?: string;
+    build_approved_by?: string;
+    build_approved_on?: string;
     level: Level;
     kinds: string[];
     language: string;
@@ -57,7 +62,7 @@ export interface InstalledRecord {
 export interface ListedAdapter {
     name: string;
     level: Level | "none";
-    state: "built in" | "ok" | "CHANGED since install" | "MISSING" | "ships here" | "written here" | "no folder";
+    state: "built in" | PinState | "ships here" | "written here" | "no folder";
     registered: boolean;
     origin: string;
     commit?: string;
@@ -138,6 +143,8 @@ export const sourceAllowed = (source: string, registry: string) => isRemote(sour
 export function classifyLocation(location: string, base: string): { kind: "git" | "folder"; at: string } {
     const refuse = (why: string) => new RegistryError(`That registry location is refused: ${why}`);
     if (typeof location !== "string" || !location.trim() || location.startsWith("-") || UNSHOWABLE.test(location)) throw refuse("it is empty or starts with a dash.");
+    // user:password@host, written without a scheme. It is not a folder, and repeating it would print the password.
+    if (/^[^/\s@]*:[^/\s@]*@/.test(location)) throw refuse("it holds a credential. Leave it out: git asks your credential helper or your ssh key. The location was not stored or printed.");
     if (/^[a-z0-9+.-]+::/i.test(location)) throw refuse("git's remote helpers can run commands. Use https, ssh or a folder.");
     const scheme = /^([a-z][a-z0-9+.-]*):\/\/([^/]*)/i.exec(location);
     if (scheme) {
@@ -246,25 +253,6 @@ function stageFromFolder(root: string, sub: string, stage: string): string[] {
     return files;
 }
 
-/** One fingerprint for the whole folder. Windows line endings count as the same text, so a checkout on Windows is not a change. */
-export function fingerprint(dir: string): string {
-    const hash = crypto.createHash("sha256");
-    const walk = (at: string, prefix: string) => {
-        for (const e of fs.readdirSync(at, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))) {
-            if (LEFT_OUT.has(e.name)) continue;
-            const rel = prefix + e.name;
-            // A link cannot come from an install, so one here was added since: count it, without following it.
-            if (e.isSymbolicLink()) { hash.update(`${rel}\0link\n`); continue; }
-            if (e.isDirectory()) { walk(path.join(at, e.name), `${rel}/`); continue; }
-            let data = fs.readFileSync(path.join(at, e.name));
-            if (!data.subarray(0, 8000).includes(0)) data = Buffer.from(data.toString("latin1").replace(/\r\n/g, "\n"), "latin1");
-            hash.update(`${rel}\0${crypto.createHash("sha256").update(data).digest("hex")}\n`);
-        }
-    };
-    walk(dir, "");
-    return `sha256:${hash.digest("hex")}`;
-}
-
 export interface Prepared {
     entry: RegistryEntry;
     registry: string;
@@ -303,7 +291,7 @@ function openRegistry(location: string, base: string, work: string, pin: string 
  * exactly what `commitInstall` moves into place: nothing is fetched twice.
  */
 export function prepareInstall(o: { name: string; root: string; registries: string[]; base: string; pin?: string; toolkitAdapters?: string }): Prepared {
-    const dir = path.join(o.root, "adapters");
+    const dir = adaptersFolder(o.root);
     if (fs.existsSync(path.join(dir, o.name))) throw new RegistryError(`adapters/${o.name} already exists. A person removes it first, then adds the version they want.`);
     fs.mkdirSync(dir, { recursive: true });
     const work = fs.mkdtempSync(path.join(dir, ".cmtk-staging-"));
@@ -338,6 +326,13 @@ export function prepareInstall(o: { name: string; root: string; registries: stri
         cleanup();
         throw err;
     }
+}
+
+/** The project's adapters folder, or a refusal if it is a link that leads somewhere else: nothing is ever written outside the project. */
+export function adaptersFolder(root: string): string {
+    const dir = path.join(root, "adapters");
+    if (fs.lstatSync(dir, { throwIfNoEntry: false })?.isSymbolicLink()) throw new RegistryError("adapters/ is a link, and could lead outside the project. Nothing was written. Make it a plain folder.");
+    return dir;
 }
 
 function notesOn(stage: string, files: string[]): string[] {
@@ -381,11 +376,47 @@ export function describeInstall(p: Prepared): string[] {
 const installedFile = (root: string) => path.join(root, "adapters", "installed.yaml");
 
 export function loadInstalled(root: string): Record<string, InstalledRecord> {
-    const f = installedFile(root);
-    if (!fs.existsSync(f)) return {};
-    let doc: any;
-    try { doc = YAML.parse(fs.readFileSync(f, "utf8")); } catch (err) { throw new RegistryError(`adapters/installed.yaml is not valid YAML: ${(err as Error).message.split("\n")[0]}`); }
-    return (doc?.adapters ?? {}) as Record<string, InstalledRecord>;
+    try {
+        return readInstalled(root) as unknown as Record<string, InstalledRecord>;
+    } catch (err) {
+        throw err instanceof ManifestError ? new RegistryError(err.message) : err;
+    }
+}
+
+function writeInstalled(root: string, all: Record<string, InstalledRecord>): string {
+    const tmp = `${installedFile(root)}.${process.pid}.tmp`;
+    fs.writeFileSync(tmp, `# Written by \`cmtk adapter add\`, once a person said yes. Each entry pins what was installed.\n${YAML.stringify({ adapters: all }, { lineWidth: 0 })}`, "utf8");
+    return tmp;
+}
+
+/** What `cmtk adapter approve` shows: the build files as they are now, or why there is nothing it may approve. */
+export function describeBuild(root: string, name: string): string[] {
+    const rec = loadInstalled(root)[name];
+    if (!rec || !Object.hasOwn(loadInstalled(root), name)) throw new RegistryError(`${name} was not installed from a registry, so it has no pin to approve.`);
+    const dir = path.join(root, "adapters", name);
+    const state = pinState(dir, rec);
+    if (state === "MISSING" || state === "CHANGED since install") throw new RegistryError(`adapters/${name} is ${state}: its code no longer matches what a person approved, and this command only covers build files. Read the changes, or remove the folder and its entry in adapters/installed.yaml and add it again.`);
+    const { files } = buildFiles(dir);
+    const by = new Map<string, number>();
+    for (const f of files) { const top = f.split("/").find((p) => LEFT_OUT.has(p))!; by.set(top, (by.get(top) ?? 0) + 1); }
+    return [
+        `Adapter ${name}: its code still matches what ${rec.approved_by} approved.`,
+        files.length ? `Build files now: ${[...by].map(([k, n]) => `${n} file${n === 1 ? "" : "s"} in ${k}`).join(", ")}.` : "It has no build files now.",
+        ...files.slice(0, 12).map((f) => `  ${f}`),
+        ...(files.length > 12 ? [`  and ${files.length - 12} more`] : []),
+        "",
+        "These run with your rights whenever the adapter does. Say yes only if you wrote them, or ran the build or the install yourself.",
+    ];
+}
+
+/** Records what a build wrote, with the person who said yes. */
+export function approveBuild(root: string, name: string, approvedBy: string, date: string): void {
+    const all = loadInstalled(root);
+    const rec = all[name]!;
+    const { print } = buildFiles(path.join(root, "adapters", name));
+    const { build_fingerprint: _p, build_approved_by: _b, build_approved_on: _o, ...rest } = rec;
+    all[name] = { ...rest, ...(print ? { build_fingerprint: print, build_approved_by: approvedBy, build_approved_on: date } : {}) };
+    fs.renameSync(writeInstalled(root, all), installedFile(root));
 }
 
 /** Moves the approved files into place, and records who said yes. Either both happen or neither does. */
@@ -400,8 +431,7 @@ export function commitInstall(p: Prepared, root: string, approvedBy: string, dat
     };
     const all = { ...loadInstalled(root), [e.name]: record };
     const f = installedFile(root);
-    const tmp = `${f}.${process.pid}.tmp`;
-    fs.writeFileSync(tmp, `# Written by \`cmtk adapter add\`, once a person said yes. Each entry pins what was installed.\n${YAML.stringify({ adapters: all }, { lineWidth: 0 })}`, "utf8");
+    const tmp = writeInstalled(root, all);
     fs.renameSync(p.stage, to);
     try {
         fs.renameSync(tmp, f);
@@ -428,7 +458,7 @@ export function listAdapters(root: string, registered: Record<string, unknown>):
         if (rec && typeof rec === "object") {
             rows.push({
                 name, level: LEVELS.includes(rec.level) ? rec.level : "none", registered: reg, origin: `${rec.source}, approved by ${rec.approved_by} on ${rec.date}`,
-                state: !has ? "MISSING" : fingerprint(path.join(dir, name)) === rec.fingerprint ? "ok" : "CHANGED since install",
+                state: pinState(path.join(dir, name), rec),
                 ...(rec.commit ? { commit: rec.commit } : {}), ...(rec.version ? { version: rec.version } : {}), licence: rec.licence, owner: rec.owner,
             });
             continue;
