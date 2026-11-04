@@ -86,6 +86,10 @@ Three things keep it safe. `Console.WriteLine` goes to standard error, so a stra
 
 [adapters/worker](../adapters/worker/README.md) is a full example, for a Windows service or a .NET worker.
 
+## User interfaces
+
+[adapters/web](../adapters/web/README.md) drives a real browser, and [adapters/desktop](../adapters/desktop/README.md) runs a recorded script against a desktop app. Both report journeys and page structure, which the `journey`, `structure` and `visual` match levels compare.
+
 ## Rules every adapter keeps
 
 - **Sandboxes only for money and messages.** Refuse live payment keys, such as Stripe's `sk_live_`, and real SMS or email delivery.

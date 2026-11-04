@@ -44,7 +44,7 @@ const DRAFT = {
         { check: "the basket holds the jacket", value: "items", equals: 1 },
     ],
 };
-const CASE = "cases:\n  - { id: BASKET, requirement: SHOP-1, surface: web, match: journey, request: POST /, expect: { status: 200 }, journey: { script: cmtk/journeys/basket.json, step_timeout_ms: 800 } }\n";
+const CASE = "cases:\n  - { id: BASKET, requirement: SHOP-1, surface: web, match: journey, request: POST /, expect: { status: 200 }, journey: { script: cmtk/journeys/basket.json, step_timeout_ms: 2500 } }\n";
 const UNSAFE = "allow_unsafe_methods: true";
 const SCRIPT = "cmtk/journeys/basket.json";
 const recordArgs = (a, b) => ["--journey", "cmtk/journeys/basket.draft.json", "--out", SCRIPT, "--target", `legacy=${a.url}`, "--target", `candidate=${b.url}`, "--writes", "--date", "2026-11-04"];

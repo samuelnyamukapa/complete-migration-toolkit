@@ -60,6 +60,7 @@ These run in CI on every pull request, except the last one, which starts with ea
 - **A TOTP seed stays in its environment variable.** A test plants a seed, runs an MFA journey on two systems, and searches every file the run wrote, standard output and standard error for the seed and the codes.
 - **A repair never changes what is expected.** A broken locator is an error, and it stays one until a person accepts a proposal. The proposal can only change how an action step finds its element, on one target, and refuses a read, a check or an `expect:` block.
 - **Replay makes no model calls.** A test replays a script with the model keys removed and every non-local connection recorded, and the report shows zero.
+- **A desktop app runs only where it is meant to.** The real reader refuses a target without `isolated_vm: true`, and a step marked `leaves_sandbox` needs a named person who is not an agent. A case written as GET cannot press or fill anything. On a system with no Windows UI Automation, the adapter says so, and only an app written as a stub runs.
 - **Evidence stays inside the project.** Clearing old evidence never follows a link outside it.
 - **Sandboxes only for money and messages.** Payment adapters refuse live keys, such as `sk_live_`, before any network call. Email and SMS adapters refuse anything that isn't a capture server or a test number.
 - **Pilot systems are never modified.** Each pilot checks the system's folder against a checksum list before and after every session.

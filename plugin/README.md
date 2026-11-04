@@ -11,6 +11,7 @@ Skills for GitHub Copilot (CLI and app) and Claude Code that do the grind of tes
 | `/cmtk:triage` | Goes through a comparison of an old and a new system, and proposes for each group of differences: noise, intended drift or a defect. |
 | `/cmtk:explore` | Exploratory testing against a charter, read-only and within a budget. Findings become draft cases, with every request logged. |
 | `/cmtk:journey` | Works out a web journey once, against a goal, and records it as a script that replays with no model. A broken locator gets a proposed repair, never a silent one. |
+| `/cmtk:desktop` | Works out a desktop journey once, against a charter, and writes a script a person reviews. The script then runs with no model. |
 | `/cmtk:defects` | Drafts defects from failures, with steps, expected, actual and evidence. Files them in your tracker only after you say yes. |
 
 **Agents propose; people decide.** The skills write draft cases and proposals, and nothing counts until a person accepts it. That happens in a terminal, with `cmtk review` for drafts and proposals and `cmtk signoff` for a report. Both refuse to run from a script, and the plugin has no tool that approves or signs. Ask the agent for the exact commands: it gets them from `cmtk_commands_for_person`.

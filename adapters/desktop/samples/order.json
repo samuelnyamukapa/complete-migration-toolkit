@@ -1,0 +1,12 @@
+{
+  "cmtk_script": 1,
+  "goal": "Place an order for three and see its total",
+  "steps": [
+    { "reach": "order form", "window": "Orders*" },
+    { "set_value": { "automation_id": "qty" }, "with": "3" },
+    { "invoke": { "automation_id": "place" } },
+    { "reach": "confirmation", "window": "Order placed*" },
+    { "read": "total", "from": { "automation_id": "total" } },
+    { "check": "the total is three times the price", "value": "total", "equals": "30.00" }
+  ]
+}
