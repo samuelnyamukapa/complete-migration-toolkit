@@ -2,6 +2,14 @@
 
 The HTTP adapter (REST, GraphQL, SOAP) is built in. Everything else (queues, Windows services and workers, files and batch jobs, databases, email, SMS, payment sandboxes, desktop apps) is an adapter: a small program in any language that drives one kind of boundary and reports what happened as plain JSON.
 
+## Adapters that ship with the toolkit
+
+| Adapter | What it tests | Works against | Refuses |
+|---|---|---|---|
+| [mailbox](../adapters/mailbox/README.md) | The emails a system sends | Mailpit or MailHog | An address that doesn't answer as Mailpit or MailHog |
+| [sms](../adapters/sms/README.md) | The text messages a system sends | Its own local capture, or Twilio test credentials | A recipient off the allow-list, before any network call |
+| [payments](../adapters/payments/README.md) | Payments, refunds and webhooks, including a duplicate | A Stripe test-mode account | Any key that isn't a test-mode key, before any network call |
+
 ## The protocol
 
 The toolkit starts the adapter once per run and writes one JSON request per line to its standard input. The adapter answers each one with one JSON line on standard output. Nothing else may go to standard output; diagnostics go to standard error, which the toolkit passes through to your terminal. An adapter that gives no answer within its `timeout_s` (default 300 seconds) is stopped, and that case is reported as an error.
@@ -36,7 +44,7 @@ An observation:
    - the same case twice gives the same observation;
    - no header value leaks into what the adapter reports.
 
-   It uses a dummy target. An adapter that needs settings from its target, such as folders, gives them in `samples/cases.yaml` under `check_target:`.
+   By default it uses a dummy target. An adapter that needs settings can give them in `samples/cases.yaml` under `check_target:`, such as folders, or take a target from `cmtk.yaml` with `--target legacy`, such as the address of a capture server. With `--target` the sample cases are really sent to it, twice and with no reset between, so point it only at a test system.
 4. Register it in `cmtk.yaml`, and give its cases `surface: mailbox`:
 
    ```yaml

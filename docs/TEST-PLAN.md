@@ -35,7 +35,7 @@ Three rules for every test:
 
 ## Safety tests that must always pass
 
-These run in CI on every pull request, except the last two, which start with the phase that adds payment and messaging adapters (Phase 2) and with each pilot. A pull request that breaks one is not merged.
+These run in CI on every pull request, except the last one, which starts with each pilot. A pull request that breaks one is not merged.
 
 - **Changing data needs two switches.** POST, PUT, PATCH and DELETE are skipped unless `allow_unsafe_methods: true` is in `cmtk.yaml` and `--allow-unsafe` is on the run. Each switch is tested on its own: the request must not be sent.
 - **Secrets never reach disk.** A test plants a known secret in `headers_from_env` and searches every file the run wrote.
@@ -48,7 +48,7 @@ These run in CI on every pull request, except the last two, which start with the
 - **Only a person adds a known issue.** The ledger refuses an entry with no named person, or one naming an agent. An agent's proposal changes no verdict until a person accepts it in `cmtk review`. A failure the entry does not describe is still FAIL, and a known issue never counts as passed.
 - **Part of a system never reads as parity.** When a target lacks a surface, or a surface a target lists has no case, the verdict is PARTIAL COMPARISON at best, with exit code 4, and the report and the signature state the scope. Nothing is sent for a case that is not comparable.
 - **Evidence stays inside the project.** Clearing old evidence never follows a link outside it.
-- **Sandboxes only for money and messages.** Payment adapters refuse live keys, such as `sk_live_`, before any network call. Email and SMS adapters refuse anything that isn't a capture server or a test number.
+- **Sandboxes only for money and messages.** Payment adapters refuse live keys, such as `sk_live_`, before any network call. Email and SMS adapters refuse anything that isn't a capture server or a test number. See `adapters/*/test/safety.test.mjs`.
 - **Pilot systems are never modified.** Each pilot checks the system's folder against a checksum list before and after every session.
 
 ## Platforms
