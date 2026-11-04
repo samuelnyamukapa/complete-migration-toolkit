@@ -117,6 +117,25 @@ The mask paints over the same place on both systems. Set `visual_tolerance` in `
 
 Screenshots can hold personal data, so use test data only.
 
+## MFA with test authenticators
+
+For a test user in a test tenant, never a real person's phone or account. Never a bypass code in any build that can reach production.
+
+**A six-digit code from an app.** Enrol a test user with a known seed, and put the seed in an environment variable. The step names the variable:
+
+```yaml
+- fill: { label: Code }
+  with_totp_env: CMTK_TEST_TOTP_SEED
+```
+
+Only the current code leaves the helper. The seed never reaches an answer, a report or a log, and a page that shows the seed or the code has it replaced in the answer. A screenshot can't be searched, so a test page must not draw a seed. A site that refuses a code used twice can fail a second run within the same 30 seconds.
+
+As a command, `node adapters/web/totp.mjs CMTK_TEST_TOTP_SEED` prints the code and nothing else. Give an agent this, never the seed.
+
+**A passkey or a security key.** Set `authenticator: passkey` or `authenticator: security-key` on the journey. A virtual authenticator in the browser answers the site, so no hardware is needed. The address must be a secure one: `https://` or `http://localhost`, not `http://127.0.0.1`.
+
+**A code sent by email or SMS.** This is not wired yet: `adapters/mailbox` and `adapters/sms` are not in this tree. A step with `with_code_from: mailbox` is an error that says so.
+
 ## Safety
 
 - **A case written as GET only reads.** The browser refuses every POST, PUT, PATCH and DELETE, and web sockets, and lists them under `blocked`. A journey that writes is written as `POST`, so it needs `allow_unsafe_methods: true` and `--allow-unsafe`, or `safe: true` if a person has confirmed it changes nothing.

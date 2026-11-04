@@ -5,6 +5,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { totpCode } from "./totp.mjs";
+
 export const SAFE = new Set(["GET", "HEAD", "OPTIONS"]);
 const MODEL_HOSTS = /(^|\.)(api\.anthropic\.com|api\.openai\.com|openai\.azure\.com|generativelanguage\.googleapis\.com|api\.mistral\.ai|api\.cohere\.ai|api\.groq\.com|openrouter\.ai)$|^bedrock-runtime\..*\.amazonaws\.com$/i;
 const SETTLE_MAX_MS = 3000;
@@ -57,9 +59,8 @@ const CONTAINER = new Set(["generic", "none", "presentation", "paragraph", "list
 const NEVER = new Set(["InlineTextBox", "LineBreak", "ListMarker", "ignored", "RootWebArea", "WebArea"]);
 
 /** The page's accessibility tree in reading order, flat: what a screen reader would announce, whatever the styling. */
-export async function pageElements(page) {
-    const cdp = await page.context().newCDPSession(page);
-    try {
+export async function pageElements(cdp) {
+    {
         const { nodes } = await cdp.send("Accessibility.getFullAXTree");
         const byId = new Map(nodes.map((n) => [n.nodeId, n]));
         const out = [];
@@ -87,8 +88,6 @@ export async function pageElements(page) {
         };
         walk(nodes.find((n) => !n.parentId), { role: "", name: "" });
         return out;
-    } finally {
-        await cdp.detach().catch(() => {});
     }
 }
 
@@ -143,6 +142,9 @@ class Session {
 
     current() { return pathOf(this.page.url()); }
 
+    /** One DevTools session for the page's whole life: closing another would switch a virtual authenticator off. */
+    devtools() { return (this.cdp ??= this.page.context().newCDPSession(this.page)); }
+
     masks() { return (this.mask ?? []).map((l) => locatorOf(this.page, l)); }
 
     async shoot(label) {
@@ -155,7 +157,7 @@ class Session {
 
     async capture(label) {
         await this.shoot(label);
-        const elements = await pageElements(this.page).catch((err) => { process.stderr.write(`no structure for ${label}: ${String(err.message).split("\n")[0]}\n`); return []; });
+        const elements = await this.devtools().then(pageElements).catch((err) => { process.stderr.write(`no structure for ${label}: ${String(err.message).split("\n")[0]}\n`); return []; });
         this.structure = this.structure.filter((p) => p.page !== label);
         this.structure.push({ page: label, elements });
     }
@@ -177,13 +179,32 @@ class Session {
 
 /** The text a step types, from the step or an environment variable. Secrets are remembered so the reply can never hold them. */
 function textFor(step, session, n) {
+    if (step.with_totp_env !== undefined) {
+        const variable = String(step.with_totp_env);
+        let code;
+        try {
+            code = totpCode(variable);
+        } catch (err) {
+            throw new StepError(`step ${n}: ${err.message}`);
+        }
+        // The seed and the code are both kept out of the reply, should a page ever show them.
+        const seed = process.env[variable];
+        session.secrets.set(variable, seed);
+        session.secrets.set(`${variable} lower case`, seed.toLowerCase());
+        session.secrets.set(`${variable} upper case`, seed.toUpperCase());
+        session.secrets.set(`${variable} code`, code);
+        return code;
+    }
+    if (step.with_code_from !== undefined) {
+        throw new StepError(`step ${n}: reading a code from ${step.with_code_from} is not wired: this adapter does not use adapters/mailbox or adapters/sms yet`);
+    }
     if (step.with_env !== undefined) {
         const value = process.env[String(step.with_env)];
         if (value === undefined) throw new StepError(`step ${n}: the environment variable ${step.with_env} is not set`);
         session.secrets.set(String(step.with_env), value);
         return value;
     }
-    if (step.with === undefined) throw new StepError(`step ${n}: ${step.fill ? "fill" : "select"} needs \`with\` or \`with_env\``);
+    if (step.with === undefined) throw new StepError(`step ${n}: ${step.fill ? "fill" : "select"} needs \`with\`, \`with_env\` or \`with_totp_env\``);
     return String(step.with);
 }
 
@@ -381,6 +402,19 @@ const pageBody = (session) => ({
     ...(session.blocked.length ? { blocked: session.blocked } : {}),
 });
 
+/**
+ * A virtual authenticator in this browser, so passkeys and security keys need no hardware. It answers every
+ * request by itself, and its keys stay in the browser: nothing here asks for them.
+ */
+async function addAuthenticator(session, spec) {
+    const known = { passkey: { protocol: "ctap2", transport: "internal" }, "security-key": { protocol: "ctap2", transport: "usb" } };
+    const options = known[spec === true ? "passkey" : spec];
+    if (!options) throw new StepError(`authenticator must be passkey or security-key, not ${JSON.stringify(spec)}`);
+    const cdp = await session.devtools();
+    await cdp.send("WebAuthn.enable");
+    await cdp.send("WebAuthn.addVirtualAuthenticator", { options: { ...options, hasResidentKey: true, hasUserVerification: true, isUserVerified: true, automaticPresenceSimulation: true } });
+}
+
 /** Runs one case on one target and returns an observation. */
 export async function runCase(browser, written, target, headers, baseUrl, secrets) {
     // The conformance kit sends a case as written, so a request may still be one line.
@@ -433,6 +467,7 @@ export async function runCase(browser, written, target, headers, baseUrl, secret
             return outcome;
         };
         try {
+            if (journey.authenticator) await addAuthenticator(session, journey.authenticator);
             const stopped = await runJourney(session, journey, target);
             build(stopped);
             if (journey.checks_module) { await moduleChecks(session, journey.checks_module, outcome); build(stopped); }

@@ -57,6 +57,7 @@ These run in CI on every pull request, except the last one, which starts with ea
 - **A browser only does what the case allows.** A case written as GET, HEAD or OPTIONS only reads: the web adapter's browser refuses every write and reports it. A journey that writes is written as POST, so both switches apply. The browser reaches only the target's own address and uses no proxy.
 - **Page text is data.** A journey's steps and checks come from its file. Page text only goes into values, and an instruction written on a page changes nothing.
 - **Passwords come from the environment.** A step that types into a password field with a value written in the file is refused, and no value from `with_env` or a header appears in an answer.
+- **A TOTP seed stays in its environment variable.** A test plants a seed, runs an MFA journey on two systems, and searches every file the run wrote, standard output and standard error for the seed and the codes.
 - **Evidence stays inside the project.** Clearing old evidence never follows a link outside it.
 - **Sandboxes only for money and messages.** Payment adapters refuse live keys, such as `sk_live_`, before any network call. Email and SMS adapters refuse anything that isn't a capture server or a test number.
 - **Pilot systems are never modified.** Each pilot checks the system's folder against a checksum list before and after every session.
