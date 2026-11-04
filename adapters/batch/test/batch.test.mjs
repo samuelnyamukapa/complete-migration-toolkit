@@ -27,7 +27,7 @@ function rig(jobs, extra = {}, env = process.env) {
 }
 const target = { name: "sys" };
 const hashOf = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex");
-const tempDir = (t) => { const d = fs.mkdtempSync(path.join(os.tmpdir(), "cmtk-batch-test-")); t.after(() => fs.rmSync(d, { recursive: true, force: true })); return d; };
+const tempDir = (t) => { const d = fs.mkdtempSync(path.join(os.tmpdir(), "cmtk-batch-test-")); t.after(() => fs.rmSync(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 })); return d; };
 
 test("EBCDIC: code page 037 maps its well-known bytes, and every byte to a different character", () => {
     assert.equal(CP037.length, 256);
