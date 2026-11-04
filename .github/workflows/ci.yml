@@ -99,6 +99,13 @@ jobs:
       - run: npm ci
       - run: npm install --no-save amqplib@2.2.1 pg@8.23.1 mssql@12.7.13
       - run: npm run build
+      - name: Install sqlcmd
+        run: |
+          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null
+          echo "deb [arch=amd64] https://packages.microsoft.com/ubuntu/$(lsb_release -rs)/prod $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/mssql.list
+          sudo apt-get update -q
+          sudo ACCEPT_EULA=Y apt-get install -y -q mssql-tools18 unixodbc-dev
+          echo /opt/mssql-tools18/bin >> "$GITHUB_PATH"
       - name: Wait for SQL Server
         run: for i in $(seq 1 30); do (echo > /dev/tcp/localhost/1433) 2>/dev/null && break; sleep 2; done
       - run: node --test adapters/queue/test/real-server.test.mjs adapters/database/test/real-server.test.mjs adapters/mailbox/test/real-server.test.mjs packages/core/test/seed-mssql.test.mjs
