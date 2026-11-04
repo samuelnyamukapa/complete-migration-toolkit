@@ -59,7 +59,8 @@ Other commands:
 - `cmtk check`: checks the settings and case files, without sending anything;
 - `cmtk probe <target> "GET /path"`: sends one read-only request;
 - `cmtk review`: a person accepts or rejects draft cases and proposals;
-- `cmtk defects run`: drafts defects from a report.
+- `cmtk defects run`: drafts defects from a report;
+- `cmtk shadow --from access.log`: replays read-only requests from a log to both systems, and reports unexplained differences per endpoint ([docs/SHADOW.md](docs/SHADOW.md)).
 
 A person who has never seen the toolkit can follow [docs/RUNBOOK.md](docs/RUNBOOK.md) step by step.
 

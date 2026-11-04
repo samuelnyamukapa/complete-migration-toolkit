@@ -139,7 +139,7 @@ function alive(pid: number): boolean {
  * finished, so a run that stops half way leaves the last complete evidence where it was.
  * One run at a time per folder: a second run would delete the first one's half-written evidence.
  */
-function evidenceDir(manifest: Manifest, mode: string) {
+export function evidenceDir(manifest: Manifest, mode: string, _opts: { dated?: boolean; note?: (line: string) => void } = {}) {
     ownedFolder(manifest, manifest.evidence); // never the project folder itself
     const final = ownedFolder(manifest, path.join(manifest.evidence, mode));
     const work = ownedFolder(manifest, path.join(manifest.evidence, `.${mode}.partial`));

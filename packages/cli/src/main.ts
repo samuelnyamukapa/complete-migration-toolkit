@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // cmtk: the Complete Migration Toolkit command. Every command can be run again safely, prints the
 // next step, and exits with a code CI can use:
-//   0 PASS, PARITY or DRIFT ONLY · 1 FAIL or NO PARITY · 2 INCOMPLETE or NO EVIDENCE · 3 a usage or settings problem
-//   4 nothing new failed, but the result has a limit a person must read: PASS WITH KNOWN ISSUES or PARTIAL COMPARISON
+//   0 PASS, PARITY or DRIFT ONLY · 1 FAIL, NO PARITY or UNEXPLAINED DIFFERENCES · 2 INCOMPLETE or NO EVIDENCE · 3 a usage or settings problem
+//   4 nothing new failed, but the result has a limit a person must read: PASS WITH KNOWN ISSUES, PARTIAL COMPARISON or NO UNEXPLAINED DIFFERENCES
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline/promises";
@@ -14,7 +14,7 @@ import YAML from "yaml";
 import {
     acceptDraft, adaptersFor, BOUNDARY_KINDS, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
-    initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target,
+    initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target, shadow, SHADOW_FORMATS, type ShadowFormat,
     planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat,
 } from "@cmtk/core";
 
@@ -42,6 +42,10 @@ Usage:
                                                                     check one system against each case's expect: block
                                                                     (--accepted-only leaves draft cases out, as in CI)
   cmtk compare [--only <id,id>] [--allow-unsafe]                    send each case to the reference and the candidate, and diff
+  cmtk shadow --from <file>... [--format auto|clf|w3c|jsonl] [--sample 0.1] [--seed <n>] [--rate 5] [--max 1000]
+              [--include <regex>] [--exclude <regex>] [--keep-header <name>]... [--redact <regex>]... [--keep-values] [--capture-only]
+                                                                    replay GET, HEAD and OPTIONS requests from a log to both systems, and diff
+                                                                    (everything else is dropped and counted; not a proxy)
   cmtk status                                                       the latest verdicts
   cmtk check                                                        check settings and case files; sends nothing
   cmtk discover [--assembly <dll>]... [--rea-json <file>]... [--config <file>]... [--har <file>]... [--topology <file>]... [--fresh]
@@ -70,8 +74,8 @@ Options:
   --manifest <file>   default: cmtk.yaml in the current folder
   --json              print the report as JSON
 
-Exit codes: 0 PASS, PARITY or DRIFT ONLY · 1 FAIL or NO PARITY · 2 INCOMPLETE or NO EVIDENCE · 3 usage or settings problem
-            4 nothing new failed, but read the limit: PASS WITH KNOWN ISSUES or PARTIAL COMPARISON.
+Exit codes: 0 PASS, PARITY or DRIFT ONLY · 1 FAIL, NO PARITY or UNEXPLAINED DIFFERENCES · 2 INCOMPLETE or NO EVIDENCE · 3 usage or settings problem
+            4 nothing new failed, but read the limit: PASS WITH KNOWN ISSUES, PARTIAL COMPARISON or NO UNEXPLAINED DIFFERENCES.
 Docs: https://github.com/samuelnyamukapa/complete-migration-toolkit`;
 
 class UsageError extends Error {}
@@ -152,6 +156,14 @@ async function main(argv: string[]): Promise<number> {
             lang: { type: "string" },
             registry: { type: "string" },
             pin: { type: "string" },
+            from: { type: "string", multiple: true },
+            sample: { type: "string" },
+            rate: { type: "string" },
+            max: { type: "string" },
+            "keep-header": { type: "string", multiple: true },
+            redact: { type: "string", multiple: true },
+            "keep-values": { type: "boolean", default: false },
+            "capture-only": { type: "boolean", default: false },
             help: { type: "boolean", short: "h", default: false },
             version: { type: "boolean", short: "v", default: false },
         },
@@ -200,6 +212,7 @@ async function main(argv: string[]): Promise<number> {
             printReport(report, values.json!, manifest.root, manifest.evidence);
             return exitFor(report.verdict);
         }
+        case "shadow": return shadowCommand(manifestFile, values);
         case "status": {
             const manifest = loadManifest(manifestFile);
             let any = false;
@@ -210,6 +223,12 @@ async function main(argv: string[]): Promise<number> {
                 any = true;
                 const r = JSON.parse(fs.readFileSync(f, "utf8")) as Report;
                 console.log(`${mode}: ${r.verdict} on ${r.date}${r.settings ? ` from ${r.settings.manifest}` : ""}, ${describeSignoff(signoffState(dir))}`);
+            }
+            const shadowFile = path.join(manifest.root, manifest.evidence, "shadow", "REPORT.json");
+            if (fs.existsSync(shadowFile)) {
+                any = true;
+                const r = JSON.parse(fs.readFileSync(shadowFile, "utf8")) as { verdict: string; date: string };
+                console.log(`shadow: ${r.verdict} on ${r.date}`);
             }
             if (!any) console.log("No reports yet. Next: `cmtk run` or `cmtk compare`.");
             return 0;
@@ -245,6 +264,30 @@ async function main(argv: string[]): Promise<number> {
         default:
             throw new UsageError(`Unknown command ${cmd}. Run \`cmtk help\`.`);
     }
+}
+
+/** Read a log, clean it, replay it. The verdict never says parity: it covers a sample of read-only traffic, so a clean result exits 4. */
+async function shadowCommand(manifestFile: string, v: Record<string, any>): Promise<number> {
+    if (!v.from?.length) throw new UsageError("`cmtk shadow` needs --from <file>: an access log or a mirror file.");
+    if (v.format !== undefined && !(SHADOW_FORMATS as readonly string[]).includes(v.format)) throw new UsageError(`--format must be one of ${SHADOW_FORMATS.join(", ")}.`);
+    const num = (name: string) => (v[name] === undefined ? undefined : Number(v[name]));
+    const m = loadManifest(manifestFile);
+    const r = await shadow(m, {
+        from: (v.from as string[]).map((f) => path.resolve(f)), format: v.format as ShadowFormat | undefined, sample: num("sample"), seed: num("seed"), rate: num("rate"), max: num("max"),
+        include: v.include, exclude: v.exclude, keepHeaders: v["keep-header"], redact: v.redact, keepValues: v["keep-values"], captureOnly: v["capture-only"], dated: v.dated, note: (line) => console.error(line),
+    });
+    if (v.json) console.log(JSON.stringify(r, null, 2));
+    else {
+        console.log(`Shadow verdict for ${r.system}: ${r.verdict}`);
+        console.log(`Read ${r.capture.lines} lines: ${r.capture.kept} kept, ${r.capture.dropped_total} dropped because they could change data${r.capture.dropped_total ? ` (${Object.entries(r.capture.dropped).map(([k, n]) => `${n} ${k}`).join(", ")})` : ""}, ${r.capture.unreadable} unreadable, ${r.capture.filtered + r.capture.sampled_out + r.capture.over_limit} left out.`);
+        console.log(`Sent ${r.replay.sent} to both systems: ${r.replay.matched} matched, ${r.replay.drift} approved drift, ${r.replay.different} unexplained, ${r.replay.errors} errors, ${r.replay.not_sent} not sent.`);
+        for (const e of r.endpoints.filter((x) => x.unexplained).slice(0, 20)) console.log(`  ${e.endpoint}: ${e.unexplained} of ${e.requests} unexplained, at ${e.differences.filter((d) => !d.drift).slice(0, 3).map((d) => d.where).join(", ")}`);
+        console.log(`Report: ${path.relative(process.cwd(), path.join(m.root, m.evidence, "shadow", "REPORT.md"))}`);
+        console.log(r.reason);
+        console.log(`Next: ${r.next}`);
+    }
+    if (r.capture_only) return 0;
+    return r.verdict === "UNEXPLAINED DIFFERENCES" ? 1 : r.verdict === "NO UNEXPLAINED DIFFERENCES" ? EXIT_QUALIFIED : 2;
 }
 
 async function signoff(manifestFile: string, mode: string | undefined): Promise<number> {

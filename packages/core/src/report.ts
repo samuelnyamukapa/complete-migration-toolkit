@@ -7,6 +7,9 @@ const NOISE: [string, RegExp][] = [
     ["a /Date()/ value", /^"?\\?\/Date\(\d+/],
 ];
 
+/** What a value looks like, when it looks like something that changes on every call. */
+export const noiseKind = (value: string) => NOISE.find(([, rx]) => rx.test(value))?.[0];
+
 function noise(cases: CaseOutcome[]) {
     const byWhere = new Map<string, { reference: string; candidate: string }[]>();
     for (const c of cases) {

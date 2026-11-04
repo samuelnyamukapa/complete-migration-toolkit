@@ -41,6 +41,8 @@ These run in CI on every pull request, except the last one, which starts with ea
 - **Secrets never reach disk.** A test plants a known secret in `headers_from_env` and searches every file the run wrote.
 - **HAR import keeps credentials out.** It drops cookies and authorization, key and token headers, and redacts secret-looking query values and body fields.
 - **A recording is not a requirement.** `cmtk import-har --draft-expect` copies only the status and the media type of a recorded answer, never body text or another header. The case is skipped until a person confirms that expectation, one at a time, in `cmtk review`.
+- **Shadow traffic only reads.** `cmtk shadow` sends only GET, HEAD and OPTIONS. It drops and counts anything else, a body on a read, and a method override. A test plants them, and neither system may receive one.
+- **Shadow traffic stores nothing personal.** Planted credentials and personal data in a log must not reach any file written, what is sent, or what is printed. Answers are not kept, and differing values are withheld. A clean replay never reads as parity.
 - **Requests go only to the targets in `cmtk.yaml`.** A case holds a path, never a host.
 - **Redirects are compared, not followed.**
 - **No proxies.** Requests go straight to the target, even when proxy environment variables are set.
