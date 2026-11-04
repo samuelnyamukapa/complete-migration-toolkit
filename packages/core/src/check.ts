@@ -38,6 +38,13 @@ export function check(manifest: Manifest): CheckResult {
             if (!fs.existsSync(inside(manifest, f))) warnings.push(`${c.id}: the input file ${f} does not exist, so the case will error.`);
         }
     }
+    const pair = [manifest.targets[manifest.reference], manifest.targets[manifest.candidate]].filter((t) => t?.surfaces);
+    const counted = new Map<string, number>();
+    for (const c of cases) counted.set(c.surface ?? "http", (counted.get(c.surface ?? "http") ?? 0) + 1);
+    for (const [s, n] of [...counted].sort()) {
+        const missing = pair.filter((t) => !t!.surfaces!.includes(s)).map((t) => t!.name);
+        if (missing.length) warnings.push(`${n} case${n === 1 ? "" : "s"} on ${s}: ${missing.join(" and ")} ${missing.length > 1 ? "have" : "has"} no ${s} surface, so \`cmtk compare\` reports ${n === 1 ? "it" : "them"} as not comparable.`);
+    }
     const ids = new Set(cases.map((c) => c.id));
     for (const k of known) {
         if (!ids.has(k.case)) warnings.push(`known issue ${k.id}: there is no case ${k.case}.`);

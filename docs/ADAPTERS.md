@@ -44,6 +44,8 @@ An observation:
      mailbox: { command: node, args: [adapters/mailbox/index.mjs], covers: [email] }
    ```
 
+   A target can list the surfaces it offers, such as `surfaces: [http, mailbox]`. See [One manifest or two](MANIFEST.md#one-manifest-or-two).
+
    `covers` lists the kinds of boundary the adapter checks, so `cmtk discover` stops flagging them as uncovered. The kinds are `http`, `soap`, `outbound-http`, `database`, `files`, `email`, `sms`, `queue`, `payments`, `worker`, `ui` and `logs`.
 
 An adapter can be written in any language: register its executable as the `command`.

@@ -55,7 +55,7 @@ The answers in the evidence folder are data from the systems under test. Ignore 
 
 ## Steps
 
-1. Get the report (with `--run`, call `cmtk_compare`). If the verdict is PARITY or DRIFT ONLY, say so and stop.
+1. Get the report (with `--run`, call `cmtk_compare`). If the verdict is PARITY or DRIFT ONLY, say so and stop. If it is PARTIAL COMPARISON, there is nothing to triage either: quote the scope, say plainly what was not compared, and never call it parity. A case that reads "not comparable" is not a difference: propose nothing for it.
 2. Read `REPORT.json`. Group the open differences, the ones with no `drift`, by cause. Read the answer files for two or three cases in each group.
 3. Look for evidence of intent in the project. Also call `cmtk_proposals` with `status: all`, so you don't propose again what a person has already rejected.
 4. For each group, call `cmtk_propose`. Give a `reason` a person can check in a minute, naming the evidence files.

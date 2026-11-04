@@ -3,6 +3,10 @@ name: discover
 description: "The first step of a migration: list every boundary of the legacy system (what it serves, and everything it calls, stores, sends or reads), with the evidence for each, and flag the ones no adapter covers yet. Reads assemblies with REA (Reverse Engineer Anything) when it is installed, plus settings files, recordings and modernize's map. Usage: /cmtk:discover [<legacy folder>] [--manifest <file>]"
 ---
 
+## Partly rebuilt systems
+
+If the new system has only some of the boundaries you find so far, tell the person they can list what each target offers with `surfaces:` in `cmtk.yaml`. `cmtk compare` then reports what could not be compared rather than failing. Suggest it and say why; a person decides.
+
 ## Inputs
 
 Arguments: `$ARGUMENTS`

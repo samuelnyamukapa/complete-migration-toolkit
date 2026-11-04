@@ -22,7 +22,7 @@ The toolkit does the grind (writing, running, re-running and gathering evidence)
 |---|---|---|
 | Checks | one system against what each requirement expects | the candidate against the reference (usually the legacy system), answer by answer |
 | Use it for | any project, every sprint, every pull request | migrations, upgrades, rewrites, reskins |
-| Verdicts | PASS, PASS WITH KNOWN ISSUES, FAIL, INCOMPLETE, NO EVIDENCE | PARITY, DRIFT ONLY, NO PARITY, INCOMPLETE, NO EVIDENCE |
+| Verdicts | PASS, PASS WITH KNOWN ISSUES, FAIL, INCOMPLETE, NO EVIDENCE | PARITY, DRIFT ONLY, PARTIAL COMPARISON, NO PARITY, INCOMPLETE, NO EVIDENCE |
 
 Both modes write a report per requirement, keep every answer as evidence, and end with a sign-off table that only a person fills in.
 
@@ -146,7 +146,7 @@ To use the server without the plugin:
 
 ## Exit codes
 
-`0` PASS, PARITY or DRIFT ONLY · `1` FAIL or NO PARITY · `2` INCOMPLETE or NO EVIDENCE · `3` a usage or settings problem · `4` nothing new failed, but the result has a limit a person must read: PASS WITH KNOWN ISSUES.
+`0` PASS, PARITY or DRIFT ONLY · `1` FAIL or NO PARITY · `2` INCOMPLETE or NO EVIDENCE · `3` a usage or settings problem · `4` nothing new failed, but the result has a limit a person must read: PASS WITH KNOWN ISSUES or PARTIAL COMPARISON.
 
 ## Layout
 

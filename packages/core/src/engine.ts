@@ -104,6 +104,10 @@ function unsafe(c: Case, manifest: Manifest, opts: RunOptions) {
     return !safe && !(manifest.allow_unsafe_methods && opts.allowUnsafe);
 }
 
+/** The targets that do not offer a surface. A target that lists no surfaces offers them all. */
+const lacking = (surface: string, ...targets: Target[]) => targets.filter((t) => t.surfaces && !t.surfaces.includes(surface)).map((t) => t.name);
+const hasNo = (names: string[], surface: string) => `${names.join(" and ")} ${names.length > 1 ? "have" : "has"} no ${surface} surface`;
+
 const DRAFT_WHY = "a draft: a person accepts it with `cmtk review` before it counts";
 const EXPECT_DRAFT_WHY = "draft expectation: review it with `cmtk review`. It records what the system answered, which a person confirms before it counts";
 const UNSAFE_WHY = "changes data: needs allow_unsafe_methods in cmtk.yaml and --allow-unsafe on this run";
@@ -188,7 +192,7 @@ export function settingsOf(manifest: Manifest, drift: Drift[], known?: KnownIssu
 }
 
 /** How a report names a target: its address, or its adapter settings. */
-const where = (t: Target) => (t.base_url ? cleanUrl(t.base_url) : undefined) ?? Object.entries(t).filter(([k]) => k !== "name").map(([k, v]) => `${k}=${v}`).join(", ");
+const where = (t: Target) => (t.base_url ? cleanUrl(t.base_url) : undefined) ?? Object.entries(t).filter(([k]) => k !== "name" && k !== "surfaces").map(([k, v]) => `${k}=${v}`).join(", ");
 
 const writeJson = (file: string, data: unknown) => fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8");
 
@@ -202,7 +206,10 @@ function target(manifest: Manifest, name: string | undefined, role: string): Tar
 /** cmtk run: one target, checked against expectations. */
 export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Report> {
     const t = target(manifest, opts.target ?? manifest.default_target, "default_target");
-    const cases = selectCases(manifest, "run", opts.only, opts.acceptedOnly);
+    const selected = selectCases(manifest, "run", opts.only, opts.acceptedOnly);
+    const compareOnly = (c: Case) => manifest.compare_only_surfaces.includes(c.surface ?? "http");
+    const cases = selected.filter((c) => !compareOnly(c));
+    const leftOut = selected.length - cases.length;
     // A bad ledger stops the run here, before any evidence is touched. An entry for another target does not apply.
     const known = loadKnownIssues(manifest).filter((k) => !k.target || k.target === t.name);
     const extra = envHeaders(manifest);
@@ -215,6 +222,8 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
         try {
             for (const c of cases) {
                 const b = base(c);
+                const missing = lacking(b.surface, t);
+                if (missing.length) { out.push({ ...b, result: "SKIPPED", why: `not run: ${hasNo(missing, b.surface)}` }); continue; }
                 if (c.expect_draft) { out.push({ ...b, result: "SKIPPED", why: EXPECT_DRAFT_WHY }); continue; }
                 if (c.draft) { out.push({ ...b, result: "SKIPPED", why: DRAFT_WHY }); continue; }
                 if (!c.expect) { out.push({ ...b, result: "SKIPPED", why: "no `expect:` block, so there is nothing to check on one system" }); continue; }
@@ -236,7 +245,7 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
         } finally {
             await adapters.closeAll();
         }
-        const report = summarise({ mode: "run", manifest, targets: { [t.name]: where(t) }, cases: out, contracts: [], drift: [], usedDrift: new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, [], known), excludedDrafts: cases.excluded, known: knownInReport(known, out, new Set(loadCases(manifest).map((c) => c.id))) });
+        const report = summarise({ mode: "run", manifest, targets: { [t.name]: where(t) }, cases: out, contracts: [], drift: [], usedDrift: new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, [], known), excludedDrafts: selected.excluded, excludedCompareOnly: leftOut, compareOnlySurfaces: manifest.compare_only_surfaces, known: knownInReport(known, out, new Set(loadCases(manifest).map((c) => c.id))) });
         writeJson(path.join(dir, "REPORT.json"), report);
         fs.writeFileSync(path.join(dir, "REPORT.md"), renderReport(report), "utf8");
         ev.commit();
@@ -266,6 +275,8 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
         try {
             const http = adapters.get("http");
             for (const k of manifest.contracts) {
+                const missing = lacking("http", ref, cand);
+                if (missing.length) { contracts.push({ name: k.name, kind: k.kind, result: "NOT COMPARABLE", findings: [{ breaking: null, what: `not comparable: ${hasNo(missing, "http")}` }] }); continue; }
                 const probe: Case = { id: `contract-${k.name}`, request: { method: "GET", path: k.path } };
                 const [a, b] = [await http.run(probe, ref, extra), await http.run(probe, cand, extra)];
                 const slug = k.name.replace(/[^A-Za-z0-9_.-]/g, "_").slice(0, 64);
@@ -281,6 +292,8 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
             for (const c of cases) {
                 const b: Omit<CaseOutcome, "result"> & { match: MatchLevel } = { ...base(c), match: matchFor(c, manifest) };
                 if (c.draft) { out.push({ ...b, result: "SKIPPED", why: DRAFT_WHY }); continue; }
+                const missing = lacking(b.surface, ref, cand);
+                if (missing.length) { out.push({ ...b, result: "NOT COMPARABLE", why: `not comparable: ${hasNo(missing, b.surface)}` }); continue; }
                 if (unsafe(c, manifest, opts)) { out.push({ ...b, result: "SKIPPED", why: UNSAFE_WHY }); continue; }
                 if (silent >= STOP_AFTER_NO_ANSWER) { out.push({ ...b, result: "SKIPPED", why: STOPPED_WHY }); continue; }
                 try {
@@ -316,7 +329,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
         } finally {
             await adapters.closeAll();
         }
-        const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), excludedDrafts: cases.excluded });
+        const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), excludedDrafts: cases.excluded, surfaces: { [ref.name]: ref.surfaces, [cand.name]: cand.surfaces } });
         writeJson(path.join(dir, "REPORT.json"), report);
         fs.writeFileSync(path.join(dir, "REPORT.md"), renderReport(report), "utf8");
         ev.commit();

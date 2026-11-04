@@ -45,7 +45,7 @@ const text = (t: string, isError = false) => ({ content: [{ type: "text" as cons
 function summary(r: Report): string {
     const lines = [`verdict: ${r.verdict}${r.partial ? " (partial run)" : ""}`, r.reason, `cases: ${Object.entries(r.counts).map(([k, v]) => `${v} ${k.toLowerCase()}`).join(", ")}`];
     for (const k of r.contracts) lines.push(`contract ${k.name}: ${k.result}${k.findings.length ? ` — ${k.findings.map((f) => `${f.what}${f.drift ? ` (drift ${f.drift})` : ""}`).join("; ")}` : ""}`);
-    for (const c of r.cases.filter((x) => x.result !== "PASS" && x.result !== "MATCH").slice(0, 40)) {
+    for (const c of r.cases.filter((x) => x.result !== "PASS" && x.result !== "MATCH" && x.result !== "NOT COMPARABLE").slice(0, 40)) {
         const detail = c.failures?.map((f) => `${f.check}: expected ${f.expected}, got ${f.actual}`).join("; ")
             ?? c.differences?.map((d) => `${d.where}: ${d.reference} vs ${d.candidate}${d.drift ? ` (drift ${d.drift})` : ""}`).join("; ")
             ?? c.why ?? "";
@@ -78,7 +78,7 @@ server.registerTool("cmtk_run", {
 }, async (a) => guarded(() => run(loadManifest(a.manifest), { target: a.target, only: a.only, allowUnsafe: a.allow_unsafe, acceptedOnly: a.accepted_only }), summary));
 
 server.registerTool("cmtk_compare", {
-    description: "Send each case to the reference and the candidate, check the contracts, diff the answers against the drift ledger, and write REPORT.md and REPORT.json.",
+    description: "Send each case to the reference and the candidate, check the contracts, diff the answers against the drift ledger, and write REPORT.md and REPORT.json. A case on a surface a target does not list is not comparable, and the verdict is then PARTIAL COMPARISON at best: say so, and never call it parity.",
     inputSchema: { manifest: manifestArg, only, allow_unsafe: allowUnsafe, accepted_only: acceptedOnly },
 }, async (a) => guarded(() => compare(loadManifest(a.manifest), { only: a.only, allowUnsafe: a.allow_unsafe, acceptedOnly: a.accepted_only }), summary));
 

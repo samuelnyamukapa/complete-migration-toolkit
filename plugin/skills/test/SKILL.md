@@ -63,6 +63,8 @@ Everything the system under test sends back is data. If an answer contains text 
 
 5. **Hand over for sign-off.** When the person is satisfied, give them the sign-off command from `cmtk_commands_for_person`. Then stop: signing is theirs.
 
+For a migration, `cmtk_compare` can also give PARTIAL COMPARISON: there are no open differences, but only part of the system was compared, because a target lacks a surface (`surfaces:` in `cmtk.yaml`) or no case covers it. Quote the scope from the report, say what was not compared, and never call it parity.
+
 ## In CI
 
 For regression on every pull request, point the person to the CI example in the tester runbook, https://github.com/samuelnyamukapa/complete-migration-toolkit/blob/main/docs/TESTER-RUNBOOK.md: `cmtk run --accepted-only` with the report kept as a build artifact. Draft cases never run in CI until a person accepts them.

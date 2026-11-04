@@ -7,7 +7,7 @@
 | Key | Default | Meaning |
 |---|---|---|
 | `system` | (required) | A name for the system under test |
-| `targets` | (required) | Name to `{ base_url }`. A string is accepted as the URL. A target reached only through an adapter, such as a class library or a queue, can leave out `base_url` and give its adapter settings instead: `{ probe: probes/legacy.exe }`. Every setting is passed to the adapter as part of `target` |
+| `targets` | (required) | Name to `{ base_url }`. A string is accepted as the URL. A target reached only through an adapter, such as a class library or a queue, can leave out `base_url` and give its adapter settings instead: `{ probe: probes/legacy.exe }`. Every setting is passed to the adapter as part of `target`. A target may list what it offers with `surfaces: [http, catalog]` (see [One manifest or two](#one-manifest-or-two)) |
 | `default_target` | `candidate`, or the first | The target `cmtk run` uses |
 | `reference` | `legacy`, if present | `cmtk compare`'s reference: today's system |
 | `candidate` | `candidate`, if present | `cmtk compare`'s system under test |
@@ -28,6 +28,7 @@
 | `insecure_tls` | `false` | Accept self-signed certificates, for test systems only |
 | `proposals` | `cmtk/proposals.yaml` | Agents' proposals (scrubs, drift, known issues, defects, new expectations) waiting for a person. Only `cmtk review` decides them. Draft cases a person rejects are kept, with the reason, in `rejected.yaml` in the same folder |
 | `explore_requests_per_day` | `1000` | The most requests exploration may send in one day (UTC), across all sessions. An open session counts its whole budget |
+| `compare_only_surfaces` | `[]` | Surfaces whose cases exist only to compare two systems, usually with no `expect:`. `cmtk run` leaves them out and its reason says how many |
 | `adapters` | `{}` | Surface name to `{ command, args, timeout_s, covers }`. `timeout_s` (default 300) is the longest wait for one answer. `covers` lists the kinds of boundary it checks, for `cmtk discover`. See [ADAPTERS.md](ADAPTERS.md) |
 
 ## Case files
@@ -122,6 +123,42 @@ Every entry needs `id`, `case`, `fails`, `reason` and `accepted_by`. Each item i
 
 Exit code 4 is on purpose not 0. A pipeline written before this verdict stops and a person looks; a pipeline that accepts it says so (see [TESTER-RUNBOOK.md](TESTER-RUNBOOK.md)). It is also not 1, so a known issue is told apart from a new failure. A person can sign the report, and the signature records which known issues still fail and who accepted them.
 
+## One manifest or two
+
+A partly rebuilt system often has surfaces the new one does not have yet. One manifest can hold them all: each target lists what it offers.
+
+```yaml
+targets:
+  legacy:    { base_url: "http://localhost:53190", probe: probe/net472.exe, surfaces: [http, catalog] }
+  candidate: { probe: probe/net8.exe, surfaces: [catalog] }
+compare_only_surfaces: [catalog]
+```
+
+A target that lists nothing takes part in every case, as before.
+
+| Command | A case on a surface the target has | A case on a surface a target lacks |
+|---|---|---|
+| `cmtk compare` | Sent to both systems and compared | Nothing is sent. It reads "not comparable: candidate has no http surface". It is not an error |
+| `cmtk run` | Sent to the target | Nothing is sent. It is SKIPPED, so the verdict is INCOMPLETE: a requirement was not checked on that target |
+
+`compare_only_surfaces` is for cases with no `expect:`, written only to be compared. Without it `cmtk run` would skip each one, and could never pass on this manifest.
+
+**A comparison of part of a system never reads as parity.** When a target lists its surfaces, the report has a Scope section saying what was compared and what was not, and the reason repeats it. The verdict is decided in this order:
+
+| Verdict | Means | Exit code |
+|---|---|---|
+| NO PARITY | An open difference on what was compared. The scope is stated too | 1 |
+| NO EVIDENCE | Nothing could be compared | 2 |
+| INCOMPLETE | A case was skipped or could not run | 2 |
+| PARTIAL COMPARISON | No open difference, but a surface a target lists was not compared, because the other target lacks it or no case covers it; or a contract could not be compared | 4 |
+| PARITY or DRIFT ONLY | Every surface the targets list was compared | 0 |
+
+The word PARITY is left out of PARTIAL COMPARISON on purpose, so that nobody reads, or searches for, parity in it. The exit code is 4 for the same reason: a pipeline that gates a release on parity does not pass on a partial comparison. A person can sign one, and the signature records the scope, so it covers what was compared and nothing else.
+
+**Use one manifest** when both systems are the same migration, and the difference is only how far the rebuild has reached. You get one report that shows the gap, and the gap closes as the candidate adds surfaces.
+
+**Use two manifests** when the settings must differ: another match level, other scrubs or another drift ledger for each part, or two comparisons with different reference systems. Then each report covers its own part, and neither says what the other left out, so list the gap in your pilot's write-up. A target with no `surfaces` in such a manifest reads PARITY for what its cases cover: list `surfaces` if it covers only part of the system.
+
 ## Where values in a report come from
 
 | `where` | Meaning |
@@ -134,6 +171,7 @@ Exit code 4 is on purpose not 0. A pipeline written before this verdict stops an
 | `body line N` | The first differing line of a text body |
 | `effects:$.emails[0].subject` | A side effect an adapter reported |
 | `body encoding` | One system sent UTF-8 and the other did not (checked at `exact`) |
+| `not comparable: <target> has no <surface> surface` | Not a `where`, but a result: a target lacks the case's surface, so nothing was sent |
 | `contract:<name>: <finding>` | A change to a contract, such as `contract:catalog-api: operation added: GET /api/v2/items`. Every change needs approval, additions included, because contracts are locked by default |
 
 ## Test-data recipes (cmtk/data/*.yaml)

@@ -16,7 +16,9 @@ export const MATCH_LEVELS: readonly MatchLevel[] = ["exact", "semantic", "contra
 export interface Target {
     name: string;
     base_url?: string;
-    [setting: string]: string | number | boolean | undefined;
+    /** The surfaces this target offers, such as ["catalog"]. Not listed: it takes part in every case. */
+    surfaces?: string[];
+    [setting: string]: string | number | boolean | string[] | undefined;
 }
 
 export interface Override {
@@ -71,6 +73,8 @@ export interface Manifest {
     headers_from_env: Record<string, string>;
     timeout_s: number;
     insecure_tls: boolean;
+    /** Surfaces whose cases exist only to compare two systems: `cmtk run` leaves them out and says so. */
+    compare_only_surfaces: string[];
     /** Adapters beyond the built-in http one: surface name to the program that runs it. */
     adapters: Record<string, { command: string; args?: string[]; timeout_s?: number; covers?: string[] }>;
     /** Folder the manifest lives in; every relative path is resolved against it. */
@@ -258,6 +262,7 @@ export interface KnownIssueInReport extends KnownIssue {
 export type CaseResult =
     | "PASS" | "FAIL"            // cmtk run
     | "MATCH" | "DRIFT" | "DIFFERENT" // cmtk compare (DRIFT: only approved differences)
+    | "NOT COMPARABLE"           // cmtk compare: a target has no surface for this case, so nothing was sent
     | "SKIPPED" | "ERROR";
 
 export interface Failure {
@@ -302,13 +307,14 @@ export interface ContractFinding {
 export interface ContractOutcome {
     name: string;
     kind: string;
-    result: "IDENTICAL" | "EQUIVALENT" | "COMPATIBLE" | "BREAKING" | "REVIEW" | "ERROR";
+    result: "IDENTICAL" | "EQUIVALENT" | "COMPATIBLE" | "BREAKING" | "REVIEW" | "ERROR" | "NOT COMPARABLE";
     findings: ContractFinding[];
 }
 
 export type Verdict =
     | "PASS" | "PASS WITH KNOWN ISSUES" | "FAIL" // cmtk run
     | "PARITY" | "DRIFT ONLY" | "NO PARITY"  // cmtk compare
+    | "PARTIAL COMPARISON"                   // cmtk compare: no open difference, but only part of the system was compared
     | "INCOMPLETE" | "NO EVIDENCE";
 
 export interface ReportSettings {
@@ -322,6 +328,19 @@ export interface ReportSettings {
     drift_entries: number;
     known_issues_file?: string;
     known_issues_entries?: number;
+}
+
+/** What a comparison covered. Present when a target lists its surfaces. */
+export interface ReportScope {
+    /** True when every surface the targets list was compared by at least one case, and every case and contract was comparable. */
+    whole: boolean;
+    /** In words, for a person: what was compared and what was not. */
+    statement: string;
+    compared: { surface: string; cases: number }[];
+    not_compared: { surface: string; cases: number; why: string }[];
+    /** Surfaces both targets offer that no case compared. */
+    no_cases: string[];
+    contracts_not_compared: string[];
 }
 
 export interface Report {
@@ -345,6 +364,10 @@ export interface Report {
     partial: boolean;
     /** Draft cases left out with --accepted-only. */
     excluded_drafts?: number;
+    /** cmtk run: cases on a surface listed under compare_only_surfaces. */
+    excluded_compare_only?: number;
+    /** cmtk compare: what the comparison covered, when a target lists its surfaces. */
+    scope?: ReportScope;
     /** The settings that produced this report, so a signer sees exactly what was hidden or approved. */
     settings?: ReportSettings;
     /** Why the verdict is what it is, in a sentence, and what to do next. */

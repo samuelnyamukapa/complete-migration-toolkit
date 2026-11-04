@@ -25,6 +25,8 @@ export interface Signoff {
     manifest_sha256?: string;
     /** The known issues this signature accepts as still failing, each with the person who accepted it. */
     known_issues?: string[];
+    /** For a comparison of part of a system: what the signature covers, and what it does not. */
+    scope?: string;
 }
 
 export class SignoffError extends Error {}
@@ -76,7 +78,7 @@ export function describeSignoff(st: SignoffState): string {
     if (st.state === "none") return "not signed";
     const s = st.signoff;
     const covers = s.known_issues?.length ? `; known issues still failing: ${s.known_issues.join(", ")}` : "";
-    return st.state === "signed" ? `signed by ${s.name} (${s.role}): ${s.decision}, ${s.date}${covers}` : `the signature by ${s.name} is for different evidence, so it no longer counts`;
+    return st.state === "signed" ? `signed by ${s.name} (${s.role}): ${s.decision}, ${s.date}${covers}${s.scope ? `; for what was compared only. ${s.scope}` : ""}` : `the signature by ${s.name} is for different evidence, so it no longer counts`;
 }
 
 /** Record a person's decision on the report in `dir`. */
@@ -103,6 +105,7 @@ export function recordSignoff(dir: string, who: { name: string; role: string; de
     const s: Signoff = {
         name, role, decision: decision as Signoff["decision"], date, verdict: report.verdict, evidence_sha256: evidenceFingerprint(dir),
         ...(known.length ? { known_issues: known } : {}),
+        ...(report.scope && !report.scope.whole ? { scope: report.scope.statement } : {}),
         ...(report.settings ? { manifest: report.settings.manifest, manifest_sha256: report.settings.manifest_sha256 } : {}),
     };
     const cell = (v: string) => v.replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");

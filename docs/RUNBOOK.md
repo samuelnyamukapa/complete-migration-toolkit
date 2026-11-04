@@ -66,7 +66,7 @@ Follow these steps in order. Each one says what to do, what you should see, and 
 
 2. **Start both systems,** for example the legacy one on `http://localhost:5001` and the new one on `http://localhost:5002`.
 
-3. **Make sure `cmtk.yaml` names both** under `targets:` as `legacy` and `candidate`. With a new project, `cmtk init --legacy <url> --candidate <url>` does this.
+3. **Make sure `cmtk.yaml` names both** under `targets:` as `legacy` and `candidate`. With a new project, `cmtk init --legacy <url> --candidate <url>` does this. If the new system has only part of what legacy has so far, list what each one offers, such as `surfaces: [catalog]`: see [One manifest or two](MANIFEST.md#one-manifest-or-two).
 
 4. **Add cases.** The cases from Part 1 work as they are. You can also record real use of the legacy system:
    1. In the browser, open the developer tools, use the old system, then export the traffic from the Network tab with Export HAR.
@@ -101,8 +101,9 @@ Follow these steps in order. Each one says what to do, what you should see, and 
 
    | Verdict | Meaning |
    |---|---|
-   | PARITY | No differences at all |
+   | PARITY | No differences at all, and every surface the targets list was compared |
    | DRIFT ONLY | Only approved differences |
+   | PARTIAL COMPARISON | No open differences, but only part of the system was compared. The report's Scope section says what was not. This is not parity. The exit code is 4 |
    | NO PARITY | At least one unexplained difference, or a breaking contract change |
    | INCOMPLETE | Something could not be checked; the report says what |
 
@@ -131,4 +132,6 @@ Use this for a failure that must stay for now, such as a legacy defect a migrati
 | `leads outside the project folder through a link` | `evidence` (or a case file) points through a link to another folder. Use a folder inside the project |
 | `npm` fails with "Cannot find module … npm-cli.js" (Windows) | Your `npm` command points at a missing install. Run Node's own copy: `& 'C:\Program Files\nodejs\npm.cmd' ci` |
 | `git pull` fails with "unable to write file … Permission denied" (Windows) | Run it again as `git -c core.fscache=false -c core.preloadindex=false pull` |
-| `has no base_url, so HTTP cases cannot run on it` | That target is reached through an adapter only. Give the case the adapter's `surface:`, or use a manifest whose cases suit that target |
+| `has no base_url, so HTTP cases cannot run on it` | That target is reached through an adapter only. List what it offers with `surfaces:`, give the case the adapter's `surface:`, or use a manifest whose cases suit that target |
+| `not comparable: candidate has no http surface` | Not a fault: that case cannot be compared until the candidate has the surface. The report's Scope section counts these |
+| `not run: candidate has no http surface` | `cmtk run` on a target that lacks that case's surface. The case stays unchecked on that target, so the verdict is INCOMPLETE |

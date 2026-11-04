@@ -47,6 +47,7 @@ export function loadManifest(file: string): Manifest {
         const target: Target = { name };
         for (const [k, v] of Object.entries(spec)) {
             if (k === "name") throw new ManifestError(`targets.${name}: \`name\` is set from the key; remove it.`);
+            if (k === "surfaces") { target.surfaces = surfaceList(v, `targets.${name}.surfaces`); continue; }
             if (!["string", "number", "boolean"].includes(typeof v)) throw new ManifestError(`targets.${name}.${k} must be text, a number or true/false.`);
             target[k] = v as string | number | boolean;
         }
@@ -72,6 +73,16 @@ export function loadManifest(file: string): Manifest {
         return { name: String(c.name ?? c.path), kind: String(c.kind ?? "text"), path: c.path };
     });
     const scrub = raw.scrub ?? {};
+    const adapters = adaptersOf(raw.adapters);
+    const known = (surface: string, where: string) => {
+        if (surface !== "http" && !adapters[surface]) throw new ManifestError(`${where} names ${JSON.stringify(surface)}, which has no adapter. Add it under \`adapters:\` in cmtk.yaml, or use http.`);
+    };
+    for (const t of Object.values(targets)) {
+        for (const s of t.surfaces ?? []) known(s, `targets.${t.name}.surfaces`);
+        if (t.surfaces?.includes("http") && !t.base_url) throw new ManifestError(`targets.${t.name}.surfaces lists http, so it needs a base_url.`);
+    }
+    const compareOnly = raw.compare_only_surfaces === undefined ? [] : surfaceList(raw.compare_only_surfaces, "compare_only_surfaces");
+    for (const s of compareOnly) known(s, "compare_only_surfaces");
     return {
         system: raw.system,
         targets,
@@ -93,10 +104,16 @@ export function loadManifest(file: string): Manifest {
         headers_from_env: raw.headers_from_env ?? {},
         timeout_s: positive(raw.timeout_s, "timeout_s", 30),
         insecure_tls: raw.insecure_tls === true,
-        adapters: adaptersOf(raw.adapters),
+        compare_only_surfaces: compareOnly,
+        adapters,
         root: path.dirname(path.resolve(file)),
         file: path.resolve(file),
     };
+}
+
+function surfaceList(v: unknown, where: string): string[] {
+    if (!Array.isArray(v) || v.length === 0 || !v.every((s) => typeof s === "string" && NAME.test(s))) throw new ManifestError(`${where} must be a list of surface names, such as [http, catalog].`);
+    return [...new Set(v as string[])];
 }
 
 function globsOf(v: unknown): string[] {
@@ -306,6 +323,8 @@ system: ${system}
 targets:
   legacy:    { base_url: ${JSON.stringify(reference)} }   # the reference: today's system
   candidate: { base_url: ${JSON.stringify(candidate)} }   # the system under test
+
+# A target reached only in part can list what it offers: surfaces: [catalog]. See docs/MANIFEST.md.
 
 # How strict \`cmtk compare\` is: exact | semantic | contract. Loosen per path with overrides.
 match: exact

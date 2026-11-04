@@ -72,6 +72,7 @@ To run cmtk by hand from this folder:
 | `cmtk\drift*.yaml` | approved drift; only a named person adds an entry |
 | `cmtk\proposals.yaml` | an agent's proposal, added 4 November 2026, to record legacy defect LEG-1 in the known-issues ledger. It changes nothing until a person accepts it in `cmtk review`. It has not been run against legacy with a ledger entry yet: that needs cmtk 0.6 in `tools\cmtk` |
 | `cmtk\evidence*\` | answers and reports from each run |
+| `cmtk-one-manifest.yaml` | added 4 November 2026 (#42): both parts in one manifest, using `surfaces`. NOT YET RUN against legacy or CatalogCore; only its use of local stand-ins in `packages/cli/test/surfaces.test.mjs` has run. The signed reports above came from the two manifests |
 | `compare-canary.yaml` | the same comparison with a planted defect, to prove it is caught |
 | `cmtk\cases\imported\har.yaml` | the raw HAR import, before review; the reviewed cases are `cmtk\cases\legacy\har-journeys.yaml` |
 | `reports\` | the final reports from the pilot, and the log of the Windows checks; `data-forms.REPORT.md` is part 5, the generated rows posted to the Create form |

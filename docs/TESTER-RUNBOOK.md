@@ -134,7 +134,7 @@ The exit code tells the pipeline the verdict:
 - `1`: FAIL;
 - `2`: INCOMPLETE or NO EVIDENCE;
 - `3`: a settings problem;
-- `4`: PASS WITH KNOWN ISSUES: nothing new failed, but a named person accepted some failures, and they still fail.
+- `4`: PASS WITH KNOWN ISSUES: nothing new failed, but a named person accepted some failures, and they still fail. `cmtk compare` gives 4 too, for PARTIAL COMPARISON.
 
 Exit code 4 stops a pipeline until you decide it should not. To let a known issue through, say so in the pipeline. PowerShell: `cmtk run --accepted-only; if ($LASTEXITCODE -notin 0,4) { exit $LASTEXITCODE }`. bash: `cmtk run --accepted-only || [ $? -eq 4 ]`.
 
