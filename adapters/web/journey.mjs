@@ -1,6 +1,7 @@
 // Runs one case in one browser context: a page visit, or a journey written as steps with checks in code.
 // Everything read from a page is data. It goes into the observation and nowhere else: no page text ever
 // chooses a step, a locator or a result. This file holds no model client, and it makes no model calls.
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -92,7 +93,44 @@ export async function pageElements(cdp) {
 }
 
 const ACTIONS = ["click", "fill", "select", "tick"];
+const REPAIRABLE = ACTIONS;
 const STEP_KINDS = ["goto", ...ACTIONS, "press", "reach", "read", "check", "capture"];
+
+/** How alike two labels are, from 0 to 1: shared words first, then shared letters. */
+function similarity(a, b) {
+    const x = a.toLowerCase().trim(), y = b.toLowerCase().trim();
+    if (x === y) return 1;
+    const wx = new Set(x.split(/\s+/)), wy = new Set(y.split(/\s+/));
+    const shared = [...wx].filter((w) => wy.has(w)).length;
+    const words = shared / Math.max(1, new Set([...wx, ...wy]).size);
+    const row = Array.from({ length: y.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= x.length; i++) {
+        let last = row[0];
+        row[0] = i;
+        for (let j = 1; j <= y.length; j++) {
+            const keep = row[j];
+            row[j] = Math.min(row[j] + 1, row[j - 1] + 1, last + (x[i - 1] === y[j - 1] ? 0 : 1));
+            last = keep;
+        }
+    }
+    const letters = 1 - row[y.length] / Math.max(1, x.length, y.length);
+    return Math.round(Math.max(words, letters) * 100) / 100;
+}
+
+/** A recorded script from a file inside the project, with a fingerprint for the evidence. */
+export function loadScript(file) {
+    const full = insideProject(file, "script");
+    if (!fs.existsSync(full)) throw new StepError(`script: ${file} does not exist`);
+    const bytes = fs.readFileSync(full);
+    let doc;
+    try {
+        doc = JSON.parse(bytes.toString("utf8"));
+    } catch {
+        throw new StepError(`script: ${file} is not JSON`);
+    }
+    if (doc?.cmtk_script !== 1 || !Array.isArray(doc.steps)) throw new StepError(`script: ${file} is not a recorded script: it needs cmtk_script: 1 and steps`);
+    return { ...doc, script_file: String(file).split(path.sep).join("/"), script_sha256: crypto.createHash("sha256").update(bytes).digest("hex") };
+}
 
 /** What one target's browser did during a case. */
 class Session {
@@ -167,6 +205,7 @@ class Session {
         const found = locatorOf(this.page, l);
         try {
             await found.waitFor({ state: "visible", timeout: this.stepMs });
+            if (this.resolved && ACTIONS.includes(action)) await this.remember(found, l, stepNumber, action);
             return found;
         } catch (err) {
             if (/strict mode violation/.test(err.message)) throw new StepError(`step ${stepNumber}: ${describeLocator(l)} matches more than one element; add \`nth\` or a closer locator`);
@@ -174,7 +213,33 @@ class Session {
         }
     }
 
-    async repairFor() { return undefined; }
+    /**
+     * When a step finds nothing: the elements on the page most like the one it wanted. These are suggestions for a
+     * person, sent as data. Nothing here changes a script, and a step never runs on a suggestion.
+     */
+    async repairFor(l, stepNumber, action) {
+        if (!REPAIRABLE.includes(action)) return undefined;
+        const elements = await this.devtools().then(pageElements).catch(() => []);
+        const wanted = String(l.name ?? l.label ?? l.text ?? l.placeholder ?? l.testid ?? "");
+        const scored = elements
+            .filter((e) => e.name && e.role !== "StaticText" && (!l.role || e.role === l.role))
+            .map((e) => ({ locator: { role: e.role, name: e.name }, similarity: similarity(wanted, e.name) }))
+            .sort((a, b) => b.similarity - a.similarity || a.locator.name.localeCompare(b.locator.name));
+        return { step: stepNumber, target: this.target.name, action, was: l, candidates: scored.slice(0, 3), ...(this.scriptFile ? { script: this.scriptFile } : {}) };
+    }
+
+    /** While recording: the plainest stable way to find this element. It must find this element alone, or the step stays as written. */
+    async remember(found, l, stepNumber, action) {
+        const check = async (candidate) => (await locatorOf(this.page, candidate).count().catch(() => 0)) === 1 ? candidate : undefined;
+        const testid = await found.getAttribute("data-testid").catch(() => null);
+        let best = testid ? await check({ testid }) : undefined;
+        if (!best) {
+            const aria = await found.ariaSnapshot().catch(() => "");
+            const m = /^- ([\w-]+)(?: "((?:[^"\\]|\\.)*)")?/.exec(aria);
+            if (m?.[1] && m[2]) best = await check({ role: m[1], name: m[2].replace(/\\(.)/g, "$1") });
+        }
+        this.resolved.set(stepNumber, { action, locator: best ?? l });
+    }
 }
 
 /** The text a step types, from the step or an environment variable. Secrets are remembered so the reply can never hold them. */
@@ -416,7 +481,7 @@ async function addAuthenticator(session, spec) {
 }
 
 /** Runs one case on one target and returns an observation. */
-export async function runCase(browser, written, target, headers, baseUrl, secrets) {
+export async function runCase(browser, written, target, headers, baseUrl, secrets, { record } = {}) {
     // The conformance kit sends a case as written, so a request may still be one line.
     const line = typeof written.request === "string" ? /^(\S+)\s+(\S+)$/.exec(written.request.trim()) : undefined;
     const c = line ? { ...written, request: { method: line[1], path: line[2] } } : written;
@@ -436,10 +501,19 @@ export async function runCase(browser, written, target, headers, baseUrl, secret
         reducedMotion: "reduce",
         ignoreHTTPSErrors: target.insecure_tls === true,
     });
-    const journey = c.journey;
+    let journey = c.journey;
+    if (journey?.script) {
+        try {
+            journey = { ...loadScript(journey.script), ...(journey.step_timeout_ms ? { step_timeout_ms: journey.step_timeout_ms } : {}) };
+        } catch (err) {
+            await context.close().catch(() => {});
+            if (err instanceof StepError) return { error: err.message, model_calls: 0 };
+            throw err;
+        }
+    }
     const stepMs = Number(journey?.step_timeout_ms ?? target.step_timeout_ms ?? 5000);
     const page = await context.newPage();
-    const session = new Session(page, { stepMs, navMs: Number(target.navigation_timeout_ms ?? 30000), secrets, mask: c.mask ?? journey?.mask, target });
+    const session = new Session(page, { stepMs, navMs: Number(target.navigation_timeout_ms ?? 30000), secrets, mask: c.mask ?? journey?.mask, target, scriptFile: journey?.script_file, resolved: record });
     await guardRequests(context, session, allowed, writes);
     const finish = async (obs) => ({ ...obs, ...(session.structure.length ? { structure: { pages: session.structure } } : {}), ...(session.shots.length ? { screenshots: session.shots } : {}), model_calls: session.modelCalls });
     try {
@@ -457,6 +531,7 @@ export async function runCase(browser, written, target, headers, baseUrl, secret
         const build = (stopped) => {
             Object.assign(outcome, {
                 goal: clean(journey.goal),
+                ...(journey.script_file ? { script: { file: journey.script_file, sha256: journey.script_sha256 } } : {}),
                 passed: !stopped && session.checks.every((k) => k.passed),
                 ...(stopped ? { stopped } : {}),
                 checks: session.checks,

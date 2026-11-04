@@ -187,6 +187,8 @@ export interface Case {
     requirement?: string | string[];
     /** Which adapter runs it. Default: http. */
     surface?: string;
+    /** For a UI adapter: a task written as steps with checks in code, or `script`: a recorded one in a file. */
+    journey?: { script?: string; [setting: string]: unknown };
     request: Request;
     expect?: Expectation;
     match?: MatchLevel;

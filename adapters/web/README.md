@@ -84,6 +84,40 @@ A journey needs at least one check. A step that finds nothing makes the case an 
 
 The answer holds what happened: the checks, the key values, the pages reached with their status, and the API calls each page made. Query strings are left out, because they can hold keys. A screenshot is kept at each milestone and at the end, as evidence: only the `visual` level looks at one.
 
+## Recording, and replay with no model
+
+An agent or a person works a journey out once. After that, a recorded script replays it with no model calls, and checks in code decide pass or fail.
+
+**Record.** Write the journey as JSON, with `goal` and `steps` as above. Then record it on the systems it runs on:
+
+```
+node adapters/web/record.mjs --journey cmtk/journeys/basket.draft.json --out cmtk/journeys/basket.json \\
+  --target legacy=http://localhost:5001 --target candidate=http://localhost:5002 --writes
+```
+
+`--writes` lets the journey change data; use it only on disposable test data. A script is written only when every check held on every target, so only a verified run is recorded. Each action's locator is worked out again in its plainest stable form: a test id, or a role and name. Checks and values are copied as written, and nothing is taken from what the page showed, because a recording is not a requirement. A person reviews the script before a case uses it.
+
+**Replay.** A case names the script:
+
+```yaml
+- id: BASKET
+  surface: web
+  match: journey
+  request: POST /
+  expect: { status: 200 }
+  journey: { script: cmtk/journeys/basket.json }
+```
+
+The report shows `Model calls: 0`. The answer holds the script's fingerprint.
+
+**When the UI changes.** A step that finds nothing makes the case an ERROR. The script is not changed, and no step runs on a guess. The answer file holds `repair`: the step, the target, how it looked, and the elements on the page most like it. Those are page text, so they are data. An agent checks them, then proposes one:
+
+```
+cmtk_propose { kind: locator, case: BASKET, step: 7, target: candidate, locator: { role: button, name: Add to bag }, reason: "…" }
+```
+
+It waits for a person in `cmtk review`. Accepting it changes that step's locator on that target and records who accepted it, and nothing else. A proposal cannot touch a read, a check or an `expect:` block: only a person changes what correct means.
+
 ## A page visit, and comparing a reskin
 
 A case with no `journey` opens `request.path` and only reads. Its answer holds the page's elements, from the accessibility tree (what a screen reader uses), and a screenshot.

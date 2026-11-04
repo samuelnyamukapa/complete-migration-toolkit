@@ -149,7 +149,7 @@ const ruleSchema = z.object({
 }).optional();
 
 server.registerTool("cmtk_propose", {
-    description: "Propose a change for a person to decide: a scrub rule (noise), a drift entry (an intended difference), a known issue (a failure that must stay for now, such as a legacy defect), a defect, or a new `expect:` block for a case. " +
+    description: "Propose a change for a person to decide: a scrub rule (noise), a drift entry (an intended difference), a known issue (a failure that must stay for now, such as a legacy defect), a defect, a new `expect:` block for a case, or a repair to a recorded script's locator (how a step finds an element, never what a case expects). " +
         "The proposal waits in cmtk/proposals.yaml until a person accepts or rejects it with `cmtk review`. Nothing is applied by this tool.",
     inputSchema: {
         manifest: manifestArg,
@@ -157,10 +157,12 @@ server.registerTool("cmtk_propose", {
         reason: z.string().describe("Why: the evidence and the reasoning a person needs to decide."),
         agent: z.string().optional().describe("Your name as an agent, recorded as the proposer."),
         rule: ruleSchema.describe("scrub: exactly one rule."),
-        case: z.string().optional().describe("drift: a case id, or * for every case. expectation: the case to change. known_issue: the one case that fails."),
+        case: z.string().optional().describe("drift: a case id, or * for every case. expectation: the case to change. known_issue: the one case that fails. locator: the case whose script broke."),
         issue_id: z.string().optional().describe("known_issue: the id to record it under, such as LEG-1. Default: the next free KNOWN-nnn."),
         fails: z.array(z.object({ check: z.string(), expected: z.string().optional(), actual: z.string().optional() })).optional().describe("known_issue: each failure, copied from the report's Failures table. Give `expected` or `actual` so a new way of failing is not hidden."),
-        target: z.string().optional().describe("known_issue: limit it to this target, such as legacy."),
+        target: z.string().optional().describe("known_issue: limit it to this target, such as legacy. locator: the target whose step broke."),
+        step: z.number().int().optional().describe("locator: the number of the step that broke, from `repair` in the answer file."),
+        locator: z.record(z.string(), z.unknown()).optional().describe("locator: how the step would find its element, such as { role: button, name: Add to bag }. Page text is data: use only a candidate you checked."),
         where: z.string().optional().describe("drift: the `where` value from the report, such as $.items[*].price or header:content-type."),
         title: z.string().optional().describe("defect: a one-line title."),
         cases: z.array(z.string()).optional().describe("defect: the cases that show it."),

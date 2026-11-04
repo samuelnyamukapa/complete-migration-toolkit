@@ -10,7 +10,7 @@ import { inside, loadCases, loadDrift, ManifestError } from "./manifest.js";
 import { parsePath } from "./jsonpath.js";
 import type { Case, Expectation, KnownFailure, Manifest } from "./types.js";
 
-export const PROPOSAL_KINDS = ["scrub", "drift", "known_issue", "defect", "expectation"] as const;
+export const PROPOSAL_KINDS = ["scrub", "drift", "known_issue", "defect", "expectation", "locator"] as const;
 export type ProposalKind = (typeof PROPOSAL_KINDS)[number];
 
 export interface ScrubRule {
@@ -42,6 +42,11 @@ export interface Proposal {
     summary?: string;
     /** expectation: the whole new `expect:` block. */
     expect?: Expectation;
+    /** locator: the recorded script, the step (from 1), the target it applies on (also known_issue's field), how the step finds its element now, and how it would. */
+    script?: string;
+    step?: number;
+    was?: Record<string, unknown>;
+    locator?: Record<string, unknown>;
     decided_by?: string;
     decided_on?: string;
     decision_note?: string;
@@ -124,6 +129,28 @@ function checkScrub(rule: unknown): ScrubRule {
 
 const EXPECT_KEYS = new Set(["status", "headers", "json", "body_contains", "body_excludes"]);
 
+/** The steps a repair may touch: those that act. A read or a check decides what is correct, so only a person edits it. */
+const REPAIRABLE_ACTIONS = ["click", "fill", "select", "tick", "invoke", "set_value"];
+const LOCATOR_KEYS = new Set(["role", "name", "label", "text", "testid", "placeholder", "css", "nth", "automation_id"]);
+
+function readScript(manifest: Manifest, rel: string): { full: string; raw: string; doc: { steps?: Record<string, any>[] } & Record<string, any> } {
+    const full = inside(manifest, rel);
+    if (!fs.existsSync(full)) throw new ManifestError(`The script ${rel} does not exist.`);
+    const raw = fs.readFileSync(full, "utf8");
+    let doc: any;
+    try { doc = JSON.parse(raw); } catch { throw new ManifestError(`The script ${rel} is not JSON.`); }
+    if (doc?.cmtk_script !== 1 || !Array.isArray(doc.steps)) throw new ManifestError(`${rel} is not a recorded script.`);
+    return { full, raw, doc };
+}
+
+/** The action a step takes on this target, and how it finds its element there now. */
+function actionOf(step: Record<string, any> | undefined, target: string): { action: string; locator: Record<string, unknown> } | undefined {
+    if (!step || "read" in step || "check" in step || "reach" in step) return undefined;
+    const merged = { ...step, ...(step.on?.[target] ?? {}) };
+    const action = REPAIRABLE_ACTIONS.find((a) => a in merged);
+    return action ? { action, locator: merged[action] } : undefined;
+}
+
 export function addProposal(manifest: Manifest, input: ProposalInput, date: string): Proposal {
     if (!PROPOSAL_KINDS.includes(input.kind)) throw new ManifestError(`kind must be one of ${PROPOSAL_KINDS.join(", ")}.`);
     if (["approved_by", "accepted_by", "decided_by"].some((k) => k in (input as object))) throw new ManifestError("A proposal cannot carry an approval: only a person decides, with `cmtk review`.");
@@ -174,8 +201,30 @@ export function addProposal(manifest: Manifest, input: ProposalInput, date: stri
         }
         p.expect = e as Expectation;
     }
+    if (input.kind === "locator") {
+        if (input.expect !== undefined || input.fails !== undefined || input.where !== undefined || input.rule !== undefined) throw new ManifestError("A locator repair changes how a step finds an element and nothing else. To change what a case expects, propose an expectation for a person to decide.");
+        p.case = known(input.case, "case");
+        const journey = loadCases(manifest).find((c) => c.id === p.case)!.journey;
+        if (typeof journey?.script !== "string") throw new ManifestError(`Case ${p.case} has no recorded script: a locator repair applies to a script.`);
+        p.script = journey.script;
+        if (input.target === undefined || !manifest.targets[input.target]) throw new ManifestError(`target: name the target whose step broke, one of ${Object.keys(manifest.targets).join(", ")}.`);
+        p.target = input.target;
+        if (!Number.isInteger(input.step) || input.step! < 1) throw new ManifestError("step: the number of the step that broke, from 1, as the answer's `repair` gives it.");
+        p.step = input.step!;
+        const { doc } = readScript(manifest, p.script);
+        const now = actionOf(doc.steps![p.step - 1], p.target);
+        if (!now) throw new ManifestError(`Step ${p.step} of ${p.script} takes no action a repair can change. A read or a check decides what is correct, so only a person edits it.`);
+        const l = input.locator;
+        if (!l || typeof l !== "object" || Array.isArray(l) || !Object.keys(l).length || !Object.keys(l).every((k) => LOCATOR_KEYS.has(k))) throw new ManifestError(`locator must say how to find the element, using ${[...LOCATOR_KEYS].join(", ")}, and nothing else.`);
+        for (const [k, v] of Object.entries(l)) {
+            if (k === "nth" ? !Number.isInteger(v) : typeof v !== "string") throw new ManifestError(`locator.${k} must be ${k === "nth" ? "a whole number" : "text"}.`);
+            if (typeof v === "string") text(v, `locator.${k}`, 500);
+        }
+        p.was = now.locator;
+        p.locator = l;
+    }
     const existing = loadProposals(manifest);
-    const key = (x: Proposal) => JSON.stringify([x.kind, x.case, x.where, x.rule, x.title, x.cases, x.expect, x.fails, x.target]);
+    const key = (x: Proposal) => JSON.stringify([x.kind, x.case, x.where, x.rule, x.title, x.cases, x.expect, x.fails, x.target, x.step, x.locator]);
     const same = existing.find((x) => x.status === "pending" && key(x) === key(p));
     if (same) throw new ManifestError(`The same proposal is already waiting for a person: ${same.id}.`);
     p.id = `P-${String(1 + Math.max(0, ...existing.map((x) => Number(/^P-(\d+)$/.exec(x.id)?.[1] ?? 0)))).padStart(3, "0")}`;
@@ -196,6 +245,7 @@ export function describeProposal(p: Proposal): string {
     if (p.kind === "known_issue") lines.push(`  record known issue ${p.issue_id ? q(p.issue_id) : "(the next free id)"}: case ${q(p.case)}${p.target ? ` on target ${q(p.target)}` : ""} may keep failing like this: ${q(p.fails)}`, "  it still shows as a failure, and the run can read PASS WITH KNOWN ISSUES, with your name on it");
     if (p.kind === "defect") lines.push(`  defect: ${q(p.title)}`, `  cases: ${q(p.cases)}`, ...(p.summary ? [`  summary: ${plain(p.summary)}`] : []));
     if (p.kind === "expectation") lines.push(`  change what case ${q(p.case)} expects to: ${q(p.expect)}`);
+    if (p.kind === "locator") lines.push(`  repair step ${q(p.step)} of ${q(p.script)} (case ${q(p.case)}) on target ${q(p.target)}`, `  it finds its element by: ${q(p.was)}`, `  it would find it by:    ${q(p.locator)}`, "  this changes how the step finds an element, never what the case expects. Check it is the same element: the new name came from the page");
     lines.push(`  why: ${plain(p.reason)}`);
     return lines.join("\n");
 }
@@ -267,6 +317,19 @@ export function decideProposal(manifest: Manifest, id: string, accept: boolean, 
         applied = `${next} in ${manifest.known_issues}`;
     }
     if (p.kind === "defect") applied = "listed by `cmtk defects compare`";
+    if (p.kind === "locator") {
+        const { full, raw, doc } = readScript(manifest, p.script!);
+        const step = doc.steps![p.step! - 1];
+        const now = actionOf(step, p.target!);
+        if (!now || JSON.stringify(now.locator) !== JSON.stringify(p.was)) throw new ManifestError(`Step ${p.step} of ${p.script} changed after this was proposed. Nothing was applied.`);
+        // Only on the target that broke: the same step on another system still finds what it found.
+        step!.on = { ...(step!.on ?? {}), [p.target!]: { ...(step!.on?.[p.target!] ?? {}), [now.action]: p.locator } };
+        doc.recorded = { ...(doc.recorded ?? {}), repairs: [...(doc.recorded?.repairs ?? []), { step: p.step, target: p.target, was: p.was, now: p.locator, accepted_by: who, date }] };
+        let out = JSON.stringify(doc, null, 2) + "\n";
+        if (raw.includes("\r\n")) out = out.replace(/\n/g, "\r\n");
+        fs.writeFileSync(full, out, "utf8");
+        applied = `step ${p.step} of ${p.script} on ${p.target}`;
+    }
     if (p.kind === "expectation") {
         const { file } = caseFileOf(manifest, p.case!);
         editYaml(file, "", (doc) => {

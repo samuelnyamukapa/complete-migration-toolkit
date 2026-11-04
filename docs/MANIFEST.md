@@ -31,7 +31,7 @@ The formats here are frozen by [FORMATS.md](FORMATS.md), and `schemas/` lets an 
 | `headers_from_env` | `{}` | Header name to environment variable name; read at run time, never written |
 | `timeout_s` | `30` | Per request: the whole answer must arrive within it |
 | `insecure_tls` | `false` | Accept self-signed certificates, for test systems only |
-| `proposals` | `cmtk/proposals.yaml` | Agents' proposals (scrubs, drift, known issues, defects, new expectations) waiting for a person. Only `cmtk review` decides them. Draft cases a person rejects are kept, with the reason, in `rejected.yaml` in the same folder |
+| `proposals` | `cmtk/proposals.yaml` | Agents' proposals (scrubs, drift, known issues, defects, new expectations, locator repairs) waiting for a person. Only `cmtk review` decides them. Draft cases a person rejects are kept, with the reason, in `rejected.yaml` in the same folder |
 | `explore_requests_per_day` | `1000` | The most requests exploration may send in one day (UTC), across all sessions. An open session counts its whole budget |
 | `compare_only_surfaces` | `[]` | Surfaces whose cases exist only to compare two systems, usually with no `expect:`. `cmtk run` leaves them out and its reason says how many |
 | `adapters` | `{}` | Surface name to `{ command, args, timeout_s, covers }`. `timeout_s` (default 300) is the longest wait for one answer. `covers` lists the kinds of boundary it checks, for `cmtk discover`. See [ADAPTERS.md](ADAPTERS.md) |

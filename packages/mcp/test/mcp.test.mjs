@@ -72,12 +72,13 @@ test("no tool installs an adapter, and an agent can only hand a person the comma
 });
 
 test("the plugin: bundled server and command, one version everywhere, seven skills", async () => {
+test("the plugin: bundled server and command, one version everywhere, eight skills", async () => {
     const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
     const plugin = path.join(root, "plugin");
     const version = JSON.parse(fs.readFileSync(path.join(root, "packages", "cli", "package.json"), "utf8")).version;
     for (const f of ["plugin.json", ".claude-plugin/plugin.json"]) assert.equal(JSON.parse(fs.readFileSync(path.join(plugin, f), "utf8")).version, version, f);
     assert.equal(JSON.parse(fs.readFileSync(path.join(root, ".github/plugin/marketplace.json"), "utf8")).plugins[0].version, version);
-    for (const s of ["test", "plan", "discover", "data", "triage", "explore", "defects"]) {
+    for (const s of ["test", "plan", "discover", "data", "triage", "explore", "defects", "journey"]) {
         const md = fs.readFileSync(path.join(plugin, "skills", s, "SKILL.md"), "utf8");
         assert.match(md, new RegExp(`^---\\nname: ${s}\\ndescription: "`), `${s} frontmatter`);
     }
