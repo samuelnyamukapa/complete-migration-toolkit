@@ -173,9 +173,15 @@ As a command, `node adapters/web/totp.mjs CMTK_TEST_TOTP_SEED` prints the code a
 ## Safety
 
 - **A case written as GET only reads.** The browser refuses every POST, PUT, PATCH and DELETE, and web sockets, and lists them under `blocked`. A journey that writes is written as `POST`, so it needs `allow_unsafe_methods: true` and `--allow-unsafe`, or `safe: true` if a person has confirmed it changes nothing.
-- **The target only.** The browser reaches only the target's own address, or those in the target's `allow_origins`, and uses no proxy. Anything else is blocked and listed.
+- **The target only.** The browser reaches only the target's own address, or those in the target's `allow_origins`. Everything it sends passes through a small proxy on this machine, the fence (`fence.mjs`), which connects straight to the address and uses no other proxy. A page's own call elsewhere is blocked and listed under `blocked`, and the case goes on.
+- **A redirect off the target is stopped.** Playwright's routes do not see a redirect the browser follows, so the fence stops it before anything is sent. The case is an error, whatever its checks say, so it can't pass. If the address should be reached, add it to `allow_origins`.
+- **Credentials go only to the target's origin.** Header values are added per request, for the target alone. An address in `allow_origins` does not receive them. They are also not added to web sockets, so a socket has to sign in with a cookie.
 - **Page text is data.** It goes into values and nowhere else. No step, locator or result ever comes from a page.
 - **Secrets.** Header values and `with_env` values are replaced in the answer if a page shows them. A screenshot can't be searched, so use test accounts and test data only.
+- **What is not protected.** These remain:
+  - A redirect from the target to an address in `allow_origins`, in a case that holds credentials. Playwright repeats the headers on a redirect. Over `http` the fence removes them. Over `https` the fence sees only an encrypted tunnel, so they arrive. The case is an error that says to treat them as exposed: it is reported, not prevented. List only addresses you would trust with those credentials.
+  - The fence covers TCP. WebRTC traffic over UDP does not go through it, and DNS look-ups are not checked: a page in the browser can still try these.
+  - The fence listens on this machine with no password. Another program here could send through it, but only to the case's own addresses, and it adds no credentials.
 - **`model_calls`** is 0 because this adapter has no model client. A page that tries to call a known model API is blocked and counted.
 
 ## Target settings

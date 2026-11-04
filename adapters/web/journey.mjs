@@ -6,6 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { startFence } from "./fence.mjs";
 import { totpCode } from "./totp.mjs";
 
 export const SAFE = new Set(["GET", "HEAD", "OPTIONS"]);
@@ -305,12 +306,13 @@ async function takeStep(session, step, n) {
 async function open(session, to) {
     let res;
     try {
+        session.report.netFailure = undefined;
         res = await session.page.goto(to, { waitUntil: "load", timeout: session.navMs });
     } catch (err) {
-        const m = String(err.message);
-        if (/ERR_CONNECTION_REFUSED/.test(m)) throw new StepError(`ECONNREFUSED: nothing answered at ${to}`);
-        if (/ERR_NAME_NOT_RESOLVED/.test(m)) throw new StepError(`ENOTFOUND: the target's host name did not resolve`);
-        if (/Timeout/.test(m)) throw new StepError(`ETIMEDOUT: ${to} did not load within ${session.navMs / 1000}s`);
+        const m = `${session.report.netFailure ?? ""} ${err.message}`;
+        if (/ERR_CONNECTION_REFUSED|ECONNREFUSED/.test(m)) throw new StepError(`ECONNREFUSED: nothing answered at ${to}`);
+        if (/ERR_NAME_NOT_RESOLVED|ENOTFOUND|EAI_AGAIN/.test(m)) throw new StepError(`ENOTFOUND: the target's host name did not resolve`);
+        if (/Timeout|ETIMEDOUT/.test(m)) throw new StepError(`ETIMEDOUT: ${to} did not load within ${session.navMs / 1000}s`);
         if (/ERR_FAILED|ERR_BLOCKED/.test(m)) throw new StepError(`${to} was blocked: see \`blocked\` in the answer`);
         throw new StepError(`${to} could not be opened: ${m.split("\n")[0]}`);
     }
@@ -419,21 +421,19 @@ async function runJourney(session, journey, target) {
     return stopped;
 }
 
-/** Watches every request the browser makes: the target only, and no writes unless the case may write. */
-async function guardRequests(context, session, allowedOrigins, writes) {
-    session.blocked = [];
-    session.modelCalls = 0;
-    const seen = new Set();
-    const block = (why, request) => {
-        const key = `${why}|${request}`;
-        if (!seen.has(key)) { seen.add(key); session.blocked.push({ why, request }); }
-    };
+/**
+ * Watches every request the browser makes: the target only, and no writes unless the case may write. Credentials
+ * are added here, for the target's own origin, so nothing else can receive them. What this cannot see (a redirect,
+ * a worker's socket) still has to pass the fence: see fence.mjs.
+ */
+async function guardRequests(context, report, allowedOrigins, writes, targetOrigin, credentials) {
+    const { block } = report;
     await context.route("**/*", (route) => {
         const req = route.request();
         const url = new URL(req.url());
         if (url.protocol === "data:" || url.protocol === "blob:") return route.continue();
         if (MODEL_HOSTS.test(url.hostname)) {
-            session.modelCalls++;
+            report.modelCalls++;
             block("a call to a model", `${req.method()} ${url.origin}`);
             return route.abort("blockedbyclient");
         }
@@ -445,8 +445,19 @@ async function guardRequests(context, session, allowedOrigins, writes) {
             block("changes data: write the case's request as POST, with both unsafe switches on, or mark it safe", `${req.method()} ${url.pathname}`);
             return route.abort("blockedbyclient");
         }
+        if (url.origin === targetOrigin && Object.keys(credentials).length) return route.continue({ headers: { ...req.headers(), ...credentials } });
         return route.continue();
     });
+    // Playwright repeats a request's headers on the redirect it follows, so credentials can be carried off the target.
+    if (Object.keys(credentials).length) {
+        context.on("request", (req) => {
+            let first = req;
+            while (first.redirectedFrom()) first = first.redirectedFrom();
+            const to = new URL(req.url()).origin;
+            if (first === req || to === targetOrigin || new URL(first.url()).origin !== targetOrigin || !allowedOrigins.has(to)) return;
+            report.stop(`the target redirected a request holding credentials to ${to}, which is in allow_origins. Over http they were removed on the way. Over https they cannot be, so treat them as exposed`, `REDIRECT ${to}`);
+        });
+    }
     await context.routeWebSocket(/.*/, (ws) => {
         const url = new URL(ws.url());
         const http = url.origin.replace(/^ws/, "http");
@@ -464,7 +475,7 @@ const sortCalls = (session) => {
 const pageBody = (session) => ({
     pages: session.pages,
     api_calls: sortCalls(session),
-    ...(session.blocked.length ? { blocked: session.blocked } : {}),
+    ...(session.report.blocked.length ? { blocked: session.report.blocked } : {}),
 });
 
 /**
@@ -493,10 +504,38 @@ export async function runCase(browser, written, target, headers, baseUrl, secret
     const writes = !SAFE.has(method) || c.safe === true;
     const origin = new URL(baseUrl).origin;
     const allowed = new Set([origin, ...String(target.allow_origins ?? "").split(",").map((s) => s.trim()).filter(Boolean).map((s) => new URL(s).origin)]);
+    const credentials = Object.fromEntries(Object.entries({ ...(c.request?.headers ?? {}), ...headers }).map(([k, v]) => [k.toLowerCase(), String(v)]));
+    const report = {
+        blocked: [],
+        stops: [],
+        modelCalls: 0,
+        seen: new Set(),
+        netFailure: undefined,
+        block(why, request) {
+            const key = `${why}|${request}`;
+            if (!report.seen.has(key)) { report.seen.add(key); report.blocked.push({ why, request }); }
+        },
+        stop(why, request) {
+            if (!report.seen.has(`${why}|${request}`)) report.stops.push(`${why}: ${request}`);
+            report.block(why, request);
+        },
+    };
+    const fence = await startFence({
+        allowed,
+        target: origin,
+        writes,
+        credentials,
+        onStop(why, request, hostname) {
+            if (MODEL_HOSTS.test(hostname)) report.modelCalls++;
+            report.stop(why, request);
+        },
+        onFailure(code) { report.netFailure = code; },
+    });
     const context = await browser.newContext({
         baseURL: baseUrl,
         serviceWorkers: "block",
-        extraHTTPHeaders: { ...(c.request?.headers ?? {}), ...headers },
+        // Everything the browser sends goes through the fence, loopback too: Chromium skips a proxy for loopback unless told not to.
+        proxy: { server: fence.url, bypass: "<-loopback>" },
         viewport: { width: 1280, height: 800 },
         locale: "en-GB",
         timezoneId: "UTC",
@@ -510,15 +549,21 @@ export async function runCase(browser, written, target, headers, baseUrl, secret
             journey = { ...loadScript(journey.script), ...(journey.step_timeout_ms ? { step_timeout_ms: journey.step_timeout_ms } : {}) };
         } catch (err) {
             await context.close().catch(() => {});
+            await fence.close();
             if (err instanceof StepError) return { error: err.message, model_calls: 0 };
             throw err;
         }
     }
     const stepMs = Number(journey?.step_timeout_ms ?? target.step_timeout_ms ?? 5000);
     const page = await context.newPage();
-    const session = new Session(page, { stepMs, navMs: Number(target.navigation_timeout_ms ?? 30000), secrets, mask: c.mask ?? journey?.mask, target, scriptFile: journey?.script_file, resolved: record });
-    await guardRequests(context, session, allowed, writes);
-    const finish = async (obs) => ({ ...obs, ...(session.structure.length ? { structure: { pages: session.structure } } : {}), ...(session.shots.length ? { screenshots: session.shots } : {}), model_calls: session.modelCalls });
+    const session = new Session(page, { stepMs, navMs: Number(target.navigation_timeout_ms ?? 30000), secrets, mask: c.mask ?? journey?.mask, target, scriptFile: journey?.script_file, resolved: record, report });
+    await guardRequests(context, report, allowed, writes, origin, credentials);
+    const finish = async (obs) => {
+        // Something tried to leave the target by a way a page's routes cannot see. Whatever the checks say, this case cannot pass.
+        const { status, ...rest } = obs;
+        const verdict = report.stops.length ? { error: `stopped by the fence: ${report.stops.join("; ")}. Add the address to the target's allow_origins only if it should be reached` } : { ...(status !== undefined ? { status } : {}) };
+        return { ...rest, ...verdict, ...(session.structure.length ? { structure: { pages: session.structure } } : {}), ...(session.shots.length ? { screenshots: session.shots } : {}), model_calls: report.modelCalls };
+    };
     try {
         if (!journey) {
             try {
@@ -535,7 +580,7 @@ export async function runCase(browser, written, target, headers, baseUrl, secret
             Object.assign(outcome, {
                 goal: clean(journey.goal),
                 ...(journey.script_file ? { script: { file: journey.script_file, sha256: journey.script_sha256 } } : {}),
-                passed: !stopped && session.checks.every((k) => k.passed),
+                passed: !stopped && !report.stops.length && session.checks.every((k) => k.passed),
                 ...(stopped ? { stopped } : {}),
                 checks: session.checks,
                 values: session.values,
@@ -558,5 +603,6 @@ export async function runCase(browser, written, target, headers, baseUrl, secret
         }
     } finally {
         await context.close().catch(() => {});
+        await fence.close();
     }
 }

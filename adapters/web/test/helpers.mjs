@@ -1,6 +1,7 @@
 // What the web adapter's tests share: a browser check, a project on disk, and local sites.
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import http from "node:http";
 import { createRequire } from "node:module";
@@ -87,6 +88,41 @@ export async function serve(handler) {
     const server = http.createServer(handler);
     await new Promise((r) => server.listen(0, "127.0.0.1", r));
     return { url: `http://127.0.0.1:${server.address().port}`, close: () => new Promise((r) => { server.closeAllConnections(); server.close(r); }) };
+}
+
+/** A server that writes down every request and every socket upgrade it receives, with the headers. */
+export async function recorder(body = "<!doctype html><title>Other</title><h1>Other</h1>") {
+    const seen = [];
+    const sockets = new Set();
+    const server = http.createServer((req, res) => {
+        seen.push({ kind: "http", method: req.method, url: req.url, headers: req.headers });
+        res.writeHead(200, { "content-type": "text/html", "access-control-allow-origin": "*" });
+        res.end(body);
+    });
+    server.on("upgrade", (req, socket) => {
+        seen.push({ kind: "socket", url: req.url, headers: req.headers });
+        sockets.add(socket);
+        socket.on("error", () => {});
+        const accept = crypto.createHash("sha1").update(`${req.headers["sec-websocket-key"]}258EAFA5-E914-47DA-95CA-C5AB0DC85B11`).digest("base64");
+        socket.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n\r\n`);
+    });
+    await new Promise((r) => server.listen(0, "127.0.0.1", r));
+    const port = server.address().port;
+    return { url: `http://127.0.0.1:${port}`, ws: `ws://127.0.0.1:${port}`, seen, close: () => new Promise((r) => { for (const s of sockets) s.destroy(); server.closeAllConnections(); server.close(r); }) };
+}
+
+/** A target whose pages are written by the test, and which records what it receives as well. */
+export function site(routes, seen = []) {
+    const s = serve((req, res) => {
+        const url = new URL(req.url, "http://x");
+        seen.push({ method: req.method, url: url.pathname, headers: req.headers });
+        const r = routes[url.pathname];
+        if (r?.location) { res.writeHead(r.status ?? 302, { location: r.location, ...(r.headers ?? {}) }); return res.end(); }
+        if (r === undefined) { res.writeHead(404); return res.end(); }
+        res.writeHead(200, { "content-type": "text/html", ...(r.headers ?? {}) });
+        res.end(`<!doctype html><title>Page</title><h1>Page</h1>${r.html ?? r}`);
+    });
+    return s.then((x) => ({ ...x, seen }));
 }
 
 const html = (res, body, status = 200, extra = {}) => { res.writeHead(status, { "content-type": "text/html; charset=utf-8", ...extra }); res.end(`<!doctype html><html lang="en">${body}</html>`); };
