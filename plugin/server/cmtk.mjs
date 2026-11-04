@@ -109,17 +109,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP2;
     visit.REMOVE = REMOVE;
-    function visit_(key2, node, visitor, path15) {
-      const ctrl = callVisitor(key2, node, visitor, path15);
+    function visit_(key2, node, visitor, path16) {
+      const ctrl = callVisitor(key2, node, visitor, path16);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key2, path15, ctrl);
-        return visit_(key2, ctrl, visitor, path15);
+        replaceNode(key2, path16, ctrl);
+        return visit_(key2, ctrl, visitor, path16);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path15 = Object.freeze(path15.concat(node));
+          path16 = Object.freeze(path16.concat(node));
           for (let i8 = 0; i8 < node.items.length; ++i8) {
-            const ci = visit_(i8, node.items[i8], visitor, path15);
+            const ci = visit_(i8, node.items[i8], visitor, path16);
             if (typeof ci === "number")
               i8 = ci - 1;
             else if (ci === BREAK)
@@ -130,13 +130,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path15 = Object.freeze(path15.concat(node));
-          const ck = visit_("key", node.key, visitor, path15);
+          path16 = Object.freeze(path16.concat(node));
+          const ck = visit_("key", node.key, visitor, path16);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path15);
+          const cv = visit_("value", node.value, visitor, path16);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -157,17 +157,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP2;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key2, node, visitor, path15) {
-      const ctrl = await callVisitor(key2, node, visitor, path15);
+    async function visitAsync_(key2, node, visitor, path16) {
+      const ctrl = await callVisitor(key2, node, visitor, path16);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key2, path15, ctrl);
-        return visitAsync_(key2, ctrl, visitor, path15);
+        replaceNode(key2, path16, ctrl);
+        return visitAsync_(key2, ctrl, visitor, path16);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path15 = Object.freeze(path15.concat(node));
+          path16 = Object.freeze(path16.concat(node));
           for (let i8 = 0; i8 < node.items.length; ++i8) {
-            const ci = await visitAsync_(i8, node.items[i8], visitor, path15);
+            const ci = await visitAsync_(i8, node.items[i8], visitor, path16);
             if (typeof ci === "number")
               i8 = ci - 1;
             else if (ci === BREAK)
@@ -178,13 +178,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path15 = Object.freeze(path15.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path15);
+          path16 = Object.freeze(path16.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path16);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path15);
+          const cv = await visitAsync_("value", node.value, visitor, path16);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -211,23 +211,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key2, node, visitor, path15) {
+    function callVisitor(key2, node, visitor, path16) {
       if (typeof visitor === "function")
-        return visitor(key2, node, path15);
+        return visitor(key2, node, path16);
       if (identity.isMap(node))
-        return visitor.Map?.(key2, node, path15);
+        return visitor.Map?.(key2, node, path16);
       if (identity.isSeq(node))
-        return visitor.Seq?.(key2, node, path15);
+        return visitor.Seq?.(key2, node, path16);
       if (identity.isPair(node))
-        return visitor.Pair?.(key2, node, path15);
+        return visitor.Pair?.(key2, node, path16);
       if (identity.isScalar(node))
-        return visitor.Scalar?.(key2, node, path15);
+        return visitor.Scalar?.(key2, node, path16);
       if (identity.isAlias(node))
-        return visitor.Alias?.(key2, node, path15);
+        return visitor.Alias?.(key2, node, path16);
       return void 0;
     }
-    function replaceNode(key2, path15, node) {
-      const parent = path15[path15.length - 1];
+    function replaceNode(key2, path16, node) {
+      const parent = path16[path16.length - 1];
       if (identity.isCollection(parent)) {
         parent.items[key2] = node;
       } else if (identity.isPair(parent)) {
@@ -839,10 +839,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path15, value) {
+    function collectionFromPath(schema, path16, value) {
       let v2 = value;
-      for (let i8 = path15.length - 1; i8 >= 0; --i8) {
-        const k2 = path15[i8];
+      for (let i8 = path16.length - 1; i8 >= 0; --i8) {
+        const k2 = path16[i8];
         if (typeof k2 === "number" && Number.isInteger(k2) && k2 >= 0) {
           const a4 = [];
           a4[k2] = v2;
@@ -861,7 +861,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path15) => path15 == null || typeof path15 === "object" && !!path15[Symbol.iterator]().next().done;
+    var isEmptyPath = (path16) => path16 == null || typeof path16 === "object" && !!path16[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -891,11 +891,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path15, value) {
-        if (isEmptyPath(path15))
+      addIn(path16, value) {
+        if (isEmptyPath(path16))
           this.add(value);
         else {
-          const [key2, ...rest] = path15;
+          const [key2, ...rest] = path16;
           const node = this.get(key2, true);
           if (identity.isCollection(node))
             node.addIn(rest, value);
@@ -909,8 +909,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path15) {
-        const [key2, ...rest] = path15;
+      deleteIn(path16) {
+        const [key2, ...rest] = path16;
         if (rest.length === 0)
           return this.delete(key2);
         const node = this.get(key2, true);
@@ -924,8 +924,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path15, keepScalar) {
-        const [key2, ...rest] = path15;
+      getIn(path16, keepScalar) {
+        const [key2, ...rest] = path16;
         const node = this.get(key2, true);
         if (rest.length === 0)
           return !keepScalar && identity.isScalar(node) ? node.value : node;
@@ -943,8 +943,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path15) {
-        const [key2, ...rest] = path15;
+      hasIn(path16) {
+        const [key2, ...rest] = path16;
         if (rest.length === 0)
           return this.has(key2);
         const node = this.get(key2, true);
@@ -954,8 +954,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path15, value) {
-        const [key2, ...rest] = path15;
+      setIn(path16, value) {
+        const [key2, ...rest] = path16;
         if (rest.length === 0) {
           this.set(key2, value);
         } else {
@@ -3470,9 +3470,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path15, value) {
+      addIn(path16, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path15, value);
+          this.contents.addIn(path16, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3547,14 +3547,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path15) {
-        if (Collection.isEmptyPath(path15)) {
+      deleteIn(path16) {
+        if (Collection.isEmptyPath(path16)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path15) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path16) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3569,10 +3569,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path15, keepScalar) {
-        if (Collection.isEmptyPath(path15))
+      getIn(path16, keepScalar) {
+        if (Collection.isEmptyPath(path16))
           return !keepScalar && identity.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity.isCollection(this.contents) ? this.contents.getIn(path15, keepScalar) : void 0;
+        return identity.isCollection(this.contents) ? this.contents.getIn(path16, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -3583,10 +3583,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path15) {
-        if (Collection.isEmptyPath(path15))
+      hasIn(path16) {
+        if (Collection.isEmptyPath(path16))
           return this.contents !== void 0;
-        return identity.isCollection(this.contents) ? this.contents.hasIn(path15) : false;
+        return identity.isCollection(this.contents) ? this.contents.hasIn(path16) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3603,13 +3603,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path15, value) {
-        if (Collection.isEmptyPath(path15)) {
+      setIn(path16, value) {
+        if (Collection.isEmptyPath(path16)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path15), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path16), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path15, value);
+          this.contents.setIn(path16, value);
         }
       }
       /**
@@ -5570,9 +5570,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP2;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path15) => {
+    visit.itemAtPath = (cst, path16) => {
       let item = cst;
-      for (const [field, index] of path15) {
+      for (const [field, index] of path16) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -5581,23 +5581,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path15) => {
-      const parent = visit.itemAtPath(cst, path15.slice(0, -1));
-      const field = path15[path15.length - 1][0];
+    visit.parentCollection = (cst, path16) => {
+      const parent = visit.itemAtPath(cst, path16.slice(0, -1));
+      const field = path16[path16.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path15, item, visitor) {
-      let ctrl = visitor(item, path15);
+    function _visit(path16, item, visitor) {
+      let ctrl = visitor(item, path16);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i8 = 0; i8 < token.items.length; ++i8) {
-            const ci = _visit(Object.freeze(path15.concat([[field, i8]])), token.items[i8], visitor);
+            const ci = _visit(Object.freeze(path16.concat([[field, i8]])), token.items[i8], visitor);
             if (typeof ci === "number")
               i8 = ci - 1;
             else if (ci === BREAK)
@@ -5608,10 +5608,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path15);
+            ctrl = ctrl(item, path16);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path15) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path16) : ctrl;
     }
     exports.visit = visit;
   }
@@ -6913,14 +6913,14 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs17 = this.flowScalar(this.type);
+              const fs18 = this.flowScalar(this.type);
               if (atNextItem || it2.value) {
-                map.items.push({ start, key: fs17, sep: [] });
+                map.items.push({ start, key: fs18, sep: [] });
                 this.onKeyLine = true;
               } else if (it2.sep) {
-                this.stack.push(fs17);
+                this.stack.push(fs18);
               } else {
-                Object.assign(it2, { key: fs17, sep: [] });
+                Object.assign(it2, { key: fs18, sep: [] });
                 this.onKeyLine = true;
               }
               return;
@@ -7048,13 +7048,13 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs17 = this.flowScalar(this.type);
+              const fs18 = this.flowScalar(this.type);
               if (!it2 || it2.value)
-                fc.items.push({ start: [], key: fs17, sep: [] });
+                fc.items.push({ start: [], key: fs18, sep: [] });
               else if (it2.sep)
-                this.stack.push(fs17);
+                this.stack.push(fs18);
               else
-                Object.assign(it2, { key: fs17, sep: [] });
+                Object.assign(it2, { key: fs18, sep: [] });
               return;
             }
             case "flow-map-end":
@@ -13842,9 +13842,9 @@ var require_lib = __commonJS({
 });
 
 // packages/cli/dist/main.js
-var import_yaml5 = __toESM(require_dist(), 1);
-import fs16 from "node:fs";
-import path14 from "node:path";
+var import_yaml6 = __toESM(require_dist(), 1);
+import fs17 from "node:fs";
+import path15 from "node:path";
 import readline2 from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
@@ -13976,6 +13976,7 @@ function loadManifest(file) {
     insecure_tls: raw.insecure_tls === true,
     compare_only_surfaces: compareOnly,
     adapters,
+    adapter_registries: registriesOf(raw.adapter_registries),
     root: path.dirname(path.resolve(file)),
     file: path.resolve(file)
   };
@@ -14008,6 +14009,21 @@ function positive(v2, key2, fallback) {
   if (!Number.isFinite(n3) || n3 <= 0)
     throw new ManifestError(`\`${key2}\` must be a number of seconds above 0.`);
   return n3;
+}
+function registriesOf(raw) {
+  if (raw === void 0 || raw === null)
+    return {};
+  if (typeof raw !== "object" || Array.isArray(raw))
+    throw new ManifestError("adapter_registries must map a name to a git address or a folder.");
+  for (const [name, at2] of Object.entries(raw)) {
+    if (!NAME.test(name))
+      throw new ManifestError(`adapter_registries: the name ${JSON.stringify(name)} must be letters, digits, '.', '-' and '_'.`);
+    if (typeof at2 !== "string" || !at2.trim())
+      throw new ManifestError(`adapter_registries.${name} must be a git address or a folder.`);
+    if (/^https?:\/\/[^/]*@|^[a-z][a-z0-9+.-]*:\/\/[^/@]*:[^/@]*@/i.test(at2))
+      throw new ManifestError(`adapter_registries.${name} holds a credential. Remove it from cmtk.yaml, and let git's credential helper or your ssh key supply it.`);
+  }
+  return raw;
 }
 function adaptersOf(raw) {
   const out = {};
@@ -14059,7 +14075,7 @@ function caseFiles(manifest) {
 function loadCases(manifest) {
   const all = [];
   const seen = /* @__PURE__ */ new Set();
-  const RESERVED = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\.|$)/i;
+  const RESERVED2 = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\.|$)/i;
   for (const rel2 of caseFiles(manifest)) {
     const doc = readStructured(inside(manifest, rel2));
     const list = Array.isArray(doc) ? doc : doc?.cases;
@@ -14071,7 +14087,7 @@ function loadCases(manifest) {
         throw new ManifestError(`${where2}: \`id\` must be letters, digits, '.', '-' and '_'.`);
       if (seen.has(c4.id.toLowerCase()))
         throw new ManifestError(`${where2}: the id ${c4.id} is used twice (ids must differ by more than upper and lower case, because evidence files are named after them).`);
-      if (RESERVED.test(c4.id))
+      if (RESERVED2.test(c4.id))
         throw new ManifestError(`${where2}: ${c4.id} cannot be an id, because Windows cannot create a file with that name.`);
       seen.add(c4.id.toLowerCase());
       const req = typeof c4.request === "string" ? parseRequestLine(c4.request, where2) : c4.request;
@@ -15679,13 +15695,13 @@ function caseNode(doc, caseId) {
     throw new ManifestError(`Case ${caseId} is not in its file any more.`);
   return { seq, index, node: seq.items[index] };
 }
-function decideProposal(manifest, id, accept, person, date, note, shown) {
+function decideProposal(manifest, id, accept, person, date, note, shown2) {
   const p4 = loadProposals(manifest).find((x2) => x2.id === id);
   if (!p4)
     throw new ManifestError(`There is no proposal ${id}.`);
   if (p4.status !== "pending")
     throw new ManifestError(`${id} was already ${p4.status}.`);
-  if (shown && JSON.stringify(p4) !== JSON.stringify(shown))
+  if (shown2 && JSON.stringify(p4) !== JSON.stringify(shown2))
     throw new ManifestError(`${id} changed after it was shown to you. Nothing was applied; run \`cmtk review\` again.`);
   const who = text(person, "Your name", 100);
   if (!accept) {
@@ -15744,12 +15760,12 @@ function decideProposal(manifest, id, accept, person, date, note, shown) {
   setStatus(manifest, id, { status: "accepted", decided_by: who, decided_on: date, applied, ...note ? { decision_note: note } : {} });
   return { ...p4, status: "accepted", decided_by: who, decided_on: date, applied };
 }
-function acceptDraft(manifest, caseId, person, date, shown) {
+function acceptDraft(manifest, caseId, person, date, shown2) {
   const who = text(person, "Your name", 100);
   const { c: c4, file } = caseFileOf(manifest, caseId);
   if (!c4.draft)
     throw new ManifestError(`${caseId} is not a draft.`);
-  if (shown && JSON.stringify(c4) !== JSON.stringify(shown))
+  if (shown2 && JSON.stringify(c4) !== JSON.stringify(shown2))
     throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was accepted; run \`cmtk review\` again.`);
   editYaml(file, "", (doc) => {
     const { node } = caseNode(doc, caseId);
@@ -15766,12 +15782,12 @@ function acceptDraft(manifest, caseId, person, date, shown) {
     }
   });
 }
-function confirmExpectation(manifest, caseId, person, date, shown) {
+function confirmExpectation(manifest, caseId, person, date, shown2) {
   const who = text(person, "Your name", 100);
   const { c: c4, file } = caseFileOf(manifest, caseId);
   if (!c4.expect_draft)
     throw new ManifestError(`${caseId} has no drafted expectation.`);
-  if (shown && JSON.stringify(c4) !== JSON.stringify(shown))
+  if (shown2 && JSON.stringify(c4) !== JSON.stringify(shown2))
     throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was confirmed; run \`cmtk review\` again.`);
   editYaml(file, "", (doc) => {
     const { node } = caseNode(doc, caseId);
@@ -15783,13 +15799,13 @@ function confirmExpectation(manifest, caseId, person, date, shown) {
     node.set("expect_confirmed_on", date);
   });
 }
-function rejectExpectation(manifest, caseId, person, date, reason, shown) {
+function rejectExpectation(manifest, caseId, person, date, reason, shown2) {
   const who = text(person, "Your name", 100);
   const why = text(reason, "A reason", 1e3);
   const { c: c4, file } = caseFileOf(manifest, caseId);
   if (!c4.expect_draft)
     throw new ManifestError(`${caseId} has no drafted expectation.`);
-  if (shown && JSON.stringify(c4) !== JSON.stringify(shown))
+  if (shown2 && JSON.stringify(c4) !== JSON.stringify(shown2))
     throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was changed; run \`cmtk review\` again.`);
   const rejected = inside(manifest, path4.join(path4.dirname(manifest.proposals), "rejected.yaml"));
   editYaml(rejected, "# Draft cases a person rejected, with the reason. Kept so the same draft is not proposed again.\nrejected: []\n", (doc) => {
@@ -15996,24 +16012,24 @@ function regex(pattern, where2) {
   }
 }
 var typeOf2 = (v2) => v2 === null ? "null" : Array.isArray(v2) ? "array" : typeof v2;
-function checkJson(path15, check2, doc) {
-  const found = select(doc, parsePath(path15));
+function checkJson(path16, check2, doc) {
+  const found = select(doc, parsePath(path16));
   if ("exists" in check2) {
-    return found.length > 0 === check2.exists ? [] : [{ check: path15, expected: check2.exists ? "present" : "absent", actual: found.length ? short(found[0].value) : "(missing)" }];
+    return found.length > 0 === check2.exists ? [] : [{ check: path16, expected: check2.exists ? "present" : "absent", actual: found.length ? short(found[0].value) : "(missing)" }];
   }
   if (found.length === 0)
-    return [{ check: path15, expected: describe(check2), actual: "(missing)" }];
+    return [{ check: path16, expected: describe(check2), actual: "(missing)" }];
   const out = [];
   for (const { at: at2, value } of found) {
     let ok = true;
     if ("equals" in check2)
       ok = jsonEqual(value, check2.equals);
     else if ("matches" in check2)
-      ok = typeof value === "string" && regex(check2.matches, path15).test(value);
+      ok = typeof value === "string" && regex(check2.matches, path16).test(value);
     else if ("type" in check2)
       ok = typeOf2(value) === check2.type;
     if (!ok)
-      out.push({ check: found.length > 1 ? render(at2) : path15, expected: describe(check2), actual: short(value) });
+      out.push({ check: found.length > 1 ? render(at2) : path16, expected: describe(check2), actual: short(value) });
   }
   return out;
 }
@@ -16046,8 +16062,8 @@ function checkExpectation(exp, obs) {
     } catch {
       return [...out, { check: "body", expected: "JSON", actual: short(obs.body ?? "", 60) }];
     }
-    for (const [path15, check2] of Object.entries(exp.json))
-      out.push(...checkJson(path15, check2, doc));
+    for (const [path16, check2] of Object.entries(exp.json))
+      out.push(...checkJson(path16, check2, doc));
   }
   for (const text2 of exp.body_contains ?? []) {
     if (!(obs.body ?? "").includes(text2))
@@ -16131,7 +16147,13 @@ function summarise(x2) {
   const stale = (x2.known ?? []).filter((k2) => k2.state === "no longer fails").map((k2) => k2.id).sort();
   const decided = decide({ ...x2, scope }, counts);
   const { verdict, next } = decided;
-  const reason = decided.reason + (scope && !scope.whole ? ` ${scope.statement}` : "") + (x2.excludedCompareOnly ? ` ${plural(x2.excludedCompareOnly, "case")} on a compare-only surface (${x2.compareOnlySurfaces.join(", ")}) ${x2.excludedCompareOnly === 1 ? "was" : "were"} left out: \`cmtk compare\` covers ${x2.excludedCompareOnly === 1 ? "it" : "them"}.` : "") + (stale.length ? ` ${stale.length === 1 ? "A known issue no longer fails" : "Known issues no longer fail"} (${stale.join(", ")}): a person removes ${stale.length === 1 ? "it" : "them"} from the ledger.` : "") + (x2.excludedDrafts ? ` ${x2.excludedDrafts} draft case${x2.excludedDrafts === 1 ? " was" : "s were"} left out (--accepted-only).` : "");
+  const gaps = /* @__PURE__ */ new Map();
+  for (const c4 of x2.cases)
+    if (c4.no_adapter)
+      gaps.set(c4.surface, [...gaps.get(c4.surface) ?? [], c4.id]);
+  const noAdapter2 = [...gaps].sort().map(([surface, cases]) => ({ surface, cases }));
+  const gapCount = noAdapter2.reduce((n3, g3) => n3 + g3.cases.length, 0);
+  const reason = decided.reason + (gapCount ? ` ${plural(gapCount, "case")} on a surface with no adapter (${noAdapter2.map((g3) => g3.surface).join(", ")}): nothing was sent for ${gapCount === 1 ? "it" : "them"}.` : "") + (scope && !scope.whole ? ` ${scope.statement}` : "") + (x2.excludedCompareOnly ? ` ${plural(x2.excludedCompareOnly, "case")} on a compare-only surface (${x2.compareOnlySurfaces.join(", ")}) ${x2.excludedCompareOnly === 1 ? "was" : "were"} left out: \`cmtk compare\` covers ${x2.excludedCompareOnly === 1 ? "it" : "them"}.` : "") + (stale.length ? ` ${stale.length === 1 ? "A known issue no longer fails" : "Known issues no longer fail"} (${stale.join(", ")}): a person removes ${stale.length === 1 ? "it" : "them"} from the ledger.` : "") + (x2.excludedDrafts ? ` ${x2.excludedDrafts} draft case${x2.excludedDrafts === 1 ? " was" : "s were"} left out (--accepted-only).` : "");
   const reqs = /* @__PURE__ */ new Map();
   for (const c4 of x2.cases) {
     for (const r6 of c4.requirement.length ? c4.requirement : ["(no requirement named)"]) {
@@ -16163,6 +16185,7 @@ function summarise(x2) {
     partial: x2.partial,
     ...x2.excludedDrafts ? { excluded_drafts: x2.excludedDrafts } : {},
     ...x2.excludedCompareOnly ? { excluded_compare_only: x2.excludedCompareOnly } : {},
+    ...noAdapter2.length ? { no_adapter: noAdapter2 } : {},
     ...scope ? { scope } : {},
     ...x2.settings ? { settings: x2.settings } : {},
     reason,
@@ -16260,6 +16283,12 @@ function renderReport(r6) {
       L2.push(`- Not compared: contract ${cell(k2)}`);
     L2.push("");
   }
+  if (r6.no_adapter?.length) {
+    L2.push("## Cases with no adapter", "", "Nothing was sent for these cases, because no adapter drives their surface. They count as errors, so this report can't pass until each has an adapter.", "");
+    for (const n3 of r6.no_adapter)
+      L2.push(`- ${cell(n3.surface)}: ${n3.cases.map(cell).join(", ")}`);
+    L2.push("");
+  }
   L2.push("## Requirements", "", "| Requirement | Cases | Passed | Failed | Not run |", "| --- | --- | --- | --- | --- |");
   for (const q2 of r6.requirements)
     L2.push(`| ${cell(q2.requirement)} | ${q2.cases} | ${q2.passed} | ${q2.failed} | ${q2.other} |`);
@@ -16277,8 +16306,8 @@ function renderReport(r6) {
   L2.push("", "## Cases", "", r6.mode === "compare" ? "| Case | Request | Level | Result |" : "| Case | Request | Requirement | Result |", "| --- | --- | --- | --- |");
   for (const c4 of r6.cases) {
     const mid = r6.mode === "compare" ? c4.match ?? "" : c4.requirement.join(", ") || "\u2014";
-    const shown = c4.known_issues ? `FAIL (known issue ${c4.known_issues.join(", ")})` : c4.result;
-    L2.push(`| ${c4.id} | ${cell(c4.name)} | ${cell(mid)} | ${c4.result === "NOT COMPARABLE" ? cell(c4.why) : `${shown}${c4.why ? ` \u2014 ${cell(c4.why)}` : ""}`} |`);
+    const shown2 = c4.known_issues ? `FAIL (known issue ${c4.known_issues.join(", ")})` : c4.result;
+    L2.push(`| ${c4.id} | ${cell(c4.name)} | ${cell(mid)} | ${c4.result === "NOT COMPARABLE" ? cell(c4.why) : `${shown2}${c4.why ? ` \u2014 ${cell(c4.why)}` : ""}`} |`);
   }
   const sent = r6.cases.filter((c4) => c4.inputs?.length);
   if (sent.length) {
@@ -16382,11 +16411,6 @@ function selectCases(manifest, mode, only, acceptedOnly = false) {
 }
 function pick(manifest, only) {
   const all = loadCases(manifest);
-  for (const c4 of all) {
-    const s4 = c4.surface ?? "http";
-    if (s4 !== "http" && !manifest.adapters[s4])
-      throw new ManifestError(`Case ${c4.id} uses surface "${s4}", which has no adapter. Add it under \`adapters:\` in cmtk.yaml, or run \`cmtk adapter new ${s4}\`.`);
-  }
   if (!only?.length)
     return all;
   const ids = new Set(all.map((c4) => c4.id));
@@ -16394,6 +16418,12 @@ function pick(manifest, only) {
   if (unknown.length)
     throw new ManifestError(`Unknown case ids: ${unknown.join(", ")}.`);
   return all.filter((c4) => only.includes(c4.id));
+}
+function noAdapter(c4, manifest) {
+  const s4 = c4.surface ?? "http";
+  if (s4 === "http" || Object.hasOwn(manifest.adapters, s4))
+    return void 0;
+  return { result: "ERROR", no_adapter: true, why: `surface "${s4}" has no adapter, so nothing was sent. Add it under \`adapters:\` in cmtk.yaml: \`cmtk adapter new ${s4}\` writes one, and \`cmtk adapter add ${s4}\` lets a person install one` };
 }
 var requirementsOf = (c4) => c4.requirement === void 0 ? [] : Array.isArray(c4.requirement) ? c4.requirement.map(String) : [String(c4.requirement)];
 function base(c4) {
@@ -16506,6 +16536,11 @@ async function run(manifest, opts = {}) {
     try {
       for (const c4 of cases) {
         const b2 = base(c4);
+        const gap = noAdapter(c4, manifest);
+        if (gap) {
+          out.push({ ...b2, ...gap });
+          continue;
+        }
         const missing = lacking(b2.surface, t3);
         if (missing.length) {
           out.push({ ...b2, result: "SKIPPED", why: `not run: ${hasNo(missing, b2.surface)}` });
@@ -16603,6 +16638,11 @@ async function compare(manifest, opts = {}) {
       }
       for (const c4 of cases) {
         const b2 = { ...base(c4), match: matchFor(c4, manifest) };
+        const gap = noAdapter(c4, manifest);
+        if (gap) {
+          out.push({ ...b2, ...gap });
+          continue;
+        }
         if (c4.draft) {
           out.push({ ...b2, result: "SKIPPED", why: DRAFT_WHY });
           continue;
@@ -18026,8 +18066,8 @@ var round = (n3, step) => {
   const d4 = Math.max(0, Math.min(10, Math.ceil(-Math.log10(step))));
   return Number(n3.toFixed(d4));
 };
-function bva(slug2, edge, side, path15, value, valid, keyword, item) {
-  return { name: `${slug2}_${edge}_${side}_3bva`, technique: "BVA-3", coverage_item: item, expect_valid: valid, ...valid ? {} : { invalid_because: { path: path15, keyword } }, oracle: "specified", set: { [path15]: value } };
+function bva(slug2, edge, side, path16, value, valid, keyword, item) {
+  return { name: `${slug2}_${edge}_${side}_3bva`, technique: "BVA-3", coverage_item: item, expect_valid: valid, ...valid ? {} : { invalid_because: { path: path16, keyword } }, oracle: "specified", set: { [path16]: value } };
 }
 function wrongType(f4) {
   switch (f4.type) {
@@ -20210,12 +20250,12 @@ var toKey = function(value) {
   const result = `${value}`;
   return result == "0" && 1 / value == -Infinity ? "-0" : result;
 };
-var get = function(object, path15) {
-  path15 = castPath(path15, object);
+var get = function(object, path16) {
+  path16 = castPath(path16, object);
   let index = 0;
-  const length = path15.length;
+  const length = path16.length;
   while (object != null && index < length) {
-    object = object[toKey(path15[index++])];
+    object = object[toKey(path16[index++])];
   }
   return index && index === length ? object : void 0;
 };
@@ -21287,14 +21327,465 @@ function writeCases(m4, id, o4 = {}) {
   return { file: path13.relative(m4.root, out).split(path13.sep).join("/"), cases, withoutExpect, leftOut };
 }
 
+// packages/cli/dist/registry.js
+var import_yaml5 = __toESM(require_dist(), 1);
+import { spawnSync as spawnSync2 } from "node:child_process";
+import crypto8 from "node:crypto";
+import fs16 from "node:fs";
+import os from "node:os";
+import path14 from "node:path";
+var RegistryError = class extends Error {
+};
+var LEVELS = ["experimental", "verified", "core"];
+var LEFT_OUT = /* @__PURE__ */ new Set(["bin", "obj", "node_modules"]);
+var MAX_FILES = 5e3;
+var MAX_BYTES = 100 * 1024 * 1024;
+var NAME2 = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
+var FULL_COMMIT = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
+var PIN = /^[A-Za-z0-9][A-Za-z0-9._/+-]{0,127}$/;
+var UNSHOWABLE = /[\u0000-\u001f\u007f-\u009f‎‏‪-‮⁦-⁩]/;
+var RESERVED = /^(?:con|prn|aux|nul|com\d|lpt\d)(?:\..*)?$/i;
+function shown(v2, field, where2) {
+  const s4 = typeof v2 === "number" ? String(v2) : v2;
+  if (typeof s4 !== "string" || !s4.trim())
+    throw new RegistryError(`${where2} needs \`${field}\`.`);
+  if (s4.length > 200 || UNSHOWABLE.test(s4))
+    throw new RegistryError(`${where2}: \`${field}\` must be plain text of up to 200 characters.`);
+  return s4.trim();
+}
+function pathProblem(rel2) {
+  if (!rel2 || rel2.length > 200 || UNSHOWABLE.test(rel2))
+    return "it is empty, too long, or holds control characters";
+  for (const part of rel2.split("/")) {
+    if (!part || part === "." || part === "..")
+      return "it climbs out of the folder";
+    if (/^\.git$/i.test(part) || /^git~\d+$/i.test(part))
+      return "it writes into a .git folder";
+    if (/[\\:<>"|?*]/.test(part) || /[. ]$/.test(part) || RESERVED.test(part))
+      return "Windows cannot hold that name, or would read it as something else";
+  }
+  return "";
+}
+function folderOf(raw, where2) {
+  const clean2 = raw.trim().replace(/\/+$/, "").replace(/^\.\//, "");
+  if (clean2 === "" || clean2 === ".")
+    return ".";
+  const problem = pathProblem(clean2);
+  if (problem)
+    throw new RegistryError(`${where2}: \`source\` is not a folder inside the registry: ${problem}.`);
+  return clean2;
+}
+function sourceOf(raw, where2) {
+  if (typeof raw === "string")
+    return folderOf(raw, where2);
+  if (!raw || typeof raw !== "object" || Array.isArray(raw))
+    throw new RegistryError(`${where2} needs \`source\`: a folder inside the registry, or { git, commit, path }.`);
+  const git2 = shown(raw.git, "source.git", where2);
+  const commit = shown(raw.commit, "source.commit", where2);
+  if (!FULL_COMMIT.test(commit))
+    throw new RegistryError(`${where2}: \`source.commit\` must be a full commit id. A tag or a branch can move after a person said yes.`);
+  return { git: git2, commit, path: raw.path === void 0 ? "." : folderOf(String(raw.path), where2) };
+}
+function parseRegistry(text2, label, opts = {}) {
+  let doc;
+  try {
+    doc = import_yaml5.default.parse(text2);
+  } catch (err) {
+    throw new RegistryError(`${label} is not valid YAML: ${err.message.split("\n")[0]}`);
+  }
+  if (!doc || !Array.isArray(doc.adapters))
+    throw new RegistryError(`${label} needs a list under \`adapters:\`.`);
+  const seen = /* @__PURE__ */ new Set();
+  return doc.adapters.map((e6, i8) => {
+    const where2 = `${label}, entry ${i8 + 1}${typeof e6?.name === "string" && !UNSHOWABLE.test(e6.name) ? ` (${e6.name.slice(0, 64)})` : ""}`;
+    if (!e6 || typeof e6 !== "object")
+      throw new RegistryError(`${where2} must be a mapping.`);
+    if (typeof e6.name !== "string" || !NAME2.test(e6.name) || e6.name === "http" || RESERVED.test(e6.name))
+      throw new RegistryError(`${where2}: \`name\` must be letters, digits, '.', '-' and '_', and not http, which is built in.`);
+    if (seen.has(e6.name.toLowerCase()))
+      throw new RegistryError(`${where2}: the name is listed twice.`);
+    seen.add(e6.name.toLowerCase());
+    if (!Array.isArray(e6.kinds) || !e6.kinds.length || !e6.kinds.every((k2) => typeof k2 === "string" && NAME2.test(k2)))
+      throw new RegistryError(`${where2} needs \`kinds\`: a list such as [email].`);
+    const language = shown(e6.language, "language", where2);
+    if (!LEVELS.includes(e6.level))
+      throw new RegistryError(`${where2}: \`level\` must be ${LEVELS.join(", ")}.`);
+    if (e6.level === "core" && !opts.allowCore)
+      throw new RegistryError(`${where2}: \`level\` is core, and core means it ships with the toolkit. A registry cannot award that.`);
+    if (e6.license !== void 0 && e6.licence === void 0)
+      throw new RegistryError(`${where2} needs \`licence\`, spelled that way.`);
+    return {
+      name: e6.name,
+      kinds: e6.kinds,
+      language,
+      level: e6.level,
+      source: sourceOf(e6.source, where2),
+      licence: shown(e6.licence, "licence", where2),
+      owner: shown(e6.owner, "owner", where2),
+      ...e6.version !== void 0 ? { version: shown(e6.version, "version", where2) } : {}
+    };
+  });
+}
+var isRemote = (location) => /^(?:https|ssh):\/\/|^[\w.-]+@/i.test(location);
+var sourceAllowed = (source, registry) => isRemote(source) || !isRemote(registry);
+function classifyLocation(location, base2) {
+  const refuse = (why) => new RegistryError(`That registry location is refused: ${why}`);
+  if (typeof location !== "string" || !location.trim() || location.startsWith("-") || UNSHOWABLE.test(location))
+    throw refuse("it is empty or starts with a dash.");
+  if (/^[a-z0-9+.-]+::/i.test(location))
+    throw refuse("git's remote helpers can run commands. Use https, ssh or a folder.");
+  const scheme = /^([a-z][a-z0-9+.-]*):\/\/([^/]*)/i.exec(location);
+  if (scheme) {
+    const kind = scheme[1].toLowerCase();
+    if (!["https", "ssh", "file"].includes(kind))
+      throw refuse(`${kind}:// is not allowed. Use https, ssh or a folder, so nobody on the network can swap the code.`);
+    if (kind === "https" ? scheme[2].includes("@") : /:[^@]*@/.test(scheme[2]))
+      throw refuse("it holds a credential. Leave it out: git asks your credential helper or your ssh key. The location was not stored or printed.");
+    if (/[?#]/.test(location))
+      throw refuse("it holds a query or a fragment, which could carry a credential. The location was not stored or printed.");
+    return { kind: "git", at: location };
+  }
+  if (/^[\w.-]+@[\w.-]+:/.test(location))
+    return { kind: "git", at: location };
+  const at2 = path14.resolve(base2, location);
+  if (!fs16.existsSync(at2) || !fs16.statSync(at2).isDirectory())
+    throw new RegistryError(`There is no folder at ${at2}, and it is not an https or ssh address.`);
+  const isGit = fs16.existsSync(path14.join(at2, ".git")) || fs16.existsSync(path14.join(at2, "HEAD")) && fs16.existsSync(path14.join(at2, "objects"));
+  return { kind: isGit ? "git" : "folder", at: at2 };
+}
+function git(args, what) {
+  const env = { ...process.env, GIT_ALLOW_PROTOCOL: "https:ssh:file" };
+  for (const k2 of ["GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_COMMON_DIR", "GIT_CONFIG_PARAMETERS", "GIT_CONFIG_COUNT", "GIT_TEMPLATE_DIR"])
+    delete env[k2];
+  const safe = ["-c", `core.hooksPath=${os.devNull}`, "-c", "protocol.ext.allow=never", "-c", "core.fsmonitor=false", "-c", "core.symlinks=false"];
+  const r6 = spawnSync2("git", [...safe, ...args], { env, stdio: ["inherit", "pipe", "pipe"], maxBuffer: MAX_BYTES + 1024 * 1024, timeout: 3e5, shell: false });
+  if (r6.error)
+    throw new RegistryError(r6.error.code === "ENOENT" ? "A git registry needs git, and git was not found." : `${what}: ${r6.error.message}`);
+  if (r6.status !== 0) {
+    const said = String(r6.stderr).trim().split(/\r?\n/).filter(Boolean).pop() ?? "git gave no reason";
+    throw new RegistryError(`${what}: ${said.replace(/\/\/[^/@\s]*@/g, "//")}`);
+  }
+  return r6.stdout;
+}
+function cloneBare(at2, into, what) {
+  git(["clone", "--bare", "--no-local", "--quiet", "--template=", "--", at2, into], what);
+  return into;
+}
+var inRepo = (repo, args, what) => git([`--git-dir=${repo}`, ...args], what);
+function resolveCommit(repo, ref, what) {
+  let out;
+  try {
+    out = String(inRepo(repo, ["rev-parse", "--verify", "--quiet", "--end-of-options", `${ref}^{commit}`], what)).trim();
+  } catch {
+    throw new RegistryError(`${what}: there is no such commit.`);
+  }
+  if (!FULL_COMMIT.test(out))
+    throw new RegistryError(`${what}: there is no such commit.`);
+  return out;
+}
+var keep = (rel2) => !rel2.split("/").some((p4) => LEFT_OUT.has(p4));
+function writeFile(stage, rel2, data, executable) {
+  const to = path14.join(stage, ...rel2.split("/"));
+  fs16.mkdirSync(path14.dirname(to), { recursive: true });
+  fs16.writeFileSync(to, data, { flag: "wx", mode: executable ? 493 : 420 });
+}
+function stageFromGit(repo, commit, sub, stage) {
+  const prefix = sub === "." ? "" : `${sub}/`;
+  const listing = String(inRepo(repo, ["ls-tree", "-r", "-z", "--full-tree", commit], "Reading the file list")).split("\0").filter(Boolean);
+  const files = [];
+  let bytes = 0;
+  for (const line of listing) {
+    const m4 = /^(\d+) (\w+) ([0-9a-f]+)\t(.*)$/s.exec(line);
+    if (!m4 || !m4[4].startsWith(prefix))
+      continue;
+    const rel2 = m4[4].slice(prefix.length);
+    if (!keep(rel2))
+      continue;
+    const problem = pathProblem(rel2);
+    if (problem)
+      throw new RegistryError(`Refused: the adapter holds a file with a bad path: ${problem}.`);
+    if (m4[1] !== "100644" && m4[1] !== "100755")
+      throw new RegistryError(`Refused: ${rel2} is ${m4[1] === "120000" ? "a symbolic link" : m4[1] === "160000" ? "a submodule" : "not a plain file"}. An adapter is plain files only, so what you approve is all you get.`);
+    if (files.length >= MAX_FILES)
+      throw new RegistryError(`Refused: the adapter holds more than ${MAX_FILES} files.`);
+    const data = inRepo(repo, ["cat-file", "blob", m4[3]], `Reading ${rel2}`);
+    bytes += data.length;
+    if (bytes > MAX_BYTES)
+      throw new RegistryError(`Refused: the adapter is over ${MAX_BYTES / 1024 / 1024} MB.`);
+    writeFile(stage, rel2, data, m4[1] === "100755");
+    files.push(rel2);
+  }
+  return files;
+}
+function stageFromFolder(root, sub, stage) {
+  const from = path14.resolve(root, sub);
+  const realRoot = fs16.realpathSync(root);
+  if (!fs16.existsSync(from) || !fs16.statSync(from).isDirectory())
+    throw new RegistryError(`The registry has no folder ${sub}.`);
+  const real = fs16.realpathSync(from);
+  if (real !== realRoot && !real.startsWith(realRoot + path14.sep))
+    throw new RegistryError(`Refused: ${sub} leaves the registry.`);
+  const files = [];
+  let bytes = 0;
+  const walk = (dir, prefix) => {
+    for (const e6 of fs16.readdirSync(dir, { withFileTypes: true }).sort((a4, b2) => a4.name < b2.name ? -1 : 1)) {
+      if (e6.name === ".git" || LEFT_OUT.has(e6.name))
+        continue;
+      const rel2 = prefix + e6.name;
+      const problem = pathProblem(rel2);
+      if (problem)
+        throw new RegistryError(`Refused: the adapter holds a file with a bad path: ${problem}.`);
+      const full = path14.join(dir, e6.name);
+      if (e6.isSymbolicLink())
+        throw new RegistryError(`Refused: ${rel2} is a symbolic link. An adapter is plain files only, so what you approve is all you get.`);
+      if (e6.isDirectory()) {
+        walk(full, `${rel2}/`);
+        continue;
+      }
+      if (!e6.isFile())
+        throw new RegistryError(`Refused: ${rel2} is not a plain file.`);
+      if (files.length >= MAX_FILES)
+        throw new RegistryError(`Refused: the adapter holds more than ${MAX_FILES} files.`);
+      const data = fs16.readFileSync(full);
+      bytes += data.length;
+      if (bytes > MAX_BYTES)
+        throw new RegistryError(`Refused: the adapter is over ${MAX_BYTES / 1024 / 1024} MB.`);
+      writeFile(stage, rel2, data, process.platform !== "win32" && (fs16.statSync(full).mode & 73) !== 0);
+      files.push(rel2);
+    }
+  };
+  walk(from, "");
+  return files;
+}
+function fingerprint2(dir) {
+  const hash2 = crypto8.createHash("sha256");
+  const walk = (at2, prefix) => {
+    for (const e6 of fs16.readdirSync(at2, { withFileTypes: true }).sort((a4, b2) => a4.name < b2.name ? -1 : 1)) {
+      if (LEFT_OUT.has(e6.name))
+        continue;
+      const rel2 = prefix + e6.name;
+      if (e6.isSymbolicLink()) {
+        hash2.update(`${rel2}\0link
+`);
+        continue;
+      }
+      if (e6.isDirectory()) {
+        walk(path14.join(at2, e6.name), `${rel2}/`);
+        continue;
+      }
+      let data = fs16.readFileSync(path14.join(at2, e6.name));
+      if (!data.subarray(0, 8e3).includes(0))
+        data = Buffer.from(data.toString("latin1").replace(/\r\n/g, "\n"), "latin1");
+      hash2.update(`${rel2}\0${crypto8.createHash("sha256").update(data).digest("hex")}
+`);
+    }
+  };
+  walk(dir, "");
+  return `sha256:${hash2.digest("hex")}`;
+}
+function openRegistry(location, base2, work, pin, toolkitAdapters) {
+  const { kind, at: at2 } = classifyLocation(location, base2);
+  if (kind === "folder") {
+    if (pin)
+      throw new RegistryError(`${at2} is a plain folder, which has no history to pin to. Leave --pin out; the fingerprint of the files is the pin.`);
+    const file = path14.join(at2, "registry.yaml");
+    if (!fs16.existsSync(file) || !fs16.lstatSync(file).isFile())
+      throw new RegistryError(`${at2} has no registry.yaml.`);
+    return { location, kind, at: at2, entries: parseRegistry(fs16.readFileSync(file, "utf8"), `${location}/registry.yaml`, { allowCore: !!toolkitAdapters && path14.resolve(at2) === path14.resolve(toolkitAdapters) }) };
+  }
+  if (pin && !PIN.test(pin))
+    throw new RegistryError("--pin must be a tag, a branch or a commit id.");
+  const repo = cloneBare(at2, fs16.mkdtempSync(path14.join(work, "registry-")), `Fetching registry ${location}`);
+  const commit = resolveCommit(repo, pin ?? "HEAD", `Finding ${pin ?? "the latest commit"} in registry ${location}`);
+  let text2;
+  try {
+    text2 = String(inRepo(repo, ["cat-file", "blob", `${commit}:registry.yaml`], "Reading registry.yaml"));
+  } catch {
+    throw new RegistryError(`Registry ${location} has no registry.yaml at commit ${commit.slice(0, 12)}.`);
+  }
+  return { location, kind, at: at2, repo, commit, entries: parseRegistry(text2, `${location}/registry.yaml`) };
+}
+function prepareInstall(o4) {
+  const dir = path14.join(o4.root, "adapters");
+  if (fs16.existsSync(path14.join(dir, o4.name)))
+    throw new RegistryError(`adapters/${o4.name} already exists. A person removes it first, then adds the version they want.`);
+  fs16.mkdirSync(dir, { recursive: true });
+  const work = fs16.mkdtempSync(path14.join(dir, ".cmtk-staging-"));
+  const cleanup = () => fs16.rmSync(work, { recursive: true, force: true, maxRetries: 3 });
+  try {
+    const opened = o4.registries.map((r6) => openRegistry(r6, o4.base, work, o4.pin, o4.toolkitAdapters));
+    const holders = opened.filter((r6) => r6.entries.some((e6) => e6.name === o4.name));
+    if (holders.length > 1)
+      throw new RegistryError(`${o4.name} is in more than one registry (${holders.map((h4) => h4.location).join(", ")}). Choose one with --registry.`);
+    if (!holders.length)
+      throw new RegistryError(`${o4.name} is not in ${o4.registries.join(", ")}.`);
+    const reg = holders[0];
+    const entry = reg.entries.find((e6) => e6.name === o4.name);
+    const stage = path14.join(work, "adapter");
+    fs16.mkdirSync(stage);
+    let files, source, commit;
+    if (typeof entry.source === "string") {
+      source = `${reg.location}${entry.source === "." ? "" : `, folder ${entry.source}`}`;
+      commit = reg.commit;
+      files = reg.repo ? stageFromGit(reg.repo, commit, entry.source, stage) : stageFromFolder(reg.at, entry.source, stage);
+    } else {
+      const where2 = classifyLocation(entry.source.git, o4.base);
+      if (where2.kind !== "git")
+        throw new RegistryError(`${o4.name}: \`source.git\` is not a git repository.`);
+      if (!sourceAllowed(entry.source.git, reg.location))
+        throw new RegistryError(`${o4.name}: a remote registry may not point at a repository on this machine.`);
+      const repo = cloneBare(where2.at, fs16.mkdtempSync(path14.join(work, "source-")), `Fetching ${entry.source.git}`);
+      commit = resolveCommit(repo, entry.source.commit, `Finding the commit the registry names in ${entry.source.git}`);
+      source = `${entry.source.git}${entry.source.path === "." ? "" : `, folder ${entry.source.path}`}`;
+      files = stageFromGit(repo, commit, entry.source.path, stage);
+    }
+    if (!files.length)
+      throw new RegistryError(`${o4.name}: the source holds no files${commit ? ` at commit ${commit.slice(0, 12)}` : ""}.`);
+    return { entry, registry: reg.location, source, ...commit ? { commit } : {}, fingerprint: fingerprint2(stage), files, notes: notesOn(stage, files), stage, cleanup };
+  } catch (err) {
+    cleanup();
+    throw err;
+  }
+}
+function notesOn(stage, files) {
+  const notes = [];
+  if (!files.some((f4) => !f4.includes("/") && /^(?:licen[sc]e|copying)/i.test(f4)))
+    notes.push("It holds no LICENSE file, so only the registry's word says what the licence is.");
+  if (files.includes("package.json")) {
+    try {
+      const pkg = JSON.parse(fs16.readFileSync(path14.join(stage, "package.json"), "utf8"));
+      const hooks = ["preinstall", "install", "postinstall", "prepare"].filter((k2) => pkg.scripts?.[k2]);
+      if (hooks.length)
+        notes.push(`package.json has install scripts (${hooks.join(", ")}). cmtk does not run them, but npm install would.`);
+      const deps = Object.keys(pkg.dependencies ?? {});
+      if (deps.length)
+        notes.push(`It needs ${deps.length} npm package${deps.length === 1 ? "" : "s"} (${deps.slice(0, 5).join(", ")}${deps.length > 5 ? ", \u2026" : ""}). cmtk does not install them, and did not check them.`);
+    } catch {
+      notes.push("Its package.json cannot be read.");
+    }
+  }
+  const runnable = files.filter((f4) => /\.(?:exe|dll|so|dylib|node|wasm|jar|class|bat|cmd|ps1|sh)$/i.test(f4));
+  if (runnable.length)
+    notes.push(`It holds ready-to-run files you cannot read as source: ${runnable.slice(0, 5).join(", ")}${runnable.length > 5 ? ", \u2026" : ""}.`);
+  return notes;
+}
+function describeInstall(p4) {
+  const e6 = p4.entry;
+  return [
+    `Adapter ${e6.name} from registry ${p4.registry}`,
+    `  Source:   ${p4.source}`,
+    `  Pin:      ${p4.commit ? `commit ${p4.commit}` : "no commit, because a plain folder has no history; the fingerprint below is the pin"}`,
+    `  Version:  ${e6.version ?? "not stated"}`,
+    `  Licence:  ${e6.licence} (as the registry states it)`,
+    `  Owner:    ${e6.owner}`,
+    `  Level:    ${e6.level} (as the registry states it)`,
+    `  Kinds:    ${e6.kinds.join(", ")}; language ${e6.language}`,
+    `  Files:    ${p4.files.length}: ${p4.files.slice(0, 12).join(", ")}${p4.files.length > 12 ? ", \u2026" : ""}`,
+    `  Print:    ${p4.fingerprint}`,
+    ...p4.notes.map((n3) => `  Note:     ${n3}`),
+    "",
+    "This is someone else's code. Nothing has been run yet, and cmtk has not reviewed it.",
+    "Once installed, it runs with your rights whenever you run `cmtk adapter check`, `run` or `compare`."
+  ];
+}
+var installedFile = (root) => path14.join(root, "adapters", "installed.yaml");
+function loadInstalled(root) {
+  const f4 = installedFile(root);
+  if (!fs16.existsSync(f4))
+    return {};
+  let doc;
+  try {
+    doc = import_yaml5.default.parse(fs16.readFileSync(f4, "utf8"));
+  } catch (err) {
+    throw new RegistryError(`adapters/installed.yaml is not valid YAML: ${err.message.split("\n")[0]}`);
+  }
+  return doc?.adapters ?? {};
+}
+function commitInstall(p4, root, approvedBy, date) {
+  const e6 = p4.entry;
+  const to = path14.join(root, "adapters", e6.name);
+  if (fs16.existsSync(to))
+    throw new RegistryError(`adapters/${e6.name} appeared while you were reading. Nothing was changed.`);
+  if (fingerprint2(p4.stage) !== p4.fingerprint)
+    throw new RegistryError("The fetched files changed while you were reading. Nothing was installed.");
+  const record = {
+    ...e6.version ? { version: e6.version } : {},
+    ...p4.commit ? { commit: p4.commit } : {},
+    fingerprint: p4.fingerprint,
+    level: e6.level,
+    kinds: e6.kinds,
+    language: e6.language,
+    licence: e6.licence,
+    owner: e6.owner,
+    registry: p4.registry,
+    source: p4.source,
+    approved_by: approvedBy,
+    date
+  };
+  const all = { ...loadInstalled(root), [e6.name]: record };
+  const f4 = installedFile(root);
+  const tmp = `${f4}.${process.pid}.tmp`;
+  fs16.writeFileSync(tmp, `# Written by \`cmtk adapter add\`, once a person said yes. Each entry pins what was installed.
+${import_yaml5.default.stringify({ adapters: all }, { lineWidth: 0 })}`, "utf8");
+  fs16.renameSync(p4.stage, to);
+  try {
+    fs16.renameSync(tmp, f4);
+  } catch (err) {
+    fs16.rmSync(to, { recursive: true, force: true });
+    fs16.rmSync(tmp, { force: true });
+    throw err;
+  }
+  return record;
+}
+function listAdapters(root, registered) {
+  const dir = path14.join(root, "adapters");
+  const installed = loadInstalled(root);
+  const shippedFile = path14.join(dir, "registry.yaml");
+  const shipped = fs16.existsSync(shippedFile) ? parseRegistry(fs16.readFileSync(shippedFile, "utf8"), "adapters/registry.yaml", { allowCore: true }) : [];
+  const folders = fs16.existsSync(dir) ? fs16.readdirSync(dir, { withFileTypes: true }).filter((e6) => e6.isDirectory() && !e6.name.startsWith(".")).map((e6) => e6.name) : [];
+  const rows = [{ name: "http", level: "core", state: "built in", registered: true, origin: "the toolkit" }];
+  for (const name of [.../* @__PURE__ */ new Set([...folders, ...Object.keys(installed), ...Object.keys(registered)])].sort()) {
+    const has = folders.includes(name);
+    const reg = Object.hasOwn(registered, name);
+    const rec = Object.hasOwn(installed, name) ? installed[name] : void 0;
+    if (rec && typeof rec === "object") {
+      rows.push({
+        name,
+        level: LEVELS.includes(rec.level) ? rec.level : "none",
+        registered: reg,
+        origin: `${rec.source}, approved by ${rec.approved_by} on ${rec.date}`,
+        state: !has ? "MISSING" : fingerprint2(path14.join(dir, name)) === rec.fingerprint ? "ok" : "CHANGED since install",
+        ...rec.commit ? { commit: rec.commit } : {},
+        ...rec.version ? { version: rec.version } : {},
+        licence: rec.licence,
+        owner: rec.owner
+      });
+      continue;
+    }
+    const entry = shipped.find((e6) => e6.name === name);
+    if (has && entry)
+      rows.push({ name, level: entry.level, state: "ships here", registered: reg, origin: "listed in adapters/registry.yaml", licence: entry.licence, owner: entry.owner });
+    else if (has)
+      rows.push({ name, level: "none", state: "written here", registered: reg, origin: "not from a registry" });
+    else
+      rows.push({ name, level: "none", state: "no folder", registered: reg, origin: "only in cmtk.yaml" });
+  }
+  return rows;
+}
+function describeList(rows) {
+  const table = [["NAME", "LEVEL", "STATE", "IN CMTK.YAML", "PIN", "ORIGIN"], ...rows.map((r6) => [r6.name, r6.level, r6.state, r6.registered ? "yes" : "no", r6.commit ? r6.commit.slice(0, 12) : "-", r6.origin])];
+  const width = table[0].map((_2, i8) => Math.max(...table.map((t3) => t3[i8].length)));
+  return table.map((t3) => t3.map((c4, i8) => i8 === t3.length - 1 ? c4 : c4.padEnd(width[i8])).join("  "));
+}
+
 // packages/cli/dist/main.js
 process.removeAllListeners("warning");
 process.on("warning", (w2) => {
   if (w2.name !== "ExperimentalWarning")
     console.error(`${w2.name}: ${w2.message}`);
 });
-var HERE = path14.dirname(fileURLToPath(import.meta.url));
-var VERSION = true ? "0.5.2" : JSON.parse(fs16.readFileSync(path14.join(HERE, "..", "package.json"), "utf8")).version;
+var HERE = path15.dirname(fileURLToPath(import.meta.url));
+var VERSION = true ? "0.5.2" : JSON.parse(fs17.readFileSync(path15.join(HERE, "..", "package.json"), "utf8")).version;
 var HELP = `cmtk ${VERSION}: test any system from its requirements, and prove a migrated system behaves like the old one.
 
 Usage:
@@ -21327,6 +21818,9 @@ Usage:
   cmtk signoff run|compare                                          a person signs a report, at a terminal (never an agent)
   cmtk adapter new <name> [--lang node|csharp]                      write a new adapter from a template (default: node)
   cmtk adapter check <name> [--target <name>]                       the conformance kit, on a dummy target or one from cmtk.yaml
+  cmtk adapter add <name> [--registry <name, url or folder>] [--pin <tag, branch or commit>]
+                                                                    a person installs an adapter from a registry, at a terminal (never an agent)
+  cmtk adapter list                                                 the adapters here, and each one's level
 
 Options:
   --manifest <file>   default: cmtk.yaml in the current folder
@@ -21356,7 +21850,9 @@ function printReport(r6, json, manifestRoot, evidence) {
     })() : c4.why ?? "";
     console.log(`  ${c4.known_issues ? `FAIL (known issue ${c4.known_issues.join(", ")})` : c4.result} ${c4.id} ${c4.name}: ${first}`);
   }
-  const report = path14.relative(process.cwd(), path14.join(manifestRoot, evidence, r6.mode, "REPORT.md")) || "REPORT.md";
+  for (const n3 of r6.no_adapter ?? [])
+    console.log(`  No adapter for surface ${n3.surface}, so nothing was sent for: ${n3.cases.join(", ")}`);
+  const report = path15.relative(process.cwd(), path15.join(manifestRoot, evidence, r6.mode, "REPORT.md")) || "REPORT.md";
   console.log(`Report: ${report}`);
   console.log(r6.reason);
   console.log(`Next: ${r6.next}`);
@@ -21405,6 +21901,8 @@ async function main(argv) {
       "only-rows": { type: "string" },
       "except-rows": { type: "string" },
       lang: { type: "string" },
+      registry: { type: "string" },
+      pin: { type: "string" },
       help: { type: "boolean", short: "h", default: false },
       version: { type: "boolean", short: "v", default: false }
     }
@@ -21418,14 +21916,14 @@ async function main(argv) {
     console.log(HELP);
     return 0;
   }
-  const manifestFile = path14.resolve(values.manifest);
+  const manifestFile = path15.resolve(values.manifest);
   const only = values.only ? values.only.split(",").map((s4) => s4.trim()).filter(Boolean) : void 0;
   switch (cmd) {
     case "init": {
       if (!values.candidate)
         throw new UsageError("`cmtk init` needs --candidate <url> (and --legacy <url> to compare two systems).");
       const written = initProject(manifestFile, { candidate: values.candidate, legacy: values.legacy, system: values.system });
-      console.log(`Wrote ${written.map((f4) => path14.relative(process.cwd(), f4)).join(", ")}.`);
+      console.log(`Wrote ${written.map((f4) => path15.relative(process.cwd(), f4)).join(", ")}.`);
       console.log(`Next: edit the example case for your system, then \`cmtk run\`${values.legacy ? " and `cmtk compare`" : ""}.`);
       return 0;
     }
@@ -21434,13 +21932,13 @@ async function main(argv) {
         throw new UsageError("`cmtk import-har` needs at least one .har file.");
       const manifest = loadManifest(manifestFile);
       const existing = loadCases(manifest);
-      const res = importHar(rest.map((f4) => path14.resolve(f4)), { include: values.include, exclude: values.exclude, existing, draftExpect: values["draft-expect"] });
+      const res = importHar(rest.map((f4) => path15.resolve(f4)), { include: values.include, exclude: values.exclude, existing, draftExpect: values["draft-expect"] });
       const out = inside(manifest, values.out ?? "cmtk/cases/har.yaml");
-      if (fs16.existsSync(out))
-        throw new UsageError(`${path14.relative(process.cwd(), out)} already exists; pass --out <new file>.`);
-      fs16.mkdirSync(path14.dirname(out), { recursive: true });
-      fs16.writeFileSync(out, casesToYaml(res.cases, values["draft-expect"] ? "Imported from HAR recordings. Each drafted expect: is what the system answered, not the requirement: `cmtk review` confirms it, and `cmtk run` skips the case until then." : void 0), "utf8");
-      console.log(`Added ${res.cases.length} cases to ${path14.relative(process.cwd(), out)}; skipped ${res.skipped} (static files, filtered or duplicates).`);
+      if (fs17.existsSync(out))
+        throw new UsageError(`${path15.relative(process.cwd(), out)} already exists; pass --out <new file>.`);
+      fs17.mkdirSync(path15.dirname(out), { recursive: true });
+      fs17.writeFileSync(out, casesToYaml(res.cases, values["draft-expect"] ? "Imported from HAR recordings. Each drafted expect: is what the system answered, not the requirement: `cmtk review` confirms it, and `cmtk run` skips the case until then." : void 0), "utf8");
+      console.log(`Added ${res.cases.length} cases to ${path15.relative(process.cwd(), out)}; skipped ${res.skipped} (static files, filtered or duplicates).`);
       if (res.droppedHeaders.length)
         console.log(`Dropped these headers from every case: ${res.droppedHeaders.join(", ")}. Credentials come from headers_from_env at run time.`);
       if (res.redacted.length)
@@ -21466,12 +21964,12 @@ async function main(argv) {
       const manifest = loadManifest(manifestFile);
       let any = false;
       for (const mode of ["run", "compare"]) {
-        const dir = path14.join(manifest.root, manifest.evidence, mode);
-        const f4 = path14.join(dir, "REPORT.json");
-        if (!fs16.existsSync(f4))
+        const dir = path15.join(manifest.root, manifest.evidence, mode);
+        const f4 = path15.join(dir, "REPORT.json");
+        if (!fs17.existsSync(f4))
           continue;
         any = true;
-        const r6 = JSON.parse(fs16.readFileSync(f4, "utf8"));
+        const r6 = JSON.parse(fs17.readFileSync(f4, "utf8"));
         console.log(`${mode}: ${r6.verdict} on ${r6.date}${r6.settings ? ` from ${r6.settings.manifest}` : ""}, ${describeSignoff(signoffState(dir))}`);
       }
       if (!any)
@@ -21492,7 +21990,7 @@ async function main(argv) {
         throw new UsageError("`cmtk defects` needs `run` or `compare`.");
       const m4 = loadManifest(manifestFile);
       const { file, drafts } = draftDefects(m4, mode);
-      console.log(drafts.length ? `Drafted ${drafts.length} defect${drafts.length === 1 ? "" : "s"} in ${path14.relative(process.cwd(), path14.join(m4.root, file))}.` : `Nothing failed, so there are no defects to draft (${file}).`);
+      console.log(drafts.length ? `Drafted ${drafts.length} defect${drafts.length === 1 ? "" : "s"} in ${path15.relative(process.cwd(), path15.join(m4.root, file))}.` : `Nothing failed, so there are no defects to draft (${file}).`);
       if (drafts.length)
         console.log("Next: a person checks each draft and files it in your tracker.");
       return 0;
@@ -21507,14 +22005,14 @@ async function main(argv) {
       console.log(`Boundaries for ${discovery.system}: ${describeDiscovery(discovery)}`);
       for (const b2 of discovery.boundaries.filter((x2) => !x2.covered_by))
         console.log(`  uncovered ${b2.kind} ${b2.direction}: ${b2.name}${b2.where ? ` (${b2.where})` : ""}`);
-      console.log(`Inventory: ${path14.relative(process.cwd(), path14.join(m4.root, file))}`);
-      console.log(discovery.boundaries.some((x2) => !x2.covered_by) ? "Next: for each uncovered kind, add an adapter (`cmtk adapter new <name>`, then `covers:` in cmtk.yaml) or have a person record why it is out of scope." : "Next: write cases for each boundary, then `cmtk compare`.");
+      console.log(`Inventory: ${path15.relative(process.cwd(), path15.join(m4.root, file))}`);
+      console.log(discovery.boundaries.some((x2) => !x2.covered_by) ? "Next: for each uncovered kind, add an adapter (`cmtk adapter new <name>` or `cmtk adapter add <name>`, then `covers:` in cmtk.yaml) or have a person record why it is out of scope." : "Next: write cases for each boundary, then `cmtk compare`.");
       return 0;
     }
     case "probe":
       return probe(manifestFile, rest, values.surface);
     case "adapter":
-      return adapterCommand(rest, manifestFile, values.lang, values.target);
+      return adapterCommand(rest, manifestFile, values);
     case "data":
       return dataCommand(rest, manifestFile, values);
     default:
@@ -21528,11 +22026,11 @@ async function signoff(manifestFile, mode) {
     throw new UsageError("Sign-off is for a person at a keyboard: run `cmtk signoff` in a terminal yourself. Agents and scripts do not sign.");
   }
   const manifest = loadManifest(manifestFile);
-  const dir = path14.join(manifest.root, manifest.evidence, mode);
-  const json = path14.join(dir, "REPORT.json");
-  if (!fs16.existsSync(json))
+  const dir = path15.join(manifest.root, manifest.evidence, mode);
+  const json = path15.join(dir, "REPORT.json");
+  if (!fs17.existsSync(json))
     throw new UsageError(`There is no ${mode} report yet. Run \`cmtk ${mode}\` first.`);
-  const report = JSON.parse(fs16.readFileSync(json, "utf8"));
+  const report = JSON.parse(fs17.readFileSync(json, "utf8"));
   console.log(`${mode} report for ${report.system}: ${report.verdict} (${report.date}). ${report.reason}`);
   if (report.settings) {
     const st2 = report.settings;
@@ -21545,7 +22043,7 @@ async function signoff(manifestFile, mode) {
   for (const k2 of report.known_issues ?? [])
     if (k2.state === "still fails")
       console.log(`Known issue ${k2.id} still fails on case ${k2.case}: accepted by ${k2.accepted_by}. Your signature covers this report with that failure in it. ${k2.reason}`);
-  console.log(`Read it first: ${path14.relative(process.cwd(), path14.join(dir, "REPORT.md"))}`);
+  console.log(`Read it first: ${path15.relative(process.cwd(), path15.join(dir, "REPORT.md"))}`);
   const rl = readline2.createInterface({ input: process.stdin, output: process.stdout });
   try {
     const name = await rl.question("Your full name: ");
@@ -21600,10 +22098,10 @@ async function review(manifestFile) {
       ...drafts.map((c4) => async () => {
         if (done.has(c4.id))
           return true;
-        const { file: _file, draft: _d, ...shown } = c4;
+        const { file: _file, draft: _d, ...shown2 } = c4;
         console.log(`
 Draft case ${c4.id} in ${c4.file}:
-${import_yaml5.default.stringify(shown, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
+${import_yaml6.default.stringify(shown2, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
         const rest = drafts.filter((d4) => d4.file === c4.file && !done.has(d4.id) && !d4.expect_draft);
         let v2 = await ask(!c4.expect_draft && rest.length > 1);
         while (v2 === "A") {
@@ -21643,10 +22141,10 @@ ${import_yaml5.default.stringify(shown, { lineWidth: 0 }).trimEnd().replace(/^/g
         return true;
       }),
       ...drafted.map((c4) => async () => {
-        const { file: _file, expect_draft: _d, ...shown } = c4;
+        const { file: _file, expect_draft: _d, ...shown2 } = c4;
         console.log(`
 Drafted expectation for case ${c4.id} in ${c4.file}. It is what the system answered in the recording; accept it only if that is what should happen:
-${import_yaml5.default.stringify(shown, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
+${import_yaml6.default.stringify(shown2, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
         const v2 = await ask();
         if (v2 === "q")
           return false;
@@ -21736,27 +22234,33 @@ async function probe(manifestFile, args, surface = "http") {
   }
 }
 function writeTemplate(tpl, dir, name) {
-  fs16.mkdirSync(dir, { recursive: true });
-  for (const e6 of fs16.readdirSync(tpl, { withFileTypes: true })) {
-    const to = path14.join(dir, e6.name === "gitignore" ? ".gitignore" : e6.name.replaceAll("__NAME__", name));
+  fs17.mkdirSync(dir, { recursive: true });
+  for (const e6 of fs17.readdirSync(tpl, { withFileTypes: true })) {
+    const to = path15.join(dir, e6.name === "gitignore" ? ".gitignore" : e6.name.replaceAll("__NAME__", name));
     if (e6.isDirectory())
-      writeTemplate(path14.join(tpl, e6.name), to, name);
+      writeTemplate(path15.join(tpl, e6.name), to, name);
     else
-      fs16.writeFileSync(to, fs16.readFileSync(path14.join(tpl, e6.name), "utf8").replaceAll("__NAME__", name), "utf8");
+      fs17.writeFileSync(to, fs17.readFileSync(path15.join(tpl, e6.name), "utf8").replaceAll("__NAME__", name), "utf8");
   }
 }
-async function adapterCommand(args, manifestFile, lang = "node", targetName) {
+async function adapterCommand(args, manifestFile, values) {
   const [sub, name] = args;
+  const lang = values.lang ?? "node";
+  if (sub === "list")
+    return adapterList(manifestFile, values.json === true);
+  if (sub === "add" && (!process.stdin.isTTY || !process.stdout.isTTY)) {
+    throw new UsageError("Installing an adapter runs someone else's code, so a person says yes at a keyboard: run `cmtk adapter add` in a terminal yourself. Agents and scripts do not install.");
+  }
   if (!name || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(name) || name === "http")
     throw new UsageError("Give the adapter a name of letters, digits, '.', '-' and '_' (not http, which is built in).");
-  const root = path14.dirname(manifestFile);
-  const dir = path14.join(root, "adapters", name);
+  const root = path15.dirname(manifestFile);
+  const dir = path15.join(root, "adapters", name);
   if (sub === "new") {
     if (lang !== "node" && lang !== "csharp")
       throw new UsageError(`--lang must be node or csharp, not ${lang}.`);
-    if (fs16.existsSync(dir))
+    if (fs17.existsSync(dir))
       throw new UsageError(`adapters/${name} already exists.`);
-    writeTemplate(path14.join(HERE, "..", "templates", `adapter-${lang}`), dir, name);
+    writeTemplate(path15.join(HERE, "..", "templates", `adapter-${lang}`), dir, name);
     if (lang === "csharp") {
       console.log(`Wrote adapters/${name}/. Next: write Run() in Adapter.cs, then \`dotnet build -c Release adapters/${name}\` and \`cmtk adapter check ${name}\`.`);
       console.log(`Register it in cmtk.yaml:
@@ -21771,50 +22275,110 @@ async function adapterCommand(args, manifestFile, lang = "node", targetName) {
     return 0;
   }
   if (sub === "check")
-    return adapterCheck(name, dir, manifestFile, targetName);
-  throw new UsageError("`cmtk adapter` takes `new <name>` or `check <name>`.");
+    return adapterCheck(name, dir, manifestFile, values.target);
+  if (sub === "add")
+    return adapterAdd(name, root, manifestFile, values.registry, values.pin);
+  throw new UsageError("`cmtk adapter` takes `new <name>`, `check <name>`, `add <name>` or `list`.");
+}
+function adapterList(manifestFile, json) {
+  const registered = fs17.existsSync(manifestFile) ? loadManifest(manifestFile).adapters : {};
+  const rows = listAdapters(path15.dirname(manifestFile), registered);
+  if (json) {
+    console.log(JSON.stringify(rows, null, 2));
+    return 0;
+  }
+  for (const line of describeList(rows))
+    console.log(line);
+  console.log("\nLevels: experimental passes the conformance kit; verified was used on one real project; core ships with the toolkit and has real use behind it. For an adapter from a registry, the level is what that registry says: `cmtk adapter check <name>` proves the kit here.");
+  const changed = rows.filter((r6) => r6.state === "CHANGED since install" || r6.state === "MISSING").map((r6) => r6.name);
+  if (changed.length)
+    console.log(`Warning: ${changed.join(", ")} no longer match what a person approved. Read the changes, or remove the folder and its entry in adapters/installed.yaml and add it again.`);
+  return 0;
+}
+var TOOLKIT_ADAPTERS = path15.resolve(HERE, "..", "..", "..", "adapters");
+async function adapterAdd(name, root, manifestFile, registry, pin) {
+  const named = fs17.existsSync(manifestFile) ? loadManifest(manifestFile).adapter_registries : {};
+  const chosen = registry === void 0 ? void 0 : Object.hasOwn(named, registry) ? { list: [named[registry]], base: root } : { list: [registry], base: process.cwd() };
+  if (!chosen && !Object.keys(named).length)
+    throw new UsageError("Name a registry: --registry <url or folder>, or list yours under `adapter_registries:` in cmtk.yaml. cmtk has no default registry, so it never fetches from somewhere you did not name.");
+  const prepared = prepareInstall({ name, root, registries: chosen?.list ?? Object.values(named), base: chosen?.base ?? root, pin, toolkitAdapters: TOOLKIT_ADAPTERS });
+  const rl = readline2.createInterface({ input: process.stdin, output: process.stdout });
+  const ask = (q2) => new Promise((resolve2) => {
+    rl.once("close", () => resolve2(null));
+    rl.question(q2).then((a4) => resolve2(a4), () => resolve2(null));
+  });
+  try {
+    for (const line of describeInstall(prepared))
+      console.log(line);
+    const person = (await ask("\nYour full name: "))?.trim();
+    if (!person || person.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(person) || /^agent\b/i.test(person)) {
+      console.log("A person's name of up to 100 characters is needed: it goes beside this install. Nothing was installed.");
+      return 3;
+    }
+    const yes = (await ask(`Type yes to install ${name}, anything else to stop: `))?.trim().toLowerCase();
+    if (yes !== "yes") {
+      console.log("Nothing was installed.");
+      return 0;
+    }
+    commitInstall(prepared, root, person, (/* @__PURE__ */ new Date()).toISOString().slice(0, 10));
+    console.log(`Installed adapters/${name}${prepared.commit ? `, pinned to commit ${prepared.commit}` : `, pinned to ${prepared.fingerprint}`}. Recorded in adapters/installed.yaml.`);
+    const covers3 = prepared.entry.kinds.filter((k2) => BOUNDARY_KINDS.includes(k2));
+    const also = covers3.length ? `, covers: [${covers3.join(", ")}]` : "";
+    if (prepared.files.some((f4) => f4.endsWith(".csproj") && !f4.includes("/"))) {
+      console.log(`Next: read the code, then \`dotnet build -c Release adapters/${name}\` and \`cmtk adapter check ${name}\`. Register the built program in cmtk.yaml; its README shows how.`);
+    } else if (prepared.files.includes("index.mjs")) {
+      console.log(`Next: read the code, then \`cmtk adapter check ${name}\`. Register it in cmtk.yaml:
+  adapters:
+    ${name}: { command: node, args: [adapters/${name}/index.mjs]${also} }`);
+    } else
+      console.log(`Next: read the code and its README, register it in cmtk.yaml, then \`cmtk adapter check ${name}\`.`);
+    return 0;
+  } finally {
+    rl.close();
+    prepared.cleanup();
+  }
 }
 function builtCsharpAdapter(name, dir) {
-  const top = fs16.existsSync(dir) ? fs16.readdirSync(dir) : [];
+  const top = fs17.existsSync(dir) ? fs17.readdirSync(dir) : [];
   const project = top.find((f4) => f4.endsWith(".csproj"));
   if (!project)
     return void 0;
   const stem = project.slice(0, -".csproj".length);
-  const release = path14.join(dir, "bin", "Release");
-  const frameworks = fs16.existsSync(release) ? fs16.readdirSync(release) : [];
-  const built = frameworks.map((f4) => path14.join(release, f4, `${stem}.dll`)).find((f4) => fs16.existsSync(f4));
+  const release = path15.join(dir, "bin", "Release");
+  const frameworks = fs17.existsSync(release) ? fs17.readdirSync(release) : [];
+  const built = frameworks.map((f4) => path15.join(release, f4, `${stem}.dll`)).find((f4) => fs17.existsSync(f4));
   const build = `Run: dotnet build -c Release adapters/${name}`;
   if (!built)
     throw new UsageError(`adapters/${name} has not been built. ${build}`);
   const code = top.filter((f4) => f4.endsWith(".cs") || f4.endsWith(".csproj"));
-  const newer = code.find((f4) => fs16.statSync(path14.join(dir, f4)).mtimeMs > fs16.statSync(built).mtimeMs);
+  const newer = code.find((f4) => fs17.statSync(path15.join(dir, f4)).mtimeMs > fs17.statSync(built).mtimeMs);
   if (newer)
     throw new UsageError(`adapters/${name}/${newer} is newer than the build. ${build}`);
   return { command: "dotnet", args: [built] };
 }
 async function adapterCheck(name, dir, manifestFile, targetName) {
   let spec;
-  if (targetName !== void 0 && !fs16.existsSync(manifestFile))
+  if (targetName !== void 0 && !fs17.existsSync(manifestFile))
     throw new UsageError(`--target ${targetName} needs a cmtk.yaml that sets it; ${manifestFile} does not exist.`);
-  if (fs16.existsSync(manifestFile)) {
+  if (fs17.existsSync(manifestFile)) {
     const m4 = loadManifest(manifestFile);
     if (m4.adapters[name])
       spec = { command: m4.adapters[name].command, args: m4.adapters[name].args ?? [] };
   }
-  spec ??= builtCsharpAdapter(name, dir) ?? { command: process.execPath, args: [path14.join(dir, "index.mjs")] };
-  const samplesFile = path14.join(dir, "samples", "cases.yaml");
-  const doc = fs16.existsSync(samplesFile) ? readStructured(samplesFile) : {};
+  spec ??= builtCsharpAdapter(name, dir) ?? { command: process.execPath, args: [path15.join(dir, "index.mjs")] };
+  const samplesFile = path15.join(dir, "samples", "cases.yaml");
+  const doc = fs17.existsSync(samplesFile) ? readStructured(samplesFile) : {};
   const samples = doc.cases ?? [];
   const secret = `cmtk-check-${Math.random().toString(36).slice(2)}`;
   let target2 = { ...doc.check_target, name: "check", base_url: "http://127.0.0.1:9" };
   if (targetName !== void 0) {
     const named = loadManifest(manifestFile).targets[targetName];
     if (!named)
-      throw new UsageError(`--target ${targetName} is not in the targets of ${path14.basename(manifestFile)}.`);
+      throw new UsageError(`--target ${targetName} is not in the targets of ${path15.basename(manifestFile)}.`);
     target2 = named;
   }
   const checks = [];
-  const adapter = processAdapter(name, { ...spec, timeout_s: 60 }, path14.dirname(manifestFile));
+  const adapter = processAdapter(name, { ...spec, timeout_s: 60 }, path15.dirname(manifestFile));
   try {
     const d4 = await adapter.describe().catch((err) => ({ error: err.message }));
     checks.push(["answers describe with a name and its kinds", typeof d4?.name === "string" && Array.isArray(d4?.kinds), d4?.error ?? 'reply {"name":"\u2026","kinds":["\u2026"],"settings":[]}']);
@@ -21837,7 +22401,7 @@ async function adapterCheck(name, dir, manifestFile, targetName) {
   return failed2 ? 1 : 0;
 }
 main(process.argv.slice(2)).then((code) => process.exit(code), (err) => {
-  if (err instanceof UsageError || err instanceof ManifestError || err instanceof ConfigError || err instanceof PathError || err instanceof SignoffError)
+  if (err instanceof UsageError || err instanceof ManifestError || err instanceof ConfigError || err instanceof PathError || err instanceof SignoffError || err instanceof RegistryError)
     console.error(`cmtk: ${err.message}`);
   else
     console.error(`cmtk: ${err?.stack ?? err}`);
