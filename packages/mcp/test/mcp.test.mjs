@@ -85,7 +85,7 @@ test("the plugin: bundled server and command, one version everywhere, nine skill
     await client.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(plugin, "server", "cmtk-mcp.mjs")] }));
     try {
         const names = (await client.listTools()).tools.map((t) => t.name);
-        assert.equal(names.length, 19);
+        assert.equal(names.length, 24);
         assert.ok(!names.some((n) => /sign|review|approve|accept|decide/.test(n)));
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cmtk-plugin-"));
         const init = await client.callTool({ name: "cmtk_init", arguments: { manifest: path.join(dir, "cmtk.yaml"), candidate: "http://127.0.0.1:9" } });

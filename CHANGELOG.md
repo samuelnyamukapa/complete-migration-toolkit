@@ -38,7 +38,7 @@ Everything below passes its tests in CI on Windows and Linux unless it says othe
 - **Data files (#50):** CSV options, edge files, copybooks and EBCDIC, and `cmtk data diff`, which compares by meaning. PDF and Word are not done.
 - **XSD and SOAP (#52):** rows from an XSD with patterns respected, XML negatives, and SOAP envelopes.
 - **Seeding (#51):** `cmtk data seed` and `reconcile`, from a DDL script, with virtual keys and load order. The live catalogue reader and the mapping step are not done.
-- **`/cmtk:data` (#53):** proposals wait for `cmtk review`, and disagreements are findings. `cmtk data traffic` reads a HAR.
+- **`/cmtk:data` (#53):** proposals wait for `cmtk review`, and disagreements are findings. `cmtk data traffic` compares a HAR with a schema.
 
 ### Shadow traffic, trends, release
 
