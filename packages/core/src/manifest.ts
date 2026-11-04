@@ -106,6 +106,7 @@ export function loadManifest(file: string): Manifest {
         insecure_tls: raw.insecure_tls === true,
         compare_only_surfaces: compareOnly,
         adapters,
+        adapter_registries: registriesOf(raw.adapter_registries),
         root: path.dirname(path.resolve(file)),
         file: path.resolve(file),
     };
@@ -136,6 +137,18 @@ function positive(v: unknown, key: string, fallback: number): number {
     const n = Number(v);
     if (!Number.isFinite(n) || n <= 0) throw new ManifestError(`\`${key}\` must be a number of seconds above 0.`);
     return n;
+}
+
+function registriesOf(raw: unknown): Record<string, string> {
+    if (raw === undefined || raw === null) return {};
+    if (typeof raw !== "object" || Array.isArray(raw)) throw new ManifestError("adapter_registries must map a name to a git address or a folder.");
+    for (const [name, at] of Object.entries(raw)) {
+        if (!NAME.test(name)) throw new ManifestError(`adapter_registries: the name ${JSON.stringify(name)} must be letters, digits, '.', '-' and '_'.`);
+        if (typeof at !== "string" || !at.trim()) throw new ManifestError(`adapter_registries.${name} must be a git address or a folder.`);
+        // The value is not repeated: it may be the very secret this refuses. Git's credential helper or an ssh key carries it instead.
+        if (/^https?:\/\/[^/]*@|^[a-z][a-z0-9+.-]*:\/\/[^/@]*:[^/@]*@/i.test(at)) throw new ManifestError(`adapter_registries.${name} holds a credential. Remove it from cmtk.yaml, and let git's credential helper or your ssh key supply it.`);
+    }
+    return raw as Record<string, string>;
 }
 
 function adaptersOf(raw: unknown): Manifest["adapters"] {

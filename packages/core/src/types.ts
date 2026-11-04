@@ -77,6 +77,8 @@ export interface Manifest {
     compare_only_surfaces: string[];
     /** Adapters beyond the built-in http one: surface name to the program that runs it. */
     adapters: Record<string, { command: string; args?: string[]; timeout_s?: number; covers?: string[] }>;
+    /** Registries `cmtk adapter add` looks in: name to a git address or a folder. Often private. */
+    adapter_registries: Record<string, string>;
     /** Folder the manifest lives in; every relative path is resolved against it. */
     root: string;
     /** The manifest file itself. */
@@ -284,6 +286,8 @@ export interface CaseOutcome {
     before?: BeforeOutcome;
     requirement: string[];
     surface: string;
+    /** No adapter drives this case's surface, so nothing was sent. */
+    no_adapter?: boolean;
     match?: MatchLevel;
     result: CaseResult;
     why?: string;
@@ -366,6 +370,8 @@ export interface Report {
     excluded_drafts?: number;
     /** cmtk run: cases on a surface listed under compare_only_surfaces. */
     excluded_compare_only?: number;
+    /** Cases whose surface has no adapter, so nothing was sent for them. They count as errors, so the report can't pass. */
+    no_adapter?: { surface: string; cases: string[] }[];
     /** cmtk compare: what the comparison covered, when a target lists its surfaces. */
     scope?: ReportScope;
     /** The settings that produced this report, so a signer sees exactly what was hidden or approved. */

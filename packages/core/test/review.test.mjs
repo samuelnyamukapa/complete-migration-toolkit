@@ -159,8 +159,11 @@ test("bad input stops before evidence is touched, and a failing case never ends 
         await assert.rejects(() => run(manifest("headers_from_env: { Authorization: CMTK_BAD }\n")), /CMTK_BAD holds a line break/);
         delete process.env.CMTK_BAD;
         write(dir, "cmtk/cases/b.yaml", "cases:\n  - { id: Q, surface: queue, request: GET /q, expect: { status: 200 } }\n");
-        await assert.rejects(() => run(manifest()), /surface "queue"/);
-        assert.ok(fs.existsSync(kept), "the last evidence is still there");
+        // A case with no adapter does not stop the run: the report names it, and it can't pass (#24).
+        const gap = await run(manifest());
+        assert.equal(gap.verdict, "INCOMPLETE");
+        assert.deepEqual(gap.no_adapter, [{ surface: "queue", cases: ["Q"] }]);
+        assert.ok(fs.existsSync(kept), "the report is written");
 
         write(dir, "cmtk/cases/b.yaml", `cases:
   - { id: REGEX, request: GET /a, expect: { json: { "$.name": { matches: "([" } } } }

@@ -82,15 +82,18 @@ function selectCases(manifest: Manifest, mode: "run" | "compare", only?: string[
 
 function pick(manifest: Manifest, only?: string[]): Case[] {
     const all = loadCases(manifest);
-    for (const c of all) {
-        const s = c.surface ?? "http";
-        if (s !== "http" && !manifest.adapters[s]) throw new ManifestError(`Case ${c.id} uses surface "${s}", which has no adapter. Add it under \`adapters:\` in cmtk.yaml, or run \`cmtk adapter new ${s}\`.`);
-    }
     if (!only?.length) return all;
     const ids = new Set(all.map((c) => c.id));
     const unknown = only.filter((i) => !ids.has(i));
     if (unknown.length) throw new ManifestError(`Unknown case ids: ${unknown.join(", ")}.`);
     return all.filter((c) => only.includes(c.id));
+}
+
+/** A gap to show, not a reason to stop: the report names the case, and counts it as an error so the result can't pass. */
+function noAdapter(c: Case, manifest: Manifest): Pick<CaseOutcome, "result" | "why" | "no_adapter"> | undefined {
+    const s = c.surface ?? "http";
+    if (s === "http" || Object.hasOwn(manifest.adapters, s)) return undefined;
+    return { result: "ERROR", no_adapter: true, why: `surface "${s}" has no adapter, so nothing was sent. Add it under \`adapters:\` in cmtk.yaml: \`cmtk adapter new ${s}\` writes one, and \`cmtk adapter add ${s}\` lets a person install one` };
 }
 
 const requirementsOf = (c: Case) => (c.requirement === undefined ? [] : Array.isArray(c.requirement) ? c.requirement.map(String) : [String(c.requirement)]);
@@ -222,6 +225,8 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
         try {
             for (const c of cases) {
                 const b = base(c);
+                const gap = noAdapter(c, manifest);
+                if (gap) { out.push({ ...b, ...gap }); continue; }
                 const missing = lacking(b.surface, t);
                 if (missing.length) { out.push({ ...b, result: "SKIPPED", why: `not run: ${hasNo(missing, b.surface)}` }); continue; }
                 if (c.expect_draft) { out.push({ ...b, result: "SKIPPED", why: EXPECT_DRAFT_WHY }); continue; }
@@ -291,6 +296,8 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
             }
             for (const c of cases) {
                 const b: Omit<CaseOutcome, "result"> & { match: MatchLevel } = { ...base(c), match: matchFor(c, manifest) };
+                const gap = noAdapter(c, manifest);
+                if (gap) { out.push({ ...b, ...gap }); continue; }
                 if (c.draft) { out.push({ ...b, result: "SKIPPED", why: DRAFT_WHY }); continue; }
                 const missing = lacking(b.surface, ref, cand);
                 if (missing.length) { out.push({ ...b, result: "NOT COMPARABLE", why: `not comparable: ${hasNo(missing, b.surface)}` }); continue; }

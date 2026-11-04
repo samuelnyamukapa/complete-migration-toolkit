@@ -82,7 +82,11 @@ export function summarise(x: {
     const stale = (x.known ?? []).filter((k) => k.state === "no longer fails").map((k) => k.id).sort();
     const decided = decide({ ...x, scope }, counts);
     const { verdict, next } = decided;
-    const reason = decided.reason + (scope && !scope.whole ? ` ${scope.statement}` : "") + (x.excludedCompareOnly ? ` ${plural(x.excludedCompareOnly, "case")} on a compare-only surface (${x.compareOnlySurfaces!.join(", ")}) ${x.excludedCompareOnly === 1 ? "was" : "were"} left out: \`cmtk compare\` covers ${x.excludedCompareOnly === 1 ? "it" : "them"}.` : "") + (stale.length ? ` ${stale.length === 1 ? "A known issue no longer fails" : "Known issues no longer fail"} (${stale.join(", ")}): a person removes ${stale.length === 1 ? "it" : "them"} from the ledger.` : "") + (x.excludedDrafts ? ` ${x.excludedDrafts} draft case${x.excludedDrafts === 1 ? " was" : "s were"} left out (--accepted-only).` : "");
+    const gaps = new Map<string, string[]>();
+    for (const c of x.cases) if (c.no_adapter) gaps.set(c.surface, [...(gaps.get(c.surface) ?? []), c.id]);
+    const noAdapter = [...gaps].sort().map(([surface, cases]) => ({ surface, cases }));
+    const gapCount = noAdapter.reduce((n, g) => n + g.cases.length, 0);
+    const reason = decided.reason + (gapCount ? ` ${plural(gapCount, "case")} on a surface with no adapter (${noAdapter.map((g) => g.surface).join(", ")}): nothing was sent for ${gapCount === 1 ? "it" : "them"}.` : "") + (scope && !scope.whole ? ` ${scope.statement}` : "") + (x.excludedCompareOnly ? ` ${plural(x.excludedCompareOnly, "case")} on a compare-only surface (${x.compareOnlySurfaces!.join(", ")}) ${x.excludedCompareOnly === 1 ? "was" : "were"} left out: \`cmtk compare\` covers ${x.excludedCompareOnly === 1 ? "it" : "them"}.` : "") + (stale.length ? ` ${stale.length === 1 ? "A known issue no longer fails" : "Known issues no longer fail"} (${stale.join(", ")}): a person removes ${stale.length === 1 ? "it" : "them"} from the ledger.` : "") + (x.excludedDrafts ? ` ${x.excludedDrafts} draft case${x.excludedDrafts === 1 ? " was" : "s were"} left out (--accepted-only).` : "");
 
     const reqs = new Map<string, { cases: number; passed: number; failed: number; other: number }>();
     for (const c of x.cases) {
@@ -112,6 +116,7 @@ export function summarise(x: {
         partial: x.partial,
         ...(x.excludedDrafts ? { excluded_drafts: x.excludedDrafts } : {}),
         ...(x.excludedCompareOnly ? { excluded_compare_only: x.excludedCompareOnly } : {}),
+        ...(noAdapter.length ? { no_adapter: noAdapter } : {}),
         ...(scope ? { scope } : {}),
         ...(x.settings ? { settings: x.settings } : {}),
         reason,
@@ -208,6 +213,11 @@ export function renderReport(r: Report): string {
         for (const n of r.scope.not_compared) L.push(`- Not compared: ${n.surface}, ${n.cases} case${n.cases === 1 ? "" : "s"}: ${cell(n.why)}`);
         for (const s of r.scope.no_cases) L.push(`- Not compared: ${s}: both targets offer it, and no case compared it`);
         for (const k of r.scope.contracts_not_compared) L.push(`- Not compared: contract ${cell(k)}`);
+        L.push("");
+    }
+    if (r.no_adapter?.length) {
+        L.push("## Cases with no adapter", "", "Nothing was sent for these cases, because no adapter drives their surface. They count as errors, so this report can't pass until each has an adapter.", "");
+        for (const n of r.no_adapter) L.push(`- ${cell(n.surface)}: ${n.cases.map(cell).join(", ")}`);
         L.push("");
     }
     L.push("## Requirements", "", "| Requirement | Cases | Passed | Failed | Not run |", "| --- | --- | --- | --- | --- |");
