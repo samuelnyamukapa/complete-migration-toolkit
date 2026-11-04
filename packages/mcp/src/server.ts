@@ -277,8 +277,9 @@ server.registerTool("cmtk_data_plan", {
         seed: z.number().int().optional(),
         clock: z.string().optional().describe("The fixed date and time every generated date is relative to. Default 2026-01-15T09:30:00Z."),
         locale: z.string().optional().describe("Faker locale for realistic values. Default en_GB."),
+        soap: z.object({ version: z.enum(["1.1", "1.2"]), action: z.string().optional() }).optional().describe("For an XSD: write each row in a SOAP envelope too. A WSDL's operation gives this by itself."),
     },
-}, async (a) => guarded(() => planRecipe(loadManifest(a.manifest), { schema: a.schema, operation: a.operation, id: a.id, seed: a.seed, clock: a.clock, locale: a.locale, draft: true, generators: dataGenerators }),
+}, async (a) => guarded(() => planRecipe(loadManifest(a.manifest), { schema: a.schema, operation: a.operation, id: a.id, seed: a.seed, clock: a.clock, locale: a.locale, draft: true, generators: dataGenerators, ...(a.soap ? { soap: a.soap } : {}) }),
     ({ file, recipe }) => {
         const by = recipe.rows.reduce<Record<string, number>>((acc, r) => ({ ...acc, [r.technique]: (acc[r.technique] ?? 0) + 1 }), {});
         return [`recipe ${recipe.id} written to ${file}: ${recipe.fields.length - 1} fields, ${recipe.rows.length} rows (${Object.entries(by).map(([k, n]) => `${n} ${k}`).join(", ")}), ${recipe.rows.filter(isHappy).length} happy paths.`,

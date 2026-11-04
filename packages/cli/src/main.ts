@@ -60,7 +60,8 @@ Usage:
   cmtk probe <target> "GET /path" [--surface <name>]                send one read-only request and show the answer
   cmtk data plan --schema <file> [--operation "POST /path"] [--id <name>] [--seed <n>] [--clock <iso>] [--locale <loc>]
                                                                     compile a test-data recipe from a JSON Schema or an OpenAPI operation
-                       a copybook (.cpy) works as the schema too: [--record-encoding cp037|ascii]; CSV: [--csv-delimiter ;] [--csv-no-header] [--csv-no-bom] [--csv-lf]
+                       an XSD or a single-file WSDL works as the schema too, with --operation naming an element or an operation, [--soap 1.1|1.2] [--soap-action <uri>];
+                       a copybook (.cpy) too: [--record-encoding cp037|ascii]; CSV: [--csv-delimiter ;] [--csv-no-header] [--csv-no-bom] [--csv-lf]
   cmtk data make <id> [--format json,csv,xlsx,fixed,edge-csv,edge-xlsx,edge-fixed]
                                                                     regenerate the rows from the recipe, check them, write the files
   cmtk data diff <a> <b> --key <col,col> [--as csv|xlsx|fixed] [--epsilon 0.01] [--scrub dates,guids] [--copybook <file>] [--csv-delimiter ;] [--formulas value|formula] [--ignore col,col] [--no-fold-empty]
@@ -181,6 +182,8 @@ async function main(argv: string[]): Promise<number> {
             "keep-values": { type: "boolean", default: false },
             "capture-only": { type: "boolean", default: false },
             "record-encoding": { type: "string" },
+            soap: { type: "string" },
+            "soap-action": { type: "string" },
             "csv-delimiter": { type: "string" },
             "csv-no-header": { type: "boolean", default: false },
             "csv-no-bom": { type: "boolean", default: false },
@@ -667,6 +670,11 @@ main(process.argv.slice(2)).then(
     },
 );
 
+function soapVersion(s: string): "1.1" | "1.2" {
+    if (s !== "1.1" && s !== "1.2") throw new UsageError("--soap is 1.1 or 1.2.");
+    return s;
+}
+
 function recordEncoding(s: string): "cp037" | "ascii" {
     if (s !== "cp037" && s !== "ascii") throw new UsageError("--record-encoding is cp037 or ascii.");
     return s;
@@ -683,6 +691,7 @@ async function dataCommand(args: string[], manifestFile: string, v: Record<strin
             const { file, recipe } = planRecipe(m, {
                 schema: v.schema, operation: v.operation, id: v.id, seed, clock: v.clock, locale: v.locale, generators,
                 ...(v["record-encoding"] ? { recordEncoding: recordEncoding(v["record-encoding"]) } : {}),
+                ...(v.soap ? { soap: { version: soapVersion(v.soap), ...(v["soap-action"] ? { action: v["soap-action"] } : {}) } } : {}),
                 ...(v["csv-delimiter"] || v["csv-no-header"] || v["csv-no-bom"] || v["csv-lf"] ? { csv: { ...(v["csv-delimiter"] ? { delimiter: v["csv-delimiter"] } : {}), ...(v["csv-no-header"] ? { header: false } : {}), ...(v["csv-no-bom"] ? { bom: false } : {}), ...(v["csv-lf"] ? { line_ending: "lf" as const } : {}) } } : {}),
             });
             const happy = recipe.rows.filter(isHappy).length;

@@ -17,6 +17,7 @@ import type { Manifest } from "../types.js";
 import type { CsvOptions, XlsxOptions } from "./files.js";
 import type { RecordEncoding } from "./copybook.js";
 import { patternLimits } from "./regex.js";
+import { checkSimple, type SoapInfo, type XmlOp, type XsdModel } from "./xsd.js";
 import { loadModel, type Field, type TargetModel } from "./schema.js";
 
 export type Technique = "EP" | "BVA-3" | "pairwise" | "hostile";
@@ -40,6 +41,10 @@ export interface Row {
     unset?: string[];
     /** The whole body replaced, for rows that are not objects at all. */
     replace_body?: unknown;
+    /** XML: an edit only XML can express, made after the row is built. */
+    xml_op?: XmlOp;
+    /** XML: keep every branch of a choice this row sets, to break the choice. */
+    keep_choices?: boolean;
 }
 
 export interface RecipeField {
@@ -53,6 +58,8 @@ export interface RecipeField {
     valid_from: string;
     /** For a person: why this field's values are what they are, and any doubt. */
     note?: string;
+    /** Why no row can break this field, so the quota doesn't ask for one: optional text with no limit, in XML. */
+    cannot_break?: string;
 }
 
 export interface Quotas {
@@ -88,6 +95,8 @@ export interface Recipe {
     xlsx?: XlsxOptions;
     /** For a copybook: how fixed-width records are written. */
     fixed?: { encoding: RecordEncoding };
+    /** For an XSD or a WSDL: write each row in a SOAP envelope too. */
+    soap?: SoapInfo;
 }
 
 /** A happy path: a valid row that a partition or a pairwise combination chose, as opposed to a boundary or a hostile value. */
@@ -139,6 +148,8 @@ export interface PlanOptions {
     xlsx?: XlsxOptions;
     /** For a copybook: cp037 (the default) or ascii. */
     recordEncoding?: RecordEncoding;
+    /** For an XSD: write each row in a SOAP envelope too. A WSDL's operation gives these by itself. */
+    soap?: SoapInfo;
 }
 
 /** Compile a recipe from a schema: the fields, and the rows every technique calls for. */
@@ -156,7 +167,7 @@ export function planRecipe(m: Manifest, o: PlanOptions): { file: string; recipe:
     const notes: string[] = [];
     const fields: RecipeField[] = model.fields.map((f) => {
         const constraints: Record<string, unknown> = {};
-        for (const k of ["enum", "const", "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf", "minLength", "maxLength", "pattern", "format", "minItems", "maxItems", "uniqueItems"] as const) if (f[k] !== undefined) constraints[k] = f[k];
+        for (const k of ["enum", "const", "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf", "minLength", "maxLength", "pattern", "format", "minItems", "maxItems", "uniqueItems", "totalDigits", "fractionDigits"] as const) if (f[k] !== undefined) constraints[k] = f[k];
         let valid_from = f.const !== undefined ? "const" : f.enum ? "enum" : f.examples?.length ? "examples" : f.pattern ? "pattern" : f.format ? `format:${f.format}` : f.type;
         let note: string | undefined;
         if (f.pattern) {
@@ -167,7 +178,15 @@ export function planRecipe(m: Manifest, o: PlanOptions): { file: string; recipe:
         if (f.description) note = `${f.description}${note ? ` ${note}` : ""}`;
         return { path: f.path, type: f.type, required: f.required, nullable: f.nullable, constraints, source: f.source, valid_from, ...(note ? { note } : {}) };
     });
-    const rows = planRows(model.fields, notes);
+    const rows = model.xsd ? xmlRows(model.xsd, model.fields, planRows(model.fields, notes), notes) : planRows(model.fields, notes);
+    if (model.xsd) {
+        notes.push(...model.xsd.notes);
+        for (const f of fields) {
+            if (f.type === "object" || f.path === "$") continue;
+            const general = (p: string) => p.replace(/\[\d+\]/g, "[*]");
+            if (!rows.some((x) => !x.expect_valid && x.invalid_because && general(x.invalid_because.path) === f.path)) f.cannot_break = "Optional text with no limit: in XML every value is text, so nothing here can break it.";
+        }
+    }
     const layout = (model as { layout?: { notes: string[]; counters: string[]; record_size: number } }).layout;
     if (layout) {
         notes.push(`A record is ${layout.record_size} bytes.`, ...layout.notes);
@@ -177,6 +196,7 @@ export function planRecipe(m: Manifest, o: PlanOptions): { file: string; recipe:
         id, ...(o.draft ? { draft: true } : {}), seed, clock, locale: o.locale ?? "en_GB", source: { ...model.source, file: path.relative(m.root, schemaFile).split(path.sep).join("/") },
         generators: { ...(o.generators ?? {}) }, quotas, fields, rows, ...(model.responses ? { responses: model.responses } : {}), ...(notes.length ? { notes } : {}),
         ...(o.csv ? { csv: o.csv } : {}), ...(o.xlsx ? { xlsx: o.xlsx } : {}), ...(layout ? { fixed: { encoding: o.recordEncoding ?? "cp037" } } : {}),
+        ...(o.soap ?? model.xsd?.soap ? { soap: (o.soap ?? model.xsd?.soap)! } : {}),
     };
     const problems = checkQuotas(recipe);
     if (problems.length) throw new ManifestError(`The plan breaks its own quotas: ${problems.join("; ")}`);
@@ -225,13 +245,15 @@ export function checkQuotas(r: Recipe): string[] {
     if (q.boundaries_on_every_ordered_field) {
         for (const f of r.fields) {
             const c = f.constraints;
-            if (![c.minimum, c.maximum, c.minLength, c.maxLength, c.minItems, c.maxItems].some((x) => x !== undefined)) continue;
+            // A length limit on text with a pattern or a list of values: the pattern decides what is made, so no boundary is generated for it.
+            const lengthOnly = c.pattern !== undefined || c.enum !== undefined;
+            if (![c.minimum, c.maximum, ...(lengthOnly ? [] : [c.minLength, c.maxLength]), c.minItems, c.maxItems].some((x) => x !== undefined)) continue;
             if (!r.rows.some((x) => x.technique === "BVA-3" && x.coverage_item.startsWith(`${f.path} `))) out.push(`${f.path} has a boundary but no BVA-3 rows`);
         }
     }
     if (q.negative_for_every_field) {
         const general = (p: string) => p.replace(/\[\d+\]/g, "[*]");
-        for (const f of leaves) if (!r.rows.some((x) => !x.expect_valid && x.invalid_because && general(x.invalid_because.path) === f.path)) out.push(`${f.path} has no row that breaks it`);
+        for (const f of leaves) if (!f.cannot_break && !r.rows.some((x) => !x.expect_valid && x.invalid_because && general(x.invalid_because.path) === f.path)) out.push(`${f.path} has no row that breaks it`);
     }
     return out;
 }
@@ -256,21 +278,22 @@ function planRows(fields: Field[], notes: string[]): Row[] {
             const at = f.exclusiveMinimum ? round(f.minimum + step, step) : f.minimum;
             add(bva(slug, "minimum", "below", first, f.exclusiveMinimum ? f.minimum : round(f.minimum - step, step), false, f.exclusiveMinimum ? "exclusiveMinimum" : "minimum", `${p} ${f.exclusiveMinimum ? "at" : "below"} its minimum (${f.minimum})`));
             add(bva(slug, "minimum", "at", first, at, true, undefined, `${p} at its lowest valid value (${at})`));
-            add(bva(slug, "minimum", "above", first, round(at + step, step), true, undefined, `${p} one step above its lowest valid value`));
+            // Where a field has one valid value, the neighbours are outside it, and the rows on the other edge say so.
+            if (f.maximum === undefined || round(at + step, step) <= f.maximum) add(bva(slug, "minimum", "above", first, round(at + step, step), true, undefined, `${p} one step above its lowest valid value`));
         }
         if (num && f.maximum !== undefined) {
             const at = f.exclusiveMaximum ? round(f.maximum - step, step) : f.maximum;
-            add(bva(slug, "maximum", "below", first, round(at - step, step), true, undefined, `${p} one step below its highest valid value`));
+            if (f.minimum === undefined || round(at - step, step) >= f.minimum) add(bva(slug, "maximum", "below", first, round(at - step, step), true, undefined, `${p} one step below its highest valid value`));
             add(bva(slug, "maximum", "at", first, at, true, undefined, `${p} at its highest valid value (${at})`));
             add(bva(slug, "maximum", "above", first, f.exclusiveMaximum ? f.maximum : round(f.maximum + step, step), false, f.exclusiveMaximum ? "exclusiveMaximum" : "maximum", `${p} ${f.exclusiveMaximum ? "at" : "above"} its maximum (${f.maximum})`));
         }
         if (f.type === "string" && f.minLength !== undefined && f.minLength > 0 && !f.pattern && !f.enum) {
             add(bva(slug, "minLength", "below", first, "a".repeat(f.minLength - 1), false, "minLength", `${p} one character shorter than ${f.minLength}`));
             add(bva(slug, "minLength", "at", first, "a".repeat(f.minLength), true, undefined, `${p} exactly ${f.minLength} characters`));
-            add(bva(slug, "minLength", "above", first, "a".repeat(f.minLength + 1), true, undefined, `${p} ${f.minLength + 1} characters`));
+            if (f.maxLength === undefined || f.minLength < f.maxLength) add(bva(slug, "minLength", "above", first, "a".repeat(f.minLength + 1), true, undefined, `${p} ${f.minLength + 1} characters`));
         }
         if (f.type === "string" && f.maxLength !== undefined && !f.pattern && !f.enum) {
-            add(bva(slug, "maxLength", "below", first, "b".repeat(Math.max(f.maxLength - 1, f.minLength ?? 0)), true, undefined, `${p} one character shorter than ${f.maxLength}`));
+            if (f.minLength === undefined || f.maxLength - 1 >= f.minLength) add(bva(slug, "maxLength", "below", first, "b".repeat(Math.max(f.maxLength - 1, 0)), true, undefined, `${p} one character shorter than ${f.maxLength}`));
             add(bva(slug, "maxLength", "at", first, "b".repeat(f.maxLength), true, undefined, `${p} exactly ${f.maxLength} characters`));
             add(bva(slug, "maxLength", "above", first, "b".repeat(f.maxLength + 1), false, "maxLength", `${p} one character longer than ${f.maxLength}`));
         }
@@ -320,7 +343,7 @@ function planRows(fields: Field[], notes: string[]): Row[] {
         add({ name: `${slugOf(f.path)}_element_wrong_type`, technique: "EP", coverage_item: `${f.path}: the first element of the wrong type`, expect_valid: false, invalid_because: { path: p, keyword: f.enum ? "enum" : "type" }, oracle: "specified", set: { [p]: wrongType(f) } });
     }
     // Pairwise over the discrete fields: enums, booleans, nullable and optional fields.
-    const discrete = leaves.filter((f) => !f.path.includes("[*]")).map((f) => {
+    const discrete = leaves.filter((f) => !f.path.includes("[*]") && !f.choice).map((f) => {
         const values: { label: string; apply: (row: Row) => void }[] = [];
         if (f.enum) for (const v of f.enum) values.push({ label: `${f.path}=${JSON.stringify(v)}`, apply: (r) => { (r.set ??= {})[f.path] = v; } });
         else if (f.type === "boolean") for (const v of [true, false]) values.push({ label: `${f.path}=${v}`, apply: (r) => { (r.set ??= {})[f.path] = v; } });
@@ -358,6 +381,74 @@ function planRows(fields: Field[], notes: string[]): Row[] {
         notes.push(`Pairwise rows cover every pair of values of ${discrete.map((d) => d.field.path).join(", ")} (${n} rows).`);
     }
     return rows;
+}
+
+/** The planner's rows, kept where they still mean something in XML, and the rows only XML can have. */
+function xmlRows(model: XsdModel, fields: Field[], planned: Row[], notes: string[]): Row[] {
+    const byPath = new Map(fields.map((f) => [f.path, f]));
+    const general = (p: string) => p.replace(/\[\d+\]/g, "[*]");
+    const keep: Row[] = [];
+    let dropped = 0;
+    for (const row of planned) {
+        if (row.replace_body !== undefined) { dropped++; continue; } // a document always has a root element
+        const [p, v] = Object.entries(row.set ?? {})[0] ?? [];
+        const f = p ? byPath.get(general(p)) : undefined;
+        if (f && !row.expect_valid && f.type === "array" && row.invalid_because?.keyword === "type") { dropped++; continue; } // an element is repeated or it isn't
+        if (f && !row.expect_valid && row.invalid_because?.keyword !== "required" && f.type !== "array" && f.type !== "object") {
+            // Every XML value is text, so a "wrong type" is only wrong if its text breaks the field.
+            const simple = { type: f.type, ...(f.enum ? { enum: f.enum } : {}), ...(f.minLength !== undefined ? { minLength: f.minLength } : {}), ...(f.maxLength !== undefined ? { maxLength: f.maxLength } : {}), ...(f.pattern ? { pattern: f.pattern } : {}), ...(f.format ? { format: f.format } : {}), ...(f.minimum !== undefined ? { minimum: f.minimum } : {}), ...(f.maximum !== undefined ? { maximum: f.maximum } : {}), ...(f.exclusiveMinimum ? { exclusiveMinimum: true } : {}), ...(f.exclusiveMaximum ? { exclusiveMaximum: true } : {}), ...(f.multipleOf !== undefined ? { multipleOf: f.multipleOf } : {}), ...(f.totalDigits !== undefined ? { totalDigits: f.totalDigits } : {}), ...(f.fractionDigits !== undefined ? { fractionDigits: f.fractionDigits } : {}) } as Parameters<typeof checkSimple>[0];
+            const broken = checkSimple(simple, v === null || v === undefined ? "" : typeof v === "object" ? JSON.stringify(v) : String(v), p!);
+            if (!broken.length) { dropped++; continue; }
+            row.invalid_because = { path: row.invalid_because!.path, keyword: broken[0]!.keyword };
+        }
+        keep.push(row);
+    }
+    if (dropped) notes.push(`${dropped} rows left out because they mean nothing in XML: every value is text, so a text field can't have the wrong type, and a document always has a root.`);
+    const row = (r: Omit<Row, "technique" | "oracle">) => { if (!keep.some((x) => x.name === r.name)) keep.push({ technique: "EP", oracle: "specified", ...r }); };
+    const root = model.root;
+    if (root.ns) row({ name: "root_wrong_namespace", coverage_item: `$.${root.name} in a namespace the schema does not name`, expect_valid: false, invalid_because: { path: `$.${root.name}`, keyword: "namespace" }, xml_op: { kind: "wrong_namespace" } });
+    // One set per complex element reached without leaving the first occurrence.
+    const objects = fields.filter((f) => f.type === "object" && f.path !== "$");
+    for (const o of objects) {
+        const at = o.path.replace(/\[\*\]/g, "[0]");
+        const slug = slugOf(o.path);
+        const children = fields.filter((f) => f.path.startsWith(`${o.path}.`) && !f.path.slice(o.path.length + 1).includes(".") && !f.path.slice(o.path.length + 1).includes("[") && !/^[@#]/.test(f.path.slice(o.path.length + 1)));
+        if (o.required && o.path !== `$.${root.name}` && !o.path.includes("[*]")) row({ name: `${slug}_missing`, coverage_item: `${o.path} missing though required`, expect_valid: false, invalid_because: { path: at, keyword: "required" }, unset: [o.path] });
+        if (!children.length) continue;
+        row({ name: `${slug}_extra_element`, coverage_item: `${o.path} with an element the schema does not name`, expect_valid: false, invalid_because: { path: `${at}.NotInTheSchema`, keyword: "additional" }, xml_op: { kind: "extra", path: at, name: "NotInTheSchema" } });
+        const required = children.filter((f) => f.required && !f.choice && f.type !== "array");
+        if (required.length >= 2 && !isAll(model, o.path)) {
+            const [a, b] = [required[0]!.path.split(".").pop()!, required[1]!.path.split(".").pop()!];
+            row({ name: `${slug}_wrong_order`, coverage_item: `${o.path}: ${b} before ${a}, against the sequence`, expect_valid: false, invalid_because: { path: at, keyword: "order" }, xml_op: { kind: "swap", path: at, a, b } });
+        }
+        if (required[0]) {
+            const n = required[0].path.split(".").pop()!;
+            row({ name: `${slugOf(required[0].path)}_twice`, coverage_item: `${required[0].path} twice, though it occurs once`, expect_valid: false, invalid_because: { path: `${at}.${n}`, keyword: "maxOccurs" }, xml_op: { kind: "duplicate", path: `${at}.${n}` } });
+        }
+    }
+    // Each branch of a choice on its own; and two branches together, which a choice forbids.
+    const groups = new Map<string, Field[]>();
+    for (const f of fields) if (f.choice) groups.set(f.choice.group, [...(groups.get(f.choice.group) ?? []), f]);
+    for (const members of groups.values()) {
+        const parent = members[0]!.choice!.parent.replace(/\[\*\]/g, "[0]");
+        const others = [...new Set(members.map((m) => m.choice!.index))].filter((i) => i > 0).map((i) => members.find((m) => m.choice!.index === i)!);
+        for (const f of others) {
+            row({ name: `${slugOf(f.path)}_choice_branch`, coverage_item: `${f.path}: this branch of the choice, on its own`, expect_valid: true, set: { [f.path.replace(/\[\*\]/g, "[0]")]: { $valid: true } } });
+        }
+        if (others[0]) row({ name: `${slugOf(others[0].path)}_choice_two_branches`, coverage_item: `${others[0].path} as well as another branch of the choice`, expect_valid: false, invalid_because: { path: parent, keyword: "choice" }, keep_choices: true, set: { [others[0].path.replace(/\[\*\]/g, "[0]")]: { $valid: true } } });
+    }
+    return keep;
+}
+
+function isAll(model: XsdModel, p: string): boolean {
+    const parts = p.replace(/^\$\./, "").replace(/\[\*\]/g, "").split(".");
+    let e = model.root;
+    for (const name of parts.slice(1)) {
+        const next = e.complex?.particles.flatMap((x) => (x.kind === "element" ? [x] : x.options.flat())).find((x) => x.name === name);
+        if (!next) return false;
+        e = next;
+    }
+    return e.complex?.order === "all";
 }
 
 const round = (n: number, step: number) => { const d = Math.max(0, Math.min(10, Math.ceil(-Math.log10(step)))); return Number(n.toFixed(d)); };

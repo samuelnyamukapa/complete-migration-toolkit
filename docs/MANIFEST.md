@@ -266,6 +266,22 @@ In a recipe, `csv:` sets `delimiter`, `quote`, `quoted`, `header`, `bom`, `line_
 
 A copybook (`.cpy`, `.cbl`, `.cob`) works as `--schema`, with `--record-encoding cp037` (the default) or `ascii`. It takes the same boundaries and negatives as JSON. `PIC X`, `A`, `9`, `S`, `V`, `COMP`, `COMP-3`, `SIGN SEPARATE`, `OCCURS` and `OCCURS DEPENDING ON` are read. `REDEFINES` is noted in the recipe, and rows follow the original field. `COMP-1` and `COMP-2` are refused. Money with more than 15 digits stays as text, because a number can't hold it exactly.
 
+### XML and SOAP
+
+An XSD, or a single-file WSDL (`?singleWsdl`), works as `--schema`. `--operation` names the top-level element, or the WSDL's operation.
+
+```
+cmtk data plan --schema Billing.wsdl --operation GetInvoice --id get-invoice
+cmtk data make get-invoice
+cmtk data cases get-invoice --path /Billing.svc --requirement RULE-20
+```
+
+The rows are the same as for JSON: partitions, three-value boundaries, negatives and pairwise. `xs:pattern` is respected, and a value is made from it. Each row is written as `rows/<name>.xml`, with its namespaces, and read back and checked against the schema. XML adds rows of its own: a wrong order in a sequence, an extra element, an element that occurs twice, two branches of a choice, the wrong namespace. A row that means nothing in XML is left out, and the recipe's notes say so, because every XML value is text.
+
+A WSDL's operation also writes `rows/<name>.soap.xml`, in a SOAP envelope, with the version and the action from its binding. For a plain XSD, `--soap 1.1 --soap-action <uri>` does the same. `cmtk data cases` sends the envelope, with the right `Content-Type` and `SOAPAction`, and `cmtk compare` compares the answers as it does any SOAP answer.
+
+Understood: elements, `sequence`, `choice`, `all`, `minOccurs`, `maxOccurs`, attributes, `ref`, named and inline types, extensions, and the facets `length`, `minLength`, `maxLength`, `pattern`, `enumeration`, `minInclusive`, `maxInclusive`, `minExclusive`, `maxExclusive`, `totalDigits` and `fractionDigits`. Local `xs:include` and `xs:import` files are followed; nothing is fetched. `xs:group` is refused. `xs:union` and `xs:list` are treated as plain text, and the recipe's notes say so. An `xs:long` is limited to what a number holds exactly.
+
 ### Comparing files
 
 `cmtk data diff <a> <b> --key <columns>` compares two files by what they mean. It exits 0 if they are the same and 1 if they differ. It never compares bytes.

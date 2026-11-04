@@ -33,4 +33,5 @@ export { makeRows, makeData, tabulate, rng, FAKER_VERSION, LOCALES, DATA_FORMATS
 export { parseCopybook, encodeRecord, decodeRecord, decodeFile, encodePacked, encodeText, decodeText, fixedEdges, schemaOfLayout, EncodeError, type Layout, type RecordEncoding } from "./data/copybook.js";
 export { csvBytes, csvEdges, xlsxEdges, FORMULA_LEADS, type CsvOptions, type XlsxOptions, type EdgeInfo } from "./data/files.js";
 export { compareTables, csvTable, xlsxTables, recordsTable, readTables, parseCsv, scrubber, describeComparison, type Table, type TableComparison, type CompareOptions, type ReadOptions, type Scrubbing } from "./data/compare.js";
+export { readXsd, toXml, validateXml, soapEnvelope, soapHeaders, xsdPattern, checkSimple, xsdFields, isXsd, XML_DECLARATION, type XsdModel, type SoapInfo, type XmlOp, type SimpleType } from "./data/xsd.js";
 export { writeCases, describeLeftOut, type CasesOptions } from "./data/cases.js";

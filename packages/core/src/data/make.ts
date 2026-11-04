@@ -29,6 +29,7 @@ import { inside, ManifestError } from "../manifest.js";
 import type { Manifest } from "../types.js";
 import { dataFolder, loadRecipe, checkQuotas, isHappy, type Recipe, type RecipeField, type Row } from "./recipe.js";
 import { stringFromPattern, type Rng } from "./regex.js";
+import { soapEnvelope, toXml, validateXml, XML_DECLARATION, type XsdModel } from "./xsd.js";
 import { loadModel, validate, type Field } from "./schema.js";
 
 export interface MadeRow {
@@ -42,6 +43,8 @@ export interface MadeRow {
     value: unknown;
     /** Query and path parameters, for an OpenAPI operation, as the wire carries them. */
     query?: Record<string, string>;
+    /** From an XSD or a WSDL: the row as a document, without its declaration. */
+    xml?: string;
 }
 
 export interface DataManifest {
@@ -149,7 +152,8 @@ function baseline(fields: Field[], at: string, rand: Rng, faker: Faker, clock: s
     if (!self) return undefined;
     if (self.type === "object") {
         const out: Record<string, unknown> = {};
-        for (const f of fields.filter((x) => x.path.startsWith(`${at}.`) && !x.path.slice(at.length + 1).includes(".") && !x.path.slice(at.length + 1).includes("["))) {
+        // A choice takes its first branch; a row may set another.
+        for (const f of fields.filter((x) => x.path.startsWith(`${at}.`) && !x.path.slice(at.length + 1).includes(".") && !x.path.slice(at.length + 1).includes("[") && !(x.choice && x.choice.index > 0))) {
             out[f.path.slice(at.length + 1)] = baseline(fields, f.path, rand, faker, clock);
         }
         return out;
@@ -187,19 +191,19 @@ function unsetAt(root: unknown, p: string) {
     if (cur && typeof cur === "object") Array.isArray(cur) ? cur.splice(parts[parts.length - 1] as number, 1) : delete cur[parts[parts.length - 1] as string];
 }
 
-function fieldsOf(m: Manifest, r: Recipe): { fields: Field[]; schema: Record<string, unknown>; parameters: { name: string; in: string; required: boolean; schema: Record<string, unknown> }[]; hasBody: boolean; layout?: Layout } {
+function fieldsOf(m: Manifest, r: Recipe): { fields: Field[]; schema: Record<string, unknown>; parameters: { name: string; in: string; required: boolean; schema: Record<string, unknown> }[]; hasBody: boolean; layout?: Layout; xsd?: XsdModel } {
     const file = inside(m, r.source.file);
     if (!fs.existsSync(file)) throw new ManifestError(`The recipe's schema ${r.source.file} no longer exists.`);
     const model = loadModel(file, r.source.operation);
     if (r.source.sha256 && model.source.sha256 !== r.source.sha256) throw new ManifestError(`${r.source.file} has changed since the recipe was planned (sha256 ${model.source.sha256.slice(0, 12)}… now, ${r.source.sha256.slice(0, 12)}… then). Plan it again, or restore the file.`);
-    return { fields: model.fields, schema: model.schema, parameters: model.parameters ?? [], hasBody: model.fields.some((f) => f.path === "$"), ...((model as { layout?: Layout }).layout ? { layout: (model as { layout?: Layout }).layout } : {}) };
+    return { fields: model.fields, schema: model.schema, parameters: model.parameters ?? [], hasBody: model.fields.some((f) => f.path === "$"), ...((model as { layout?: Layout }).layout ? { layout: (model as { layout?: Layout }).layout } : {}), ...(model.xsd ? { xsd: model.xsd } : {}) };
 }
 
 const onWire = (v: unknown) => (v === null ? "" : typeof v === "object" ? JSON.stringify(v) : String(v));
 
 /** The rows a recipe makes, each checked against the schema: valid rows validate, invalid rows fail for the reason they claim. */
 export function makeRows(m: Manifest, r: Recipe): MadeRow[] {
-    const { fields, schema, parameters, hasBody } = fieldsOf(m, r);
+    const { fields, schema, parameters, hasBody, xsd } = fieldsOf(m, r);
     const rand = rng(r.seed);
     const faker = fakerFor(r.locale, r.seed, r.clock);
     const out: MadeRow[] = [];
@@ -224,11 +228,18 @@ export function makeRows(m: Manifest, r: Recipe): MadeRow[] {
                 const f = fields.find((x) => x.path === p.replace(/\[\d+\]/g, "[*]"));
                 if (v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === 1 && "$items" in (v as object) && f?.type === "array") {
                     value = setAt(value, p, Array.from({ length: Number((v as any).$items) }, () => baseline(fields, `${f.path}[*]`, rand, faker, r.clock)));
+                } else if (v && typeof v === "object" && !Array.isArray(v) && (v as { $valid?: unknown }).$valid === true && f) {
+                    value = setAt(value, p, baseline(fields, f.path, rowRand, rowFaker, r.clock)); // any valid value: the row is about being here at all
                 } else value = setAt(value, p, structuredClone(v));
             }
             for (const p of row.unset ?? []) if (!p.startsWith("?")) unsetAt(value, p);
         }
-        if (hasBody) violations.push(...validate(schema, value));
+        let xml: string | undefined;
+        if (xsd) {
+            if (!row.keep_choices) leaveOneBranch(fields, value, Object.keys(row.set ?? {}));
+            xml = toXml(xsd, value, row.xml_op);
+            violations.push(...validateXml(xsd, xml)); // read back from the text: nothing rests on how it was written
+        } else if (hasBody) violations.push(...validate(schema, value));
         if (row.expect_valid && violations.length) throw new ManifestError(`Row ${row.name} should be valid but is not: ${violations.map((v) => `${v.path} ${v.message}`).join("; ")}. The schema may use a keyword the planner does not understand, or the row was edited.`);
         if (!row.expect_valid) {
             const why = row.invalid_because!;
@@ -237,9 +248,19 @@ export function makeRows(m: Manifest, r: Recipe): MadeRow[] {
         }
         const wire: Record<string, string> = {};
         for (const [k, v] of Object.entries(query)) wire[k] = onWire(v);
-        out.push({ name: row.name, technique: row.technique, coverage_item: row.coverage_item, expect_valid: row.expect_valid, ...(row.invalid_because ? { invalid_because: row.invalid_because } : {}), oracle: row.oracle, value, ...(parameters.length ? { query: wire } : {}) });
+        out.push({ name: row.name, technique: row.technique, coverage_item: row.coverage_item, expect_valid: row.expect_valid, ...(row.invalid_because ? { invalid_because: row.invalid_because } : {}), oracle: row.oracle, value, ...(parameters.length ? { query: wire } : {}), ...(xml !== undefined ? { xml } : {}) });
     }
     return out;
+}
+
+/** A row that sets a branch of a choice takes that branch only. */
+function leaveOneBranch(fields: Field[], value: unknown, setPaths: string[]) {
+    for (const p of setPaths) {
+        const general = p.replace(/\[\d+\]/g, "[*]");
+        const f = fields.find((x) => x.choice && (x.path === general || general.startsWith(`${x.path}.`) || general.startsWith(`${x.path}[`)));
+        if (!f) continue;
+        for (const other of fields.filter((x) => x.choice?.group === f.choice!.group && x.choice.index !== f.choice!.index)) unsetAt(value, other.path.replace(/\[\*\]/g, "[0]"));
+    }
 }
 
 /** A seed for one row, from the recipe's seed and the row's name: adding a row never changes the others. */
@@ -247,7 +268,7 @@ function hash(seed: number, name: string): number {
     return crypto.createHash("sha256").update(`${seed}:${name}`).digest().readUInt32BE(0) >>> 1;
 }
 
-export const DATA_FORMATS = ["json", "csv", "xlsx", "fixed", "edge-csv", "edge-xlsx", "edge-fixed"] as const;
+export const DATA_FORMATS = ["json", "csv", "xlsx", "xml", "fixed", "edge-csv", "edge-xlsx", "edge-fixed"] as const;
 export type DataFormat = (typeof DATA_FORMATS)[number];
 
 export interface MakeOptions {
@@ -263,7 +284,9 @@ export async function makeData(m: Manifest, id: string, o: MakeOptions = {}): Pr
     const { file, recipe, sha256 } = loadRecipe(m, id);
     const rows = makeRows(m, recipe);
     const problems = checkQuotas(recipe);
-    const formats = o.formats ?? ["json", "csv"];
+    const asked = o.formats ?? ["json", "csv"];
+    // An XML recipe always writes its documents, and rows.json, which `cmtk data cases` reads.
+    const formats: DataFormat[] = recipe.source.format === "xsd" ? [...new Set<DataFormat>(["json", "xml", ...asked])] : asked;
     const dir = dataFolder(m, id);
     fs.rmSync(dir, { recursive: true, force: true });
     fs.mkdirSync(path.join(dir, "rows"), { recursive: true });
@@ -290,6 +313,14 @@ export async function makeData(m: Manifest, id: string, o: MakeOptions = {}): Pr
         }
     }
     if (formats.includes("xlsx")) put("rows.xlsx", workbook(table, recipe));
+    if (formats.includes("xml")) {
+        if (recipe.source.format !== "xsd") throw new ManifestError(`Recipe ${id} did not come from an XSD or a WSDL, so it has no XML documents.`);
+        for (const r of rows) {
+            if (r.xml === undefined) continue;
+            put(path.join("rows", `${r.name}.xml`), XML_DECLARATION + r.xml + "\n");
+            if (recipe.soap) put(path.join("rows", `${r.name}.soap.xml`), soapEnvelope(r.xml, recipe.soap.version));
+        }
+    }
     // The valid rows, data columns only: the files an import would take.
     const validRows = rows.filter((r) => r.expect_valid && r.value && typeof r.value === "object" && !Array.isArray(r.value));
     const data = (() => {
