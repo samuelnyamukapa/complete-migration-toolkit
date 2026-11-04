@@ -14,7 +14,7 @@ import YAML from "yaml";
 import {
     acceptDraft, adaptersFor, BOUNDARY_KINDS, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
-    initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target, shadow, SHADOW_FORMATS, type ShadowFormat,
+    initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target, shadow, SHADOW_FORMATS, type ShadowFormat, cleanHistory, HISTORY_MODES, trend, type HistoryMode,
     planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat,
 } from "@cmtk/core";
 
@@ -38,14 +38,19 @@ Usage:
                                                                     turn recorded traffic into cases
                                                                     (--draft-expect drafts each expect: from the recorded status and
                                                                     content type; \`cmtk run\` skips it until a person confirms it)
-  cmtk run [--target <name>] [--only <id,id>] [--allow-unsafe] [--accepted-only]
+  cmtk run [--target <name>] [--only <id,id>] [--allow-unsafe] [--accepted-only] [--dated]
                                                                     check one system against each case's expect: block
                                                                     (--accepted-only leaves draft cases out, as in CI)
-  cmtk compare [--only <id,id>] [--allow-unsafe]                    send each case to the reference and the candidate, and diff
+  cmtk compare [--only <id,id>] [--allow-unsafe] [--dated]          send each case to the reference and the candidate, and diff
+                                                                    (--dated also keeps this run in a dated folder, for \`cmtk trend\`)
   cmtk shadow --from <file>... [--format auto|clf|w3c|jsonl] [--sample 0.1] [--seed <n>] [--rate 5] [--max 1000]
-              [--include <regex>] [--exclude <regex>] [--keep-header <name>]... [--redact <regex>]... [--keep-values] [--capture-only]
+              [--include <regex>] [--exclude <regex>] [--keep-header <name>]... [--redact <regex>]... [--keep-values] [--capture-only] [--dated]
                                                                     replay GET, HEAD and OPTIONS requests from a log to both systems, and diff
                                                                     (everything else is dropped and counted; not a proxy)
+  cmtk trend [--mode run|compare|shadow] [--last <n>]               across dated runs: the verdict over time, differences by where, flaky cases,
+                                                                    drift that stopped matching, scrubs that never fired
+  cmtk trend clean [--keep-days <n>] [--keep-runs <n>] [--max-mb <n>] [--dry-run]
+                                                                    remove old dated runs. Never follows a link
   cmtk status                                                       the latest verdicts
   cmtk check                                                        check settings and case files; sends nothing
   cmtk discover [--assembly <dll>]... [--rea-json <file>]... [--config <file>]... [--har <file>]... [--topology <file>]... [--fresh]
@@ -156,6 +161,13 @@ async function main(argv: string[]): Promise<number> {
             lang: { type: "string" },
             registry: { type: "string" },
             pin: { type: "string" },
+            dated: { type: "boolean", default: false },
+            mode: { type: "string" },
+            last: { type: "string" },
+            "keep-days": { type: "string" },
+            "keep-runs": { type: "string" },
+            "max-mb": { type: "string" },
+            "dry-run": { type: "boolean", default: false },
             from: { type: "string", multiple: true },
             sample: { type: "string" },
             rate: { type: "string" },
@@ -207,12 +219,13 @@ async function main(argv: string[]): Promise<number> {
         case "compare": {
             const manifest = loadManifest(manifestFile);
             const report = cmd === "run"
-                ? await run(manifest, { target: values.target, only, allowUnsafe: values["allow-unsafe"], acceptedOnly: values["accepted-only"] })
-                : await compare(manifest, { only, allowUnsafe: values["allow-unsafe"], acceptedOnly: values["accepted-only"] });
+                ? await run(manifest, { target: values.target, only, allowUnsafe: values["allow-unsafe"], acceptedOnly: values["accepted-only"], dated: values.dated })
+                : await compare(manifest, { only, allowUnsafe: values["allow-unsafe"], acceptedOnly: values["accepted-only"], dated: values.dated });
             printReport(report, values.json!, manifest.root, manifest.evidence);
             return exitFor(report.verdict);
         }
         case "shadow": return shadowCommand(manifestFile, values);
+        case "trend": return trendCommand(manifestFile, rest, values);
         case "status": {
             const manifest = loadManifest(manifestFile);
             let any = false;
@@ -288,6 +301,39 @@ async function shadowCommand(manifestFile: string, v: Record<string, any>): Prom
     }
     if (r.capture_only) return 0;
     return r.verdict === "UNEXPLAINED DIFFERENCES" ? 1 : r.verdict === "NO UNEXPLAINED DIFFERENCES" ? EXIT_QUALIFIED : 2;
+}
+
+/** Read the dated reports. It sends nothing and changes no report. With `clean`, it removes old dated runs by the rule. */
+async function trendCommand(manifestFile: string, args: string[], v: Record<string, any>): Promise<number> {
+    const number = (name: string) => {
+        if (v[name] === undefined) return undefined;
+        const n = Number(v[name]);
+        if (!Number.isFinite(n) || n <= 0) throw new UsageError(`--${name} must be a number above 0.`);
+        return n;
+    };
+    const m = loadManifest(manifestFile);
+    if (args[0] === "clean") {
+        const r = cleanHistory(m, { keepDays: number("keep-days"), keepRuns: number("keep-runs"), maxMb: number("max-mb"), dryRun: v["dry-run"] });
+        if (v.json) { console.log(JSON.stringify(r, null, 2)); return 0; }
+        console.log(`${v["dry-run"] ? "Would remove" : "Removed"} ${r.removed.length} dated run${r.removed.length === 1 ? "" : "s"}${r.removed.length ? `: ${r.removed.join(", ")}` : ""}. ${r.kept} kept, ${Math.ceil(r.bytes / 1024 / 1024)} MB.`);
+        for (const w of r.warnings) console.log(`Warning: ${w}`);
+        return 0;
+    }
+    if (args.length) throw new UsageError("`cmtk trend` takes only `clean`, or no word at all.");
+    if (v.mode !== undefined && !(HISTORY_MODES as readonly string[]).includes(v.mode)) throw new UsageError(`--mode must be one of ${HISTORY_MODES.join(", ")}.`);
+    const { report, file } = trend(m, { mode: v.mode as HistoryMode | undefined, last: number("last") });
+    if (v.json) { console.log(JSON.stringify(report, null, 2)); return report.runs.length ? 0 : 2; }
+    if (!report.runs.length) {
+        console.log(`No dated runs for ${report.mode} yet${report.unreadable.length ? `, and ${report.unreadable.length} could not be read` : ""}. Next: \`cmtk ${report.mode === "shadow" ? "shadow --from <file>" : report.mode} --dated\`, or set evidence_history: { dated: true } in cmtk.yaml.`);
+        return 2;
+    }
+    console.log(report.summary);
+    for (const d of report.differences.filter((x) => !x.approved && x.state !== "gone").slice(0, 10)) console.log(`  ${d.state}: ${d.where} (${d.runs} of ${report.runs.length} runs)`);
+    for (const f of report.flaky.slice(0, 10)) console.log(`  flaky: ${f.case} (passed ${f.passed}, failed ${f.failed})`);
+    if (report.drift_stopped_matching.length) console.log(`  drift that stopped matching: ${report.drift_stopped_matching.join(", ")}`);
+    if (report.scrubs_never_fired.length) console.log(`  scrubs that never fired: ${report.scrubs_never_fired.join(", ")}`);
+    console.log(`Report: ${path.relative(process.cwd(), path.join(m.root, file!))}`);
+    return 0;
 }
 
 async function signoff(manifestFile: string, mode: string | undefined): Promise<number> {

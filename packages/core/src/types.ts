@@ -44,6 +44,18 @@ export interface Scrub {
     regex: { pattern: string; replace?: string }[];
 }
 
+/** Dated copies of each run's evidence, and the rule for removing old ones. */
+export interface EvidenceHistory {
+    /** Keep every run in a dated folder, as --dated does for one run. */
+    dated: boolean;
+    /** Remove dated runs older than this many days. */
+    keep_days?: number;
+    /** Keep at most this many dated runs per mode. */
+    keep_runs?: number;
+    /** The most the dated runs may take up, in megabytes. */
+    max_mb: number;
+}
+
 /** cmtk.yaml: everything about one system under test. */
 export interface Manifest {
     system: string;
@@ -68,6 +80,7 @@ export interface Manifest {
     /** The most requests exploration may send in one day, across all sessions. */
     explore_requests_per_day: number;
     evidence: string;
+    evidence_history: EvidenceHistory;
     allow_unsafe_methods: boolean;
     /** Header name to environment variable name. Values are read at run time and never written. */
     headers_from_env: Record<string, string>;
@@ -376,6 +389,8 @@ export interface Report {
     scope?: ReportScope;
     /** The settings that produced this report, so a signer sees exactly what was hidden or approved. */
     settings?: ReportSettings;
+    /** cmtk compare: how many times each scrub rule changed something, including the ones that never did. */
+    scrub_fired?: Record<string, number>;
     /** Why the verdict is what it is, in a sentence, and what to do next. */
     reason: string;
     next: string;

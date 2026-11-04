@@ -1,6 +1,8 @@
 export * from "./types.js";
 export { loadManifest, loadCases, loadDrift, inside, ownedFolder, ManifestError, STARTER_MANIFEST, readStructured } from "./manifest.js";
 export { shadow, captureRequests, cleanTarget, redactText, looksPersonal, endpointOf, renderShadow, SHADOW_FORMATS, type ShadowOptions, type ShadowReport, type ShadowVerdict, type ShadowEndpoint, type ShadowDifference, type ShadowFormat, type CapturedRequest } from "./shadow.js";
+export { keepDated, cleanHistory, datedRuns, sizeOf, stampOf, stampTime, historyFolder, DEFAULT_HISTORY, HISTORY_MODES, type HistoryMode, type CleanOptions } from "./history.js";
+export { trend, trendOf, renderTrend, scrubRules, type TrendReport, type TrendRun, type TrendDifference, type TrendFlaky } from "./trend.js";
 export { run, compare, matchFor, envHeaders, adaptersFor, SAFE_METHODS, type RunOptions } from "./engine.js";
 export { compareObservations, diffJson, diffXml, parseXml, parseJsonKeepingNumbers, scrubberOf, scrubJson, shortPair, ConfigError, SCRUBBED } from "./diff.js";
 export { parseJsonExact, JsonNumber, JsonObject, jsonEqual } from "./json.js";

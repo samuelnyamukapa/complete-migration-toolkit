@@ -10,6 +10,8 @@ import path from "node:path";
 import { httpAdapter, processAdapter, type Adapter } from "./adapters.js";
 import { checkContract } from "./contracts.js";
 import { cleanUrl } from "./defects.js";
+import { keepDated, type HistoryMode } from "./history.js";
+import { scrubRules } from "./trend.js";
 import { compareObservations, scrubberOf } from "./diff.js";
 import { coveringDrift } from "./drift.js";
 import { checkExpectation } from "./expect.js";
@@ -31,6 +33,10 @@ export interface RunOptions {
     target?: string;
     /** Today's date (tests pass a fixed one). */
     date?: string;
+    /** Also keep this run in a dated folder, as `evidence_history.dated` does for every run. */
+    dated?: boolean;
+    /** Where a line about dated evidence goes. Default: standard error. */
+    note?: (line: string) => void;
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -139,7 +145,7 @@ function alive(pid: number): boolean {
  * finished, so a run that stops half way leaves the last complete evidence where it was.
  * One run at a time per folder: a second run would delete the first one's half-written evidence.
  */
-export function evidenceDir(manifest: Manifest, mode: string, _opts: { dated?: boolean; note?: (line: string) => void } = {}) {
+export function evidenceDir(manifest: Manifest, mode: HistoryMode, opts: { dated?: boolean; note?: (line: string) => void } = {}) {
     ownedFolder(manifest, manifest.evidence); // never the project folder itself
     const final = ownedFolder(manifest, path.join(manifest.evidence, mode));
     const work = ownedFolder(manifest, path.join(manifest.evidence, `.${mode}.partial`));
@@ -172,6 +178,18 @@ export function evidenceDir(manifest: Manifest, mode: string, _opts: { dated?: b
         commit() {
             fs.rmSync(final, { recursive: true, force: true });
             fs.renameSync(work, final);
+            if (opts.dated || manifest.evidence_history.dated) {
+                const note = opts.note ?? ((line: string) => { process.stderr.write(`${line}\n`); });
+                // The run has finished and its evidence is in place, so a problem here is said out loud and costs only the copy.
+                try {
+                    const kept = keepDated(manifest, mode, final);
+                    note(`Kept a dated copy: ${path.join(manifest.evidence, "history", mode, kept.name).split(path.sep).join("/")}.`);
+                    if (kept.removed.length) note(`Removed old dated runs by the clean-up rule: ${kept.removed.join(", ")}.`);
+                    for (const w of kept.warnings) note(`Warning: ${w}`);
+                } catch (err) {
+                    note(`Warning: no dated copy was kept: ${(err as Error).message}`);
+                }
+            }
             return final;
         },
         release,
@@ -217,7 +235,7 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
     const known = loadKnownIssues(manifest).filter((k) => !k.target || k.target === t.name);
     const extra = envHeaders(manifest);
     const adapters = adaptersFor(manifest);
-    const ev = evidenceDir(manifest, "run");
+    const ev = evidenceDir(manifest, "run", opts);
     try {
         const dir = ev.dir;
         const out: CaseOutcome[] = [];
@@ -270,10 +288,11 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
     scrubberOf(manifest); // a bad scrub rule stops the run here, before any evidence is touched
     const extra = envHeaders(manifest);
     const adapters = adaptersFor(manifest);
-    const ev = evidenceDir(manifest, "compare");
+    const ev = evidenceDir(manifest, "compare", opts);
     try {
         const dir = ev.dir;
         const used = new Set<string>();
+        const fired = new Map<string, number>(scrubRules(manifest.scrub).map((rule) => [rule, 0]));
         const contracts: ContractOutcome[] = [];
         const out: CaseOutcome[] = [];
         let silent = 0; // cases in a row where a system gave no answer
@@ -317,7 +336,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
                         out.push({ ...b, result: "ERROR", why: [ra.error && `reference: ${ra.error}`, rb.error && `candidate: ${rb.error}`].filter(Boolean).join("; ") });
                         continue;
                     }
-                    const diffs = compareObservations(ra, rb, manifest, b.match);
+                    const diffs = compareObservations(ra, rb, manifest, b.match, fired);
                     for (const d of diffs) {
                         const hit = coveringDrift(drift, c.id, d.where);
                         if (hit) { d.drift = hit.id; used.add(hit.id); }
@@ -336,7 +355,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
         } finally {
             await adapters.closeAll();
         }
-        const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), excludedDrafts: cases.excluded, surfaces: { [ref.name]: ref.surfaces, [cand.name]: cand.surfaces } });
+        const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), excludedDrafts: cases.excluded, surfaces: { [ref.name]: ref.surfaces, [cand.name]: cand.surfaces }, ...(fired.size ? { scrubFired: Object.fromEntries(fired) } : {}) });
         writeJson(path.join(dir, "REPORT.json"), report);
         fs.writeFileSync(path.join(dir, "REPORT.md"), renderReport(report), "utf8");
         ev.commit();

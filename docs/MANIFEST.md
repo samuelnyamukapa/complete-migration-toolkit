@@ -23,6 +23,7 @@
 | `drift` | `cmtk/drift.yaml` | The drift ledger |
 | `known_issues` | `cmtk/known-issues.yaml` | The known-issues ledger: failures of `cmtk run` a named person accepted |
 | `evidence` | `cmtk/evidence` | Where answers and reports are written. Each run replaces its own folder once it has finished. It cannot be the project folder itself |
+| `evidence_history` | off | `{ dated: true, keep_days: 90, keep_runs: 30, max_mb: 1024 }`: keep every run in a dated folder, and the rule for removing old ones. `dated` is off by default; `--dated` does the same for one run. `keep_days` defaults to 90, `max_mb` to 1024, and `keep_runs` to no limit. See [TRENDS.md](TRENDS.md) |
 | `allow_unsafe_methods` | `false` | Allow POST, PUT, PATCH and DELETE, with `--allow-unsafe` on the run |
 | `headers_from_env` | `{}` | Header name to environment variable name; read at run time, never written |
 | `timeout_s` | `30` | Per request: the whole answer must arrive within it |

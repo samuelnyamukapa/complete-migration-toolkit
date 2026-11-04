@@ -72,6 +72,7 @@ export function summarise(x: {
     excludedCompareOnly?: number;
     compareOnlySurfaces?: string[];
     surfaces?: Record<string, string[] | undefined>;
+    scrubFired?: Record<string, number>;
 }): Report {
     const counts: Record<string, number> = {};
     const keys = x.mode === "run" ? ["PASS", "FAIL", "SKIPPED", "ERROR"] : ["MATCH", "DRIFT", "DIFFERENT", "SKIPPED", "ERROR"];
@@ -122,6 +123,7 @@ export function summarise(x: {
         ...(noAdapter.length ? { no_adapter: noAdapter } : {}),
         ...(scope ? { scope } : {}),
         ...(x.settings ? { settings: x.settings } : {}),
+        ...(x.scrubFired ? { scrub_fired: x.scrubFired } : {}),
         reason,
         next,
     };

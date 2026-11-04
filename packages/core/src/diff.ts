@@ -13,11 +13,14 @@ export interface Scrubber {
     jsonPaths: Token[][];
     xmlIgnore: Set<string>;
     regex: { rx: RegExp; replace: string }[];
+    /** When given, counts how many times each rule changed something, by the names in scrubRules. */
+    hits?: Map<string, number>;
+    jsonLabels?: string[];
 }
 
 export class ConfigError extends Error {}
 
-export function scrubberOf(manifest: Pick<Manifest, "scrub">): Scrubber {
+export function scrubberOf(manifest: Pick<Manifest, "scrub">, hits?: Map<string, number>): Scrubber {
     const s = manifest.scrub;
     const regex = (s.regex ?? []).map((r) => {
         try {
@@ -26,14 +29,25 @@ export function scrubberOf(manifest: Pick<Manifest, "scrub">): Scrubber {
             throw new ConfigError(`scrub.regex ${JSON.stringify(r.pattern)} is not a valid regular expression: ${(err as Error).message}`);
         }
     });
-    return { jsonPaths: (s.json_paths ?? []).map(parsePath), xmlIgnore: new Set(s.xml_ignore ?? []), regex };
+    return { jsonPaths: (s.json_paths ?? []).map(parsePath), xmlIgnore: new Set(s.xml_ignore ?? []), regex, ...(hits ? { hits, jsonLabels: (s.json_paths ?? []).map((p) => `json_path ${p}`) } : {}) };
 }
 
-export const scrubText = (text: string, sc: Scrubber) => sc.regex.reduce((t, r) => t.replace(r.rx, r.replace), text);
+const hit = (sc: Scrubber, label: string, by = 1) => { if (sc.hits && by) sc.hits.set(label, (sc.hits.get(label) ?? 0) + by); };
+
+export const scrubText = (text: string, sc: Scrubber) => sc.regex.reduce((t, r) => {
+    if (sc.hits) hit(sc, `regex ${r.rx.source}`, t.match(r.rx)?.length ?? 0);
+    return t.replace(r.rx, r.replace);
+}, text);
 
 /** A copy with the scrubbed values replaced. Keeps key order and number formats. */
 export function scrubJson(value: unknown, sc: Scrubber, at: Location = []): unknown {
-    if (at.length > 0 && sc.jsonPaths.some((p) => matches(p, at))) return SCRUBBED;
+    if (at.length > 0) {
+        const n = sc.jsonPaths.findIndex((p) => matches(p, at));
+        if (n >= 0) {
+            if (sc.jsonLabels) hit(sc, sc.jsonLabels[n]!);
+            return SCRUBBED;
+        }
+    }
     if (value instanceof JsonNumber) return value;
     if (Array.isArray(value)) return value.map((v, i) => scrubJson(v, sc, [...at, i]));
     if (value instanceof JsonObject) return new JsonObject(entriesOf(value).map(([k, v]) => [k, scrubJson(v, sc, [...at, k])]));
@@ -151,7 +165,10 @@ export function diffXml(a: XNode, b: XNode, sc: Scrubber, exact = true, at = "",
         out.push({ where: here, reference: `{${a.ns}}${a.local}`, candidate: `{${b.ns}}${b.local}` });
         return out;
     }
-    if (sc.xmlIgnore.has(a.local)) return out;
+    if (sc.xmlIgnore.has(a.local)) {
+        hit(sc, `xml_ignore ${a.local}`);
+        return out;
+    }
     for (const k of new Set([...a.attrs.keys(), ...b.attrs.keys()])) {
         const va = a.attrs.has(k) ? scrubText(a.attrs.get(k)!, sc) : "(missing)";
         const vb = b.attrs.has(k) ? scrubText(b.attrs.get(k)!, sc) : "(missing)";
@@ -188,12 +205,12 @@ export function bodyKind(contentType: string | undefined, body: string): "json" 
 
 const mediaType = (v: string | undefined) => (v ?? "").split(";")[0]!.trim().toLowerCase();
 
-export function compareObservations(ref: Observation, cand: Observation, manifest: Pick<Manifest, "scrub" | "compare_headers">, level: MatchLevel): Difference[] {
+export function compareObservations(ref: Observation, cand: Observation, manifest: Pick<Manifest, "scrub" | "compare_headers">, level: MatchLevel, hits?: Map<string, number>): Difference[] {
     const out: Difference[] = [];
     if (ref.status !== cand.status) out.push({ where: "status", reference: String(ref.status ?? "(none)"), candidate: String(cand.status ?? "(none)") });
     if (level === "contract") return out;
     const exact = level === "exact";
-    const sc = scrubberOf(manifest);
+    const sc = scrubberOf(manifest, hits);
     for (const name of manifest.compare_headers ?? []) {
         const h = name.toLowerCase();
         let va = ref.headers?.[h], vb = cand.headers?.[h];

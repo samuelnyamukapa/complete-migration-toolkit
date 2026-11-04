@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
 
+import { historyOf } from "./history.js";
 import { BOUNDARY_KINDS, MATCH_LEVELS, type Case, type Drift, type Manifest, type MatchLevel, type Request, type Target } from "./types.js";
 
 export class ManifestError extends Error {}
@@ -100,6 +101,7 @@ export function loadManifest(file: string): Manifest {
         proposals: pathOf(raw.proposals, "proposals", "cmtk/proposals.yaml"),
         explore_requests_per_day: positive(raw.explore_requests_per_day, "explore_requests_per_day", 1000),
         evidence: pathOf(raw.evidence, "evidence", "cmtk/evidence"),
+        evidence_history: historyOf(raw.evidence_history),
         allow_unsafe_methods: raw.allow_unsafe_methods === true,
         headers_from_env: raw.headers_from_env ?? {},
         timeout_s: positive(raw.timeout_s, "timeout_s", 30),

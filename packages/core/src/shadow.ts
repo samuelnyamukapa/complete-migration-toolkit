@@ -15,6 +15,7 @@ import { evidenceDir, envHeaders, matchFor, SAFE_METHODS, settingsOf, STOP_AFTER
 import { DROPPED_HEADERS, looksSecret, REDACTED } from "./har.js";
 import { loadDrift, ManifestError } from "./manifest.js";
 import { noiseKind } from "./report.js";
+import { scrubRules } from "./trend.js";
 import type { Case, Difference, Manifest, ReportSettings, Target } from "./types.js";
 
 export type ShadowVerdict = "NO UNEXPLAINED DIFFERENCES" | "UNEXPLAINED DIFFERENCES" | "INCOMPLETE" | "NO EVIDENCE";
@@ -124,6 +125,8 @@ export interface ShadowReport {
     unused_drift: string[];
     suggested_scrubs: { where: string; cases: number; why: string }[];
     settings: ReportSettings;
+    /** How many times each scrub rule changed something, including the ones that never did. */
+    scrub_fired?: Record<string, number>;
     reason: string;
     next: string;
 }
@@ -475,6 +478,7 @@ export async function shadow(manifest: Manifest, o: ShadowOptions): Promise<Shad
         const endpoints = new Map<string, ShadowEndpoint & { places: Map<string, ShadowDifference> }>();
         const noise = new Map<string, { kind: string | undefined; count: number }>();
         const used = new Set<string>();
+        const fired = new Map<string, number>(scrubRules(manifest.scrub).map((rule) => [rule, 0]));
         const sleep = o.sleep ?? ((ms: number) => new Promise<void>((res) => setTimeout(res, ms)));
         const now = o.now ?? (() => performance.now());
         if (!o.captureOnly) {
@@ -504,7 +508,7 @@ export async function shadow(manifest: Manifest, o: ShadowOptions): Promise<Shad
                 }
                 replay.sent++;
                 if (ra.truncated || rb.truncated) e.truncated = (e.truncated ?? 0) + 1;
-                const diffs: Difference[] = compareObservations(ra, rb, manifest, matchFor(c, manifest));
+                const diffs: Difference[] = compareObservations(ra, rb, manifest, matchFor(c, manifest), fired);
                 for (const d of diffs) {
                     const hit = coveringDrift(drift, `shadow:${name}`, d.where);
                     if (hit) { d.drift = hit.id; used.add(hit.id); }
@@ -538,6 +542,7 @@ export async function shadow(manifest: Manifest, o: ShadowOptions): Promise<Shad
             unused_drift: o.captureOnly ? [] : relevant.filter((d) => !used.has(d.id)).map((d) => d.id).sort(),
             suggested_scrubs: [...noise].filter(([, n]) => n.kind).map(([where, n]) => ({ where, cases: n.count, why: `both sides hold ${n.kind} that changes on every call` })).sort((a, b) => a.where.localeCompare(b.where)),
             settings: settingsOf(manifest, drift),
+            ...(fired.size && !o.captureOnly ? { scrub_fired: Object.fromEntries(fired) } : {}),
             reason, next,
         };
         fs.writeFileSync(path.join(dir, "REPORT.json"), JSON.stringify(report, null, 2) + "\n", "utf8");
