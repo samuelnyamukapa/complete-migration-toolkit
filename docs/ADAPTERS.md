@@ -83,6 +83,16 @@ Three things keep it safe. `Console.WriteLine` goes to standard error, so a stra
 - **Leave out what changes on every run,** such as message ids and timestamps, or report it in a field the project can scrub.
 - **Never print a secret,** not even in an error.
 
+## Adapters that ship with the toolkit
+
+Each has its own README in `adapters/<name>/`, with its settings and safety rules.
+
+| Adapter | Covers | What it does | What it has run against |
+|---|---|---|---|
+| [queue](../adapters/queue/README.md) | `queue` | Publishes a case's message to a test queue and reports what reaches the output queues, in RabbitMQ or Azure Service Bus | An in-memory stand-in. Real brokers need its real-server tests |
+| [batch](../adapters/batch/README.md) | `files` | Runs a job on copies of its input files and reports each output as name, size, hash and records, reading fixed-width and EBCDIC files | Its own small sample jobs, on any system with Node. CardDemo's files are not in this repository |
+| [database](../adapters/database/README.md) | `database` | Snapshots chosen tables before and after a case and reports the rows that changed, in SQL Server or PostgreSQL. Refuses a login that can write, and sends only SELECT | PostgreSQL through PGlite, and an in-memory stand-in for SQL Server. Real servers need its real-server tests |
+
 ## Levels
 
 Adapters move through three levels:
