@@ -70,10 +70,11 @@ A file with keys or ignored fields is hashed by its records, and `hash_of` says 
 ## Safety
 
 - **Originals.** The job gets copies, in a new folder for each run on each target, which is removed afterwards. Every original is hashed before and after: if one changed, the case is an error naming it.
-- **Writing outside the working folder.** Refused before the job runs: an argument, an input name or an `outputs` folder that is absolute or goes up with `..`. A link in the outputs leading outside is an error.
-- **Node jobs are locked in.** They run under Node's permission model, so a write outside the working folder fails. Set `node_permission: false` for a job that needs what that blocks, such as starting another program.
-- **Other programs are not locked in.** The adapter cannot stop a compiled program that ignores its arguments from writing elsewhere. Run those under an account or a container that can write nowhere else. The hash check above still catches a change to an original.
-- **No shell.** Shell characters are plain text. A `.cmd` or `.bat` file is refused on Windows, because it would need a shell.
+- **Writing outside the working folder.** Refused before the job runs: an input name or an `outputs` folder that is absolute or goes up with `..`, and an argument that holds such a path, however it is wrapped: `--out:/etc/x`, `-o../x`, `--path=a=/etc/x`, `@/etc/x`, `~/x`. So an argument with a URL is refused too. A link in the outputs leading outside is an error. This is a check on text, and a program can build a path from parts, so it is not a lock.
+- **Links in the inputs.** An input that is a link, or sits behind a linked folder, is refused wherever it points.
+- **Only node jobs have a real lock.** They run under Node's permission model, so a write outside the working folder fails, a link can't be made to get round it, and another program can't be started. A node job must name its `script`, so that an argument can't become one of Node's own switches. Reads are not locked: a node job can read any file this account can, and it can use the network. `node_permission: false` takes the lock off, for a job that needs what it blocks.
+- **Other programs are not locked in.** The adapter cannot stop a compiled program, or a script of any other kind, from writing elsewhere, reading anything this account can, or using the network, whatever its arguments say. Run those under an account or a container that can write nowhere else. The hash check above still catches a change to an original, and nothing else outside the working folder is watched.
+- **No shell.** Shell characters are plain text. A job whose command is a shell, such as `sh`, `bash`, `cmd`, `powershell` or `env`, is refused, because its arguments are commands. So is a `.cmd` or `.bat` file on Windows. A script with its own first line, such as `./job.sh`, still runs, and it is a program that is not locked in.
 - **Secrets.** A job gets only `PATH` and a few system variables, plus any named in `env_names`. Headers are never used.
 - **Too many records is an error,** with what was read kept in the evidence, so part of a file cannot count as a match.
 

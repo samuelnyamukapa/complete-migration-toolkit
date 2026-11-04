@@ -172,6 +172,81 @@ test("working folder: anything that names a place outside it is refused before t
     await assert.rejects(marker.run(POST("ok", { inputs: ["missing.txt"] }), target), /does not exist/);
 });
 
+test("working folder: a place outside it is refused however the argument wraps it", async () => {
+    for (const arg of [
+        "--out:/etc/nope", "-o../x", "-o/etc/nope", "--path=a=/etc/x", "--path=a=../x", "--list=a,/etc/x", "--list=a;../x", "a:/etc/x", "@/etc/args", "@../args",
+        "-IC:\\Windows", "--dir=D:/x", "\\\\server\\share", "~/x", "--home=~/x", "file:/etc/x", "--u=file:///etc/x", "echo x > /tmp/y", "cd ..; echo x > y", "x=..",
+    ]) {
+        await assert.rejects(rig({ bad: job("args", arg) }).run(POST("bad"), target), /outside the working folder/, arg);
+    }
+});
+
+test("working folder: an argument that only looks like a place still reaches the job", async () => {
+    const list = ["--date=2026/11/04", "--ratio=1/2", "out/file.txt", "--out=out/x.txt", "a..b", "-v", "--name=a:b", "v1.2.3", "http", "in/a.txt,in/b.txt"];
+    const o = await rig({ ok: job("args", ...list) }).run(POST("ok"), target);
+    assert.equal(o.effects.exit_code, 0);
+    assert.deepEqual(o.effects.files[0].records, list);
+});
+
+test("working folder: a shell is not a job, since its arguments can write anywhere", async () => {
+    for (const command of ["sh", "bash", "/bin/sh", "/usr/bin/env", "zsh", "dash", "cmd", "cmd.exe", "powershell", "pwsh.exe", "C:\\Windows\\System32\\cmd.exe"]) {
+        const a = rig({ bad: { command, args: ["-c", "echo x > y"] } });
+        const o = await a.run(POST("bad"), target);
+        assert.match(o.error ?? "", /shell/, command);
+    }
+});
+
+test("working folder: a node job must name its script, so its arguments can't become Node's own switches", async (t) => {
+    const dir = tempDir(t);
+    const outside = path.join(dir, "escaped.txt");
+    const a = rig({ bad: { command: "node", args: ["--allow-fs-write=*", "-e", `require("fs").writeFileSync(process.env.OUTSIDE_FILE,"x")`], env_names: ["OUTSIDE_FILE"] } }, {}, { ...process.env, OUTSIDE_FILE: outside });
+    const o = await a.run(POST("bad"), target);
+    assert.match(o.error ?? "", /needs a script/);
+    assert.equal(fs.existsSync(outside), false);
+});
+
+test("working folder: a locked node job can't make a link to get out", { skip: process.platform === "win32" ? "making a link needs a privilege on Windows" : false }, async (t) => {
+    const dir = tempDir(t);
+    const outside = path.join(dir, "escaped.txt");
+    const a = rig({ bad: { ...job("link-write"), env_names: ["OUTSIDE_FILE"] } }, {}, { ...process.env, OUTSIDE_FILE: outside });
+    const o = await a.run(POST("bad"), target);
+    assert.notEqual(o.effects.exit_code, 0);
+    assert.equal(fs.existsSync(outside), false, "nothing was written through a link");
+});
+
+test("working folder: a locked node job can't start another program, and can still read, as the README says", async (t) => {
+    const started = await rig({ bad: job("start-program") }).run(POST("bad"), target);
+    assert.notEqual(started.effects.exit_code, 0);
+    assert.deepEqual(started.effects.files, []);
+    const dir = tempDir(t);
+    const outside = path.join(dir, "readable.txt");
+    fs.writeFileSync(outside, "read me");
+    const read = await rig({ r: { ...job("read-outside"), env_names: ["OUTSIDE_FILE"] } }, {}, { ...process.env, OUTSIDE_FILE: outside }).run(POST("r"), target);
+    assert.equal(read.effects.exit_code, 0, "the lock covers writes, and the README says so");
+    assert.deepEqual(read.effects.files[0].records, ["read me"]);
+});
+
+test("inputs: a link is refused, wherever it points, and so is a folder reached through one", { skip: process.platform === "win32" ? "making a link needs a privilege on Windows" : false }, async (t) => {
+    const dir = tempDir(t);
+    const root = path.join(dir, "inputs");
+    fs.mkdirSync(path.join(root, "real"), { recursive: true });
+    fs.writeFileSync(path.join(root, "real", "good.txt"), "good");
+    fs.writeFileSync(path.join(dir, "secret.txt"), "secret");
+    fs.mkdirSync(path.join(dir, "elsewhere"));
+    fs.writeFileSync(path.join(dir, "elsewhere", "secret.txt"), "secret");
+    fs.symlinkSync(path.join(dir, "secret.txt"), path.join(root, "out.txt"));
+    fs.symlinkSync(path.join(root, "real", "good.txt"), path.join(root, "near.txt"));
+    fs.symlinkSync(path.join(dir, "elsewhere"), path.join(root, "away"));
+    const a = rig({ ok: job("where") }, { inputs_root: root });
+    for (const name of ["out.txt", "near.txt", "away/secret.txt"]) {
+        for (const method of ["POST", "GET"]) {
+            await assert.rejects(a.run({ id: "B", request: { method, path: "/jobs/ok" }, inputs: [name] }, target), /is a link/, name);
+        }
+    }
+    const fine = await a.run(POST("ok", { inputs: ["real/good.txt"] }), target);
+    assert.equal(fine.error, undefined);
+});
+
 test("working folder: a link in the outputs that leads outside it is an error", { skip: process.platform === "win32" ? "making a link needs a privilege on Windows" : false }, async (t) => {
     const dir = tempDir(t);
     const outside = path.join(dir, "secret.txt");

@@ -41,17 +41,30 @@ function relativeName(name, what) {
     return parts.filter((p) => p && p !== ".").join("/");
 }
 
-/** An argument that names a place outside the working folder, in itself or after `--flag=`. */
+/** Where an argument can start a path: its start, or after a separator it might be wrapped in. */
+const STARTS = `(?:^|[=:,;|@\\s'"(<>]|^-[A-Za-z])`;
+const OUTSIDE = [
+    new RegExp(`${STARTS}[\\\\/]`), // /etc/x, --out:/etc/x, -o/etc/x, @/etc/x, \\\\server\\share
+    new RegExp(`${STARTS}[A-Za-z]:[\\\\/]`), // C:\\Windows, -IC:\\Windows
+    new RegExp(`${STARTS}~(?:[\\\\/]|$)`), // ~/x
+    /(?:^|[=,;@\s'"])file:/i,
+    /\.\.(?:$|[\\/\s;,:|'"&)=])/, // .. as a step, whatever comes before it: -o../x, x=..
+];
+
+/**
+ * An argument that names a place outside the working folder, however it is wrapped. This looks at text only: a program
+ * can build a path from its parts, so it is a first check, and only a node job has a real lock. See README.md.
+ */
 function checkArgument(arg, job) {
     const text = String(arg);
-    const value = text.includes("=") ? text.slice(text.indexOf("=") + 1) : text;
-    for (const v of [text, value]) {
-        if (path.posix.isAbsolute(v) || path.win32.isAbsolute(v) || /^file:/i.test(v) || v.split(/[\\/]/).includes("..")) {
-            throw new Error(`the job ${job} has the argument ${JSON.stringify(text)}, which points outside the working folder, so it was not run. Arguments are relative to the working folder`);
-        }
+    if (OUTSIDE.some((re) => re.test(text))) {
+        throw new Error(`the job ${job} has the argument ${JSON.stringify(text)}, which points outside the working folder, so it was not run. Arguments are relative to the working folder`);
     }
     return text;
 }
+
+/** A program whose arguments are themselves commands, so nothing above could check them. */
+const SHELL = /^(sh|bash|dash|zsh|ksh|csh|tcsh|ash|fish|env|busybox|cmd|command|powershell|pwsh)(\.exe|\.com)?$/i;
 
 /** Files under a folder, as sorted names relative to it. A link is reported, and not followed. */
 function listFiles(dir) {
@@ -170,6 +183,11 @@ export function createAdapter({ settings = {}, root = process.cwd(), env = proce
             const full = path.resolve(from, rel);
             if (!inside(from, full)) throw new Error(`the input ${rel} is outside the inputs folder`);
             if (!fs.existsSync(full) || !fs.statSync(full).isFile()) throw new Error(`the input ${rel} does not exist`);
+            let step = from;
+            for (const part of path.relative(from, full).split(path.sep)) {
+                step = path.join(step, part);
+                if (fs.lstatSync(step).isSymbolicLink()) throw new Error(`the input ${rel} is a link, or is reached through one, so it was refused: a job gets only files that are really in the inputs folder`);
+            }
             const as = relativeName(typeof item === "string" ? path.basename(rel) : item.as ?? path.basename(rel), "the input name");
             const bytes = fs.readFileSync(full);
             return { rel: rel.split(path.sep).join("/"), full, as, sha: sha256(bytes), size: bytes.length };
@@ -202,11 +220,14 @@ export function createAdapter({ settings = {}, root = process.cwd(), env = proce
         const jobArgs = (job.args ?? []).map((a) => checkArgument(a, jobName));
         const command = String(job.command ?? "");
         if (!command) return { error: `the job ${jobName} needs a command` };
+        if (SHELL.test(command.split(/[\\/]/).at(-1))) return { error: `the job ${jobName} runs a shell (${command.split(/[\\/]/).at(-1)}), whose arguments are commands that nothing here can check. This adapter never uses one: name the program itself` };
         const isNode = command === "node";
         const program = isNode ? process.execPath : /[\\/]/.test(command) ? path.resolve(root, command) : command;
         if (process.platform === "win32" && /\.(cmd|bat)$/i.test(program)) return { error: `the job ${jobName} is a ${path.extname(program)} file, which needs a shell. This adapter never uses one: name the program itself` };
         const script = job.script === undefined ? [] : [path.resolve(root, String(job.script))];
         if (script[0] && !fs.existsSync(script[0])) return { error: `the job ${jobName}: the script ${job.script} does not exist` };
+        // Without a script, the arguments would be Node's own switches, and one of those lifts the lock.
+        if (isNode && job.node_permission !== false && !script.length) return { error: `the job ${jobName} needs a script: a node job's arguments must go to its script, not to Node` };
 
         const work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "cmtk-batch-")));
         try {

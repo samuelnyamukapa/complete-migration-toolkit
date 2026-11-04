@@ -1,4 +1,5 @@
 // A job for the tests, doing one thing a good job would not. The first argument says what.
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -33,6 +34,17 @@ switch (what) {
         break;
     case "link-out":
         fs.symlinkSync(path.resolve(process.env.OUTSIDE_FILE), "out/link.txt");
+        break;
+    case "link-write":
+        fs.symlinkSync(path.dirname(path.resolve(process.env.OUTSIDE_FILE)), "out/away");
+        fs.writeFileSync(`out/away/${path.basename(process.env.OUTSIDE_FILE)}`, "escaped");
+        break;
+    case "start-program":
+        execFileSync(process.execPath, ["--version"]);
+        fs.writeFileSync("out/started.txt", "started");
+        break;
+    case "read-outside":
+        fs.writeFileSync("out/read.txt", fs.readFileSync(process.env.OUTSIDE_FILE));
         break;
     case "records":
         fs.writeFileSync("out/many.txt", Array.from({ length: Number(rest[0]) }, (_, i) => `line ${i}`).join("\n"));
