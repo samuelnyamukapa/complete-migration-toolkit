@@ -284,7 +284,7 @@ test("with no browser the adapter says what to do, and its case is an error", { 
     }
 });
 
-test("a request body a browser can't send is an error naming it, not dropped", { timeout: 30_000 }, async () => {
+test("a request body a browser can't send is an error naming it, not dropped", web, async () => {
     const a = adapter();
     try {
         for (const part of [{ body_file: "x.json" }, { body_form: { a: 1 } }, { files: [{ field: "f", path: "x" }] }, { before: { get: "/" } }, { body: "text" }]) {
