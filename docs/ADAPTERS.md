@@ -26,6 +26,9 @@ An observation:
 { "status": 200, "headers": {}, "body": "…", "effects": { "emails": [{ "to": "a@example.com", "subject": "Your order" }] } }
 ```
 
+- **Journeys:** a UI adapter also reports `journey` (goal, checks, values, pages, API calls), which the `journey` match level compares. See [adapters/web](../adapters/web/README.md).
+- **Screenshots:** `screenshots: [{ page, png_base64 }]`. The engine writes each one to the evidence folder and keeps its name and fingerprint in the answer. They are evidence, not the test.
+- **Model calls:** `model_calls` says how many calls to a model the answer took: 0 for an adapter with no model. The report adds them up, and says when an adapter does not count them.
 - **Comparing:** `effects` is compared between systems exactly like a JSON body. It also appears in reports as `effects:$.emails[0].subject`.
 - **Errors:** an adapter that cannot run a case answers `{"error":"…"}`. A case arrives as written in its file, with `body_file`, `body_form`, `files` or `before` when it has them; the built-in HTTP adapter handles all four, and an adapter that does not support one should answer an error naming it rather than send the request without it.
 - **Headers:** the `headers` passed in hold credentials from `headers_from_env`. Use them, but never report them.

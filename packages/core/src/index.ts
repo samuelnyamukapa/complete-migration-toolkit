@@ -4,10 +4,12 @@ export { shadow, captureRequests, cleanTarget, redactText, looksPersonal, endpoi
 export { keepDated, cleanHistory, datedRuns, sizeOf, stampOf, stampTime, historyFolder, DEFAULT_HISTORY, HISTORY_MODES, type HistoryMode, type CleanOptions } from "./history.js";
 export { trend, trendOf, renderTrend, scrubRules, type TrendReport, type TrendRun, type TrendDifference, type TrendFlaky } from "./trend.js";
 export { run, compare, matchFor, envHeaders, adaptersFor, SAFE_METHODS, type RunOptions } from "./engine.js";
+export { run, compare, matchFor, envHeaders, adaptersFor, evidenceOf, SAFE_METHODS, type RunOptions } from "./engine.js";
 export { compareObservations, diffJson, diffXml, parseXml, parseJsonKeepingNumbers, scrubberOf, scrubJson, shortPair, ConfigError, SCRUBBED } from "./diff.js";
 export { parseJsonExact, JsonNumber, JsonObject, jsonEqual } from "./json.js";
 export { recordSignoff, signoffState, describeSignoff, evidenceFingerprint, SignoffError, DECISIONS, type Signoff, type SignoffState } from "./signoff.js";
 export { checkExpectation } from "./expect.js";
+export { diffJourney } from "./journey.js";
 export { loadKnownIssues, markKnown, knownInReport } from "./known.js";
 export { checkContract, diffOpenApi, diffWsdl } from "./contracts.js";
 export { coveringDrift, covers } from "./drift.js";

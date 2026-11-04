@@ -75,6 +75,7 @@ export function summarise(x: {
     compareOnlySurfaces?: string[];
     surfaces?: Record<string, string[] | undefined>;
     scrubFired?: Record<string, number>;
+    modelCalls?: { total: number; cases_not_counted: number };
 }): Report {
     const counts: Record<string, number> = {};
     const keys = x.mode === "run" ? ["PASS", "FAIL", "SKIPPED", "ERROR"] : ["MATCH", "DRIFT", "DIFFERENT", "SKIPPED", "ERROR"];
@@ -126,6 +127,7 @@ export function summarise(x: {
         ...(scope ? { scope } : {}),
         ...(x.settings ? { settings: x.settings } : {}),
         ...(x.scrubFired ? { scrub_fired: x.scrubFired } : {}),
+        ...(x.modelCalls ? { model_calls: x.modelCalls } : {}),
         reason,
         next,
     };
@@ -204,7 +206,9 @@ export function renderReport(r: Report): string {
     L.push(`# ${title}: ${r.system}`, "", `**Verdict: ${r.verdict}**${r.partial ? " (partial run: only some cases)" : ""}${r.scope && !r.scope.whole ? " (only part of the system: see Scope)" : ""}`, "", r.reason, "", `Next: ${r.next}`, "");
     L.push(`- Date: ${r.date}`);
     for (const [name, url] of Object.entries(r.targets)) L.push(`- ${name}: \`${url}\``);
-    L.push(`- Cases: ${Object.entries(r.counts).map(([k, v]) => `${v} ${k.toLowerCase()}`).join(", ")}`, "");
+    L.push(`- Cases: ${Object.entries(r.counts).map(([k, v]) => `${v} ${k.toLowerCase()}`).join(", ")}`);
+    if (r.model_calls) L.push(`- Model calls: ${r.model_calls.total}${r.model_calls.cases_not_counted ? ` counted, and ${plural(r.model_calls.cases_not_counted, "answer")} from an adapter that does not count them` : ""}`);
+    L.push("");
     L.push("Written by `cmtk " + r.mode + "` from the files in this folder. Do not edit the numbers: run it again.", "");
     if (r.settings) {
         const s = r.settings;

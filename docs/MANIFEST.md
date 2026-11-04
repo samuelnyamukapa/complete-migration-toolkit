@@ -14,7 +14,7 @@ The formats here are frozen by [FORMATS.md](FORMATS.md), and `schemas/` lets an 
 | `default_target` | `candidate`, or the first | The target `cmtk run` uses |
 | `reference` | `legacy`, if present | `cmtk compare`'s reference: today's system |
 | `candidate` | `candidate`, if present | `cmtk compare`'s system under test |
-| `match` | `exact` | `exact`, `semantic` or `contract`, for every case |
+| `match` | `exact` | `exact`, `semantic`, `contract` or `journey`, for every case (see [Match levels](#match-levels)) |
 | `overrides` | `[]` | `{ path: "/api/admin/*", match: semantic }`: a level for the paths a glob matches |
 | `scrub.json_paths` | `[]` | JSON paths replaced before comparing, such as `$..generatedAt` |
 | `scrub.xml_ignore` | `[]` | XML element names whose content is not compared |
@@ -49,6 +49,7 @@ A case file holds `cases:`, a list. Each case:
 | `request.before` | no | `{ get: /a/path, take?: { field: selector } }`: a page on the same target read before the request, for the cookies it sets (all go on the request) and the values it carries, each put into a form field. A selector is `input[name=x]` (its `value`), `meta[name=x]` (its `content`), `tag[attr=x]@attr`, `regex:<pattern with one group>` or `cookie:<name>`. This is how a form with an anti-forgery token is posted. The values taken are never written to evidence; their names, the page and its status are. A page that doesn't answer 2xx, or a selector that matches nothing, makes the case an error and the request is not sent |
 | `expect` | for `cmtk run` | What the answer must hold (below) |
 | `surface` | no | The adapter that runs it. Default `http` |
+| `journey` | no | For the [web adapter](../adapters/web/README.md): a task written as steps, with checks in code |
 | `match` | no | This case's level, overriding everything else |
 | `safe` | no | `true` when a person has confirmed a non-GET request changes nothing, such as a read-only SOAP call |
 | `draft` | no | `true` for a case an agent wrote that no person has accepted yet. It is reported as SKIPPED until `cmtk review` accepts it |
@@ -77,6 +78,17 @@ expect:
 Cases run in file order, but each case must stand alone: a case never depends on what an earlier one did.
 
 A check on a path that matches several values (with `[*]` or `..`) must hold for each of them.
+
+## Match levels
+
+| Level | Compares | For |
+|---|---|---|
+| `exact` | Status, the headers in `compare_headers`, effects and the body, byte for byte after scrubs | A system that must not change at all |
+| `semantic` | The same, ignoring number format, key order and whitespace | A rebuild that may format its answers differently |
+| `contract` | Status only | A rough check, with the contract files doing the rest |
+| `journey` | The goal, each check's result, the key values and the named pages, from an adapter's `journey` report. Paths, status, styling and screenshots may differ. API calls are compared only when the journey sets `compare_api: true` | A new UI: the same goals reached with the same outcomes, whatever the screens look like |
+
+A level that finds nothing to compare never reads as a match. An adapter that reports no journey at `journey`, or a journey with no checks, values or named pages, reads as a difference at `journey`.
 
 ## Drift ledger (cmtk/drift.yaml)
 
@@ -174,6 +186,11 @@ The word PARITY is left out of PARTIAL COMPARISON on purpose, so that nobody rea
 | `/Envelope/Body/X[2]` | An element that only one system sent, by position |
 | `body line N` | The first differing line of a text body |
 | `effects:$.emails[0].subject` | A side effect an adapter reported |
+| `journey:check:<name>` | A check in a journey that passed on one system only |
+| `journey:value:<name>` | A key value a journey read |
+| `journey:page:<name>`, `journey:pages` | A named page reached on one system only, or reached in another order |
+| `journey:api:<method> <path> <status>` | An API call made a different number of times, when the journey asks to compare them |
+| `journey:goal`, `journey` | The journeys have different goals, or an adapter reported nothing to compare |
 | `body encoding` | One system sent UTF-8 and the other did not (checked at `exact`) |
 | `not comparable: <target> has no <surface> surface` | Not a `where`, but a result: a target lacks the case's surface, so nothing was sent |
 | `contract:<name>: <finding>` | A change to a contract, such as `contract:catalog-api: operation added: GET /api/v2/items`. Every change needs approval, additions included, because contracts are locked by default |

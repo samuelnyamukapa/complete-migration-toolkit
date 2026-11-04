@@ -4,7 +4,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { adaptersFor, envHeaders, SAFE_METHODS } from "./engine.js";
+import { adaptersFor, envHeaders, evidenceOf, SAFE_METHODS } from "./engine.js";
 import { inside, ManifestError, ownedFolder } from "./manifest.js";
 import { editYaml, seqAt } from "./proposals.js";
 import type { Case, Expectation, Manifest, Observation } from "./types.js";
@@ -132,12 +132,12 @@ export async function exploreRequest(manifest: Manifest, id: string, request: un
         } finally {
             await adapters.closeAll();
         }
-        fs.writeFileSync(path.join(dir, "answers", `${String(n).padStart(3, "0")}.json`), JSON.stringify({ request: req, observation }, null, 2) + "\n", "utf8");
+        fs.writeFileSync(path.join(dir, "answers", `${String(n).padStart(3, "0")}.json`), JSON.stringify({ request: req, observation: evidenceOf(observation) }, null, 2) + "\n", "utf8");
         const entry = s.log[s.log.length - 1]!;
         if (observation.status !== undefined) entry.status = observation.status;
         if (observation.error) entry.error = observation.error;
         save(dir, s);
-        return { n, observation, left: s.budget_requests - n };
+        return { n, observation: evidenceOf(observation) as Observation, left: s.budget_requests - n };
     } finally {
         unlock();
     }

@@ -341,7 +341,7 @@ targets:
 
 # A target reached only in part can list what it offers: surfaces: [catalog]. See docs/MANIFEST.md.
 
-# How strict \`cmtk compare\` is: exact | semantic | contract. Loosen per path with overrides.
+# How strict \`cmtk compare\` is: exact | semantic | contract, or journey for a UI adapter. Loosen per path with overrides.
 match: exact
 overrides: []
 #  - { path: "/api/admin/*", match: semantic }

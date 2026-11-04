@@ -2,6 +2,7 @@
 // person can read and a drift entry can name.
 import { DOMParser } from "@xmldom/xmldom";
 
+import { diffJourney } from "./journey.js";
 import { entriesOf, isJsonObject, JsonNumber, JsonObject, parseJsonExact } from "./json.js";
 import { matches, parsePath, render, type Location, type Token } from "./jsonpath.js";
 import type { Difference, MatchLevel, Manifest, Observation } from "./types.js";
@@ -207,6 +208,8 @@ const mediaType = (v: string | undefined) => (v ?? "").split(";")[0]!.trim().toL
 
 export function compareObservations(ref: Observation, cand: Observation, manifest: Pick<Manifest, "scrub" | "compare_headers">, level: MatchLevel, hits?: Map<string, number>): Difference[] {
     const out: Difference[] = [];
+    // A journey's status only says whether its checks held, and the checks themselves are compared.
+    if (level === "journey") return diffJourney(ref.journey, cand.journey, scrubberOf(manifest));
     if (ref.status !== cand.status) out.push({ where: "status", reference: String(ref.status ?? "(none)"), candidate: String(cand.status ?? "(none)") });
     if (level === "contract") return out;
     const exact = level === "exact";

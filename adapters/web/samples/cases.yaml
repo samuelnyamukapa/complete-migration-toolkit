@@ -1,0 +1,22 @@
+# The cases `cmtk adapter check web` runs. The adapter serves the sample page itself, so the kit needs no system.
+check_target: { serve_folder: adapters/web/samples/site }
+cases:
+  - id: sample-page
+    name: A page visit only reads
+    surface: web
+    request: GET /index.html
+  - id: sample-journey
+    name: A journey with a check in code
+    surface: web
+    request: GET /
+    journey:
+      goal: See the welcome page
+      steps:
+        - goto: /
+        - reach: welcome
+          see: { role: heading, name: Welcome }
+        - read: greeting
+          from: { testid: greeting }
+        - check: the greeting is shown
+          value: greeting
+          equals: Hello

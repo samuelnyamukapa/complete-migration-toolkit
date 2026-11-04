@@ -18,7 +18,7 @@ import { checkExpectation } from "./expect.js";
 import { knownInReport, loadKnownIssues, markKnown } from "./known.js";
 import { loadCases, loadDrift, ManifestError, ownedFolder } from "./manifest.js";
 import { renderReport, summarise } from "./report.js";
-import type { Case, CaseOutcome, ContractOutcome, Drift, KnownIssue, Manifest, MatchLevel, Report, ReportSettings, Target } from "./types.js";
+import type { Case, CaseOutcome, ContractOutcome, Drift, KnownIssue, Manifest, MatchLevel, Observation, Report, ReportSettings, ScreenshotFile, Target } from "./types.js";
 
 export const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -217,6 +217,38 @@ const where = (t: Target) => (t.base_url ? cleanUrl(t.base_url) : undefined) ?? 
 
 const writeJson = (file: string, data: unknown) => fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8");
 
+/**
+ * An answer as it goes into the evidence: screenshots become files beside it, with their names and
+ * fingerprints in the answer. Without `dir` they are only left out, as for an exploration log.
+ */
+export function evidenceOf(obs: Observation, dir?: string, stem?: string): Omit<Observation, "screenshots"> & { screenshots?: ScreenshotFile[] } {
+    const { screenshots, ...rest } = obs;
+    if (!screenshots?.length) return rest;
+    if (!dir || !stem) return rest;
+    return {
+        ...rest,
+        screenshots: screenshots.map((s, i) => {
+            const bytes = Buffer.from(String(s.png_base64), "base64");
+            const file = `${stem}.screen-${String(i + 1).padStart(2, "0")}.png`;
+            fs.writeFileSync(path.join(dir, file), bytes);
+            return { page: String(s.page), file, sha256: crypto.createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length };
+        }),
+    };
+}
+
+/** Adds up what adapters say about model calls. A case on an adapter that does not say is counted as not known, never as zero. */
+function modelCalls() {
+    const tally = { total: 0, cases_not_counted: 0 };
+    return {
+        tally,
+        add(surface: string, obs: Observation) {
+            if (surface === "http") return;
+            if (typeof obs.model_calls === "number" && Number.isInteger(obs.model_calls) && obs.model_calls >= 0) tally.total += obs.model_calls;
+            else tally.cases_not_counted++;
+        },
+    };
+}
+
 function target(manifest: Manifest, name: string | undefined, role: string): Target {
     if (!name) throw new ManifestError(`cmtk.yaml names no ${role} target. Set \`${role}:\` to one of: ${Object.keys(manifest.targets).join(", ")}.`);
     const t = manifest.targets[name];
@@ -239,6 +271,7 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
     try {
         const dir = ev.dir;
         const out: CaseOutcome[] = [];
+        const models = modelCalls();
         let silent = 0; // requests in a row with no answer
         try {
             for (const c of cases) {
@@ -254,7 +287,8 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
                 if (silent >= STOP_AFTER_NO_ANSWER) { out.push({ ...b, result: "SKIPPED", why: STOPPED_WHY }); continue; }
                 try {
                     const obs = await adapters.get(b.surface).run(c, t, extra);
-                    writeJson(path.join(dir, "answers", `${c.id}.json`), obs);
+                    writeJson(path.join(dir, "answers", `${c.id}.json`), evidenceOf(obs, path.join(dir, "answers"), c.id));
+                    models.add(b.surface, obs);
                     silent = noAnswer(obs) ? silent + 1 : 0;
                     const sent = { ...(obs.inputs?.length ? { inputs: obs.inputs } : {}), ...(obs.before ? { before: obs.before } : {}) };
                     if (obs.error) { out.push({ ...b, ...sent, result: "ERROR", why: obs.error }); continue; }
@@ -268,7 +302,7 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
         } finally {
             await adapters.closeAll();
         }
-        const report = summarise({ mode: "run", manifest, targets: { [t.name]: where(t) }, cases: out, contracts: [], drift: [], usedDrift: new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, [], known), excludedDrafts: selected.excluded, excludedCompareOnly: leftOut, compareOnlySurfaces: manifest.compare_only_surfaces, known: knownInReport(known, out, new Set(loadCases(manifest).map((c) => c.id))) });
+        const report = summarise({ mode: "run", manifest, targets: { [t.name]: where(t) }, cases: out, contracts: [], drift: [], usedDrift: new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, [], known), modelCalls: models.tally, excludedDrafts: selected.excluded, excludedCompareOnly: leftOut, compareOnlySurfaces: manifest.compare_only_surfaces, known: knownInReport(known, out, new Set(loadCases(manifest).map((c) => c.id))) });
         writeJson(path.join(dir, "REPORT.json"), report);
         fs.writeFileSync(path.join(dir, "REPORT.md"), renderReport(report), "utf8");
         ev.commit();
@@ -295,6 +329,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
         const fired = new Map<string, number>(scrubRules(manifest.scrub).map((rule) => [rule, 0]));
         const contracts: ContractOutcome[] = [];
         const out: CaseOutcome[] = [];
+        const models = modelCalls();
         let silent = 0; // cases in a row where a system gave no answer
         try {
             const http = adapters.get("http");
@@ -327,8 +362,10 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
                     if (adapter.reset) { await adapter.reset(ref); await adapter.reset(cand); }
                     const ra = await adapter.run(c, ref, extra);
                     const rb = await adapter.run(c, cand, extra);
-                    writeJson(path.join(dir, "answers", `${c.id}.reference.json`), ra);
-                    writeJson(path.join(dir, "answers", `${c.id}.candidate.json`), rb);
+                    writeJson(path.join(dir, "answers", `${c.id}.reference.json`), evidenceOf(ra, path.join(dir, "answers"), `${c.id}.reference`));
+                    writeJson(path.join(dir, "answers", `${c.id}.candidate.json`), evidenceOf(rb, path.join(dir, "answers"), `${c.id}.candidate`));
+                    models.add(b.surface, ra);
+                    models.add(b.surface, rb);
                     silent = noAnswer(ra) || noAnswer(rb) ? silent + 1 : 0;
                     if (ra.inputs?.length) b.inputs = ra.inputs;
                     if (ra.before) b.before = ra.before;
@@ -356,6 +393,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
             await adapters.closeAll();
         }
         const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), excludedDrafts: cases.excluded, surfaces: { [ref.name]: ref.surfaces, [cand.name]: cand.surfaces }, ...(fired.size ? { scrubFired: Object.fromEntries(fired) } : {}) });
+        const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), modelCalls: models.tally, excludedDrafts: cases.excluded, surfaces: { [ref.name]: ref.surfaces, [cand.name]: cand.surfaces } });
         writeJson(path.join(dir, "REPORT.json"), report);
         fs.writeFileSync(path.join(dir, "REPORT.md"), renderReport(report), "utf8");
         ev.commit();

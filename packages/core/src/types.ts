@@ -2,12 +2,12 @@
 // every file the toolkit writes, and an adapter in any language can produce them.
 
 /** How strict a comparison is. Set for the whole system, then loosened per path or per case. */
-export type MatchLevel = "exact" | "semantic" | "contract";
+export type MatchLevel = "exact" | "semantic" | "contract" | "journey";
 /** The kinds of boundary `cmtk discover` lists, and an adapter's `covers` names. */
 export const BOUNDARY_KINDS = ["http", "soap", "outbound-http", "database", "files", "email", "sms", "queue", "payments", "worker", "ui", "logs"] as const;
 export type BoundaryKind = (typeof BOUNDARY_KINDS)[number];
 
-export const MATCH_LEVELS: readonly MatchLevel[] = ["exact", "semantic", "contract"];
+export const MATCH_LEVELS: readonly MatchLevel[] = ["exact", "semantic", "contract", "journey"];
 
 /**
  * One system the toolkit can send cases to. `base_url` is needed for HTTP cases; any other
@@ -210,6 +210,39 @@ export interface Case {
     expect_confirmed_on?: string;
 }
 
+/** What a UI journey did, as an adapter reports it. Plain facts: the engine decides what differs. */
+export interface JourneyOutcome {
+    /** The task, in words, such as "find a red jacket and add it to the basket". */
+    goal: string;
+    /** The checks in code that decide pass or fail. */
+    checks: { name: string; passed: boolean; expected?: string; actual?: string }[];
+    /** Key values the screens showed, by the name the journey gave them. Null when the screen did not show it. */
+    values: Record<string, string | null>;
+    /** Pages reached, in order. A `name` is a milestone the journey named, and it is what `journey` compares; the path may differ between systems. */
+    pages: { name?: string; path: string; status?: number }[];
+    /** The API calls each page made. Reported, and compared only through `api_compared`. */
+    api_calls?: { page: string; method: string; path: string; status?: number }[];
+    /** "POST /api/basket 200": the calls a journey asked to have compared. */
+    api_compared?: string[];
+    /** What the browser was not allowed to send, such as a write on a read-only case. */
+    blocked?: { why: string; request: string }[];
+}
+
+/** A screenshot an adapter took. The engine writes it to the evidence folder. It is evidence, never the test. */
+export interface Screenshot {
+    /** The page or milestone it shows. */
+    page: string;
+    png_base64: string;
+}
+
+/** A screenshot as the evidence records it. */
+export interface ScreenshotFile {
+    page: string;
+    file: string;
+    sha256: string;
+    bytes: number;
+}
+
 /** What one target answered to one case. Adapters return this shape. */
 export interface Observation {
     status?: number;
@@ -225,6 +258,12 @@ export interface Observation {
     truncated?: boolean;
     /** Side effects an adapter observed: emails, messages, rows, files. Compared like a JSON body. */
     effects?: Record<string, unknown>;
+    /** A UI journey's outcome: what the `journey` level compares. */
+    journey?: JourneyOutcome;
+    /** Screenshots, sent as base64. The engine writes them as files and keeps only their names and fingerprints in the answer. */
+    screenshots?: Screenshot[];
+    /** How many calls to a model this answer took. An adapter that has no model reports 0. */
+    model_calls?: number;
     error?: string;
 }
 
@@ -393,6 +432,8 @@ export interface Report {
     settings?: ReportSettings;
     /** cmtk compare: how many times each scrub rule changed something, including the ones that never did. */
     scrub_fired?: Record<string, number>;
+    /** How many model calls produced this report, as the adapters counted them. HTTP cases make none. */
+    model_calls?: { total: number; cases_not_counted: number };
     /** Why the verdict is what it is, in a sentence, and what to do next. */
     reason: string;
     next: string;
