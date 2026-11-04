@@ -419,9 +419,16 @@ export function processAdapter(name: string, spec: AdapterSpec, cwd: string): Ad
             return call({ op: "describe" });
         },
         async close() {
-            if (child) child.stdin.end();
+            // Wait for it to end: on Windows a running adapter holds its working folder, so a caller could not remove it.
+            const c = child;
             child = undefined;
             lines = undefined;
+            if (!c || c.exitCode !== null || c.signalCode !== null) return;
+            await new Promise<void>((done) => {
+                const timer = setTimeout(() => { c.kill(); done(); }, 3000);
+                c.once("close", () => { clearTimeout(timer); done(); });
+                c.stdin.end();
+            });
         },
     };
 }

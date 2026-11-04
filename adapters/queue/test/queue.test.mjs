@@ -270,7 +270,7 @@ for (const driver of ["rabbitmq", "servicebus"]) {
             r = await cmtk(dir, ENV[driver], "adapter", "check", "queue");
             assert.equal(r.status, 0, r.stdout + r.stderr);
         } finally {
-            fs.rmSync(dir, { recursive: true, force: true });
+            fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
         }
     });
 
@@ -297,7 +297,7 @@ for (const driver of ["rabbitmq", "servicebus"]) {
             assert.ok(evidence.includes("order-seen"), "the evidence holds the messages");
             assert.doesNotMatch(evidence + r.stdout + r.stderr, /s3cret/);
         } finally {
-            fs.rmSync(dir, { recursive: true, force: true });
+            fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
         }
     });
 }
@@ -314,7 +314,7 @@ test("publishing needs both unsafe switches: with either one alone, nothing is p
                 assert.equal(fs.existsSync(log), false, `allow_unsafe_methods=${allowUnsafe} --allow-unsafe=${flag}: nothing may be published`);
             }
         } finally {
-            fs.rmSync(dir, { recursive: true, force: true });
+            fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
         }
     }
     // And `safe: true` is no way round them. Written into a file, the engine holds it back.
@@ -331,7 +331,7 @@ test("publishing needs both unsafe switches: with either one alone, nothing is p
         assert.equal(JSON.parse(r.stdout).cases[0].result, "ERROR");
         assert.equal(fs.existsSync(log), false);
     } finally {
-        fs.rmSync(dir, { recursive: true, force: true });
+        fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
     }
 });
 
@@ -343,7 +343,7 @@ test("a limit hit on either system makes the case an error, so the verdict canno
         assert.equal(report.cases[0].result, "ERROR");
         assert.notEqual(report.verdict, "PARITY");
     } finally {
-        fs.rmSync(dir, { recursive: true, force: true });
+        fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
     }
 });
 
@@ -366,7 +366,7 @@ test("a missing driver package gives a clear error, naming the package, from the
         assert.match(b.error, /servicebus driver needs the @azure\/service-bus package/);
         assert.doesNotMatch(out, /s3cret/);
     } finally {
-        fs.rmSync(dir, { recursive: true, force: true });
+        fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
     }
 });
 

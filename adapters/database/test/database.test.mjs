@@ -349,7 +349,7 @@ for (const driver of ["postgres", "mssql"]) {
             assert.match(r.stdout, /login can write/);
             assert.doesNotMatch(r.stdout + r.stderr, /s3cret/);
         } finally {
-            fs.rmSync(dir, { recursive: true, force: true });
+            fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
         }
     });
 
@@ -375,7 +375,7 @@ for (const driver of ["postgres", "mssql"]) {
             assert.notEqual(refused.verdict, "PARITY");
             assert.match(refused.cases[0].why, /login can write/);
         } finally {
-            fs.rmSync(dir, { recursive: true, force: true });
+            fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
         }
     });
 }
@@ -388,7 +388,7 @@ test("a case that makes the system write needs both unsafe switches", async () =
             const r = await cmtk(dir, { ...ENV.mssql, STANDIN_PORT: String(port) }, "compare", ...(flag ? ["--allow-unsafe"] : []), "--json");
             assert.equal(JSON.parse(r.stdout).cases[0].result, "SKIPPED", r.stdout + r.stderr);
         } finally {
-            fs.rmSync(dir, { recursive: true, force: true });
+            fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
         }
     }
 });
@@ -411,7 +411,7 @@ test("a missing driver package gives a clear error from the real adapter with no
         assert.match(b.error, /mssql driver needs the mssql package/);
         assert.doesNotMatch(out, /s3cret/);
     } finally {
-        fs.rmSync(dir, { recursive: true, force: true });
+        fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
     }
 });
 

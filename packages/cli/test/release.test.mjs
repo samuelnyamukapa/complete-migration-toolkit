@@ -206,6 +206,6 @@ test("the packed packages work: unpacked with nothing but their own files, in th
     } finally {
         await client?.close();
         await stand.close();
-        fs.rmSync(box, { recursive: true, force: true });
+        fs.rmSync(box, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
     }
 });

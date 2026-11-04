@@ -126,7 +126,7 @@ test("a real reader needs Windows and an isolated machine: anywhere else it says
 
 test("the stand-in for the reader is for this adapter's tests: settings alone can't start it, and it must be inside the project", async (t) => {
     const dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), "cmtk-desktop-"));
-    t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+    t.after(() => fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }));
     const marker = path.join(dir, "ran.txt");
     const evil = path.join(dir, "evil.mjs");
     fs.writeFileSync(evil, `import fs from "node:fs"; fs.writeFileSync(${JSON.stringify(marker)}, "ran"); process.stdin.resume();`);

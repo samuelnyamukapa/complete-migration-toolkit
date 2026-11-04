@@ -51801,10 +51801,22 @@ function processAdapter(name, spec, cwd) {
       return call({ op: "describe" });
     },
     async close() {
-      if (child)
-        child.stdin.end();
+      const c4 = child;
       child = void 0;
       lines = void 0;
+      if (!c4 || c4.exitCode !== null || c4.signalCode !== null)
+        return;
+      await new Promise((done) => {
+        const timer = setTimeout(() => {
+          c4.kill();
+          done();
+        }, 3e3);
+        c4.once("close", () => {
+          clearTimeout(timer);
+          done();
+        });
+        c4.stdin.end();
+      });
     }
   };
 }
