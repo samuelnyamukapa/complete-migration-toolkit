@@ -12,6 +12,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { readStructured, ManifestError } from "../manifest.js";
+import { isCopybook, modelFromCopybook } from "./copybook.js";
+import { isXsd, readXsd, xsdFields, xsdSha, type XsdModel } from "./xsd.js";
 
 export type FieldType = "string" | "integer" | "number" | "boolean" | "object" | "array" | "null";
 
@@ -42,11 +44,18 @@ export interface Field {
     source: string;
     /** Keywords the planner does not understand, kept so nobody believes they were honoured. */
     unsupported?: string[];
+    /** XSD: digit limits, on top of the bounds they imply. */
+    totalDigits?: number;
+    fractionDigits?: number;
+    /** Realistic values a person accepted where the schema is silent. */
+    vocabulary?: string[];
+    /** XSD: the element is one branch of a choice. */
+    choice?: { group: string; index: number; parent: string };
 }
 
 export interface TargetModel {
     /** Where the schema came from, and its fingerprint. */
-    source: { file: string; sha256: string; operation?: string };
+    source: { file: string; sha256: string; operation?: string; format?: "xsd" };
     /** The root schema, with every local $ref resolved. */
     schema: Record<string, unknown>;
     fields: Field[];
@@ -54,6 +63,8 @@ export interface TargetModel {
     responses?: Record<string, string>;
     /** Parameters of an OpenAPI operation (query and path), each with its own schema. */
     parameters?: { name: string; in: string; required: boolean; schema: Record<string, unknown> }[];
+    /** From an XSD or a WSDL: the model XML is written and validated from. */
+    xsd?: XsdModel;
 }
 
 const SUPPORTED = new Set(["type", "properties", "required", "additionalProperties", "enum", "const", "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf",
@@ -153,7 +164,19 @@ export function modelFromOpenApi(file: string, raw: unknown, operation: string):
 }
 
 /** Load a JSON Schema or an OpenAPI file into a target model. */
-export function loadModel(file: string, operation?: string): TargetModel {
+export function loadModel(file: string, operation?: string, root?: string): TargetModel {
+    if (isXsd(file)) {
+        const xsd = readXsd(file, operation, root);
+        const fields: Field[] = xsdFields(xsd).map((x) => {
+            const { simple, minItems, maxItems, choice, ...rest } = x;
+            return { ...rest, ...(simple ?? {}), ...(minItems !== undefined ? { minItems } : {}), ...(maxItems !== undefined ? { maxItems } : {}), ...(choice ? { choice } : {}) } as Field;
+        });
+        return { source: { file, sha256: xsdSha(file), operation: operation ?? xsd.root.name, format: "xsd" }, schema: {}, fields, xsd };
+    }
+    if (isCopybook(file)) {
+        if (operation) throw new ManifestError(`${path.basename(file)} is a copybook, so there is no operation to pick.`);
+        return modelFromCopybook(file, (schema, source) => { const fields: Field[] = []; collect(schema as S, "$", source, true, fields); return fields; });
+    }
     const raw = readStructured(file) as S;
     if (raw?.openapi || raw?.swagger) {
         if (!operation) throw new ManifestError(`${path.basename(file)} is an OpenAPI document: name the operation, such as --operation "POST /api/items". Operations: ${listOperations(raw).join(", ")}.`);
@@ -212,7 +235,7 @@ export function validate(schema: S, value: unknown, at = "$"): Violation[] {
         const exMax = schema.exclusiveMaximum === true || typeof schema.exclusiveMaximum === "number";
         if (min !== undefined && (exMin ? n <= min : n < min)) bad(exMin ? "exclusiveMinimum" : "minimum", `${exMin ? "not above" : "below"} ${min}`);
         if (max !== undefined && (exMax ? n >= max : n > max)) bad(exMax ? "exclusiveMaximum" : "maximum", `${exMax ? "not below" : "above"} ${max}`);
-        if (schema.multipleOf !== undefined && Math.abs(Math.round(n / schema.multipleOf) * schema.multipleOf - n) > 1e-9) bad("multipleOf", `not a multiple of ${schema.multipleOf}`);
+        if (schema.multipleOf !== undefined && Math.abs(Math.round(n / schema.multipleOf) * schema.multipleOf - n) > Math.max(1e-9, Math.abs(n) * Number.EPSILON * 4)) bad("multipleOf", `not a multiple of ${schema.multipleOf}`);
     }
     if (type === "array") {
         const a = value as unknown[];

@@ -3,6 +3,10 @@ name: discover
 description: "The first step of a migration: list every boundary of the legacy system (what it serves, and everything it calls, stores, sends or reads), with the evidence for each, and flag the ones no adapter covers yet. Reads assemblies with REA (Reverse Engineer Anything) when it is installed, plus settings files, recordings and modernize's map. Usage: /cmtk:discover [<legacy folder>] [--manifest <file>]"
 ---
 
+## Partly rebuilt systems
+
+If the new system has only some of the boundaries you find so far, tell the person they can list what each target offers with `surfaces:` in `cmtk.yaml`. `cmtk compare` then reports what could not be compared rather than failing. Suggest it and say why; a person decides.
+
 ## Inputs
 
 Arguments: `$ARGUMENTS`
@@ -18,7 +22,7 @@ The **project** is the folder that holds the manifest. Pass `manifest` to every 
 
 | Tool | Server | When |
 |---|---|---|
-| `cmtk_discover` | `cmtk` | To record what each source shows. It reads assemblies (with REA's command), REA's saved output, settings files, HAR files and modernize's `topology.json`, and your findings in `found`. It adds to the last inventory unless you pass `fresh: true` |
+| `cmtk_discover` | `cmtk` | To record what each source shows. It reads assemblies (with REA's command), REA's saved output, `routes_from` (C# source, for `[Route]` attributes; when the source is there, always give it), settings files, HAR files and modernize's `topology.json`, and your findings in `found`. It adds to the last inventory unless you pass `fresh: true` |
 | `cmtk_check` | `cmtk` | At the end: it repeats each uncovered boundary as a warning |
 | `inspect_managed_members`, `analyze_javascript_application`, the browser and capture tools | `rea`, when connected | Only where the source is missing or can't be trusted: a compiled-only library, an Electron front end, a website. See "REA" below |
 
@@ -67,7 +71,7 @@ REA (Reverse Engineer Anything, [morluto/rea](https://github.com/morluto/rea)) r
 4. **Where there is no source,** use REA's tools on what is there (see "REA"), and record each finding the same way, with REA's evidence as the `evidence`.
 5. **Call `cmtk_check`.** Then tell the person, briefly:
    - how many boundaries there are, by kind;
-   - which are uncovered, and for each uncovered kind the two options: an adapter (`cmtk adapter new <name>`, then `covers: [<kind>]` in `cmtk.yaml`), or a person's decision that it is out of scope;
+   - which are uncovered, and for each uncovered kind the two options: an adapter (`cmtk adapter new <name>`, or a person installs one with `cmtk adapter add <name>`, then `covers: [<kind>]` in `cmtk.yaml`), or a person's decision that it is out of scope;
    - what you could not check, such as a library with no source when REA isn't installed.
 
    Point them to `cmtk/discovery/BOUNDARIES.md`.

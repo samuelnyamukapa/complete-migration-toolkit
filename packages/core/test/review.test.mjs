@@ -159,8 +159,11 @@ test("bad input stops before evidence is touched, and a failing case never ends 
         await assert.rejects(() => run(manifest("headers_from_env: { Authorization: CMTK_BAD }\n")), /CMTK_BAD holds a line break/);
         delete process.env.CMTK_BAD;
         write(dir, "cmtk/cases/b.yaml", "cases:\n  - { id: Q, surface: queue, request: GET /q, expect: { status: 200 } }\n");
-        await assert.rejects(() => run(manifest()), /surface "queue"/);
-        assert.ok(fs.existsSync(kept), "the last evidence is still there");
+        // A case with no adapter does not stop the run: the report names it, and it can't pass (#24).
+        const gap = await run(manifest());
+        assert.equal(gap.verdict, "INCOMPLETE");
+        assert.deepEqual(gap.no_adapter, [{ surface: "queue", cases: ["Q"] }]);
+        assert.ok(fs.existsSync(kept), "the report is written");
 
         write(dir, "cmtk/cases/b.yaml", `cases:
   - { id: REGEX, request: GET /a, expect: { json: { "$.name": { matches: "([" } } } }
@@ -170,7 +173,8 @@ test("bad input stops before evidence is touched, and a failing case never ends 
         write(dir, "flaky.mjs", `import readline from "node:readline";
 for await (const l of readline.createInterface({ input: process.stdin })) {
   const m = JSON.parse(l);
-  process.stdout.write(JSON.stringify(m.op === "reset" ? { ok: false, error: "database locked" } : { status: 200 }) + "\\n");
+  // It asks for a reset before reads: without that, a read gets no reset, so nothing here could fail one.
+  process.stdout.write(JSON.stringify(m.op === "reset" ? { ok: false, error: "database locked" } : m.op === "describe" ? { name: "flaky", kinds: ["queue"], reset_before_reads: true } : { status: 200 }) + "\\n");
 }`);
         const adapters = `adapters:\n  ghost: { command: cmtk-no-such-program-anywhere }\n  flaky: { command: ${JSON.stringify(process.execPath)}, args: [flaky.mjs] }\n`;
         const r = await run(manifest(adapters));

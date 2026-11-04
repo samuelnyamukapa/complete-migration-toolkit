@@ -4,9 +4,15 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { adaptersFor, envHeaders, SAFE_METHODS } from "./engine.js";
+import { hideValues } from "./adapters.js";
+import { adaptersFor, envHeaders, evidenceOf, SAFE_METHODS } from "./engine.js";
+import { CREDENTIAL_VALUE, DROPPED_HEADERS, looksSecret, REDACTED } from "./har.js";
+import { holdsToken } from "./redact.js";
+import { expectProblem } from "./expect-shape.js";
 import { inside, ManifestError, ownedFolder } from "./manifest.js";
+import { overrideIn } from "./methods.js";
 import { editYaml, seqAt } from "./proposals.js";
+import { cleanTarget } from "./shadow.js";
 import type { Case, Expectation, Manifest, Observation } from "./types.js";
 
 export interface Session {
@@ -82,6 +88,8 @@ function parseRequest(r: unknown): Case["request"] {
     const method = String(req?.method ?? "GET").toUpperCase();
     if (!SAFE_METHODS.has(method)) throw new ManifestError(`Exploration only reads: ${method} is not allowed. Use GET, HEAD or OPTIONS.`);
     if (typeof req?.path !== "string" || !req.path.startsWith("/") || req.path.startsWith("//")) throw new ManifestError("The path must start with a single '/': a path, never a host.");
+    const asks = overrideIn(req.path);
+    if (asks !== undefined) throw new ManifestError(`Exploration only reads: the path asks to be treated as ${asks}, which is not allowed.`);
     const headers: Record<string, string> = {};
     for (const [k, v] of Object.entries(req.headers ?? {})) {
         // Headers some frameworks read to treat a GET as another method.
@@ -93,6 +101,23 @@ function parseRequest(r: unknown): Case["request"] {
 }
 
 export interface Probe { n: number; observation: Observation; left: number }
+
+/** The path as a log may hold it. An agent may send a secret, and the system gets it, but it stays out of what is kept. */
+const loggedPath = (p: string) => cleanTarget(p)?.path ?? "/(withheld)";
+const secretHeader = (name: string, value: string) => DROPPED_HEADERS.has(name.toLowerCase()) || looksSecret(name, "header") || CREDENTIAL_VALUE.test(value) || holdsToken(value);
+const loggedRequest = (r: Case["request"]): Case["request"] => ({
+    ...r,
+    path: loggedPath(r.path),
+    headers: Object.fromEntries(Object.entries(r.headers ?? {}).map(([k, v]) => [k, secretHeader(k, v) ? REDACTED : v])),
+});
+
+/** The secrets in a request, so an answer that echoes one can be cleaned. */
+function secretsIn(r: Case["request"]): string[] {
+    const out = Object.entries(r.headers ?? {}).filter(([k, v]) => secretHeader(k, v)).map(([, v]) => v);
+    const q = r.path.indexOf("?");
+    if (q >= 0) for (const [k, v] of new URLSearchParams(r.path.slice(q + 1).replace(/;/g, "&"))) if (looksSecret(k)) out.push(v);
+    return out;
+}
 
 /** One request in a session: within budget and time, read-only, logged as evidence. */
 /** One request at a time per session: a second call while one is running is refused, so the budget and the log stay exact. */
@@ -120,7 +145,7 @@ export async function exploreRequest(manifest: Manifest, id: string, request: un
         // Count the request before it is sent: a request that fails or hangs still used the budget.
         const n = s.used + 1;
         s.used = n;
-        s.log.push({ n, request: `${req.method} ${req.path}` });
+        s.log.push({ n, request: `${req.method} ${loggedPath(req.path)}` });
         save(dir, s);
         const c: Case = { id: `explore-${n}`, request: req, surface: s.surface };
         const adapters = adaptersFor(manifest);
@@ -132,12 +157,13 @@ export async function exploreRequest(manifest: Manifest, id: string, request: un
         } finally {
             await adapters.closeAll();
         }
-        fs.writeFileSync(path.join(dir, "answers", `${String(n).padStart(3, "0")}.json`), JSON.stringify({ request: req, observation }, null, 2) + "\n", "utf8");
+        observation = hideValues(observation, secretsIn(req));
+        fs.writeFileSync(path.join(dir, "answers", `${String(n).padStart(3, "0")}.json`), JSON.stringify({ request: loggedRequest(req), observation: evidenceOf(observation) }, null, 2) + "\n", "utf8");
         const entry = s.log[s.log.length - 1]!;
         if (observation.status !== undefined) entry.status = observation.status;
         if (observation.error) entry.error = observation.error;
         save(dir, s);
-        return { n, observation, left: s.budget_requests - n };
+        return { n, observation: evidenceOf(observation) as Observation, left: s.budget_requests - n };
     } finally {
         unlock();
     }
@@ -185,6 +211,10 @@ export function addFinding(manifest: Manifest, id: string, f: FindingInput): { c
     const title = String(f.title ?? "").trim();
     if (!title) throw new ManifestError("A finding needs a title.");
     const req = parseRequest(f.request);
+    if (f.expect !== undefined) {
+        const bad = expectProblem(f.expect);
+        if (bad) throw new ManifestError(`A finding's \`expect\` must check something: it ${bad}.`);
+    }
     const refs = (f.evidence ?? []).map(Number).filter((n) => n >= 1 && n <= s.used);
     if (!refs.length) throw new ManifestError("Name the logged requests that show the finding, by number, in `evidence`.");
     const caseId = `EXP-${s.id.slice(1).replace(/-/g, "")}-${String(s.findings.length + 1).padStart(2, "0")}`;
@@ -197,7 +227,7 @@ export function addFinding(manifest: Manifest, id: string, f: FindingInput): { c
     const draft: Record<string, unknown> = {
         id: caseId, name: title, requirement: f.requirement ?? `EXPLORE/${s.id}`,
         ...(s.surface !== "http" ? { surface: s.surface } : {}),
-        request: `${req.method} ${req.path}`,
+        request: `${req.method} ${loggedPath(req.path)}`,
         ...(f.expect ? { expect: f.expect } : {}),
         draft: true, draft_note: note,
     };

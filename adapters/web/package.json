@@ -1,0 +1,10 @@
+{
+  "name": "cmtk-adapter-web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Drives a real browser through Playwright: journeys with checks in code, page structure, masked screenshots, test authenticators and replay with no model.",
+  "type": "module",
+  "dependencies": {
+    "playwright": "1.63.0"
+  }
+}

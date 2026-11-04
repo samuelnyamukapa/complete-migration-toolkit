@@ -1,0 +1,11 @@
+{
+  "encoding": "ascii",
+  "line_breaks": true,
+  "keys": ["account"],
+  "ignore": ["run_date"],
+  "fields": [
+    { "name": "account", "start": 0, "length": 6 },
+    { "name": "balance", "start": 6, "length": 10, "type": "zoned", "scale": 2 },
+    { "name": "run_date", "start": 16, "length": 8 }
+  ]
+}

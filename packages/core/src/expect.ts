@@ -2,6 +2,7 @@
 // Every check is code. Nothing here asks a model.
 import { parsePath, render, select } from "./jsonpath.js";
 import { ConfigError, short } from "./diff.js";
+import { expectProblem } from "./expect-shape.js";
 import { jsonEqual } from "./json.js";
 import type { Expectation, Failure, JsonCheck, Observation } from "./types.js";
 
@@ -40,6 +41,9 @@ function describe(check: JsonCheck): string {
 }
 
 export function checkExpectation(exp: Expectation, obs: Observation): Failure[] {
+    // Loading a case refuses this already. It is here too because an expectation that checks nothing must never pass.
+    const problem = expectProblem(exp);
+    if (problem) return [{ check: "expect", expected: "an expectation that checks something", actual: problem }];
     const out: Failure[] = [];
     if (exp.status !== undefined) {
         const allowed = Array.isArray(exp.status) ? exp.status : [exp.status];

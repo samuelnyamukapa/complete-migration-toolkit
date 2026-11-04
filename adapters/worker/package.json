@@ -1,0 +1,6 @@
+{
+  "name": "cmtk-adapter-worker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tests a Windows service or a .NET worker by what it does. Written in C#; this file only lets npm test run its tests."
+}

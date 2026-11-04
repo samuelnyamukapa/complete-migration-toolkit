@@ -1,0 +1,4 @@
+browser and desktop, 2026-11-04T14:12:51
+web adapter kit | exit 0 | expected 0 | Adapter web passes the conformance kit.
+catalog journey in a browser | exit 0 | expected 0 | Test verdict for eshop-legacy: PASS | Cases: 1 pass, 0 fail, 0 skipped, 0 error
+desktop: Exception calling "RegisterClientSideProviderAssembly" with "1" argument(s): "Object reference not set to an instance of an object."

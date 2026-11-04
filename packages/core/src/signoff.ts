@@ -2,13 +2,15 @@
 // evidence file, so a signature on one run never carries over to another, and `cmtk status` can
 // tell a current signature from a stale one.
 //
-// The command asks at a terminal, which keeps agents that follow the rules from signing. It is not
-// a lock: anything that can fake a terminal can type a name. Where a signature must be binding,
-// keep the evidence folder under version control and require a reviewed commit for SIGNOFF.json.
+// The command asks at a terminal, which stops accidents and agents that follow the rules. It is not
+// a lock: anything that can fake a terminal can type a name, and this function needs no terminal at
+// all. Where a signature must be binding, keep the evidence folder under version control and require
+// a reviewed commit for SIGNOFF.json. See docs/TEST-PLAN.md.
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
+import { looksLikeAgent } from "./people.js";
 import type { Report } from "./types.js";
 
 export const DECISIONS = ["accept", "accept with conditions", "reject"] as const;
@@ -23,6 +25,10 @@ export interface Signoff {
     /** The settings file that produced the report, as the report records it. */
     manifest?: string;
     manifest_sha256?: string;
+    /** The known issues this signature accepts as still failing, each with the person who accepted it. */
+    known_issues?: string[];
+    /** For a comparison of part of a system: what the signature covers, and what it does not. */
+    scope?: string;
 }
 
 export class SignoffError extends Error {}
@@ -73,7 +79,8 @@ export function signoffState(dir: string): SignoffState {
 export function describeSignoff(st: SignoffState): string {
     if (st.state === "none") return "not signed";
     const s = st.signoff;
-    return st.state === "signed" ? `signed by ${s.name} (${s.role}): ${s.decision}, ${s.date}` : `the signature by ${s.name} is for different evidence, so it no longer counts`;
+    const covers = s.known_issues?.length ? `; known issues still failing: ${s.known_issues.join(", ")}` : "";
+    return st.state === "signed" ? `signed by ${s.name} (${s.role}): ${s.decision}, ${s.date}${covers}${s.scope ? `; for what was compared only. ${s.scope}` : ""}` : `the signature by ${s.name} is for different evidence, so it no longer counts`;
 }
 
 /** Record a person's decision on the report in `dir`. */
@@ -96,8 +103,12 @@ export function recordSignoff(dir: string, who: { name: string; role: string; de
     const name = who.name.trim(), role = who.role.trim(), decision = who.decision.trim().toLowerCase();
     if (!name || !role || !(DECISIONS as readonly string[]).includes(decision)) throw new SignoffError(`Name, role and one of ${DECISIONS.join(" / ")} are all needed. Nothing was signed.`);
     if (/[\u0000-\u001f\u007f-\u009f]/.test(name + role)) throw new SignoffError("Name and role must be plain text. Nothing was signed.");
+    if (looksLikeAgent(name)) throw new SignoffError(`${JSON.stringify(name)} reads as an agent or a tool. Only a person signs. Nothing was signed.`);
+    const known = (report.known_issues ?? []).filter((k) => k.state === "still fails").map((k) => `${k.id} (accepted by ${k.accepted_by})`);
     const s: Signoff = {
         name, role, decision: decision as Signoff["decision"], date, verdict: report.verdict, evidence_sha256: evidenceFingerprint(dir),
+        ...(known.length ? { known_issues: known } : {}),
+        ...(report.scope && !report.scope.whole ? { scope: report.scope.statement } : {}),
         ...(report.settings ? { manifest: report.settings.manifest, manifest_sha256: report.settings.manifest_sha256 } : {}),
     };
     const cell = (v: string) => v.replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");

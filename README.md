@@ -2,7 +2,7 @@
 
 Test any system from its requirements, and prove a migrated system behaves like the old one, with every intended drift approved and signed.
 
-> **Status: 0.3.0, early.** The engine, the `cmtk` command, the MCP server and the plugin's six skills are tested on Windows and Linux. On the eShop sandbox:
+> **Status: 0.6.0, early.** The engine, the `cmtk` command, the MCP server and the plugin's nine skills are tested on Windows and Linux. The adapters, UI testing, shadow traffic and trends added in 0.6.0 are experimental: most have run only on local test systems. On the eShop sandbox:
 > - `cmtk run` passed 40 of 41 cases on legacy eShop; the one failure is a legacy defect.
 > - `cmtk compare` found parity with CatalogCore across 24 cases, and caught a planted defect. Both reports were signed and accepted on 18 October 2026.
 > - The AI tester ran from the GitHub Copilot desktop app: it drafted a plan and cases the owner accepted, explored, and drafted defects (0.2.1).
@@ -22,7 +22,7 @@ The toolkit does the grind (writing, running, re-running and gathering evidence)
 |---|---|---|
 | Checks | one system against what each requirement expects | the candidate against the reference (usually the legacy system), answer by answer |
 | Use it for | any project, every sprint, every pull request | migrations, upgrades, rewrites, reskins |
-| Verdicts | PASS, FAIL, INCOMPLETE, NO EVIDENCE | PARITY, DRIFT ONLY, NO PARITY, INCOMPLETE, NO EVIDENCE |
+| Verdicts | PASS, PASS WITH KNOWN ISSUES, FAIL, INCOMPLETE, NO EVIDENCE | PARITY, DRIFT ONLY, PARTIAL COMPARISON, NO PARITY, INCOMPLETE, NO EVIDENCE |
 
 Both modes write a report per requirement, keep every answer as evidence, and end with a sign-off table that only a person fills in.
 
@@ -46,6 +46,8 @@ npm run build
 npm link -w packages/cli        # puts `cmtk` on your PATH
 ```
 
+After the first release, you will not need a clone: `npx cmtk` will run it anywhere with Node.js 22.5 or later. [docs/RELEASING.md](docs/RELEASING.md) says what is published and how.
+
 Then, in the project you want to test:
 
 ```sh
@@ -59,9 +61,11 @@ Other commands:
 - `cmtk check`: checks the settings and case files, without sending anything;
 - `cmtk probe <target> "GET /path"`: sends one read-only request;
 - `cmtk review`: a person accepts or rejects draft cases and proposals;
-- `cmtk defects run`: drafts defects from a report.
+- `cmtk defects run`: drafts defects from a report;
+- `cmtk shadow --from access.log`: replays read-only requests from a log to both systems, and reports unexplained differences per endpoint ([docs/SHADOW.md](docs/SHADOW.md));
+- `cmtk compare --dated`, then `cmtk trend`: keeps each run, and shows across runs what is new, what keeps coming back and what is flaky ([docs/TRENDS.md](docs/TRENDS.md)).
 
-A person who has never seen the toolkit can follow [docs/RUNBOOK.md](docs/RUNBOOK.md) step by step.
+A person who has never seen the toolkit can follow [docs/RUNBOOK.md](docs/RUNBOOK.md) step by step. [docs/FORMATS.md](docs/FORMATS.md) says which files, tools and exit codes you can rely on, with [JSON Schemas](schemas/) so an editor checks them as you type.
 
 ## A case
 
@@ -98,7 +102,7 @@ Set one level for the system, then loosen it per path (`overrides`) or per case.
 - **Contracts served by both systems:**
   - OpenAPI (JSON): removed operations or parameters, new required parameters, removed responses, removed or retyped properties;
   - WSDL and XSD: removed operations or elements, type changes, a changed target namespace.
-- **Anything else, through adapters:** queues, workers, files, email, SMS and payment sandboxes report their side effects as JSON, and the engine compares and checks them like a body. `cmtk adapter new` writes a working adapter, and `cmtk adapter check` runs the conformance kit. See [docs/ADAPTERS.md](docs/ADAPTERS.md).
+- **Anything else, through adapters:** queues, workers, files, email, SMS and payment sandboxes report their side effects as JSON, and the engine compares and checks them like a body. `cmtk adapter new` writes a working adapter, `cmtk adapter check` runs the conformance kit, and a person installs a shared one with `cmtk adapter add`. See [docs/ADAPTERS.md](docs/ADAPTERS.md) and [docs/ADAPTER-CONTRIBUTING.md](docs/ADAPTER-CONTRIBUTING.md).
 
 ## The AI tester
 
@@ -146,7 +150,7 @@ To use the server without the plugin:
 
 ## Exit codes
 
-`0` PASS, PARITY or DRIFT ONLY · `1` FAIL or NO PARITY · `2` INCOMPLETE or NO EVIDENCE · `3` a usage or settings problem.
+`0` PASS, PARITY or DRIFT ONLY · `1` FAIL or NO PARITY · `2` INCOMPLETE or NO EVIDENCE · `3` a usage or settings problem · `4` nothing new failed, but the result has a limit a person must read: PASS WITH KNOWN ISSUES or PARTIAL COMPARISON.
 
 ## Layout
 

@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/samuelnyamukapa/complete-migration-toolkit/main/schemas/capture.schema.json",
+  "title": "One line of capture.jsonl from cmtk shadow",
+  "type": "object",
+  "properties": {
+    "n": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "method": {
+      "enum": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    "path": {
+      "type": "string",
+      "pattern": "^/(?!/)"
+    },
+    "headers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "redacted": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "n",
+    "method",
+    "path"
+  ]
+}

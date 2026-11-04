@@ -6,16 +6,18 @@
     "workspaces": [
         "packages/core",
         "packages/cli",
-        "packages/mcp"
+        "packages/mcp",
+        "adapters/*"
     ],
     "scripts": {
         "build": "tsc -b packages/core packages/cli packages/mcp",
-        "test": "npm run build && node --test --test-reporter=spec \"packages/*/test/*.test.mjs\"",
+        "test": "npm run build && node --test --test-reporter=spec \"packages/*/test/*.test.mjs\" \"adapters/*/test/*.test.mjs\"",
         "clean": "tsc -b --clean packages/core packages/cli packages/mcp",
         "bundle": "npm run build && node scripts/bundle.mjs"
     },
     "devDependencies": {
         "@types/node": "^22.10.0",
+        "ajv": "8.20.0",
         "esbuild": "^0.25.10",
         "typescript": "^5.9.3"
     },

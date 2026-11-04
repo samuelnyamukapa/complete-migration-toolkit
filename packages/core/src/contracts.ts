@@ -116,6 +116,10 @@ export function checkContract(c: Contract, ref: Observation, cand: Observation):
         if (r.error) return { ...base, result: "ERROR", findings: [{ breaking: false, what: `${side}: ${r.error}` }] };
         if (r.status !== 200) return { ...base, result: "ERROR", findings: [{ breaking: false, what: `${side} answered HTTP ${r.status}` }] };
     }
+    // Only part of a contract says nothing about the rest: a difference after the cut would read as IDENTICAL.
+    for (const [side, r] of [["reference", ref], ["candidate", cand]] as const) {
+        if (r.truncated) return { ...base, result: "ERROR", findings: [{ breaking: false, what: `${side}: the contract is over 5 MB and only the first 5 MB were read, so it was not checked. Serve a smaller one, or compare it by hand` }] };
+    }
     let findings: ContractFinding[] = [];
     try {
         const kind = c.kind.toLowerCase();

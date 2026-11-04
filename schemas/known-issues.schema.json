@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/samuelnyamukapa/complete-migration-toolkit/main/schemas/known-issues.schema.json",
+  "title": "The known-issues ledger",
+  "definitions": {
+    "entry": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"
+        },
+        "case": {
+          "type": "string",
+          "description": "One case id, never a wildcard.",
+          "minLength": 1,
+          "pattern": "^[^*]+$"
+        },
+        "fails": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "check": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^[^*]+$"
+              },
+              "expected": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
+                ]
+              },
+              "actual": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false,
+            "anyOf": [
+              { "required": ["actual"] },
+              { "required": ["expected"], "properties": { "check": { "const": "body" } } }
+            ],
+            "required": [
+              "check"
+            ]
+          }
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accepted_by": {
+          "type": "string",
+          "description": "A person's name. An agent never approves or accepts anything.",
+          "minLength": 1,
+          "pattern": "^(?!.*\\b[Aa][Gg][Ee][Nn][Tt][Ss]?\\b)"
+        },
+        "date": {
+          "type": [
+            "string"
+          ]
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "case",
+        "fails",
+        "reason",
+        "accepted_by"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/entry"
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "known_issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/entry"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "known_issues"
+      ]
+    }
+  ]
+}

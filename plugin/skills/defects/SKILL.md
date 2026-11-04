@@ -25,6 +25,8 @@ The **project** is the current working directory. The settings are `cmtk.yaml` a
 - **Link the evidence, don't copy it.** Give each evidence file's path in the project. Don't paste answer bodies into a tracker: they can hold data that shouldn't leave the team.
 - **A defect against the system under test is not a test change.** If you come to think the *case* is wrong rather than the system, say so, and propose a new expectation with `cmtk_propose` (kind `expectation`) instead of filing.
 
+A case that fails only as a known issue gets no draft: a named person already accepted it. If it should be fixed after all, say so to the person.
+
 ## Steps
 
 1. Call `cmtk_defects` with the mode. If nothing failed, say so and stop.

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Built from packages/cli/templates/adapter-csharp. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>worker</AssemblyName>
+    <RootNamespace>CmtkAdapter</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Registered as `dotnet <name>.dll`, the same line on Windows and Linux. -->
+    <UseAppHost>false</UseAppHost>
+    <RollForward>Major</RollForward>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- No packages, so nothing to audit, and it builds on a test machine with no network. -->
+    <NuGetAudit>false</NuGetAudit>
+    <DefaultItemExcludes>$(DefaultItemExcludes);sample-worker/**;test-area/**;test/**;node_modules/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+</Project>

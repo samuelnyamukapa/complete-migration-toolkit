@@ -1,0 +1,11 @@
+{
+  "encoding": "cp037",
+  "record_length": 26,
+  "keys": ["account"],
+  "fields": [
+    { "name": "account", "start": 0, "length": 6 },
+    { "name": "amount", "start": 6, "length": 7, "type": "zoned", "scale": 2 },
+    { "name": "quantity", "start": 13, "length": 3, "type": "packed" },
+    { "name": "name", "start": 16, "length": 10 }
+  ]
+}

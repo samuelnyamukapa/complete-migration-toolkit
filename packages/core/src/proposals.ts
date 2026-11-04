@@ -5,11 +5,16 @@ import fs from "node:fs";
 import path from "node:path";
 import YAML, { isMap, isSeq, type Document, YAMLMap, YAMLSeq } from "yaml";
 
+import { expectProblem } from "./expect-shape.js";
+import { KNOWN_ISSUE_ID, knownFails, loadKnownIssues } from "./known.js";
 import { inside, loadCases, loadDrift, ManifestError } from "./manifest.js";
+import { looksLikeAgent } from "./people.js";
 import { parsePath } from "./jsonpath.js";
-import type { Case, Expectation, Manifest } from "./types.js";
+import { safeConfirmed, safePrint } from "./methods.js";
+import { applyDataRule, checkDataRule, describeDataRule, type DataRule } from "./data/model.js";
+import type { Case, Expectation, KnownFailure, Manifest } from "./types.js";
 
-export const PROPOSAL_KINDS = ["scrub", "drift", "defect", "expectation"] as const;
+export const PROPOSAL_KINDS = ["scrub", "drift", "known_issue", "defect", "expectation", "locator", "data_rule"] as const;
 export type ProposalKind = (typeof PROPOSAL_KINDS)[number];
 
 export interface ScrubRule {
@@ -28,15 +33,26 @@ export interface Proposal {
     proposed_on: string;
     /** scrub */
     rule?: ScrubRule;
-    /** drift: a case id or "*", and a `where` from a report. expectation: the case to change. */
+    /** drift: a case id or "*", and a `where` from a report. expectation: the case to change. known_issue: the one case. */
     case?: string;
     where?: string;
+    /** known_issue: the id to record it under, such as LEG-1 (default: the next KNOWN-nnn), what fails, and the one target it is limited to. */
+    issue_id?: string;
+    fails?: KnownFailure[];
+    target?: string;
     /** defect */
     title?: string;
     cases?: string[];
     summary?: string;
     /** expectation: the whole new `expect:` block. */
     expect?: Expectation;
+    /** locator: the recorded script, the step (from 1), the target it applies on (also known_issue's field), how the step finds its element now, and how it would. */
+    script?: string;
+    step?: number;
+    was?: Record<string, unknown>;
+    locator?: Record<string, unknown>;
+    /** data_rule: what a schema can't say, for a recipe. It holds no rows and no answers. */
+    data_rule?: DataRule;
     decided_by?: string;
     decided_on?: string;
     decision_note?: string;
@@ -47,6 +63,8 @@ export interface Proposal {
 export type ProposalInput = Omit<Proposal, "id" | "status" | "proposed_on" | "decided_by" | "decided_on" | "decision_note" | "applied">;
 
 const HEADER = "# Proposals from agents. Each one waits for a person: only `cmtk review` accepts or rejects it.\n";
+
+const KNOWN_ISSUES_HEADER = "# Known issues: failures of `cmtk run` a named person accepted. Only a person adds an entry.\n# Each still shows as a failure, and anything an entry does not describe is an ordinary FAIL.\nknown_issues: []\n";
 
 // ---------------------------------------------------------------- YAML files edited in place
 
@@ -96,6 +114,13 @@ const text = (v: unknown, what: string, max = 2000): string => {
     return v.trim();
 };
 
+/** The name a decision is recorded under. A name is only a name, but one that says it is an agent is never accepted. */
+const personName = (v: unknown): string => {
+    const who = text(v, "Your name", 100);
+    if (looksLikeAgent(who)) throw new ManifestError(`${JSON.stringify(who)} reads as an agent or a tool. Only a person decides this, under their own name.`);
+    return who;
+};
+
 /** Any text shown to a person, made safe for a terminal. */
 export const plain = (v: unknown): string => String(v ?? "").replace(new RegExp(CONTROL.source, "g"), (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`);
 
@@ -115,11 +140,31 @@ function checkScrub(rule: unknown): ScrubRule {
     return r;
 }
 
-const EXPECT_KEYS = new Set(["status", "headers", "json", "body_contains", "body_excludes"]);
+/** The steps a repair may touch: those that act. A read or a check decides what is correct, so only a person edits it. */
+const REPAIRABLE_ACTIONS = ["click", "fill", "select", "tick", "invoke", "set_value"];
+const LOCATOR_KEYS = new Set(["role", "name", "label", "text", "testid", "placeholder", "css", "nth", "automation_id"]);
+
+function readScript(manifest: Manifest, rel: string): { full: string; raw: string; doc: { steps?: Record<string, any>[] } & Record<string, any> } {
+    const full = inside(manifest, rel);
+    if (!fs.existsSync(full)) throw new ManifestError(`The script ${rel} does not exist.`);
+    const raw = fs.readFileSync(full, "utf8");
+    let doc: any;
+    try { doc = JSON.parse(raw); } catch { throw new ManifestError(`The script ${rel} is not JSON.`); }
+    if (doc?.cmtk_script !== 1 || !Array.isArray(doc.steps)) throw new ManifestError(`${rel} is not a recorded script.`);
+    return { full, raw, doc };
+}
+
+/** The action a step takes on this target, and how it finds its element there now. */
+function actionOf(step: Record<string, any> | undefined, target: string): { action: string; locator: Record<string, unknown> } | undefined {
+    if (!step || "read" in step || "check" in step || "reach" in step) return undefined;
+    const merged = { ...step, ...(step.on?.[target] ?? {}) };
+    const action = REPAIRABLE_ACTIONS.find((a) => a in merged);
+    return action ? { action, locator: merged[action] } : undefined;
+}
 
 export function addProposal(manifest: Manifest, input: ProposalInput, date: string): Proposal {
     if (!PROPOSAL_KINDS.includes(input.kind)) throw new ManifestError(`kind must be one of ${PROPOSAL_KINDS.join(", ")}.`);
-    if ("approved_by" in (input as object) || "decided_by" in (input as object)) throw new ManifestError("A proposal cannot carry an approval: only a person decides, with `cmtk review`.");
+    if (["approved_by", "accepted_by", "decided_by"].some((k) => k in (input as object))) throw new ManifestError("A proposal cannot carry an approval: only a person decides, with `cmtk review`.");
     const ids = new Set(loadCases(manifest).map((c) => c.id));
     const known = (id: unknown, what: string) => {
         const v = text(id, what, 100);
@@ -135,10 +180,28 @@ export function addProposal(manifest: Manifest, input: ProposalInput, date: stri
         proposed_on: date,
     };
     if (input.kind === "scrub") p.rule = checkScrub(input.rule);
+    if (input.kind === "data_rule") {
+        if (!input.data_rule) throw new ManifestError("A data_rule proposal needs its rule: use the cmtk_data_propose tool.");
+        checkDataRule(manifest, input.data_rule);
+        p.data_rule = input.data_rule;
+    }
     if (input.kind === "drift") {
         p.case = input.case === undefined || input.case === "*" ? "*" : known(input.case, "case");
         p.where = text(input.where, "where", 500);
         if (p.where.replace(/[*$.[\]\s:]/g, "").length < 2) throw new ManifestError("`where` must name a place from a report, such as $.items[*].price or header:content-type; a wildcard alone would approve everything.");
+    }
+    if (input.kind === "known_issue") {
+        p.case = known(input.case, "case");
+        if (input.issue_id !== undefined) {
+            if (!KNOWN_ISSUE_ID.test(input.issue_id)) throw new ManifestError("issue_id must be letters, digits, '.', '-' and '_', such as LEG-1.");
+            if (loadKnownIssues(manifest).some((k) => k.id === input.issue_id)) throw new ManifestError(`The ledger already holds ${input.issue_id}.`);
+            p.issue_id = input.issue_id;
+        }
+        p.fails = knownFails(input.fails, "A known issue proposal").map((f) => ({ check: text(f.check, "fails.check", 500), ...(f.expected !== undefined ? { expected: text(f.expected, "fails.expected", 500) } : {}), ...(f.actual !== undefined ? { actual: text(f.actual, "fails.actual", 500) } : {}) }));
+        if (input.target !== undefined) {
+            if (!manifest.targets[input.target]) throw new ManifestError(`target: there is no target ${input.target}.`);
+            p.target = input.target;
+        }
     }
     if (input.kind === "defect") {
         p.title = text(input.title, "title", 200);
@@ -148,14 +211,34 @@ export function addProposal(manifest: Manifest, input: ProposalInput, date: stri
     }
     if (input.kind === "expectation") {
         p.case = known(input.case, "case");
-        const e = input.expect as Record<string, unknown> | undefined;
-        if (!e || typeof e !== "object" || Array.isArray(e) || !Object.keys(e).length || !Object.keys(e).every((k) => EXPECT_KEYS.has(k))) {
-            throw new ManifestError(`expect must be an \`expect:\` block using ${[...EXPECT_KEYS].join(", ")}.`);
+        const bad = expectProblem(input.expect);
+        if (bad) throw new ManifestError(`expect must be an \`expect:\` block that checks something: it ${bad}.`);
+        p.expect = input.expect as Expectation;
+    }
+    if (input.kind === "locator") {
+        if (input.expect !== undefined || input.fails !== undefined || input.where !== undefined || input.rule !== undefined) throw new ManifestError("A locator repair changes how a step finds an element and nothing else. To change what a case expects, propose an expectation for a person to decide.");
+        p.case = known(input.case, "case");
+        const journey = loadCases(manifest).find((c) => c.id === p.case)!.journey;
+        if (typeof journey?.script !== "string") throw new ManifestError(`Case ${p.case} has no recorded script: a locator repair applies to a script.`);
+        p.script = journey.script;
+        if (input.target === undefined || !manifest.targets[input.target]) throw new ManifestError(`target: name the target whose step broke, one of ${Object.keys(manifest.targets).join(", ")}.`);
+        p.target = input.target;
+        if (!Number.isInteger(input.step) || input.step! < 1) throw new ManifestError("step: the number of the step that broke, from 1, as the answer's `repair` gives it.");
+        p.step = input.step!;
+        const { doc } = readScript(manifest, p.script);
+        const now = actionOf(doc.steps![p.step - 1], p.target);
+        if (!now) throw new ManifestError(`Step ${p.step} of ${p.script} takes no action a repair can change. A read or a check decides what is correct, so only a person edits it.`);
+        const l = input.locator;
+        if (!l || typeof l !== "object" || Array.isArray(l) || !Object.keys(l).length || !Object.keys(l).every((k) => LOCATOR_KEYS.has(k))) throw new ManifestError(`locator must say how to find the element, using ${[...LOCATOR_KEYS].join(", ")}, and nothing else.`);
+        for (const [k, v] of Object.entries(l)) {
+            if (k === "nth" ? !Number.isInteger(v) : typeof v !== "string") throw new ManifestError(`locator.${k} must be ${k === "nth" ? "a whole number" : "text"}.`);
+            if (typeof v === "string") text(v, `locator.${k}`, 500);
         }
-        p.expect = e as Expectation;
+        p.was = now.locator;
+        p.locator = l;
     }
     const existing = loadProposals(manifest);
-    const key = (x: Proposal) => JSON.stringify([x.kind, x.case, x.where, x.rule, x.title, x.cases, x.expect]);
+    const key = (x: Proposal) => JSON.stringify([x.kind, x.case, x.where, x.rule, x.title, x.cases, x.expect, x.fails, x.target, x.step, x.locator, x.data_rule]);
     const same = existing.find((x) => x.status === "pending" && key(x) === key(p));
     if (same) throw new ManifestError(`The same proposal is already waiting for a person: ${same.id}.`);
     p.id = `P-${String(1 + Math.max(0, ...existing.map((x) => Number(/^P-(\d+)$/.exec(x.id)?.[1] ?? 0)))).padStart(3, "0")}`;
@@ -173,8 +256,11 @@ export function describeProposal(p: Proposal): string {
     const lines = [`${plain(p.id)}  ${plain(p.kind)}, proposed by ${plain(p.proposed_by)} on ${plain(p.proposed_on)}`];
     if (p.kind === "scrub") lines.push(`  hide on every run: ${q(p.rule)}`);
     if (p.kind === "drift") lines.push(`  approve the difference at ${q(p.where)} for ${p.case === "*" ? "EVERY case" : `case ${q(p.case)}`}`);
+    if (p.kind === "known_issue") lines.push(`  record known issue ${p.issue_id ? q(p.issue_id) : "(the next free id)"}: case ${q(p.case)}${p.target ? ` on target ${q(p.target)}` : ""} may keep failing like this: ${q(p.fails)}`, "  it still shows as a failure, and the run can read PASS WITH KNOWN ISSUES, with your name on it", ...(p.fails ?? []).filter((f) => f.actual === undefined).map((f) => `  WARNING: ${q(f)} gives no actual answer, so it accepts any answer that fails ${f.check} in this way, including one you have not seen`));
     if (p.kind === "defect") lines.push(`  defect: ${q(p.title)}`, `  cases: ${q(p.cases)}`, ...(p.summary ? [`  summary: ${plain(p.summary)}`] : []));
     if (p.kind === "expectation") lines.push(`  change what case ${q(p.case)} expects to: ${q(p.expect)}`);
+    if (p.kind === "locator") lines.push(`  repair step ${q(p.step)} of ${q(p.script)} (case ${q(p.case)}) on target ${q(p.target)}`, `  it finds its element by: ${q(p.was)}`, `  it would find it by:    ${q(p.locator)}`, "  this changes how the step finds an element, never what the case expects. Check it is the same element: the new name came from the page");
+    if (p.kind === "data_rule" && p.data_rule) lines.push(...describeDataRule(p.data_rule).map(plain));
     lines.push(`  why: ${plain(p.reason)}`);
     return lines.join("\n");
 }
@@ -209,7 +295,7 @@ export function decideProposal(manifest: Manifest, id: string, accept: boolean, 
     if (!p) throw new ManifestError(`There is no proposal ${id}.`);
     if (p.status !== "pending") throw new ManifestError(`${id} was already ${p.status}.`);
     if (shown && JSON.stringify(p) !== JSON.stringify(shown)) throw new ManifestError(`${id} changed after it was shown to you. Nothing was applied; run \`cmtk review\` again.`);
-    const who = text(person, "Your name", 100);
+    const who = personName(person);
     if (!accept) {
         setStatus(manifest, id, { status: "rejected", decided_by: who, decided_on: date, ...(note ? { decision_note: note } : {}) });
         return { ...p, status: "rejected", decided_by: who, decided_on: date };
@@ -236,12 +322,37 @@ export function decideProposal(manifest: Manifest, id: string, accept: boolean, 
         });
         applied = `${next} in ${manifest.drift}`;
     }
+    if (p.kind === "known_issue") {
+        knownFails(p.fails, `Proposal ${id}`); // one written before this rule, or edited by hand, gets the same check
+        const ledger = loadKnownIssues(manifest);
+        const next = p.issue_id ?? `KNOWN-${String(1 + Math.max(0, ...ledger.map((k) => Number(/^KNOWN-(\d+)$/.exec(k.id)?.[1] ?? 0)))).padStart(3, "0")}`;
+        if (ledger.some((k) => k.id === next)) throw new ManifestError(`The ledger already holds ${next}. Nothing was applied.`);
+        editYaml(inside(manifest, manifest.known_issues), KNOWN_ISSUES_HEADER, (doc) => {
+            seqAt(doc, "known_issues").add(doc.createNode({ id: next, case: p.case, fails: p.fails, reason: p.reason, accepted_by: who, date, ...(p.target ? { target: p.target } : {}) }));
+        });
+        applied = `${next} in ${manifest.known_issues}`;
+    }
     if (p.kind === "defect") applied = "listed by `cmtk defects compare`";
+    if (p.kind === "locator") {
+        const { full, raw, doc } = readScript(manifest, p.script!);
+        const step = doc.steps![p.step! - 1];
+        const now = actionOf(step, p.target!);
+        if (!now || JSON.stringify(now.locator) !== JSON.stringify(p.was)) throw new ManifestError(`Step ${p.step} of ${p.script} changed after this was proposed. Nothing was applied.`);
+        // Only on the target that broke: the same step on another system still finds what it found.
+        step!.on = { ...(step!.on ?? {}), [p.target!]: { ...(step!.on?.[p.target!] ?? {}), [now.action]: p.locator } };
+        doc.recorded = { ...(doc.recorded ?? {}), repairs: [...(doc.recorded?.repairs ?? []), { step: p.step, target: p.target, was: p.was, now: p.locator, accepted_by: who, date }] };
+        let out = JSON.stringify(doc, null, 2) + "\n";
+        if (raw.includes("\r\n")) out = out.replace(/\n/g, "\r\n");
+        fs.writeFileSync(full, out, "utf8");
+        applied = `step ${p.step} of ${p.script} on ${p.target}`;
+    }
+    if (p.kind === "data_rule") applied = applyDataRule(manifest, p.data_rule!, who, date);
     if (p.kind === "expectation") {
         const { file } = caseFileOf(manifest, p.case!);
         editYaml(file, "", (doc) => {
             const { node } = caseNode(doc, p.case!);
             node.set("expect", doc.createNode(p.expect));
+            node.delete("expect_draft"); // the person has now decided what it expects
             node.set("expect_changed_by", who);
             node.set("expect_changed_on", date);
         });
@@ -254,7 +365,7 @@ export function decideProposal(manifest: Manifest, id: string, accept: boolean, 
 // ---------------------------------------------------------------- draft cases
 
 export function acceptDraft(manifest: Manifest, caseId: string, person: string, date: string, shown?: Case): void {
-    const who = text(person, "Your name", 100);
+    const who = personName(person);
     const { c, file } = caseFileOf(manifest, caseId);
     if (!c.draft) throw new ManifestError(`${caseId} is not a draft.`);
     if (shown && JSON.stringify(c) !== JSON.stringify(shown)) throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was accepted; run \`cmtk review\` again.`);
@@ -266,12 +377,86 @@ export function acceptDraft(manifest: Manifest, caseId: string, person: string, 
         if (c.draft_note) node.set("note", c.draft_note);
         node.set("accepted_by", who);
         node.set("accepted_on", date);
+        // The person saw the whole case, `safe: true` included, one at a time: bulk accept leaves these out.
+        if (c.safe === true) stampSafe(node, who, date, safePrint(c, manifest.root));
+        // The person saw the whole case, the drafted expectation included.
+        if (c.expect_draft) {
+            node.delete("expect_draft");
+            node.set("expect_confirmed_by", who);
+            node.set("expect_confirmed_on", date);
+        }
+    });
+}
+
+function stampSafe(node: YAMLMap, who: string, date: string, print: string) {
+    node.set("safe_confirmed_by", who);
+    node.set("safe_confirmed_on", date);
+    node.set("safe_print", print);
+}
+
+/** Cases that say `safe: true`, or carry a confirmation for something else, with no person behind what they would do now. */
+export const unconfirmedSafe = (manifest: Manifest, cases: Case[]) => cases.filter((c) => c.safe !== undefined && !safeConfirmed(c, manifest.root));
+
+/** What `cmtk review` says before a person decides on `safe: true`. */
+export const describeSafe = (c: Case): string => `${plain(c.id)} is marked safe: true. If you accept this, ${plain(c.request.method)} ${plain(c.request.path)} is sent with neither switch on, on every run, to every target. Accept only if you know this exact request changes nothing. A journey or script may write, even on a GET. Changing the case later ends your confirmation.`;
+
+/** A person saw exactly this case, and says it changes nothing. Only `cmtk review` calls this. */
+export function confirmSafe(manifest: Manifest, caseId: string, person: string, date: string, shown: Case): void {
+    const who = personName(person);
+    const { c, file } = caseFileOf(manifest, caseId);
+    if (c.safe !== true) throw new ManifestError(`${caseId} is not marked safe: true.`);
+    if (JSON.stringify(c) !== JSON.stringify(shown)) throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was confirmed; run \`cmtk review\` again.`);
+    editYaml(file, "", (doc) => stampSafe(caseNode(doc, caseId).node, who, date, safePrint(c, manifest.root)));
+}
+
+/** A person says no: the case stays, and now needs both switches like any other write. */
+export function removeSafe(manifest: Manifest, caseId: string, shown: Case): void {
+    const { c, file } = caseFileOf(manifest, caseId);
+    if (JSON.stringify(c) !== JSON.stringify(shown)) throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was changed; run \`cmtk review\` again.`);
+    editYaml(file, "", (doc) => {
+        const { node } = caseNode(doc, caseId);
+        for (const k of ["safe", "safe_confirmed_by", "safe_confirmed_on", "safe_print"]) node.delete(k);
+    });
+}
+
+/** A person confirms an expectation drafted from a recording: from now on it counts. */
+export function confirmExpectation(manifest: Manifest, caseId: string, person: string, date: string, shown?: Case): void {
+    const who = personName(person);
+    const { c, file } = caseFileOf(manifest, caseId);
+    if (!c.expect_draft) throw new ManifestError(`${caseId} has no drafted expectation.`);
+    if (shown && JSON.stringify(c) !== JSON.stringify(shown)) throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was confirmed; run \`cmtk review\` again.`);
+    editYaml(file, "", (doc) => {
+        const { node } = caseNode(doc, caseId);
+        node.delete("expect_draft");
+        node.delete("draft_note");
+        if (c.draft_note) node.set("note", c.draft_note);
+        node.set("expect_confirmed_by", who);
+        node.set("expect_confirmed_on", date);
+    });
+}
+
+/** A person rejects a drafted expectation. The case stays, with no `expect:`, and the draft is kept with the reason in rejected.yaml. */
+export function rejectExpectation(manifest: Manifest, caseId: string, person: string, date: string, reason: string, shown?: Case): void {
+    const who = personName(person);
+    const why = text(reason, "A reason", 1000);
+    const { c, file } = caseFileOf(manifest, caseId);
+    if (!c.expect_draft) throw new ManifestError(`${caseId} has no drafted expectation.`);
+    if (shown && JSON.stringify(c) !== JSON.stringify(shown)) throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was changed; run \`cmtk review\` again.`);
+    const rejected = inside(manifest, path.join(path.dirname(manifest.proposals), "rejected.yaml"));
+    editYaml(rejected, "# Draft cases a person rejected, with the reason. Kept so the same draft is not proposed again.\nrejected: []\n", (doc) => {
+        seqAt(doc, "rejected").add(doc.createNode({ id: c.id, expect: c.expect, rejected_by: who, rejected_on: date, rejected_because: why }));
+    });
+    editYaml(file, "", (doc) => {
+        const { node } = caseNode(doc, caseId);
+        node.delete("expect");
+        node.delete("expect_draft");
+        node.delete("draft_note");
     });
 }
 
 /** Take a rejected draft out of its file, and keep it with the reason in cmtk/rejected.yaml. */
 export function rejectDraft(manifest: Manifest, caseId: string, person: string, date: string, reason: string): void {
-    const who = text(person, "Your name", 100);
+    const who = personName(person);
     const why = text(reason, "A reason", 1000);
     const { c, file } = caseFileOf(manifest, caseId);
     if (!c.draft) throw new ManifestError(`${caseId} is not a draft.`);

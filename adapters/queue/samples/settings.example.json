@@ -1,0 +1,6 @@
+{
+  "*": { "driver": "rabbitmq", "properties": ["tenant"], "quiet_ms": 1000, "limit_ms": 30000 },
+  "legacy": { "input_queue": "orders-in", "output_queues": { "orders": "orders-out", "audit": "audit-out" } },
+  "candidate": { "input_queue": "orders.in", "output_queues": { "orders": "orders.out", "audit": "audit.out" } },
+  "check": { "connection_env": "CMTK_QUEUE_LEGACY", "input_queue": "orders-in", "output_queues": ["orders-out"] }
+}

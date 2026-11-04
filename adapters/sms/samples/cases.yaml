@@ -1,0 +1,15 @@
+# Samples the conformance kit replays twice: `cmtk adapter check sms --target <name>`.
+# The target needs capture_url and allow_numbers. SMS-002 also needs a system at base_url with a
+# /send-code that sends a text; change its path to something your system does.
+cases:
+  - id: SMS-001
+    name: what the capture holds now, read without touching anything
+    surface: sms
+    request: { method: GET, path: /messages }
+  - id: SMS-002
+    name: a case that makes the system send a one-time code
+    surface: sms
+    request:
+      method: POST
+      path: /send-code
+      body: { to: "+15005550006" }

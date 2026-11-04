@@ -24,6 +24,126 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - name: The packages hold nothing they should not
+        if: runner.os == 'Linux'
+        run: npm run build && node scripts/check-package.mjs
       - name: The plugin's bundled server is up to date
         if: runner.os == 'Linux'
         run: npm run bundle && git diff --exit-code -- plugin
+
+  dotnet:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    env:
+      CMTK_REQUIRE_DOTNET: "1"
+      DOTNET_NOLOGO: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: npm ci
+      - run: npm run build
+      - run: node --test packages/cli/test/csharp-adapter.test.mjs adapters/worker/test/worker.test.mjs
+
+  real-servers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      rabbitmq:
+        image: rabbitmq:3
+        env:
+          RABBITMQ_DEFAULT_VHOST: cmtk-test
+        ports: ["5672:5672"]
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping" --health-interval 10s --health-timeout 10s --health-retries 12
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: cmtk_test
+          POSTGRES_PASSWORD: test-only
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 12
+      mailpit:
+        image: axllent/mailpit
+        ports: ["8025:8025", "1025:1025"]
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: Test-only-Passw0rd
+        ports: ["1433:1433"]
+    env:
+      CMTK_TEST_CAPTURE_URL: http://127.0.0.1:8025
+      CMTK_TEST_CAPTURE_SMTP: "1025"
+      CMTK_TEST_MSSQL_SERVER: localhost,1433
+      CMTK_TEST_MSSQL_PASSWORD: Test-only-Passw0rd
+      CMTK_TEST_RABBITMQ_URL: amqp://guest:guest@localhost:5672/cmtk-test
+      CMTK_TEST_PG_ADMIN_URL: postgres://postgres:test-only@localhost:5432/cmtk_test
+      CMTK_TEST_MSSQL_ADMIN: Server=localhost,1433;Database=master;User Id=sa;Password=Test-only-Passw0rd;Encrypt=true;TrustServerCertificate=true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save amqplib@2.2.1 pg@8.23.1 mssql@12.7.13
+      - run: npm run build
+      - name: Install sqlcmd
+        run: |
+          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null
+          echo "deb [arch=amd64] https://packages.microsoft.com/ubuntu/$(lsb_release -rs)/prod $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/mssql.list
+          sudo apt-get update -q
+          sudo ACCEPT_EULA=Y apt-get install -y -q mssql-tools18 unixodbc-dev
+          echo /opt/mssql-tools18/bin >> "$GITHUB_PATH"
+      - name: Wait for SQL Server
+        run: for i in $(seq 1 30); do (echo > /dev/tcp/localhost/1433) 2>/dev/null && break; sleep 2; done
+      - run: node --test adapters/queue/test/real-server.test.mjs adapters/database/test/real-server.test.mjs adapters/mailbox/test/real-server.test.mjs packages/core/test/seed-mssql.test.mjs
+
+  web:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CMTK_REQUIRE_BROWSER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: node --test adapters/web/test/*.test.mjs
+        shell: bash
+
+  desktop:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    # A hosted runner's desktop session is unproven, so this reports without blocking.
+    continue-on-error: true
+    env:
+      CMTK_DESKTOP_TEST: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: node --test adapters/desktop/test/desktop.test.mjs

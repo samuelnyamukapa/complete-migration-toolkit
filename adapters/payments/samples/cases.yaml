@@ -1,0 +1,27 @@
+# Samples the conformance kit replays twice: `cmtk adapter check payments --target <name>`.
+# The target needs stripe_api, key_env and webhook_secret_env, and a system at base_url.
+# Change the paths and bodies to what your system does.
+cases:
+  - id: PAY-001
+    name: what the test-mode account holds now, read without touching anything
+    surface: payments
+    request: { method: GET, path: /payments }
+  - id: PAY-002
+    name: a payment with Stripe's Visa test card
+    surface: payments
+    request:
+      method: POST
+      path: /checkout
+      body: { amount: 1999, currency: gbp, card: "test-card:visa", metadata: { order: SAMPLE } }
+  - id: PAY-003
+    name: a 3-D Secure challenge card, which waits for the customer
+    surface: payments
+    request:
+      method: POST
+      path: /checkout
+      body: { amount: 1999, currency: gbp, card: "test-card:3ds_required" }
+  - id: PAY-004
+    name: a webhook, delivered twice with the same event id
+    surface: payments
+    webhook: { type: payment_intent.succeeded, object: { amount: 1999, currency: gbp }, deliveries: 2 }
+    request: { method: POST, path: /stripe/webhook }

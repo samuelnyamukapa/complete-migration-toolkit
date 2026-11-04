@@ -7,7 +7,8 @@ import path from "node:path";
 import YAML from "yaml";
 
 import { JsonNumber, JsonObject, parseJsonExact } from "./json.js";
-import type { Case } from "./types.js";
+import { holdsToken, REDACTED, redactTokens } from "./redact.js";
+import type { Case, Expectation } from "./types.js";
 
 const STATIC = /\.(js|mjs|css|map|png|jpe?g|gif|svg|ico|woff2?|ttf|eot|webp|mp4|webm)$/i;
 export const DROPPED_HEADERS = new Set([
@@ -23,9 +24,12 @@ export interface HarImport {
     droppedHeaders: string[];
     /** Cases in which a credential-like query value or body field was replaced with REDACTED. */
     redacted: string[];
+    /** With draftExpect: cases that got a drafted expectation, and those whose recording holds no answer. */
+    drafted: string[];
+    noAnswer: string[];
 }
 
-export const REDACTED = "REDACTED";
+export { REDACTED };
 
 /**
  * Names that usually carry a credential: dropped as headers, replaced as query values and body
@@ -33,18 +37,19 @@ export const REDACTED = "REDACTED";
  */
 export function looksSecret(name: string, kind: "header" | "field" = "field"): boolean {
     const n = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-    if (kind === "header" && n.endsWith("key")) return true;
-    if (["key", "code", "sig", "sid", "pin", "otp", "totp", "mfa", "session", "jwt", "pass", "pwd", "secret", "token", "hash", "nonce", "pan"].includes(n)) return true;
-    return /token|secret|passw|apikey|subscriptionkey|accesskey|privatekey|functionkey|signature|sessionid|credential|^x?auth(orization|key|code|header)?$|cookie|csrf|xsrf|bearer|pincode|cvv|cvc|cardnumber/.test(n);
+    if (kind === "header" && (n.endsWith("key") || /session|auth(?!or)/.test(n))) return true;
+    if (["key", "code", "sig", "sid", "pin", "otp", "totp", "mfa", "session", "jwt", "pass", "pwd", "pw", "sas", "ticket", "secret", "token", "hash", "nonce", "pan"].includes(n)) return true;
+    return /token|secret|passw|passphrase|ticket$|apikey|subscriptionkey|accesskey|privatekey|functionkey|signature|sessionid|credential|^x?auth(orization|key|code|header)?$|cookie|csrf|xsrf|bearer|pincode|cvv|cvc|cardnumber/.test(n);
 }
 
 /** Redact in place, keeping key order and the exact text of every number. */
 function redactJson(v: unknown): boolean {
     let hit = false;
-    if (Array.isArray(v)) for (const x of v) hit = redactJson(x) || hit;
+    if (Array.isArray(v)) v.forEach((x, i) => { if (typeof x === "string" && holdsToken(x)) { v[i] = REDACTED; hit = true; } else hit = redactJson(x) || hit; });
     else if (v instanceof JsonObject) {
         for (const [k, x] of v) {
             if (looksSecret(k) && x !== null) { v.set(k, REDACTED); hit = true; }
+            else if (typeof x === "string" && holdsToken(x)) { v.set(k, REDACTED); hit = true; }
             else hit = redactJson(x) || hit;
         }
     }
@@ -76,7 +81,7 @@ export function redactBody(text: string, contentType: string): [string, boolean]
     if (ct.includes("x-www-form-urlencoded")) {
         const p = new URLSearchParams(text);
         let hit = false;
-        for (const k of [...new Set(p.keys())]) if (looksSecret(k)) { p.set(k, REDACTED); hit = true; }
+        for (const k of [...new Set(p.keys())]) if (looksSecret(k) || p.getAll(k).some(holdsToken)) { p.set(k, REDACTED); hit = true; }
         return hit ? [p.toString(), true] : [text, false];
     }
     if (ct.includes("xml") || ct.includes("soap") || trimmed.startsWith("<")) {
@@ -92,15 +97,61 @@ export function redactBody(text: string, contentType: string): [string, boolean]
                 hit = true;
                 return `<${tag}${attrs ?? ""}>${REDACTED}</${tag}>`;
             });
-        return [out, hit];
+        const clean = redactTokens(out);
+        return [clean, hit || clean !== out];
     }
     // Any other format: keep it only if nothing in it looks like a credential.
-    return /passw|token|secret|api[-_]?key/i.test(text) ? [REDACTED, true] : [text, false];
+    return /passw|token|secret|api[-_]?key/i.test(text) || holdsToken(text) ? [REDACTED, true] : [text, false];
+}
+
+const EXPECT_NOTE = "Expectation drafted from the recording: the status and content type legacy answered. That is legacy's behaviour, not the requirement. A person confirms it, or writes what the requirement says.";
+const CACHED_NOTE = "The browser had its own copy, so the recording says 304. A replay sends no If-None-Match, so it gets the page: the draft allows 200 or 304. Keep the one you mean.";
+const NO_ANSWER_NOTE = "The recording holds no answer for this request (the browser cancelled or blocked it), so no expectation was drafted. A person writes one.";
+const MEDIA_TYPE = /^[A-Za-z0-9!#$&^_.+-]+\/[A-Za-z0-9!#$&^_.+-]+$/;
+
+/**
+ * What a recorded answer may tell a draft: its status and its media type, and nothing else. No body text and
+ * no other header is ever read here, because they can hold personal data. Parameters after the media type
+ * (charset, boundary, a file name) are dropped for the same reason.
+ */
+export function draftExpectation(response: unknown): { expect?: Expectation; note: string } {
+    const r = (response ?? {}) as { status?: unknown; headers?: { name?: unknown; value?: unknown }[]; content?: { mimeType?: unknown } };
+    const status = Number(r.status);
+    if (!Number.isInteger(status) || status < 100 || status > 599) return { note: NO_ANSWER_NOTE };
+    if (status === 304) return { expect: { status: [200, 304] }, note: `${EXPECT_NOTE} ${CACHED_NOTE}` };
+    const header = Array.isArray(r.headers) ? r.headers.find((h) => String(h?.name ?? "").toLowerCase() === "content-type")?.value : undefined;
+    const media = String(header ?? r.content?.mimeType ?? "").split(";")[0]!.trim();
+    const expect: Expectation = { status };
+    if (MEDIA_TYPE.test(media)) expect.headers = { "Content-Type": { matches: `^${media.replace(/[.*+?^${}()|[\]\\/]/g, (c) => (c === "/" ? c : `\\${c}`))}\\s*(;|$)` } };
+    return { expect, note: EXPECT_NOTE };
 }
 
 const key = (c: Case) => crypto.createHash("sha256").update(JSON.stringify([c.request.method, c.request.path, c.request.body ?? ""])).digest("hex");
 
-export function importHar(files: string[], opts: { include?: string; exclude?: string; prefix?: string; existing?: Case[]; draft?: boolean } = {}): HarImport {
+/** A header value that says what it is: a scheme and a credential, under any name. */
+export const CREDENTIAL_VALUE = /^\s*(bearer|basic|digest|negotiate|ntlm|token|apikey)\s+\S/i;
+
+const decodedPart = (s: string) => {
+    try { return decodeURIComponent(s.replace(/\+/g, " ")); } catch { return s; }
+};
+
+/** A recorded path and query with credentials gone, by name or by shape. A pair after a ; counts, and every other value keeps its exact encoding. */
+function cleanUrlParts(pathname: string, search: string): { path: string; hidden: boolean } {
+    let hidden = false;
+    const hide = () => { hidden = true; return REDACTED; };
+    const cleanPath = pathname.split("/").map((seg) => (holdsToken(decodedPart(seg)) ? hide() : seg)).join("/");
+    if (!search) return { path: cleanPath, hidden };
+    const query = search.slice(1).split(/([&;])/).map((pair, i) => {
+        if (i % 2) return pair;
+        const eq = pair.indexOf("=");
+        if (eq < 0) return holdsToken(decodedPart(pair)) ? hide() : pair;
+        const value = decodedPart(pair.slice(eq + 1));
+        return looksSecret(decodedPart(pair.slice(0, eq))) || holdsToken(value) ? `${pair.slice(0, eq)}=${hide()}` : pair;
+    }).join("");
+    return { path: `${cleanPath}?${query}`, hidden };
+}
+
+export function importHar(files: string[], opts: { include?: string; exclude?: string; prefix?: string; existing?: Case[]; draft?: boolean; draftExpect?: boolean } = {}): HarImport {
     const inc = opts.include ? new RegExp(opts.include) : undefined;
     const exc = opts.exclude ? new RegExp(opts.exclude) : undefined;
     const seen = new Set((opts.existing ?? []).map(key));
@@ -109,6 +160,8 @@ export function importHar(files: string[], opts: { include?: string; exclude?: s
     const cases: Case[] = [];
     const dropped = new Set<string>();
     const redacted: string[] = [];
+    const drafted: string[] = [];
+    const noAnswer: string[] = [];
     let skipped = 0;
     for (const file of files) {
         const har = JSON.parse(fs.readFileSync(file, "utf8"));
@@ -127,13 +180,14 @@ export function importHar(files: string[], opts: { include?: string; exclude?: s
             for (const h of r.headers ?? []) {
                 const name = String(h?.name ?? "");
                 if (!name || name.startsWith(":")) continue;
-                if (DROPPED_HEADERS.has(name.toLowerCase()) || looksSecret(name, "header")) { dropped.add(name.toLowerCase()); continue; }
-                headers[name] = String(h.value ?? "");
+                const value = String(h.value ?? "");
+                if (DROPPED_HEADERS.has(name.toLowerCase()) || looksSecret(name, "header") || CREDENTIAL_VALUE.test(value) || holdsToken(value)) { dropped.add(name.toLowerCase()); continue; }
+                headers[name] = value;
             }
             const method = String(r.method ?? "GET").toUpperCase();
-            let hidden = false;
-            for (const k of [...new Set(u.searchParams.keys())]) if (looksSecret(k)) { u.searchParams.set(k, REDACTED); hidden = true; }
-            const p = u.pathname + u.search;
+            const clean = cleanUrlParts(u.pathname, u.search);
+            let hidden = clean.hidden;
+            const p = clean.path;
             let body: string | null = r.postData?.text || null;
             if (body) {
                 const ct = String(r.postData?.mimeType ?? Object.entries(headers).find(([h]) => h.toLowerCase() === "content-type")?.[1] ?? "");
@@ -150,11 +204,17 @@ export function importHar(files: string[], opts: { include?: string; exclude?: s
             if (seen.has(k)) { skipped++; continue; }
             seen.add(k);
             if (hidden) redacted.push(id);
+            if (opts.draftExpect) {
+                const d = draftExpectation(e?.response);
+                if (d.expect) { c.expect = d.expect; c.expect_draft = true; drafted.push(id); }
+                else noAnswer.push(id);
+                c.draft_note = [c.draft_note, d.note].filter(Boolean).join(" ");
+            }
             cases.push(c);
             n++;
         }
     }
-    return { cases, skipped, droppedHeaders: [...dropped].sort(), redacted };
+    return { cases, skipped, droppedHeaders: [...dropped].sort(), redacted, drafted, noAnswer };
 }
 
 export function casesToYaml(cases: Case[], header = "Imported from HAR recordings. Add `requirement:` and `expect:` to turn them into tests."): string {

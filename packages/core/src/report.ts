@@ -1,5 +1,5 @@
 // Verdicts and the report a person reads and signs. The numbers come from the run; nobody types them.
-import type { CaseOutcome, ContractOutcome, Drift, Manifest, Report, ReportSettings, Verdict } from "./types.js";
+import type { CaseOutcome, ContractOutcome, Drift, KnownIssueInReport, Manifest, Report, ReportScope, ReportSettings, Verdict } from "./types.js";
 
 const NOISE: [string, RegExp][] = [
     ["a GUID", /^"?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"?$/],
@@ -7,13 +7,18 @@ const NOISE: [string, RegExp][] = [
     ["a /Date()/ value", /^"?\\?\/Date\(\d+/],
 ];
 
+/** What a value looks like, when it looks like something that changes on every call. */
+export const noiseKind = (value: string) => NOISE.find(([, rx]) => rx.test(value))?.[0];
+
 function noise(cases: CaseOutcome[]) {
     const byWhere = new Map<string, { reference: string; candidate: string }[]>();
     for (const c of cases) {
         for (const d of c.differences ?? []) {
             if (d.drift) continue;
             const k = d.where.replace(/\[\d+\]/g, "[*]");
-            byWhere.set(k, [...(byWhere.get(k) ?? []), d]);
+            const list = byWhere.get(k);
+            if (list) list.push(d);
+            else byWhere.set(k, [d]);
         }
     }
     const out: Report["suggested_scrubs"] = [];
@@ -22,6 +27,35 @@ function noise(cases: CaseOutcome[]) {
         if (hit) out.push({ where, cases: ds.length, why: `both sides hold ${hit[0]} that changes on every call` });
     }
     return out;
+}
+
+const RAN = new Set(["MATCH", "DRIFT", "DIFFERENT"]);
+
+/** What a comparison covered: only when a target lists its surfaces, because otherwise nothing says what the system offers. */
+function scopeOf(cases: CaseOutcome[], contracts: ContractOutcome[], surfaces: Record<string, string[] | undefined>): ReportScope | undefined {
+    const lists = Object.entries(surfaces);
+    if (!lists.some(([, l]) => l)) return undefined;
+    const listed = [...new Set(lists.flatMap(([, l]) => l ?? []))].sort();
+    const lacks = (s: string) => lists.filter(([, l]) => l && !l.includes(s)).map(([n]) => n);
+    const words = (names: string[], s: string) => `${names.join(" and ")} ${names.length > 1 ? "have" : "has"} no ${s} surface`;
+    const count = new Map<string, number>();
+    for (const c of cases) if (RAN.has(c.result)) count.set(c.surface, (count.get(c.surface) ?? 0) + 1);
+    const compared = [...count].sort().map(([surface, n]) => ({ surface, cases: n }));
+    const out = new Map<string, number>();
+    for (const c of cases) if (c.result === "NOT COMPARABLE") out.set(c.surface, (out.get(c.surface) ?? 0) + 1);
+    for (const s of listed) if (lacks(s).length && !out.has(s)) out.set(s, 0);
+    const not_compared = [...out].sort().map(([surface, n]) => ({ surface, cases: n, why: words(lacks(surface), surface) }));
+    const no_cases = listed.filter((s) => !lacks(s).length && !count.has(s));
+    const contracts_not_compared = contracts.filter((k) => k.result === "NOT COMPARABLE").map((k) => k.name);
+    const whole = !not_compared.length && !no_cases.length && !contracts_not_compared.length;
+    const statement = whole
+        ? `Every surface the targets list was compared: ${compared.map((c) => c.surface).join(", ")}.`
+        : `This comparison covers only ${compared.map((c) => c.surface).join(", ") || "no surface at all"}, not the whole system. Not compared: ${[
+            ...not_compared.map((n) => `${n.cases ? `${plural(n.cases, "case")} on ${n.surface}` : n.surface} (${n.why})`),
+            ...no_cases.map((s) => `${s} (no case compared it)`),
+            ...contracts_not_compared.map((k) => `contract ${k}`),
+        ].join("; ")}.`;
+    return { whole, statement, compared, not_compared, no_cases, contracts_not_compared };
 }
 
 export function summarise(x: {
@@ -36,13 +70,30 @@ export function summarise(x: {
     partial: boolean;
     settings?: ReportSettings;
     excludedDrafts?: number;
+    known?: KnownIssueInReport[];
+    excludedCompareOnly?: number;
+    compareOnlySurfaces?: string[];
+    surfaces?: Record<string, string[] | undefined>;
+    scrubFired?: Record<string, number>;
+    modelCalls?: { total: number; cases_not_counted: number };
 }): Report {
     const counts: Record<string, number> = {};
     const keys = x.mode === "run" ? ["PASS", "FAIL", "SKIPPED", "ERROR"] : ["MATCH", "DRIFT", "DIFFERENT", "SKIPPED", "ERROR"];
-    for (const k of keys) counts[k] = x.cases.filter((c) => c.result === k).length;
-    const decided = decide(x, counts);
+    // A case every one of whose failures a person accepted is not counted as a new failure, and it is never counted as passed.
+    for (const k of keys) counts[k] = x.cases.filter((c) => c.result === k && !c.known_issues).length;
+    const knownFailing = x.cases.filter((c) => c.known_issues).length;
+    if (knownFailing) counts["KNOWN ISSUE"] = knownFailing;
+    const notComparable = x.cases.filter((c) => c.result === "NOT COMPARABLE").length;
+    if (notComparable) counts["NOT COMPARABLE"] = notComparable;
+    const scope = x.mode === "compare" && x.surfaces ? scopeOf(x.cases, x.contracts, x.surfaces) : undefined;
+    const stale = (x.known ?? []).filter((k) => k.state === "no longer fails").map((k) => k.id).sort();
+    const decided = decide({ ...x, scope }, counts);
     const { verdict, next } = decided;
-    const reason = decided.reason + (x.excludedDrafts ? ` ${x.excludedDrafts} draft case${x.excludedDrafts === 1 ? " was" : "s were"} left out (--accepted-only).` : "");
+    const gaps = new Map<string, string[]>();
+    for (const c of x.cases) if (c.no_adapter) gaps.set(c.surface, [...(gaps.get(c.surface) ?? []), c.id]);
+    const noAdapter = [...gaps].sort().map(([surface, cases]) => ({ surface, cases }));
+    const gapCount = noAdapter.reduce((n, g) => n + g.cases.length, 0);
+    const reason = decided.reason + (gapCount ? ` ${plural(gapCount, "case")} on a surface with no adapter (${noAdapter.map((g) => g.surface).join(", ")}): nothing was sent for ${gapCount === 1 ? "it" : "them"}.` : "") + (scope && !scope.whole ? ` ${scope.statement}` : "") + (x.excludedCompareOnly ? ` ${plural(x.excludedCompareOnly, "case")} on a compare-only surface (${x.compareOnlySurfaces!.join(", ")}) ${x.excludedCompareOnly === 1 ? "was" : "were"} left out: \`cmtk compare\` covers ${x.excludedCompareOnly === 1 ? "it" : "them"}.` : "") + (stale.length ? ` ${stale.length === 1 ? "A known issue no longer fails" : "Known issues no longer fail"} (${stale.join(", ")}): a person removes ${stale.length === 1 ? "it" : "them"} from the ledger.` : "") + (x.excludedDrafts ? ` ${x.excludedDrafts} draft case${x.excludedDrafts === 1 ? " was" : "s were"} left out (--accepted-only).` : "");
 
     const reqs = new Map<string, { cases: number; passed: number; failed: number; other: number }>();
     for (const c of x.cases) {
@@ -66,29 +117,38 @@ export function summarise(x: {
         cases: x.cases,
         contracts: x.contracts,
         requirements: [...reqs].map(([requirement, v]) => ({ requirement, ...v })).sort((a, b) => a.requirement.localeCompare(b.requirement)),
-        unused_drift: unusedDrift(x),
+        unused_drift: unusedDrift({ ...x, partial: x.partial || !!(scope && !scope.whole) }),
+        ...(x.known?.length ? { known_issues: x.known, stale_known_issues: stale } : {}),
         suggested_scrubs: x.mode === "compare" ? noise(x.cases) : [],
         partial: x.partial,
         ...(x.excludedDrafts ? { excluded_drafts: x.excludedDrafts } : {}),
+        ...(x.excludedCompareOnly ? { excluded_compare_only: x.excludedCompareOnly } : {}),
+        ...(noAdapter.length ? { no_adapter: noAdapter } : {}),
+        ...(scope ? { scope } : {}),
         ...(x.settings ? { settings: x.settings } : {}),
+        ...(x.scrubFired ? { scrub_fired: x.scrubFired } : {}),
+        ...(x.modelCalls ? { model_calls: x.modelCalls } : {}),
         reason,
         next,
     };
 }
 
-/** On a partial run only entries for cases that ran can be called unused. */
+/** On a partial run, or a comparison of part of a system, only entries for cases that ran can be called unused. */
 function unusedDrift(x: { cases: CaseOutcome[]; drift: Drift[]; usedDrift: Set<string>; partial: boolean }) {
-    const ran = new Set(x.cases.map((c) => c.id));
+    const ran = new Set(x.cases.filter((c) => c.result !== "NOT COMPARABLE").map((c) => c.id));
     return x.drift.filter((d) => !x.usedDrift.has(d.id) && (!x.partial || ran.has(d.case))).map((d) => d.id).sort();
 }
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-function decide(x: { mode: "run" | "compare"; cases: CaseOutcome[]; contracts: ContractOutcome[]; targets: Record<string, string>; partial: boolean }, counts: Record<string, number>) {
-    const ran = x.cases.filter((c) => c.result !== "SKIPPED" && c.result !== "ERROR").length;
+function decide(x: { mode: "run" | "compare"; cases: CaseOutcome[]; contracts: ContractOutcome[]; targets: Record<string, string>; partial: boolean; known?: KnownIssueInReport[]; scope?: ReportScope }, counts: Record<string, number>) {
+    const ran = x.cases.filter((c) => c.result !== "SKIPPED" && c.result !== "ERROR" && c.result !== "NOT COMPARABLE").length;
     const errored = x.cases.filter((c) => c.result === "ERROR");
     const skipped = x.cases.filter((c) => c.result === "SKIPPED");
     const again = `\`cmtk ${x.mode}\` again`;
+    // What lies past the cap was not looked at, so it cannot be called a pass or parity.
+    const cut = x.cases.filter((c) => c.truncated).length;
+    const cutWords = `${plural(cut, "answer")} ${cut === 1 ? "was" : "were"} over 5 MB, and only the first 5 MB ${x.mode === "run" ? "were checked" : "were compared"}.`;
     const why = () => {
         const first = errored[0] ?? skipped[0];
         if (!first) return "";
@@ -99,11 +159,16 @@ function decide(x: { mode: "run" | "compare"; cases: CaseOutcome[]; contracts: C
     const notRun = () => [errored.length && `${plural(errored.length, "case")} could not run`, skipped.length && `${plural(skipped.length, "case")} were skipped`].filter(Boolean).join(" and ");
 
     if (x.mode === "run") {
+        const stillFailing = (x.known ?? []).filter((k) => x.cases.some((c) => c.known_issues?.includes(k.id)));
+        const known = counts["KNOWN ISSUE"] ?? 0;
+        const knownWords = known ? ` ${plural(known, "case")} failed only as known issues (${stillFailing.map((k) => `${k.id}, accepted by ${k.accepted_by}`).join("; ")}).` : "";
         if (x.cases.length === 0) return { verdict: "NO EVIDENCE" as Verdict, reason: "There are no cases.", next: "add cases (cmtk/cases/*.yaml, or `cmtk import-har`), then `cmtk run`." };
-        if (counts.FAIL) return { verdict: "FAIL" as Verdict, reason: `${plural(counts.FAIL, "case")} failed.`, next: "fix what failed (or correct an expectation with the person who owns the requirement), then `cmtk run` again." };
+        if (counts.FAIL) return { verdict: "FAIL" as Verdict, reason: `${plural(counts.FAIL, "case")} failed.${knownWords}`, next: "fix what failed (or correct an expectation with the person who owns the requirement), then `cmtk run` again." };
         if (ran === 0) return { verdict: "NO EVIDENCE" as Verdict, reason: `No case ran: ${notRun()}.`, next: why() };
-        if (errored.length || skipped.length) return { verdict: "INCOMPLETE" as Verdict, reason: `${notRun()}.`, next: why() };
-        if (x.partial) return { verdict: "INCOMPLETE" as Verdict, reason: `Only the ${plural(ran, "case")} named with --only ran, and all passed.`, next: "run every case with `cmtk run` before anyone signs." };
+        if (errored.length || skipped.length) return { verdict: "INCOMPLETE" as Verdict, reason: `${notRun()}.${knownWords}`, next: why() };
+        if (x.partial) return { verdict: "INCOMPLETE" as Verdict, reason: `Only the ${plural(ran, "case")} named with --only ran, ${known ? "with no new failures" : "and all passed"}.${knownWords}`, next: "run every case with `cmtk run` before anyone signs." };
+        if (cut) return { verdict: "INCOMPLETE" as Verdict, reason: `Nothing failed, but ${cutWords}${knownWords}`, next: "a person checks those cases another way, such as a smaller answer, before anyone signs." };
+        if (known) return { verdict: "PASS WITH KNOWN ISSUES" as Verdict, reason: `${plural(ran - known, "case")} passed.${knownWords} These still fail: they are accepted, not fixed.`, next: "a person reviews the report, known issues included, and signs it with `cmtk signoff run`." };
         return { verdict: "PASS" as Verdict, reason: `All ${plural(ran, "case")} passed.`, next: "a person reviews the report and signs it with `cmtk signoff run`." };
     }
 
@@ -117,13 +182,17 @@ function decide(x: { mode: "run" | "compare"; cases: CaseOutcome[]; contracts: C
     if (x.cases.length === 0) {
         return { verdict: "NO EVIDENCE" as Verdict, reason: x.contracts.length ? "Only the contracts were checked; there are no cases to compare behaviour." : "There are no cases and no contracts.", next: "add cases (cmtk/cases/*.yaml, or `cmtk import-har`), then `cmtk compare`." };
     }
-    if (ran === 0) return { verdict: "NO EVIDENCE" as Verdict, reason: `No case ran: ${notRun()}.`, next: why() };
+    const notComparable = counts["NOT COMPARABLE"] ?? 0;
+    if (ran === 0) return { verdict: "NO EVIDENCE" as Verdict, reason: `No case ran: ${[notRun(), notComparable && `${plural(notComparable, "case")} not comparable`].filter(Boolean).join(" and ")}.`, next: why() || "add cases on a surface both targets offer, then `cmtk compare`." };
     if (errored.length || skipped.length || contractErrors.length) {
         const parts = [notRun(), contractErrors.length && `${plural(contractErrors.length, "contract")} could not be checked`].filter(Boolean);
         return { verdict: "INCOMPLETE" as Verdict, reason: `${parts.join(" and ")}.`, next: why() || `see the contracts table (${contractErrors[0]?.findings[0]?.what ?? ""}), fix that, then \`cmtk compare\` again.` };
     }
     const drifted = counts.DRIFT || approvedFindings.length;
     if (x.partial) return { verdict: "INCOMPLETE" as Verdict, reason: `Only the ${plural(ran, "case")} named with --only ran, with no unapproved differences.`, next: "compare every case with `cmtk compare` before anyone signs." };
+    if (cut) return { verdict: "PARTIAL COMPARISON" as Verdict, reason: `No difference in what was compared, but ${cutWords}`, next: "a person reads which cases those were, and signs for what was compared. The rest of those answers still has to be compared another way." };
+    // The word PARITY is kept from this verdict on purpose: part of a system never reads as parity for the whole of it.
+    if (x.scope && !x.scope.whole) return { verdict: "PARTIAL COMPARISON" as Verdict, reason: drifted ? "On what was compared, every difference is approved drift." : "On what was compared, there are no differences.", next: "a person reads the scope and signs with `cmtk signoff compare` for what was compared. The rest of the system still has to be compared." };
     return drifted
         ? { verdict: "DRIFT ONLY" as Verdict, reason: "Every difference is approved drift.", next: "a person reviews the report and signs it with `cmtk signoff compare`." }
         : { verdict: "PARITY" as Verdict, reason: "No differences at all.", next: "a person reviews the report and signs it with `cmtk signoff compare`." };
@@ -134,10 +203,12 @@ const cell = (v: unknown) => String(v).replace(/\|/g, "\\|").replace(/\r?\n/g, "
 export function renderReport(r: Report): string {
     const L: string[] = [];
     const title = r.mode === "run" ? "Test report" : "Comparison report";
-    L.push(`# ${title}: ${r.system}`, "", `**Verdict: ${r.verdict}**${r.partial ? " (partial run: only some cases)" : ""}`, "", r.reason, "", `Next: ${r.next}`, "");
+    L.push(`# ${title}: ${r.system}`, "", `**Verdict: ${r.verdict}**${r.partial ? " (partial run: only some cases)" : ""}${r.scope && !r.scope.whole ? " (only part of the system: see Scope)" : ""}`, "", r.reason, "", `Next: ${r.next}`, "");
     L.push(`- Date: ${r.date}`);
     for (const [name, url] of Object.entries(r.targets)) L.push(`- ${name}: \`${url}\``);
-    L.push(`- Cases: ${Object.entries(r.counts).map(([k, v]) => `${v} ${k.toLowerCase()}`).join(", ")}`, "");
+    L.push(`- Cases: ${Object.entries(r.counts).map(([k, v]) => `${v} ${k.toLowerCase()}`).join(", ")}`);
+    if (r.model_calls) L.push(`- Model calls: ${r.model_calls.total}${r.model_calls.cases_not_counted ? ` counted, and ${plural(r.model_calls.cases_not_counted, "answer")} from an adapter that does not count them` : ""}`);
+    L.push("");
     L.push("Written by `cmtk " + r.mode + "` from the files in this folder. Do not edit the numbers: run it again.", "");
     if (r.settings) {
         const s = r.settings;
@@ -147,10 +218,25 @@ export function renderReport(r: Report): string {
             ...(r.mode === "compare" ? [
                 `- Match level: ${s.match}${s.overrides.length ? `; overrides: ${s.overrides.map((o) => `\`${o.path}\` ${o.match}`).join(", ")}` : ""}`,
                 `- Scrubbed (hidden from every comparison): ${scrubs.length ? scrubs.join(", ") : "nothing"}`,
+                ...(s.visual_tolerance ? [`- Screenshots: up to ${(s.visual_tolerance * 100).toFixed(2)}% of pixels may change (visual_tolerance)`] : []),
                 `- Approved drift: ${s.drift_entries} entr${s.drift_entries === 1 ? "y" : "ies"} in \`${s.drift_file}\``,
-            ] : []), "");
+            ] : []),
+            ...(s.known_issues_file && s.known_issues_entries ? [`- Known issues: ${s.known_issues_entries} entr${s.known_issues_entries === 1 ? "y" : "ies"} for this target in \`${s.known_issues_file}\``] : []), "");
     }
 
+    if (r.scope) {
+        L.push("## Scope", "", r.scope.statement, "");
+        for (const c of r.scope.compared) L.push(`- Compared: ${c.surface}, ${c.cases} case${c.cases === 1 ? "" : "s"}`);
+        for (const n of r.scope.not_compared) L.push(`- Not compared: ${n.surface}, ${n.cases} case${n.cases === 1 ? "" : "s"}: ${cell(n.why)}`);
+        for (const s of r.scope.no_cases) L.push(`- Not compared: ${s}: both targets offer it, and no case compared it`);
+        for (const k of r.scope.contracts_not_compared) L.push(`- Not compared: contract ${cell(k)}`);
+        L.push("");
+    }
+    if (r.no_adapter?.length) {
+        L.push("## Cases with no adapter", "", "Nothing was sent for these cases, because no adapter drives their surface. They count as errors, so this report can't pass until each has an adapter.", "");
+        for (const n of r.no_adapter) L.push(`- ${cell(n.surface)}: ${n.cases.map(cell).join(", ")}`);
+        L.push("");
+    }
     L.push("## Requirements", "", "| Requirement | Cases | Passed | Failed | Not run |", "| --- | --- | --- | --- | --- |");
     for (const q of r.requirements) L.push(`| ${cell(q.requirement)} | ${q.cases} | ${q.passed} | ${q.failed} | ${q.other} |`);
     if (r.requirements.length === 0) L.push("| (no cases) | 0 | 0 | 0 | 0 |");
@@ -159,14 +245,15 @@ export function renderReport(r: Report): string {
         L.push("", "## Contracts", "");
         if (r.contracts.length) {
             L.push("| Contract | Kind | Result | Findings |", "| --- | --- | --- | --- |");
-            for (const k of r.contracts) L.push(`| ${cell(k.name)} | ${cell(k.kind)} | ${k.result} | ${cell(k.findings.map((f) => `${f.what}${f.drift ? ` (approved: ${f.drift})` : ""}`).join("; ") || "none")} |`);
+            for (const k of r.contracts) L.push(`| ${cell(k.name)} | ${cell(k.kind)} | ${k.result} | ${cell(k.findings.map((f) => `${f.what}${f.drift ? ` (approved: ${f.drift})` : ""}`).join("; ") || "none")}${k.note ? ` (${cell(k.note)})` : ""} |`);
         } else L.push("No contracts are listed in cmtk.yaml, so none were checked.");
     }
 
     L.push("", "## Cases", "", r.mode === "compare" ? "| Case | Request | Level | Result |" : "| Case | Request | Requirement | Result |", "| --- | --- | --- | --- |");
     for (const c of r.cases) {
         const mid = r.mode === "compare" ? c.match ?? "" : c.requirement.join(", ") || "—";
-        L.push(`| ${c.id} | ${cell(c.name)} | ${cell(mid)} | ${c.result}${c.why ? ` — ${cell(c.why)}` : ""} |`);
+        const shown = c.known_issues ? `FAIL (known issue ${c.known_issues.join(", ")})` : c.result;
+        L.push(`| ${c.id} | ${cell(c.name)} | ${cell(mid)} | ${c.result === "NOT COMPARABLE" ? cell(c.why) : `${shown}${c.why ? ` — ${cell(c.why)}` : ""}${c.note ? ` — ${cell(c.note)}` : ""}`} |`);
     }
     const sent = r.cases.filter((c) => c.inputs?.length);
     if (sent.length) {
@@ -181,8 +268,18 @@ export function renderReport(r: Report): string {
 
     const fails = r.cases.flatMap((c) => (c.failures ?? []).map((f) => [c.id, f] as const));
     if (fails.length) {
-        L.push("", "## Failures", "", "| Case | Check | Expected | Actual |", "| --- | --- | --- | --- |");
-        for (const [id, f] of fails.slice(0, 500)) L.push(`| ${id} | \`${cell(f.check)}\` | ${cell(f.expected)} | ${cell(f.actual)} |`);
+        const anyKnown = fails.some(([, f]) => f.known_issue);
+        L.push("", "## Failures", "", `| Case | Check | Expected | Actual |${anyKnown ? " Known issue |" : ""}`, `| --- | --- | --- | --- |${anyKnown ? " --- |" : ""}`);
+        for (const [id, f] of fails.slice(0, 500)) L.push(`| ${id} | \`${cell(f.check)}\` | ${cell(f.expected)} | ${cell(f.actual)} |${anyKnown ? ` ${f.known_issue ?? "—"} |` : ""}`);
+    }
+    if (r.known_issues?.length) {
+        L.push("", "## Known issues", "", "Failures a named person accepted. Each still fails: it is accepted, not fixed. Anything an entry does not describe is an ordinary failure.", "",
+            "| Id | Case | What fails | Reason | Accepted by | Date | This run |", "| --- | --- | --- | --- | --- | --- | --- |");
+        for (const k of r.known_issues) {
+            const what = k.fails.map((f) => [f.check, f.expected !== undefined && `expected ${f.expected}`, f.actual !== undefined && `actual ${f.actual}`].filter(Boolean).join(", ")).join("; ");
+            L.push(`| ${k.id} | ${cell(k.case)} | ${cell(what)} | ${cell(k.reason)} | ${cell(k.accepted_by)} | ${cell(k.date ?? "")} | ${k.state} |`);
+        }
+        if (r.stale_known_issues?.length) L.push("", `No longer failing: ${r.stale_known_issues.join(", ")}. A person checks each one and removes it from the ledger, so a later return of the failure is reported as new.`);
     }
     const diffs = r.cases.flatMap((c) => (c.differences ?? []).map((d) => [c.id, d] as const));
     if (diffs.length) {
