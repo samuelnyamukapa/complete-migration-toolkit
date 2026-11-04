@@ -16,6 +16,7 @@ Everything below passes its tests in CI on Windows and Linux unless it says othe
 
 ### Adapters
 
+- **The web adapter stops redirects and worker sockets off the target**, and credentials go only to the target. SMS checks every recipient form before any network call. The SQL guard allows function calls from a list. Batch, queue, database and desktop close path, host and stand-in gaps. Each README says what stays unprotected.
 - **C# template (#20):** `cmtk adapter new <name> --lang csharp`.
 - **`adapter check`:** `--target <name>` and `check_target:` in samples, for adapters that need settings.
 - **mailbox (#16):** Mailpit, tested against a real one in CI, and MailHog, on a stand-in.

@@ -50,9 +50,10 @@ function summary(r: Report): string {
     for (const n of r.no_adapter ?? []) lines.push(`no adapter for surface ${n.surface}, so nothing was sent for: ${n.cases.join(", ")}`);
     if (r.unused_drift.length) lines.push(`drift that matched nothing: ${r.unused_drift.join(", ")}`);
     if (r.stale_known_issues?.length) lines.push(`known issues that no longer fail (a person removes them from the ledger): ${r.stale_known_issues.join(", ")}`);
-    lines.push(`next: ${r.next}`);
     lines.push("The full report is REPORT.md in the evidence folder. Only a person signs it, with `cmtk signoff`.");
     lines.push(UNTRUSTED, "----");
+    // `next` can quote a system's own error text, so it sits below the line.
+    lines.push(`next: ${r.next}`);
     for (const k of r.contracts) lines.push(`contract ${k.name}: ${k.result}${k.findings.length ? ` — ${k.findings.map((f) => `${f.what}${f.drift ? ` (drift ${f.drift})` : ""}`).join("; ")}` : ""}`);
     for (const c of r.cases.filter((x) => x.result !== "PASS" && x.result !== "MATCH" && x.result !== "NOT COMPARABLE").slice(0, 40)) {
         const detail = c.failures?.map((f) => `${f.check}: expected ${f.expected}, got ${f.actual}`).join("; ")

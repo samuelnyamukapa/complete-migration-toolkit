@@ -179,8 +179,8 @@ export function createAdapter({ drivers = DRIVERS, settings = {}, env = process.
     }
 
     /**
-     * `cmtk compare` calls reset before every case, read-only ones too, and reset is not told which
-     * case comes next. A read-only case must change nothing, so reset only checks the target.
+     * `cmtk compare` calls reset before a case that writes, and an adapter is not told which case comes
+     * next. Emptying a queue belongs right before a publish, so reset only checks the target.
      * Queues are emptied immediately before a publish, which also covers `cmtk run` (no reset at all).
      */
     async function reset(target) {
