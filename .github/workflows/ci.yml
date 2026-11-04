@@ -70,6 +70,9 @@ jobs:
         ports: ["5432:5432"]
         options: >-
           --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 12
+      mailpit:
+        image: axllent/mailpit
+        ports: ["8025:8025", "1025:1025"]
       mssql:
         image: mcr.microsoft.com/mssql/server:2022-latest
         env:
@@ -77,6 +80,8 @@ jobs:
           MSSQL_SA_PASSWORD: Test-only-Passw0rd
         ports: ["1433:1433"]
     env:
+      CMTK_TEST_CAPTURE_URL: http://127.0.0.1:8025
+      CMTK_TEST_CAPTURE_SMTP: "1025"
       CMTK_TEST_RABBITMQ_URL: amqp://guest:guest@localhost:5672/cmtk-test
       CMTK_TEST_PG_ADMIN_URL: postgres://postgres:test-only@localhost:5432/cmtk_test
       CMTK_TEST_MSSQL_ADMIN: Server=localhost,1433;Database=master;User Id=sa;Password=Test-only-Passw0rd;Encrypt=true;TrustServerCertificate=true
@@ -91,4 +96,4 @@ jobs:
       - run: npm run build
       - name: Wait for SQL Server
         run: for i in $(seq 1 30); do (echo > /dev/tcp/localhost/1433) 2>/dev/null && break; sleep 2; done
-      - run: node --test adapters/queue/test/real-server.test.mjs adapters/database/test/real-server.test.mjs
+      - run: node --test adapters/queue/test/real-server.test.mjs adapters/database/test/real-server.test.mjs adapters/mailbox/test/real-server.test.mjs

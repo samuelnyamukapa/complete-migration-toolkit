@@ -21326,7 +21326,7 @@ Usage:
                                                                     one draft case per row, each sending its row from a file
   cmtk signoff run|compare                                          a person signs a report, at a terminal (never an agent)
   cmtk adapter new <name> [--lang node|csharp]                      write a new adapter from a template (default: node)
-  cmtk adapter check <name>                                         the conformance kit for an adapter
+  cmtk adapter check <name> [--target <name>]                       the conformance kit, on a dummy target or one from cmtk.yaml
 
 Options:
   --manifest <file>   default: cmtk.yaml in the current folder
@@ -21514,7 +21514,7 @@ async function main(argv) {
     case "probe":
       return probe(manifestFile, rest, values.surface);
     case "adapter":
-      return adapterCommand(rest, manifestFile, values.lang);
+      return adapterCommand(rest, manifestFile, values.lang, values.target);
     case "data":
       return dataCommand(rest, manifestFile, values);
     default:
@@ -21745,7 +21745,7 @@ function writeTemplate(tpl, dir, name) {
       fs16.writeFileSync(to, fs16.readFileSync(path14.join(tpl, e6.name), "utf8").replaceAll("__NAME__", name), "utf8");
   }
 }
-async function adapterCommand(args, manifestFile, lang = "node") {
+async function adapterCommand(args, manifestFile, lang = "node", targetName) {
   const [sub, name] = args;
   if (!name || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(name) || name === "http")
     throw new UsageError("Give the adapter a name of letters, digits, '.', '-' and '_' (not http, which is built in).");
@@ -21771,7 +21771,7 @@ async function adapterCommand(args, manifestFile, lang = "node") {
     return 0;
   }
   if (sub === "check")
-    return adapterCheck(name, dir, manifestFile);
+    return adapterCheck(name, dir, manifestFile, targetName);
   throw new UsageError("`cmtk adapter` takes `new <name>` or `check <name>`.");
 }
 function builtCsharpAdapter(name, dir) {
@@ -21792,8 +21792,10 @@ function builtCsharpAdapter(name, dir) {
     throw new UsageError(`adapters/${name}/${newer} is newer than the build. ${build}`);
   return { command: "dotnet", args: [built] };
 }
-async function adapterCheck(name, dir, manifestFile) {
+async function adapterCheck(name, dir, manifestFile, targetName) {
   let spec;
+  if (targetName !== void 0 && !fs16.existsSync(manifestFile))
+    throw new UsageError(`--target ${targetName} needs a cmtk.yaml that sets it; ${manifestFile} does not exist.`);
   if (fs16.existsSync(manifestFile)) {
     const m4 = loadManifest(manifestFile);
     if (m4.adapters[name])
@@ -21804,7 +21806,13 @@ async function adapterCheck(name, dir, manifestFile) {
   const doc = fs16.existsSync(samplesFile) ? readStructured(samplesFile) : {};
   const samples = doc.cases ?? [];
   const secret = `cmtk-check-${Math.random().toString(36).slice(2)}`;
-  const target2 = { ...doc.check_target, name: "check", base_url: "http://127.0.0.1:9" };
+  let target2 = { ...doc.check_target, name: "check", base_url: "http://127.0.0.1:9" };
+  if (targetName !== void 0) {
+    const named = loadManifest(manifestFile).targets[targetName];
+    if (!named)
+      throw new UsageError(`--target ${targetName} is not in the targets of ${path14.basename(manifestFile)}.`);
+    target2 = named;
+  }
   const checks = [];
   const adapter = processAdapter(name, { ...spec, timeout_s: 60 }, path14.dirname(manifestFile));
   try {
