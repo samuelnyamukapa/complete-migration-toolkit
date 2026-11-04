@@ -83,13 +83,14 @@ server.registerTool("cmtk_compare", {
 }, async (a) => guarded(() => compare(loadManifest(a.manifest), { only: a.only, allowUnsafe: a.allow_unsafe, acceptedOnly: a.accepted_only }), summary));
 
 server.registerTool("cmtk_import_har", {
-    description: "Turn HAR recordings into a new file of draft cases (draft: true), for a person to accept with cmtk review. Credentials, static files and duplicates are dropped.",
+    description: "Turn HAR recordings into a new file of draft cases (draft: true), for a person to accept with cmtk review. Credentials, static files and duplicates are dropped. With draft_expect, each case also gets an `expect:` block drafted from the recorded status and content type, and nothing else from the answer. A recording is the old system's behaviour, not the requirement, so a person confirms each one.",
     inputSchema: {
         manifest: manifestArg,
         har: z.array(z.string()).min(1).describe("HAR files inside the project folder."),
         out: z.string().optional().describe("New case file, relative to cmtk.yaml. Default cmtk/cases/har.yaml."),
         include: z.string().optional(),
         exclude: z.string().optional(),
+        draft_expect: z.boolean().optional().describe("Draft each case's `expect:` from the recorded status and content type. `cmtk run` skips the case until a person confirms it."),
     },
 }, async (a) => guarded(() => {
     const m = loadManifest(a.manifest);
@@ -97,12 +98,13 @@ server.registerTool("cmtk_import_har", {
     const out = inside(m, a.out ?? "cmtk/cases/har.yaml");
     if (fs.existsSync(out)) throw new Error(`${path.relative(m.root, out)} already exists; choose another \`out\`.`);
     // An agent's import is a set of drafts, like every case an agent writes.
-    const res = importHar(files, { include: a.include, exclude: a.exclude, existing: loadCases(m), draft: true });
+    const res = importHar(files, { include: a.include, exclude: a.exclude, existing: loadCases(m), draft: true, draftExpect: a.draft_expect });
     fs.mkdirSync(path.dirname(out), { recursive: true });
     fs.writeFileSync(out, casesToYaml(res.cases), "utf8");
     return { res, out: path.relative(m.root, out) };
 }, ({ res, out }) => `added ${res.cases.length} draft cases to ${out}, for a person to review; skipped ${res.skipped}; dropped headers: ${res.droppedHeaders.join(", ") || "none"}` +
-    (res.redacted.length ? `; credential-like values replaced with REDACTED in ${res.redacted.join(", ")}: a person gives those cases test values` : "")));
+    (res.redacted.length ? `; credential-like values replaced with REDACTED in ${res.redacted.join(", ")}: a person gives those cases test values` : "") +
+    (a.draft_expect ? `; drafted an expectation for ${res.drafted.length} from the recorded status and content type, which a person confirms one by one with cmtk review${res.noAnswer.length ? `; no answer recorded for ${res.noAnswer.join(", ")}` : ""}` : "")));
 
 server.registerTool("cmtk_init", {
     description: "Start a project: write cmtk.yaml, a first case file, and a drift ledger when there is a legacy system. Refuses to overwrite. Ask the person for the system's address; never guess one.",

@@ -272,6 +272,7 @@ export function decideProposal(manifest: Manifest, id: string, accept: boolean, 
         editYaml(file, "", (doc) => {
             const { node } = caseNode(doc, p.case!);
             node.set("expect", doc.createNode(p.expect));
+            node.delete("expect_draft"); // the person has now decided what it expects
             node.set("expect_changed_by", who);
             node.set("expect_changed_on", date);
         });
@@ -296,6 +297,47 @@ export function acceptDraft(manifest: Manifest, caseId: string, person: string, 
         if (c.draft_note) node.set("note", c.draft_note);
         node.set("accepted_by", who);
         node.set("accepted_on", date);
+        // The person saw the whole case, the drafted expectation included.
+        if (c.expect_draft) {
+            node.delete("expect_draft");
+            node.set("expect_confirmed_by", who);
+            node.set("expect_confirmed_on", date);
+        }
+    });
+}
+
+/** A person confirms an expectation drafted from a recording: from now on it counts. */
+export function confirmExpectation(manifest: Manifest, caseId: string, person: string, date: string, shown?: Case): void {
+    const who = text(person, "Your name", 100);
+    const { c, file } = caseFileOf(manifest, caseId);
+    if (!c.expect_draft) throw new ManifestError(`${caseId} has no drafted expectation.`);
+    if (shown && JSON.stringify(c) !== JSON.stringify(shown)) throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was confirmed; run \`cmtk review\` again.`);
+    editYaml(file, "", (doc) => {
+        const { node } = caseNode(doc, caseId);
+        node.delete("expect_draft");
+        node.delete("draft_note");
+        if (c.draft_note) node.set("note", c.draft_note);
+        node.set("expect_confirmed_by", who);
+        node.set("expect_confirmed_on", date);
+    });
+}
+
+/** A person rejects a drafted expectation. The case stays, with no `expect:`, and the draft is kept with the reason in rejected.yaml. */
+export function rejectExpectation(manifest: Manifest, caseId: string, person: string, date: string, reason: string, shown?: Case): void {
+    const who = text(person, "Your name", 100);
+    const why = text(reason, "A reason", 1000);
+    const { c, file } = caseFileOf(manifest, caseId);
+    if (!c.expect_draft) throw new ManifestError(`${caseId} has no drafted expectation.`);
+    if (shown && JSON.stringify(c) !== JSON.stringify(shown)) throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was changed; run \`cmtk review\` again.`);
+    const rejected = inside(manifest, path.join(path.dirname(manifest.proposals), "rejected.yaml"));
+    editYaml(rejected, "# Draft cases a person rejected, with the reason. Kept so the same draft is not proposed again.\nrejected: []\n", (doc) => {
+        seqAt(doc, "rejected").add(doc.createNode({ id: c.id, expect: c.expect, rejected_by: who, rejected_on: date, rejected_because: why }));
+    });
+    editYaml(file, "", (doc) => {
+        const { node } = caseNode(doc, caseId);
+        node.delete("expect");
+        node.delete("expect_draft");
+        node.delete("draft_note");
     });
 }
 

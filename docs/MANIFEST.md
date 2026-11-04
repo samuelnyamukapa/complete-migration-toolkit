@@ -50,6 +50,8 @@ A case file holds `cases:`, a list. Each case:
 | `draft_note` | no | Why the drafter wrote it this way, and any question for the reviewer. Kept as `note` when a person accepts the draft |
 | `note` | no | Where the case came from and what it depends on, in words |
 | `accepted_by`, `accepted_on` | no | Written by `cmtk review` when a person accepts a draft |
+| `expect_draft` | no | `true` for an `expect:` block drafted from a recording (`cmtk import-har --draft-expect`) that no person has confirmed. `cmtk run` reports the case as SKIPPED, "draft expectation: review it", and `--accepted-only` leaves it out. `cmtk compare` never reads `expect`, so it still compares the case |
+| `expect_confirmed_by`, `expect_confirmed_on` | no | Written by `cmtk review` when a person confirms a drafted expectation |
 
 ### expect
 

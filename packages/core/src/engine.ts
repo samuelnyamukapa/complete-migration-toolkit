@@ -72,10 +72,12 @@ export function adaptersFor(manifest: Manifest) {
     };
 }
 
-function selectCases(manifest: Manifest, only?: string[], acceptedOnly = false): Case[] & { excluded: number } {
+function selectCases(manifest: Manifest, mode: "run" | "compare", only?: string[], acceptedOnly = false): Case[] & { excluded: number } {
     const picked = pick(manifest, only);
     if (!acceptedOnly) return Object.assign(picked, { excluded: 0 });
-    return Object.assign(picked.filter((c) => !c.draft), { excluded: picked.filter((c) => c.draft).length });
+    // A comparison never reads `expect`, so a drafted expectation only holds a case back from `cmtk run`.
+    const held = (c: Case) => c.draft || (mode === "run" && c.expect_draft);
+    return Object.assign(picked.filter((c) => !held(c)), { excluded: picked.filter(held).length });
 }
 
 function pick(manifest: Manifest, only?: string[]): Case[] {
@@ -103,6 +105,7 @@ function unsafe(c: Case, manifest: Manifest, opts: RunOptions) {
 }
 
 const DRAFT_WHY = "a draft: a person accepts it with `cmtk review` before it counts";
+const EXPECT_DRAFT_WHY = "draft expectation: review it with `cmtk review`. It records what the system answered, which a person confirms before it counts";
 const UNSAFE_WHY = "changes data: needs allow_unsafe_methods in cmtk.yaml and --allow-unsafe on this run";
 
 /** An error that means no answer came at all, as opposed to a bad answer. */
@@ -199,7 +202,7 @@ function target(manifest: Manifest, name: string | undefined, role: string): Tar
 /** cmtk run: one target, checked against expectations. */
 export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Report> {
     const t = target(manifest, opts.target ?? manifest.default_target, "default_target");
-    const cases = selectCases(manifest, opts.only, opts.acceptedOnly);
+    const cases = selectCases(manifest, "run", opts.only, opts.acceptedOnly);
     // A bad ledger stops the run here, before any evidence is touched. An entry for another target does not apply.
     const known = loadKnownIssues(manifest).filter((k) => !k.target || k.target === t.name);
     const extra = envHeaders(manifest);
@@ -212,6 +215,7 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
         try {
             for (const c of cases) {
                 const b = base(c);
+                if (c.expect_draft) { out.push({ ...b, result: "SKIPPED", why: EXPECT_DRAFT_WHY }); continue; }
                 if (c.draft) { out.push({ ...b, result: "SKIPPED", why: DRAFT_WHY }); continue; }
                 if (!c.expect) { out.push({ ...b, result: "SKIPPED", why: "no `expect:` block, so there is nothing to check on one system" }); continue; }
                 if (unsafe(c, manifest, opts)) { out.push({ ...b, result: "SKIPPED", why: UNSAFE_WHY }); continue; }
@@ -247,7 +251,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
     const ref = target(manifest, manifest.reference, "reference");
     const cand = target(manifest, manifest.candidate, "candidate");
     if (ref.name === cand.name) throw new ManifestError("The reference and the candidate are the same target; comparing needs two systems.");
-    const cases = selectCases(manifest, opts.only, opts.acceptedOnly);
+    const cases = selectCases(manifest, "compare", opts.only, opts.acceptedOnly);
     const drift = loadDrift(manifest);
     scrubberOf(manifest); // a bad scrub rule stops the run here, before any evidence is touched
     const extra = envHeaders(manifest);

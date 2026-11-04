@@ -40,6 +40,7 @@ These run in CI on every pull request, except the last two, which start with the
 - **Changing data needs two switches.** POST, PUT, PATCH and DELETE are skipped unless `allow_unsafe_methods: true` is in `cmtk.yaml` and `--allow-unsafe` is on the run. Each switch is tested on its own: the request must not be sent.
 - **Secrets never reach disk.** A test plants a known secret in `headers_from_env` and searches every file the run wrote.
 - **HAR import keeps credentials out.** It drops cookies and authorization, key and token headers, and redacts secret-looking query values and body fields.
+- **A recording is not a requirement.** `cmtk import-har --draft-expect` copies only the status and the media type of a recorded answer, never body text or another header. The case is skipped until a person confirms that expectation, one at a time, in `cmtk review`.
 - **Requests go only to the targets in `cmtk.yaml`.** A case holds a path, never a host.
 - **Redirects are compared, not followed.**
 - **No proxies.** Requests go straight to the target, even when proxy environment variables are set.

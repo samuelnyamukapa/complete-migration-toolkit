@@ -184,6 +184,11 @@ export interface Case {
     /** Who accepted the draft, and when. Written by `cmtk review`. */
     accepted_by?: string;
     accepted_on?: string;
+    /** `expect` was drafted from a recording and no person has confirmed it: `cmtk run` skips the case until `cmtk review` does. */
+    expect_draft?: boolean;
+    /** Who confirmed a drafted expectation, and when. Written by `cmtk review`. */
+    expect_confirmed_by?: string;
+    expect_confirmed_on?: string;
 }
 
 /** What one target answered to one case. Adapters return this shape. */

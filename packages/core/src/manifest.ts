@@ -189,6 +189,8 @@ export function loadCases(manifest: Manifest): Case[] {
             }
             if (c.match !== undefined) level(c.match, where);
             if (c.draft !== undefined && typeof c.draft !== "boolean") throw new ManifestError(`${where}: \`draft\` must be true or false.`);
+            if (c.expect_draft !== undefined && typeof c.expect_draft !== "boolean") throw new ManifestError(`${where}: \`expect_draft\` must be true or false.`);
+            if (c.expect_draft && !c.expect) throw new ManifestError(`${where}: \`expect_draft\` marks a drafted \`expect:\` block, and this case has none.`);
             const method = String(req.method ?? "GET").toUpperCase();
             if (!/^[A-Z]+$/.test(method)) throw new ManifestError(`${where}: the method ${JSON.stringify(req.method)} must be letters only, such as GET or POST.`);
             const headers: Record<string, string> = {};

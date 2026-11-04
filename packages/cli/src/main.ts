@@ -12,9 +12,9 @@ import { parseArgs } from "node:util";
 import YAML from "yaml";
 
 import {
-    acceptDraft, adaptersFor, casesToYaml, check, compare, ConfigError, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
+    acceptDraft, adaptersFor, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
-    initProject, rejectDraft, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report,
+    initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report,
     planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat,
 } from "@cmtk/core";
 
@@ -32,8 +32,10 @@ const HELP = `cmtk ${VERSION}: test any system from its requirements, and prove 
 
 Usage:
   cmtk init --candidate <url> [--legacy <url>] [--system <name>]   write cmtk.yaml and a first case file
-  cmtk import-har <file.har>... [--include <regex>] [--exclude <regex>] [--out <file>]
+  cmtk import-har <file.har>... [--include <regex>] [--exclude <regex>] [--out <file>] [--draft-expect]
                                                                     turn recorded traffic into cases
+                                                                    (--draft-expect drafts each expect: from the recorded status and
+                                                                    content type; \`cmtk run\` skips it until a person confirms it)
   cmtk run [--target <name>] [--only <id,id>] [--allow-unsafe] [--accepted-only]
                                                                     check one system against each case's expect: block
                                                                     (--accepted-only leaves draft cases out, as in CI)
@@ -109,6 +111,7 @@ async function main(argv: string[]): Promise<number> {
             only: { type: "string" },
             "allow-unsafe": { type: "boolean", default: false },
             "accepted-only": { type: "boolean", default: false },
+            "draft-expect": { type: "boolean", default: false },
             candidate: { type: "string" },
             legacy: { type: "string" },
             system: { type: "string" },
@@ -163,14 +166,20 @@ async function main(argv: string[]): Promise<number> {
             if (rest.length === 0) throw new UsageError("`cmtk import-har` needs at least one .har file.");
             const manifest = loadManifest(manifestFile);
             const existing = loadCases(manifest);
-            const res = importHar(rest.map((f) => path.resolve(f)), { include: values.include, exclude: values.exclude, existing });
+            const res = importHar(rest.map((f) => path.resolve(f)), { include: values.include, exclude: values.exclude, existing, draftExpect: values["draft-expect"] });
             const out = inside(manifest, values.out ?? "cmtk/cases/har.yaml");
             if (fs.existsSync(out)) throw new UsageError(`${path.relative(process.cwd(), out)} already exists; pass --out <new file>.`);
             fs.mkdirSync(path.dirname(out), { recursive: true });
-            fs.writeFileSync(out, casesToYaml(res.cases), "utf8");
+            fs.writeFileSync(out, casesToYaml(res.cases, values["draft-expect"] ? "Imported from HAR recordings. Each drafted expect: is what the system answered, not the requirement: `cmtk review` confirms it, and `cmtk run` skips the case until then." : undefined), "utf8");
             console.log(`Added ${res.cases.length} cases to ${path.relative(process.cwd(), out)}; skipped ${res.skipped} (static files, filtered or duplicates).`);
             if (res.droppedHeaders.length) console.log(`Dropped these headers from every case: ${res.droppedHeaders.join(", ")}. Credentials come from headers_from_env at run time.`);
             if (res.redacted.length) console.log(`Replaced credential-like values with REDACTED in ${res.redacted.length} case${res.redacted.length === 1 ? "" : "s"} (${res.redacted.slice(0, 10).join(", ")}${res.redacted.length > 10 ? ", …" : ""}). Give those cases test values before they run.`);
+            if (values["draft-expect"]) {
+                console.log(`Drafted an expectation for ${res.drafted.length} case${res.drafted.length === 1 ? "" : "s"}, from the recorded status and content type only. No body text and no other header was copied.`);
+                if (res.noAnswer.length) console.log(`The recording holds no answer for ${res.noAnswer.join(", ")}: write those expectations by hand.`);
+                console.log("Next: a person confirms each one with `cmtk review`. `cmtk run` skips those cases until then.");
+                return 0;
+            }
             console.log("Next: name each case's requirement, add `expect:` checks for `cmtk run`, then run it.");
             return 0;
         }
@@ -268,11 +277,13 @@ async function review(manifestFile: string): Promise<number> {
     }
     const m = loadManifest(manifestFile);
     const drafts = loadCases(m).filter((c) => c.draft);
+    const drafted = loadCases(m).filter((c) => c.expect_draft && !c.draft);
     const pending = loadProposals(m).filter((p) => p.status === "pending");
-    if (!drafts.length && !pending.length) { console.log("Nothing to review: no draft cases and no proposals."); return 0; }
-    console.log(`${drafts.length} draft case${drafts.length === 1 ? "" : "s"} and ${pending.length} proposal${pending.length === 1 ? "" : "s"} to review.`);
+    if (!drafts.length && !drafted.length && !pending.length) { console.log("Nothing to review: no draft cases, no drafted expectations and no proposals."); return 0; }
+    console.log(`${drafts.length} draft case${drafts.length === 1 ? "" : "s"}, ${drafted.length} drafted expectation${drafted.length === 1 ? "" : "s"} and ${pending.length} proposal${pending.length === 1 ? "" : "s"} to review.`);
     console.log("For each: a = accept, r = reject (you give a reason), s = skip for now, q = stop.");
-    console.log("A = accept this draft and every remaining draft in the same file (you confirm first): for the cases a recipe generated, once you have read the recipe.\n");
+    console.log("A = accept this draft and every remaining draft in the same file (you confirm first): for the cases a recipe generated, once you have read the recipe.");
+    console.log("A drafted expectation records what the system answered, not what the requirement says, so you confirm each one on its own.\n");
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const date = new Date().toISOString().slice(0, 10);
     const tally = { accepted: 0, rejected: 0, skipped: 0, failed: 0 };
@@ -295,8 +306,8 @@ async function review(manifestFile: string): Promise<number> {
                 if (done.has(c.id)) return true;
                 const { file: _file, draft: _d, ...shown } = c;
                 console.log(`\nDraft case ${c.id} in ${c.file}:\n${YAML.stringify(shown, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
-                const rest = drafts.filter((d) => d.file === c.file && !done.has(d.id));
-                let v = await ask(rest.length > 1);
+                const rest = drafts.filter((d) => d.file === c.file && !done.has(d.id) && !d.expect_draft);
+                let v = await ask(!c.expect_draft && rest.length > 1);
                 while (v === "A") {
                     const yes = (await rl.question(`Accept all ${rest.length} remaining drafts in ${c.file}, ${c.id} included? Type yes to confirm: `)).trim().toLowerCase();
                     if (yes === "yes") break;
@@ -315,6 +326,16 @@ async function review(manifestFile: string): Promise<number> {
                 done.add(c.id);
                 if (v === "a") { acceptDraft(m, c.id, name, date, c); tally.accepted++; }
                 if (v === "r") { rejectDraft(m, c.id, name, date, (await rl.question("Why reject it? ")).trim() || "no reason given"); tally.rejected++; }
+                if (v === "s") tally.skipped++;
+                return true;
+            }),
+            ...drafted.map((c) => async () => {
+                const { file: _file, expect_draft: _d, ...shown } = c;
+                console.log(`\nDrafted expectation for case ${c.id} in ${c.file}. It is what the system answered in the recording; accept it only if that is what should happen:\n${YAML.stringify(shown, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
+                const v = await ask();
+                if (v === "q") return false;
+                if (v === "a") { confirmExpectation(m, c.id, name, date, c); tally.accepted++; }
+                if (v === "r") { rejectExpectation(m, c.id, name, date, (await rl.question("Why reject it? The case stays, with no expectation. ")).trim() || "no reason given", c); tally.rejected++; }
                 if (v === "s") tally.skipped++;
                 return true;
             }),

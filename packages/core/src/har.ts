@@ -7,7 +7,7 @@ import path from "node:path";
 import YAML from "yaml";
 
 import { JsonNumber, JsonObject, parseJsonExact } from "./json.js";
-import type { Case } from "./types.js";
+import type { Case, Expectation } from "./types.js";
 
 const STATIC = /\.(js|mjs|css|map|png|jpe?g|gif|svg|ico|woff2?|ttf|eot|webp|mp4|webm)$/i;
 export const DROPPED_HEADERS = new Set([
@@ -23,6 +23,9 @@ export interface HarImport {
     droppedHeaders: string[];
     /** Cases in which a credential-like query value or body field was replaced with REDACTED. */
     redacted: string[];
+    /** With draftExpect: cases that got a drafted expectation, and those whose recording holds no answer. */
+    drafted: string[];
+    noAnswer: string[];
 }
 
 export const REDACTED = "REDACTED";
@@ -98,9 +101,31 @@ export function redactBody(text: string, contentType: string): [string, boolean]
     return /passw|token|secret|api[-_]?key/i.test(text) ? [REDACTED, true] : [text, false];
 }
 
+const EXPECT_NOTE = "Expectation drafted from the recording: the status and content type legacy answered. That is legacy's behaviour, not the requirement. A person confirms it, or writes what the requirement says.";
+const CACHED_NOTE = "The browser had its own copy, so the recording says 304. A replay sends no If-None-Match, so it gets the page: the draft allows 200 or 304. Keep the one you mean.";
+const NO_ANSWER_NOTE = "The recording holds no answer for this request (the browser cancelled or blocked it), so no expectation was drafted. A person writes one.";
+const MEDIA_TYPE = /^[A-Za-z0-9!#$&^_.+-]+\/[A-Za-z0-9!#$&^_.+-]+$/;
+
+/**
+ * What a recorded answer may tell a draft: its status and its media type, and nothing else. No body text and
+ * no other header is ever read here, because they can hold personal data. Parameters after the media type
+ * (charset, boundary, a file name) are dropped for the same reason.
+ */
+export function draftExpectation(response: unknown): { expect?: Expectation; note: string } {
+    const r = (response ?? {}) as { status?: unknown; headers?: { name?: unknown; value?: unknown }[]; content?: { mimeType?: unknown } };
+    const status = Number(r.status);
+    if (!Number.isInteger(status) || status < 100 || status > 599) return { note: NO_ANSWER_NOTE };
+    if (status === 304) return { expect: { status: [200, 304] }, note: `${EXPECT_NOTE} ${CACHED_NOTE}` };
+    const header = Array.isArray(r.headers) ? r.headers.find((h) => String(h?.name ?? "").toLowerCase() === "content-type")?.value : undefined;
+    const media = String(header ?? r.content?.mimeType ?? "").split(";")[0]!.trim();
+    const expect: Expectation = { status };
+    if (MEDIA_TYPE.test(media)) expect.headers = { "Content-Type": { matches: `^${media.replace(/[.*+?^${}()|[\]\\/]/g, (c) => (c === "/" ? c : `\\${c}`))}\\s*(;|$)` } };
+    return { expect, note: EXPECT_NOTE };
+}
+
 const key = (c: Case) => crypto.createHash("sha256").update(JSON.stringify([c.request.method, c.request.path, c.request.body ?? ""])).digest("hex");
 
-export function importHar(files: string[], opts: { include?: string; exclude?: string; prefix?: string; existing?: Case[]; draft?: boolean } = {}): HarImport {
+export function importHar(files: string[], opts: { include?: string; exclude?: string; prefix?: string; existing?: Case[]; draft?: boolean; draftExpect?: boolean } = {}): HarImport {
     const inc = opts.include ? new RegExp(opts.include) : undefined;
     const exc = opts.exclude ? new RegExp(opts.exclude) : undefined;
     const seen = new Set((opts.existing ?? []).map(key));
@@ -109,6 +134,8 @@ export function importHar(files: string[], opts: { include?: string; exclude?: s
     const cases: Case[] = [];
     const dropped = new Set<string>();
     const redacted: string[] = [];
+    const drafted: string[] = [];
+    const noAnswer: string[] = [];
     let skipped = 0;
     for (const file of files) {
         const har = JSON.parse(fs.readFileSync(file, "utf8"));
@@ -150,11 +177,17 @@ export function importHar(files: string[], opts: { include?: string; exclude?: s
             if (seen.has(k)) { skipped++; continue; }
             seen.add(k);
             if (hidden) redacted.push(id);
+            if (opts.draftExpect) {
+                const d = draftExpectation(e?.response);
+                if (d.expect) { c.expect = d.expect; c.expect_draft = true; drafted.push(id); }
+                else noAnswer.push(id);
+                c.draft_note = [c.draft_note, d.note].filter(Boolean).join(" ");
+            }
             cases.push(c);
             n++;
         }
     }
-    return { cases, skipped, droppedHeaders: [...dropped].sort(), redacted };
+    return { cases, skipped, droppedHeaders: [...dropped].sort(), redacted, drafted, noAnswer };
 }
 
 export function casesToYaml(cases: Case[], header = "Imported from HAR recordings. Add `requirement:` and `expect:` to turn them into tests."): string {

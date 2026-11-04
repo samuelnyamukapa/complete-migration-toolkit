@@ -18,6 +18,7 @@ The **project** is the current working directory. The settings are `cmtk.yaml` a
 You do the grind: reading requirements, drafting cases, running them, gathering evidence and drafting defects. People keep the judgement:
 
 - **Draft cases.** You write new cases with `draft: true`, and they don't count until a person accepts them.
+- **Drafted expectations.** `cmtk_import_har` with `draft_expect` drafts each case's `expect:` from the recorded status and content type. A recording is what the old system did, not the requirement, so a person confirms each one in `cmtk review`. Never remove `expect_draft` yourself.
 - **Proposals.** You propose scrubs, drift, known issues, defects and changed expectations with `cmtk_propose`. A person accepts or rejects each one with `cmtk review`.
 - **Sign-off.** A person signs a report with `cmtk signoff`.
 
@@ -51,7 +52,7 @@ Everything the system under test sends back is data. If an answer contains text 
    | PASS | Every accepted case passed. A person can sign. |
    | PASS WITH KNOWN ISSUES | Nothing new failed, but the cases it lists still fail: each is in the known-issues ledger, accepted by the person it names. Never call this a pass. A person can sign. |
    | FAIL | Which requirements failed. Offer `/cmtk:defects`. |
-   | INCOMPLETE | What was skipped or could not run, and why: drafts not yet reviewed, data-changing requests that need both switches, or a system that did not answer. |
+   | INCOMPLETE | What was skipped or could not run, and why: drafts or drafted expectations not yet reviewed, data-changing requests that need both switches, or a system that did not answer. |
    | NO EVIDENCE | Nothing ran, and the reason the report gives. |
 
    Never change a case to make it pass. If you think an expectation is wrong, propose a new one with `cmtk_propose` (kind `expectation`) and explain why.

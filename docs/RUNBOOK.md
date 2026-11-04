@@ -76,6 +76,12 @@ Follow these steps in order. Each one says what to do, what you should see, and 
    5. Imported cases replay the browser's headers, including `Accept`. A Web API may then answer in a different format than it gives other callers, such as XML instead of JSON. Keep the header if that is what consumers send; remove it if not.
    6. Give each case you keep a `requirement` and an `expect:` block, then move it into a folder your `cases:` setting reads. Delete the HAR file: it is not evidence, and it can hold secrets.
 
+   **To draft the `expect:` blocks,** run `cmtk import-har recording.har --draft-expect`. Each case gets the status and content type the recording holds, and nothing else: no body text and no other header. A recorded answer is what legacy did, not what the requirement says, so `cmtk run` reports each one as SKIPPED, "draft expectation: review it", until a person confirms it:
+   - run `cmtk review`, and accept, reject or skip each one. There is no accept-all for these: you confirm each on its own;
+   - to confirm is to say this answer is correct. If legacy is wrong here, reject it and write what the requirement says;
+   - a request the browser answered from its own copy is recorded as 304, and a replay gets the page, so its draft allows 200 or 304. Keep the one you mean;
+   - a request with no recorded answer gets no draft: write that `expect:` by hand.
+
 5. **List the contracts consumers rely on** under `contracts:` in `cmtk.yaml`: the OpenAPI JSON and any WSDL, each at its path on both systems. Contracts are locked: every change, even an added operation, shows as a difference until a named person approves it in the drift ledger.
 
 6. **Run the comparison:**

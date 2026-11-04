@@ -68,6 +68,28 @@ test("the plugin: bundled server and command, one version everywhere, seven skil
     }
 });
 
+test("an agent's draft_expect import drafts expectations a person must confirm, and copies nothing else", async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cmtk-mcp-"));
+    const manifest = path.join(dir, "cmtk.yaml");
+    fs.writeFileSync(manifest, "system: s\ntargets:\n  candidate: { base_url: 'http://127.0.0.1:9' }\n");
+    fs.writeFileSync(path.join(dir, "w.har"), JSON.stringify({ log: { entries: [{ request: { method: "GET", url: "http://x/b", headers: [] }, response: { status: 200, headers: [{ name: "Content-Type", value: "application/json" }, { name: "X-User", value: "jane" }], content: { text: "jane@example.com" } } }] } }));
+    const client = new Client({ name: "test", version: "1" });
+    await client.connect(new StdioClientTransport({ command: process.execPath, args: [SERVER] }));
+    try {
+        const imp = await client.callTool({ name: "cmtk_import_har", arguments: { manifest, har: ["w.har"], draft_expect: true } });
+        assert.equal(imp.isError, false, imp.content[0].text);
+        assert.match(imp.content[0].text, /drafted an expectation for 1 .*a person confirms one by one/);
+        const yaml = fs.readFileSync(path.join(dir, "cmtk/cases/har.yaml"), "utf8");
+        assert.match(yaml, /draft: true/);
+        assert.match(yaml, /expect_draft: true/);
+        assert.doesNotMatch(yaml, /jane/);
+        const run = await client.callTool({ name: "cmtk_run", arguments: { manifest } });
+        assert.match(run.content[0].text, /draft expectation: review it/);
+    } finally {
+        await client.close();
+    }
+});
+
 test("an agent can propose a known issue but never add one", async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cmtk-mcp-"));
     const manifest = path.join(dir, "cmtk.yaml");

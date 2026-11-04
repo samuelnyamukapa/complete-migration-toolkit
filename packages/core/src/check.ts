@@ -12,6 +12,8 @@ import type { Manifest } from "./types.js";
 export interface CheckResult {
     cases: number;
     drafts: string[];
+    /** Cases whose `expect:` was drafted from a recording and waits for a person. */
+    draftExpectations: string[];
     requirements: number;
     pendingProposals: string[];
     /** From the last `cmtk discover`, if there was one. */
@@ -48,6 +50,7 @@ export function check(manifest: Manifest): CheckResult {
     return {
         cases: cases.length,
         drafts: cases.filter((c) => c.draft).map((c) => c.id),
+        draftExpectations: cases.filter((c) => c.expect_draft).map((c) => c.id),
         requirements: new Set(cases.flatMap((c) => (c.requirement === undefined ? [] : [c.requirement].flat().map(String)))).size,
         pendingProposals: proposals.filter((p) => p.status === "pending").map((p) => p.id),
         ...(d ? { discovery: `Boundaries (cmtk discover, ${d.date}): ${describeDiscovery(d)}` } : {}),
@@ -59,6 +62,7 @@ export function describeCheck(r: CheckResult): string {
     const lines = [
         `Settings and case files are valid: ${r.cases} cases for ${r.requirements} requirements.`,
         r.drafts.length ? `${r.drafts.length} draft cases wait for a person (\`cmtk review\`): ${r.drafts.slice(0, 20).join(", ")}${r.drafts.length > 20 ? ", …" : ""}` : "No draft cases.",
+        ...(r.draftExpectations.length ? [`${r.draftExpectations.length} drafted expectations wait for a person (\`cmtk review\`), and \`cmtk run\` skips those cases until then: ${r.draftExpectations.slice(0, 20).join(", ")}${r.draftExpectations.length > 20 ? ", …" : ""}`] : []),
         r.pendingProposals.length ? `${r.pendingProposals.length} proposals wait for a person (\`cmtk review\`): ${r.pendingProposals.join(", ")}` : "No proposals waiting.",
         ...(r.discovery ? [r.discovery] : []),
     ];
