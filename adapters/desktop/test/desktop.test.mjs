@@ -203,6 +203,16 @@ test("a broken locator is an error with candidates, and a repair is only a propo
     assert.deepEqual(JSON.parse(fs.readFileSync(file, "utf8")).steps.at(-1), JSON.parse(before).steps.at(-1), "the check did not change");
 });
 
+test("a request body is an error naming it, not dropped", async () => {
+    const a = adapter();
+    try {
+        const o = await a.run({ id: "c", request: { method: "POST", path: "/", body_file: "x.json" } }, { name: "t", stub_app: "adapters/desktop/samples/app-v1.json" });
+        assert.match(o.error, /does not support request\.body_file/);
+    } finally {
+        await a.close();
+    }
+});
+
 test("the adapter holds no model client, and reports zero for it", () => {
     for (const f of fs.readdirSync(ADAPTER).filter((x) => x.endsWith(".mjs"))) {
         const imports = [...fs.readFileSync(path.join(ADAPTER, f), "utf8").matchAll(/from\s+["']([^"']+)["']/g)].map((m) => m[1]);

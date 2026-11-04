@@ -91,6 +91,8 @@ async function find(reader, l, n, action, ms, target, script) {
 async function runCase(written, target, headers, secrets) {
     const line = typeof written.request === "string" ? /^(\S+)\s+(\S+)$/.exec(written.request.trim()) : undefined;
     const c = line ? { ...written, request: { method: line[1], path: line[2] } } : written;
+    const unsupported = ["body_file", "body_form", "files", "before"].find((k) => c.request?.[k] !== undefined) ?? (c.request?.body ? "body" : undefined);
+    if (unsupported) return { error: `the desktop adapter does not support request.${unsupported}: a script's steps fill the app`, model_calls: 0 };
     const method = String(c.request?.method ?? "GET").toUpperCase();
     const writes = !SAFE.has(method) || c.safe === true;
     const outcome = { goal: "", reader: "", passed: false, checks: [], values: {}, pages: [] };

@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { check, compare, compareObservations, covers, loadManifest, MATCH_LEVELS, renderReport, run } from "../dist/index.js";
+import { check, compare, compareObservations, covers, evidenceFingerprint, exploreRequest, loadManifest, MATCH_LEVELS, renderReport, run, startSession } from "../dist/index.js";
 
 const NONE = { scrub: { json_paths: [], xml_ignore: [], regex: [] }, compare_headers: [] };
 const outcome = (more = {}) => ({ goal: "Buy a jacket", checks: [{ name: "in the basket", passed: true }], values: { items: "1" }, pages: [{ name: "basket", path: "/basket" }], ...more });
@@ -98,6 +98,29 @@ test("the report counts model calls, and a screenshot becomes an evidence file t
     assert.deepEqual(fs.readFileSync(path.join(answers, saved.screenshots[0].file)), Buffer.from(PNG, "base64"));
 });
 
+test("a screenshot counts towards the evidence a person signs: changing one changes the fingerprint", async () => {
+    const dir = project(`(m) => ({ status: 200, journey: ${JSON.stringify(outcome())}, model_calls: 0, screenshots: [{ page: "basket", png_base64: "${PNG}" }] })`, CASE);
+    await compare(loadManifest(path.join(dir, "cmtk.yaml")));
+    const folder = path.join(dir, "cmtk/evidence/compare");
+    const before = evidenceFingerprint(folder);
+    fs.appendFileSync(path.join(folder, "answers/J.reference.screen-01.png"), "x");
+    assert.notEqual(evidenceFingerprint(folder), before);
+});
+
+test("an exploration log and its answer to the agent hold no pictures", async () => {
+    const dir = project(`(m) => ({ status: 200, body: "ok", model_calls: 0, screenshots: [{ page: "/", png_base64: "${PNG}" }] })`, CASE);
+    const m = loadManifest(path.join(dir, "cmtk.yaml"));
+    const s = startSession(m, { charter: "look around", surface: "ui", target: "candidate" });
+    const probe = await exploreRequest(m, s.id, "GET /");
+    assert.equal(probe.observation.status, 200);
+    assert.equal(probe.observation.screenshots, undefined);
+    const logs = [];
+    const walk = (d) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { if (e.isDirectory()) walk(path.join(d, e.name)); else logs.push(fs.readFileSync(path.join(d, e.name), "utf8")); } };
+    walk(path.join(dir, "cmtk"));
+    assert.ok(logs.length > 0);
+    assert.ok(logs.every((t) => !t.includes(PNG)));
+});
+
 test("a model call is counted on both systems and in `cmtk run`, and an adapter that does not count is never read as zero", async () => {
     const dir = project(`(m) => ({ status: 200, journey: ${JSON.stringify(outcome())}, model_calls: 2 })`, CASE);
     assert.deepEqual((await compare(loadManifest(path.join(dir, "cmtk.yaml")))).model_calls, { total: 4, cases_not_counted: 0 });
@@ -113,6 +136,11 @@ test("an adapter that reports no journey at the journey level reads as a differe
     const r = await compare(loadManifest(path.join(dir, "cmtk.yaml")));
     assert.equal(r.verdict, "NO PARITY");
     assert.equal(r.cases[0].differences[0].where, "journey");
+});
+
+test("`cmtk check` warns about a script that is not there", () => {
+    const dir = project(`(m) => ({ status: 200 })`, "cases:\n  - { id: J, surface: ui, request: GET /, requirement: R, journey: { script: nope.json } }\n");
+    assert.ok(check(loadManifest(path.join(dir, "cmtk.yaml"))).warnings.some((w) => /J: the script nope\.json does not exist/.test(w)));
 });
 
 test("`cmtk check` warns about an http case at the journey level", () => {

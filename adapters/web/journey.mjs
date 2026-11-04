@@ -485,6 +485,9 @@ export async function runCase(browser, written, target, headers, baseUrl, secret
     // The conformance kit sends a case as written, so a request may still be one line.
     const line = typeof written.request === "string" ? /^(\S+)\s+(\S+)$/.exec(written.request.trim()) : undefined;
     const c = line ? { ...written, request: { method: line[1], path: line[2] } } : written;
+    // A browser sends what the page sends, so a body written in the case would be silently dropped.
+    const unsupported = ["body_file", "body_form", "files", "before"].find((k) => c.request?.[k] !== undefined) ?? (c.request?.body ? "body" : undefined);
+    if (unsupported) return { error: `the web adapter does not support request.${unsupported}: a browser sends what the page sends. Write the step that sends it`, model_calls: 0 };
     const method = String(c.request?.method ?? "GET").toUpperCase();
     // The engine only sends a non-GET case when both unsafe switches are on, or when a person marked it safe.
     const writes = !SAFE.has(method) || c.safe === true;

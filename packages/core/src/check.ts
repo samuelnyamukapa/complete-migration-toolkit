@@ -35,6 +35,7 @@ export function check(manifest: Manifest): CheckResult {
         if (s === "http" && ["journey", "structure", "visual"].includes(c.match ?? "")) warnings.push(`${c.id}: match \`${c.match}\` needs an adapter that reports it, and http does not, so \`cmtk compare\` reports a difference.`);
         if (c.requirement === undefined) warnings.push(`${c.id}: names no requirement, so its result is not traced to a story.`);
         if (!c.expect && Object.keys(manifest.targets).length === 1) warnings.push(`${c.id}: has no \`expect:\` block, so \`cmtk run\` skips it.`);
+        if (typeof c.journey?.script === "string" && !fs.existsSync(inside(manifest, c.journey.script))) warnings.push(`${c.id}: the script ${c.journey.script} does not exist, so the case will error.`);
         for (const f of [c.request.body_file, typeof c.request.body_form === "string" ? c.request.body_form : undefined, ...(c.request.files ?? []).map((x) => x.path)].filter((x): x is string => !!x)) {
             if (!fs.existsSync(inside(manifest, f))) warnings.push(`${c.id}: the input file ${f} does not exist, so the case will error.`);
         }

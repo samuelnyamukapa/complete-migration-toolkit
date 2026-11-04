@@ -284,6 +284,18 @@ test("with no browser the adapter says what to do, and its case is an error", { 
     }
 });
 
+test("a request body a browser can't send is an error naming it, not dropped", { timeout: 30_000 }, async () => {
+    const a = adapter();
+    try {
+        for (const part of [{ body_file: "x.json" }, { body_form: { a: 1 } }, { files: [{ field: "f", path: "x" }] }, { before: { get: "/" } }, { body: "text" }]) {
+            const o = await a.run({ id: "p", request: { method: "POST", path: "/", ...part } }, { name: "t", base_url: "http://127.0.0.1:9" });
+            assert.match(o.error, new RegExp(`does not support request\\.${Object.keys(part)[0]}`));
+        }
+    } finally {
+        await a.close();
+    }
+});
+
 test("a journey with no check is refused: nothing else decides pass or fail", web, async () => {
     const a = adapter();
     const site = await oldShop();
