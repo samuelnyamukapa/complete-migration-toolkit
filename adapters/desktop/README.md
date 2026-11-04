@@ -58,7 +58,7 @@ A step that finds nothing makes the case an ERROR, with `repair` in the answer f
 
 A target with `stub_app: file.json` plays a small app written as JSON instead of starting one, on any system. See [samples/app-v1.json](samples/app-v1.json). The answer says `reader: stub`. A stub proves the script runner and the comparison, and says nothing about a real app, so it is never evidence for a pilot. On a system with no Windows UI Automation and no `stub_app`, a case is an error that says so.
 
-`uia_host` runs a stand-in for `uia.ps1`, for tests.
+`uia_host` runs a stand-in for `uia.ps1`, for this adapter's own tests. It runs JavaScript and reads no real app, so `CMTK_DESKTOP_TEST_HOST=1` must be in the environment, the file must be inside the project, and the answer says `stand_in: true`. A setting alone can't start it. It is the one way to run without Windows and without a stub, so don't set that variable outside these tests.
 
 ## Tests
 

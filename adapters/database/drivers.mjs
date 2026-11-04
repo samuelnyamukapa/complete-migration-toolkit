@@ -3,6 +3,7 @@
 //   dialect                 for the SELECT check
 //   open(connection)        a connection with query(sql, params) giving rows, and close()
 //   secretsOf(connection)   the parts that must never be printed
+//   hostsOf(connection)     the hosts and databases it names, read without any network call
 //   whoCanWrite(query)      what this login could change, by asking the server: a list of
 //                           plain descriptions, empty only when the server says nothing can be written
 //   databaseName(query)     the name of the database in use
@@ -48,6 +49,15 @@ export function postgresDriver(importer = (p) => import(p)) {
     return {
         dialect: "postgres",
         secretsOf: urlSecrets,
+        hostsOf(connection) {
+            try {
+                const u = new URL(connection);
+                // A host in the query takes the place of the one before it.
+                return [u.hostname, decodeURIComponent(u.pathname.replace(/^\//, "")), ...u.searchParams.getAll("host"), ...u.searchParams.getAll("dbname")];
+            } catch {
+                return [...String(connection).matchAll(/(?:^|\s)(?:host|hostaddr|dbname)\s*=\s*'?([^\s']+)/gi)].map((m) => m[1]);
+            }
+        },
         async open(connection) {
             const pg = await load(importer, "postgres");
             // A second lock behind the permission check and the SELECT check.
@@ -95,6 +105,14 @@ const DB_WRITE_RIGHTS = "('INSERT', 'UPDATE', 'DELETE', 'ALTER', 'CONTROL', 'TAK
 export function mssqlDriver(importer = (p) => import(p)) {
     return {
         dialect: "mssql",
+        hostsOf(connection) {
+            const found = [...String(connection).matchAll(/(?:^|;)\s*(?:server|data source|address|addr|network address|database|initial catalog)\s*=\s*([^;]+)/gi)].map((m) => m[1].trim());
+            try {
+                const u = new URL(connection);
+                found.push(u.hostname, decodeURIComponent(u.pathname.replace(/^\//, "")));
+            } catch { /* the usual form, read above */ }
+            return found;
+        },
         secretsOf(connection) {
             const m = /(?:^|;)\s*(?:password|pwd)\s*=\s*([^;]+)/i.exec(connection);
             return [...(m ? [m[1].trim()] : []), ...urlSecrets(connection)];

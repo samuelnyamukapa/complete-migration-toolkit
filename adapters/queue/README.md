@@ -53,7 +53,9 @@ The observation is `effects.outputs`, by queue, each message with its body (as J
 
 ## Safety
 
-- **Test namespaces only.** A namespace or virtual host must have a word like `test`, `qa`, `uat`, `sandbox`, `dev`, `ci` or `cmtk` in its name, and none like `prod` or `live`, unless `test_namespace` names it exactly. RabbitMQ's default `/` does not pass. This is checked before a driver is loaded.
+- **Test namespaces only.** A namespace or virtual host must have a word like `test`, `qa`, `uat`, `sandbox`, `dev`, `ci` or `cmtk` in its name, and hold no `prod`, unless `test_namespace` names it exactly. RabbitMQ's default `/` does not pass. This is checked before a driver is loaded.
+- **A production marker is never test.** A word like `prod`, `prod2`, `production`, `prd` or `live` in the name or in the host is refused, and `test_namespace` does not change that. So `amqps://broker.prod.acme.com/test` is refused. Service Bus's `UseDevelopmentEmulator=true` counts only on `localhost`, `127.0.0.1` or `[::1]`. `prod` inside a longer word, as in `products_test`, is not a marker, so a person can name that one.
+- **What this can't see.** It reads names only. A production broker with a plain name, such as `broker.acme.com/orders-test`, passes. An address that resolves to production, or a test name on a production host, is not found. Use credentials that reach only test systems.
 - **Secrets.** Connection strings come from the environment and are removed from every reply.
 - **Emptying queues.** The issue asked `reset` to empty the queues. `cmtk compare` calls `reset` before read-only cases too, and does not say which case comes next, so `reset` only checks the target. The queues are emptied just before a publish instead. `cmtk run`, which never calls `reset`, gets the same clean start.
 - **Partial output is an error.** Hitting `limit_ms` or `max_messages` makes the case an error, with what was read kept in the evidence, so it cannot count as a match.

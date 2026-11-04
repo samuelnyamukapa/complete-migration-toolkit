@@ -116,8 +116,37 @@ test("a real reader needs Windows and an isolated machine: anywhere else it says
     }
 });
 
+test("the stand-in for the reader is for this adapter's tests: settings alone can't start it, and it must be inside the project", async (t) => {
+    const dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), "cmtk-desktop-"));
+    t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+    const marker = path.join(dir, "ran.txt");
+    const evil = path.join(dir, "evil.mjs");
+    fs.writeFileSync(evil, `import fs from "node:fs"; fs.writeFileSync(${JSON.stringify(marker)}, "ran"); process.stdin.resume();`);
+    const c = { id: "c", safe: true, request: { method: "POST", path: "/" }, journey: { goal: "g", step_timeout_ms: 200, steps: [{ check: "c", value: "v" }] } };
+    const target = { name: "t", app: "orders.exe", isolated_vm: true };
+    const plain = adapter();
+    const asTest = adapter({ CMTK_DESKTOP_TEST_HOST: "1" });
+    try {
+        assert.match((await plain.run(c, { ...target, uia_host: path.join(HERE, "fake-uia.mjs") })).error, /CMTK_DESKTOP_TEST_HOST/, "settings alone don't start it");
+        assert.match((await asTest.run(c, { ...target, uia_host: evil })).error, /outside the project/);
+        if (process.platform !== "win32") {
+            const link = path.join(HERE, "link-to-evil.mjs");
+            fs.symlinkSync(evil, link);
+            t.after(() => fs.rmSync(link, { force: true }));
+            assert.match((await asTest.run(c, { ...target, uia_host: link })).error, /outside the project/, "a link does not help");
+        }
+        assert.equal(fs.existsSync(marker), false, "the file outside the project never ran");
+        const ran = await asTest.run(c, { ...target, uia_host: path.join(HERE, "fake-uia.mjs") });
+        assert.equal(ran.journey.reader, "uia");
+        assert.equal(ran.journey.stand_in, true, "the answer says this was no real reading");
+    } finally {
+        await plain.close();
+        await asTest.close();
+    }
+});
+
 test("the reader's wire protocol, through a stand-in for the PowerShell script", async () => {
-    const a = adapter({ CMTK_TEST_DESKTOP_PASSWORD: "desktop-password-value" });
+    const a = adapter({ CMTK_TEST_DESKTOP_PASSWORD: "desktop-password-value", CMTK_DESKTOP_TEST_HOST: "1" });
     const target = { name: "t", app: "orders.exe", isolated_vm: true, uia_host: path.join(HERE, "fake-uia.mjs") };
     const c = (steps) => ({ id: "c", safe: true, request: { method: "POST", path: "/" }, journey: { goal: "g", step_timeout_ms: 200, steps } });
     try {

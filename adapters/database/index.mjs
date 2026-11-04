@@ -16,11 +16,16 @@ import { assertSelectOnly } from "./sql-guard.mjs";
 const NAME = "database";
 const READ_ONLY = new Set(["GET", "HEAD", "OPTIONS"]);
 const TEST_WORD = /(^|[^a-z0-9])(test|tests|testing|qa|uat|sandbox|ci|cmtk|dev)([^a-z0-9]|$)/;
-const LIVE_WORD = /(^|[^a-z0-9])(prod|production|prd|live)([^a-z0-9]|$)/;
+const LIVE_WORD = /(^|[^a-z])(prod|production|prd|live)\d*([^a-z]|$)/;
+const wordsOf = (text) => String(text).replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase();
+
+/** A production word in a name or a host, with or without a number: prod2, orders-live. Nothing can name such a one as test. */
+export const holdsProductionMarker = (text) => LIVE_WORD.test(wordsOf(text));
 
 export function looksLikeTest(name) {
     const n = String(name).toLowerCase();
-    return TEST_WORD.test(n) && !LIVE_WORD.test(n);
+    // `prod` inside a longer word, as in products, is not a marker but is not a test name either. A person can name that one exactly.
+    return TEST_WORD.test(n) && !LIVE_WORD.test(wordsOf(name)) && !n.includes("prod");
 }
 
 /** Functions a person has checked and listed. A list can only come from the settings file, never from a case or from cmtk.yaml. */
@@ -160,6 +165,9 @@ export function createAdapter({ drivers = DRIVERS, settings = {}, env = process.
         if (!connection) throw new Error(`target ${target.name}: the environment variable ${s.connection_env} is not set`);
         secrets.add(connection);
         for (const p of driver.secretsOf(connection)) secrets.add(p);
+        if ((driver.hostsOf?.(connection) ?? []).some(holdsProductionMarker)) {
+            throw new Error(`target ${target.name}: the connection names a host or a database with a production marker, so nothing was read. test_database does not change that`);
+        }
         return { s, driver, connection, allowFunctions: allowFunctionsOf(s, target) };
     }
 
@@ -172,6 +180,9 @@ export function createAdapter({ drivers = DRIVERS, settings = {}, env = process.
             const conn = { query: (sql, params) => raw.query(assertSelectOnly(sql, p.driver.dialect, { allowFunctions: p.allowFunctions }), params), close: () => raw.close() };
             try {
                 const name = await p.driver.databaseName(conn.query);
+                if (holdsProductionMarker(name)) {
+                    throw new Error(`target ${target.name}: the database ${JSON.stringify(name)} does not look like a test database: it holds a production marker, so nothing was read. test_database does not change that`);
+                }
                 if (!looksLikeTest(name) && p.s.test_database !== name) {
                     throw new Error(`target ${target.name}: the database ${JSON.stringify(name)} does not look like a test database, so nothing was read. If it is one, set test_database to that exact name`);
                 }

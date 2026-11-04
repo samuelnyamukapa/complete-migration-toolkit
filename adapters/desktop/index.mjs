@@ -41,6 +41,16 @@ function loadScript(journey) {
     return { ...doc, ...journey, script_file: String(journey.script).split(path.sep).join("/"), script_sha256: crypto.createHash("sha256").update(bytes).digest("hex") };
 }
 
+/** The stand-in for uia.ps1 runs JavaScript and reads nothing real. So it is for this adapter's tests: a setting alone can't start it, and it stays inside the project. */
+function checkStandIn(file) {
+    if (process.env.CMTK_DESKTOP_TEST_HOST !== "1") throw new StepError("uia_host is for this adapter's own tests, and needs CMTK_DESKTOP_TEST_HOST=1 in the environment. To test an app, run on Windows with no uia_host");
+    const full = insideProject(file, "uia_host");
+    if (!fs.existsSync(full)) throw new StepError(`uia_host: ${file} does not exist`);
+    const root = fs.realpathSync(process.cwd());
+    const real = fs.realpathSync(full);
+    if (!real.startsWith(root + path.sep)) throw new StepError(`uia_host: ${file} is outside the project folder`);
+}
+
 /** The real reader, under the conditions #27 sets; the stub only when a target asks for it by name. */
 function readerFor(target, ms) {
     if (target.stub_app) {
@@ -50,6 +60,7 @@ function readerFor(target, ms) {
     }
     if (process.platform !== "win32" && !target.uia_host) throw new StepError(`the desktop adapter reads a real app through Windows UI Automation, so it needs Windows. On ${process.platform} only a target with stub_app runs`);
     if (target.isolated_vm !== true) throw new StepError(`target ${target.name}: set isolated_vm: true once this runs inside a virtual machine that can reach only allowed addresses. An app under test does not run on anyone's own desktop`);
+    if (target.uia_host) checkStandIn(target.uia_host);
     if (!target.app) throw new StepError(`target ${target.name} has no app: the program to start`);
     return uiaReader(target, ms);
 }
@@ -118,6 +129,7 @@ async function runCase(written, target, headers, secrets) {
         }
         reader = readerFor(target, ms);
         outcome.reader = reader.kind;
+        if (reader.standIn) outcome.stand_in = true;
         await reader.start();
         const capture = async (name) => {
             const shot = await reader.snapshot();

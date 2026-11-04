@@ -158,6 +158,51 @@ test("names: only test namespaces and virtual hosts pass, unless settings name t
     assert.equal(serviceBusDriver().namespaceOf("Endpoint=sb://localhost;SharedAccessKeyName=k;SharedAccessKey=x;UseDevelopmentEmulator=true"), "emulator");
 });
 
+test("names: one holding a production marker is never test, and part of a word is not a marker", () => {
+    for (const bad of ["prod2_test", "customers_prod01_dev", "prod-test", "test-production", "qa_prd1", "live2-test", "test.live", "ordersLive_test", "OrdersPROD_qa", "products_test", "reproduce_dev"]) assert.equal(looksLikeTest(bad), false, bad);
+    for (const ok of ["delivery-test", "olive_qa", "orders-test"]) assert.equal(looksLikeTest(ok), true, ok);
+});
+
+const refusingDrivers = (opened) => {
+    const load = async () => { opened.push("loaded"); throw new Error("must not load"); };
+    return { rabbitmq: rabbitmqDriver(load), servicebus: serviceBusDriver(load) };
+};
+const queueRig = (driver, connection, more = {}, opened = []) => createAdapter({ drivers: refusingDrivers(opened), env: { CONN: connection }, settings: { sys: { driver, connection_env: "CONN", queues: { in: "in", out: ["out"] }, ...more } } });
+
+test("a production marker in the name can't be named as test; a word that only holds `prod` can, exactly", async () => {
+    const opened = [];
+    await assert.rejects(queueRig("rabbitmq", "amqp://b:p@broker.example/prod2_test", { test_namespace: "prod2_test" }, opened).run(GET, { name: "sys" }, {}), /production/);
+    assert.deepEqual(opened, []);
+    await assert.rejects(queueRig("rabbitmq", "amqp://b:p@broker.example/products_test", { test_namespace: "products_test" }).run(GET, { name: "sys" }, {}), /must not load/);
+});
+
+test("the host counts: a production host is refused before any driver loads, whatever the namespace says", async () => {
+    for (const [driver, connection] of [
+        ["rabbitmq", "amqps://b:s3cret@broker.prod.acme.com/test"],
+        ["rabbitmq", "amqp://b:s3cret@prod2-rabbit.acme.com:5672/orders-test"],
+        ["rabbitmq", "amqp://b:s3cret@live.acme.com/cmtk"],
+        ["servicebus", "Endpoint=sb://acme-prod.servicebus.windows.net/;SharedAccessKeyName=k;SharedAccessKey=s3cret-key;UseDevelopmentEmulator=true"],
+        ["servicebus", "Endpoint=sb://acme.prod.example.net/;SharedAccessKeyName=k;SharedAccessKey=s3cret-key"],
+    ]) {
+        const opened = [];
+        for (const more of [{}, { test_namespace: "test" }, { test_namespace: "acme-prod" }, { test_namespace: "acme" }, { test_namespace: "cmtk" }]) {
+            await assert.rejects(queueRig(driver, connection, more, opened).run(GET, { name: "sys" }, {}), (e) => /production/.test(e.message) && !e.message.includes("s3cret"), connection);
+        }
+        assert.deepEqual(opened, [], connection);
+    }
+    await assert.rejects(queueRig("rabbitmq", "amqp://b:p@products.example/orders-test").run(GET, { name: "sys" }, {}), /must not load/, "a host that only holds `prod` inside a word is left alone");
+});
+
+test("the emulator switch counts only on this machine, and a second Endpoint is refused", () => {
+    const d = serviceBusDriver();
+    const rest = "SharedAccessKeyName=k;SharedAccessKey=x";
+    for (const host of ["localhost", "127.0.0.1", "[::1]"]) assert.equal(d.namespaceOf(`Endpoint=sb://${host};${rest};UseDevelopmentEmulator=true`), "emulator", host);
+    assert.equal(d.namespaceOf(`Endpoint=sb://acme-prod.servicebus.windows.net/;${rest};UseDevelopmentEmulator=true`), "acme-prod");
+    assert.equal(d.namespaceOf(`Endpoint=sb://localhost.evil.example/;${rest};UseDevelopmentEmulator=true`), "localhost");
+    assert.throws(() => d.namespaceOf(`${rest};UseDevelopmentEmulator=true`), /no Endpoint/);
+    assert.throws(() => d.namespaceOf(`Endpoint=sb://orders-test.example/;Endpoint=sb://acme-prod.example/;${rest}`), /more than one Endpoint/);
+});
+
 test("secrets: connections come from the environment only and never appear in a reply", async () => {
     const a = createAdapter({ drivers: { rabbitmq: rabbitmqDriver(async () => fakeAmqplib(() => makeBroker())) }, env: {}, settings: {} });
     await assert.rejects(a.run(GET, { name: "s", driver: "rabbitmq", connection_string: RABBIT }, {}), (e) => /not allowed in settings/.test(e.message) && !e.message.includes("s3cret"));

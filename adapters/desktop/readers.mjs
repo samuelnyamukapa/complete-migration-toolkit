@@ -61,6 +61,7 @@ export function uiaReader(target, timeoutMs) {
     };
     return {
         kind: "uia",
+        standIn: Boolean(target.uia_host),
         async start() {
             child = spawn(program, args, { stdio: ["pipe", "pipe", "pipe"], shell: false, windowsHide: true });
             child.on("error", () => {});

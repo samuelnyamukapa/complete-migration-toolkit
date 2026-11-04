@@ -2,6 +2,7 @@
 // project that uses one broker never needs the other's package.
 //
 //   namespaceOf(connection)  the namespace or virtual host it names, read without any network call
+//   hostsOf(connection)      the hosts it names, read the same way
 //   secretsOf(connection)    the parts that must never be printed
 //   open(connection)         a connection with:
 //     depth(queue)           { count, capped? }: how many wait, without taking or disturbing any
@@ -35,6 +36,9 @@ export function rabbitmqDriver(importer = (p) => import(p)) {
             if (u.protocol !== "amqp:" && u.protocol !== "amqps:") throw new Error("the rabbitmq connection is not an amqp:// or amqps:// URL");
             const vhost = decodeURIComponent(u.pathname.replace(/^\//, ""));
             return vhost || "/";
+        },
+        hostsOf(connection) {
+            return [new URL(connection).hostname];
         },
         secretsOf(connection) {
             try { const p = new URL(connection).password; return p ? [p, decodeURIComponent(p)] : []; } catch { return []; }
@@ -85,13 +89,26 @@ export function rabbitmqDriver(importer = (p) => import(p)) {
 /** The most a read-only depth counts on Service Bus, which has only peek to count with. */
 export const PEEK_CAP = 1000;
 
+const LOCAL_HOST = /^(localhost|127\.0\.0\.1|\[::1\])$/i;
+
+/** The host in Endpoint=sb://…, without a port. Two Endpoints could mean one is checked and the other used, so that is refused. */
+function endpointHost(connection) {
+    const found = [...String(connection).matchAll(/(?:^|;)\s*Endpoint\s*=\s*sb:\/\/([^;/]+)/gi)];
+    if (!found.length) throw new Error("the servicebus connection has no Endpoint=sb://…");
+    if (found.length > 1) throw new Error("the servicebus connection has more than one Endpoint");
+    return found[0][1].trim().replace(/:\d+$/, "");
+}
+
 export function serviceBusDriver(importer = (p) => import(p)) {
     return {
         namespaceOf(connection) {
-            if (/(^|;)\s*UseDevelopmentEmulator\s*=\s*true/i.test(connection)) return "emulator";
-            const m = /(?:^|;)\s*Endpoint\s*=\s*sb:\/\/([^.;/:]+)/i.exec(connection);
-            if (!m) throw new Error("the servicebus connection has no Endpoint=sb://…");
-            return m[1];
+            const host = endpointHost(connection);
+            // The switch says nothing about the host, so it only counts on this machine.
+            if (/(^|;)\s*UseDevelopmentEmulator\s*=\s*true/i.test(connection) && LOCAL_HOST.test(host)) return "emulator";
+            return host.split(".")[0];
+        },
+        hostsOf(connection) {
+            return [endpointHost(connection)];
         },
         secretsOf(connection) {
             const m = /(?:^|;)\s*SharedAccessKey\s*=\s*([^;]+)/i.exec(connection);

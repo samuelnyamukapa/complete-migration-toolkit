@@ -12,12 +12,17 @@ import { DRIVERS } from "./drivers.mjs";
 const NAME = "queue";
 const READ_ONLY = new Set(["GET", "HEAD", "OPTIONS"]);
 const TEST_WORD = /(^|[^a-z0-9])(test|tests|testing|qa|uat|sandbox|ci|cmtk|emulator|dev)([^a-z0-9]|$)/;
-const LIVE_WORD = /(^|[^a-z0-9])(prod|production|prd|live)([^a-z0-9]|$)/;
+const LIVE_WORD = /(^|[^a-z])(prod|production|prd|live)\d*([^a-z]|$)/;
+const wordsOf = (text) => String(text).replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase();
+
+/** A production word in a name or a host, with or without a number: prod2, orders-live. Nothing can name such a one as test. */
+export const holdsProductionMarker = (text) => LIVE_WORD.test(wordsOf(text));
 
 /** Whether a namespace or virtual host looks like one kept for testing. "/" does not, and neither does anything that says prod or live. */
 export function looksLikeTest(name) {
     const n = String(name).toLowerCase();
-    return TEST_WORD.test(n) && !LIVE_WORD.test(n);
+    // `prod` inside a longer word, as in products, is not a marker but is not a test name either. A person can name that one exactly.
+    return TEST_WORD.test(n) && !LIVE_WORD.test(wordsOf(name)) && !n.includes("prod");
 }
 
 const positive = (v, key, fallback) => {
@@ -86,6 +91,12 @@ export function createAdapter({ drivers = DRIVERS, settings = {}, env = process.
         secrets.add(connection);
         for (const p of driver.secretsOf(connection)) secrets.add(p);
         const namespace = driver.namespaceOf(connection);
+        if ((driver.hostsOf?.(connection) ?? []).some(holdsProductionMarker)) {
+            throw new Error(`target ${target.name}: the connection's host holds a production marker, so nothing was sent. test_namespace does not change that`);
+        }
+        if (holdsProductionMarker(namespace)) {
+            throw new Error(`target ${target.name}: ${JSON.stringify(namespace)} does not look like a test namespace or virtual host: it holds a production marker, so nothing was sent. test_namespace does not change that`);
+        }
         if (!looksLikeTest(namespace) && s.test_namespace !== namespace) {
             throw new Error(`target ${target.name}: ${JSON.stringify(namespace)} does not look like a test namespace or virtual host, so nothing was sent. If it is one, set test_namespace to that exact name`);
         }

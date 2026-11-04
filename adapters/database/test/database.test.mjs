@@ -90,6 +90,38 @@ test("database names: only test ones pass, unless settings name that exact one",
     for (const bad of ["orders", "postgres", "prod_test", "latest"]) assert.equal(looksLikeTest(bad), false, bad);
 });
 
+test("database names: one holding a production marker is never test, and part of a word is not a marker", () => {
+    for (const bad of ["prod2_test", "customers_prod01_dev", "prod-test", "test-production", "qa_prd1", "live2-test", "ordersLive_test", "products_test", "reproduce_dev"]) assert.equal(looksLikeTest(bad), false, bad);
+    for (const ok of ["delivery-test", "olive_qa", "orders_test"]) assert.equal(looksLikeTest(ok), true, ok);
+});
+
+test("the host counts: a production host, or a production name in the connection, is refused before anything connects", async () => {
+    const refusing = (opened) => ({ postgres: postgresDriver(async () => { opened.push("pg"); throw new Error("must not load"); }), mssql: mssqlDriver(async () => { opened.push("mssql"); throw new Error("must not load"); }) });
+    for (const [driver, connection] of [
+        ["postgres", "postgres://reader:s3cret-pw@db.prod.acme.com/cmtk_test"],
+        ["postgres", "postgres://reader:s3cret-pw@prod2-db.acme.com:5432/cmtk_test"],
+        ["postgres", "postgres://reader:s3cret-pw@test-db/cmtk_test?host=prod-db.acme.com"],
+        ["postgres", "postgres://reader:s3cret-pw@test-db/prod2_test"],
+        ["mssql", "Server=prod-sql,1433;Database=cmtk_test;User Id=r;Password=s3cret-pw"],
+        ["mssql", "Data Source=sql.live.acme.com;Database=cmtk_test;User Id=r;Password=s3cret-pw"],
+        ["mssql", "Server=test-sql;Database=prod2_test;User Id=r;Password=s3cret-pw"],
+        ["mssql", "Server=test-sql;Initial Catalog=orders_prod;User Id=r;Password=s3cret-pw"],
+    ]) {
+        const opened = [];
+        const a = createAdapter({ drivers: refusing(opened), env: { CONN: connection }, settings: { sys: { driver, connection_env: "CONN", test_database: "prod2_test", tables: ORDERS } } });
+        await assert.rejects(a.run(GET, { name: "sys" }, {}), (e) => /production/.test(e.message) && !e.message.includes("s3cret"), connection);
+        assert.deepEqual(opened, [], connection);
+    }
+});
+
+test("database names: naming one with a production marker in test_database does not help; one that only holds `prod` can be named", async () => {
+    const server = (name) => ({ dialect: "postgres", secretsOf: () => [], hostsOf: () => [], open: async () => ({ query: async () => [], close: async () => {} }), databaseName: async () => name, whoCanWrite: async () => [], selectAll: () => "SELECT 1" });
+    const run = (name) => createAdapter({ drivers: { postgres: server(name) }, env: { CONN: "x" }, settings: { sys: { driver: "postgres", connection_env: "CONN", test_database: name, tables: ORDERS } } }).run(GET, { name: "sys" }, {});
+    await assert.rejects(run("customers_prod01_dev"), /production/);
+    const fine = await run("products_test");
+    assert.equal(fine.error, undefined);
+});
+
 const pgRig = (dbs, role, extra = {}, seen = []) => createAdapter({
     drivers: { postgres: postgresDriver(async () => fakePg((h) => dbs[h], seen)) },
     env: { CONN: `postgres://${role}:s3cret-pw@main/x` },
