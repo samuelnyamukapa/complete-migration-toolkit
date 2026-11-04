@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
 
+import { expectProblem } from "./expect-shape.js";
 import { historyOf } from "./history.js";
 import { BOUNDARY_KINDS, MATCH_LEVELS, type Case, type Drift, type Manifest, type MatchLevel, type Request, type Target } from "./types.js";
 
@@ -238,6 +239,10 @@ export function loadCases(manifest: Manifest): Case[] {
             if (c.match !== undefined) level(c.match, where);
             if (c.draft !== undefined && typeof c.draft !== "boolean") throw new ManifestError(`${where}: \`draft\` must be true or false.`);
             if (c.expect_draft !== undefined && typeof c.expect_draft !== "boolean") throw new ManifestError(`${where}: \`expect_draft\` must be true or false.`);
+            if (c.expect !== undefined && c.expect !== null) {
+                const bad = expectProblem(c.expect);
+                if (bad) throw new ManifestError(`${where}: \`expect:\` ${bad}.`);
+            }
             if (c.expect_draft && !c.expect) throw new ManifestError(`${where}: \`expect_draft\` marks a drafted \`expect:\` block, and this case has none.`);
             const method = String(req.method ?? "GET").toUpperCase();
             if (!/^[A-Z]+$/.test(method)) throw new ManifestError(`${where}: the method ${JSON.stringify(req.method)} must be letters only, such as GET or POST.`);

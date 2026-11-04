@@ -51,6 +51,7 @@ Always present: `tool`, `mode`, `system`, `date`, `verdict`, `targets`, `counts`
 | `counts` | How many cases got each result |
 | `cases[].result` | `PASS`, `FAIL`, `MATCH`, `DRIFT`, `DIFFERENT`, `NOT COMPARABLE`, `SKIPPED` or `ERROR` |
 | `cases[].differences[].where` | Where they differ, as listed in [MANIFEST.md](MANIFEST.md#where-values-in-a-report-come-from). `drift` names the entry that approves it |
+| `contracts[].result` | `ERROR`, never `IDENTICAL`, for a contract over 5 MB, which is not checked |
 | `cases[].failures[]` | `check`, `expected`, `actual`, and the `known_issue` that accepts it |
 | `cases[].truncated` | An answer was over 5 MB, so only the first 5 MB were read |
 | `unused_drift` | Entries that matched nothing |

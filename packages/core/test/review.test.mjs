@@ -173,7 +173,8 @@ test("bad input stops before evidence is touched, and a failing case never ends 
         write(dir, "flaky.mjs", `import readline from "node:readline";
 for await (const l of readline.createInterface({ input: process.stdin })) {
   const m = JSON.parse(l);
-  process.stdout.write(JSON.stringify(m.op === "reset" ? { ok: false, error: "database locked" } : { status: 200 }) + "\\n");
+  // It asks for a reset before reads: without that, a read gets no reset, so nothing here could fail one.
+  process.stdout.write(JSON.stringify(m.op === "reset" ? { ok: false, error: "database locked" } : m.op === "describe" ? { name: "flaky", kinds: ["queue"], reset_before_reads: true } : { status: 200 }) + "\\n");
 }`);
         const adapters = `adapters:\n  ghost: { command: cmtk-no-such-program-anywhere }\n  flaky: { command: ${JSON.stringify(process.execPath)}, args: [flaky.mjs] }\n`;
         const r = await run(manifest(adapters));

@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import YAML, { isMap, isSeq, type Document, YAMLMap, YAMLSeq } from "yaml";
 
+import { expectProblem } from "./expect-shape.js";
 import { KNOWN_ISSUE_ID, knownFails, loadKnownIssues } from "./known.js";
 import { inside, loadCases, loadDrift, ManifestError } from "./manifest.js";
 import { looksLikeAgent } from "./people.js";
@@ -132,8 +133,6 @@ function checkScrub(rule: unknown): ScrubRule {
     return r;
 }
 
-const EXPECT_KEYS = new Set(["status", "headers", "json", "body_contains", "body_excludes"]);
-
 /** The steps a repair may touch: those that act. A read or a check decides what is correct, so only a person edits it. */
 const REPAIRABLE_ACTIONS = ["click", "fill", "select", "tick", "invoke", "set_value"];
 const LOCATOR_KEYS = new Set(["role", "name", "label", "text", "testid", "placeholder", "css", "nth", "automation_id"]);
@@ -205,11 +204,9 @@ export function addProposal(manifest: Manifest, input: ProposalInput, date: stri
     }
     if (input.kind === "expectation") {
         p.case = known(input.case, "case");
-        const e = input.expect as Record<string, unknown> | undefined;
-        if (!e || typeof e !== "object" || Array.isArray(e) || !Object.keys(e).length || !Object.keys(e).every((k) => EXPECT_KEYS.has(k))) {
-            throw new ManifestError(`expect must be an \`expect:\` block using ${[...EXPECT_KEYS].join(", ")}.`);
-        }
-        p.expect = e as Expectation;
+        const bad = expectProblem(input.expect);
+        if (bad) throw new ManifestError(`expect must be an \`expect:\` block that checks something: it ${bad}.`);
+        p.expect = input.expect as Expectation;
     }
     if (input.kind === "locator") {
         if (input.expect !== undefined || input.fails !== undefined || input.where !== undefined || input.rule !== undefined) throw new ManifestError("A locator repair changes how a step finds an element and nothing else. To change what a case expects, propose an expectation for a person to decide.");

@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { adaptersFor, envHeaders, evidenceOf, SAFE_METHODS } from "./engine.js";
+import { expectProblem } from "./expect-shape.js";
 import { inside, ManifestError, ownedFolder } from "./manifest.js";
 import { overrideIn } from "./methods.js";
 import { editYaml, seqAt } from "./proposals.js";
@@ -188,6 +189,10 @@ export function addFinding(manifest: Manifest, id: string, f: FindingInput): { c
     const title = String(f.title ?? "").trim();
     if (!title) throw new ManifestError("A finding needs a title.");
     const req = parseRequest(f.request);
+    if (f.expect !== undefined) {
+        const bad = expectProblem(f.expect);
+        if (bad) throw new ManifestError(`A finding's \`expect\` must check something: it ${bad}.`);
+    }
     const refs = (f.evidence ?? []).map(Number).filter((n) => n >= 1 && n <= s.used);
     if (!refs.length) throw new ManifestError("Name the logged requests that show the finding, by number, in `evidence`.");
     const caseId = `EXP-${s.id.slice(1).replace(/-/g, "")}-${String(s.findings.length + 1).padStart(2, "0")}`;
