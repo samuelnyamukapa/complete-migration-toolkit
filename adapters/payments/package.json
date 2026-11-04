@@ -1,0 +1,11 @@
+{
+    "name": "cmtk-adapter-payments",
+    "version": "0.0.0",
+    "private": true,
+    "description": "cmtk adapter: the payments and refunds a case caused in a Stripe test-mode account, and how the system handled webhooks.",
+    "type": "module",
+    "license": "Apache-2.0",
+    "engines": {
+        "node": ">=22.5"
+    }
+}
