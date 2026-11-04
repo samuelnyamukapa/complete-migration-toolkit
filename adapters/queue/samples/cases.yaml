@@ -1,0 +1,7 @@
+# Samples the conformance kit (`cmtk adapter check queue`) replays twice.
+# Only a read: the kit has no unsafe switches, so it never publishes unless a test target says so.
+cases:
+  - id: QUEUE-DEPTH
+    name: how many messages wait, read without touching them
+    surface: queue
+    request: { method: GET, path: /depth }
