@@ -52,3 +52,17 @@ adapters:
     source: sms
     licence: Apache-2.0
     owner: Complete Migration Toolkit maintainers
+  - name: web
+    kinds: [ui]
+    language: node
+    level: experimental # passes the kit in CI; no real project has used it yet
+    source: web
+    licence: Apache-2.0
+    owner: Complete Migration Toolkit maintainers
+  - name: desktop
+    kinds: [ui]
+    language: node
+    level: experimental # passes the kit in CI; no real project has used it yet
+    source: desktop
+    licence: Apache-2.0
+    owner: Complete Migration Toolkit maintainers

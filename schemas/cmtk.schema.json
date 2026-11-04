@@ -71,7 +71,10 @@
       "enum": [
         "exact",
         "semantic",
-        "contract"
+        "contract",
+        "journey",
+        "structure",
+        "visual"
       ]
     },
     "overrides": {
@@ -87,7 +90,10 @@
             "enum": [
               "exact",
               "semantic",
-              "contract"
+              "contract",
+              "journey",
+              "structure",
+              "visual"
             ]
           }
         },
@@ -247,7 +253,10 @@
     "adapter_registries": {
       "type": "object",
       "description": "Registries `cmtk adapter add` may use: a name to a git address or a folder. Never a credential.",
-      "additionalProperties": { "type": "string", "minLength": 1 }
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
     },
     "adapters": {
       "type": "object",
@@ -302,6 +311,12 @@
           "command"
         ]
       }
+    },
+    "visual_tolerance": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "The share of pixels that may differ at the visual match level, from 0 to 1."
     }
   },
   "additionalProperties": false,

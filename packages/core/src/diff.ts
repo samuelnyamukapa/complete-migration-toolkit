@@ -207,8 +207,7 @@ export function bodyKind(contentType: string | undefined, body: string): "json" 
 
 const mediaType = (v: string | undefined) => (v ?? "").split(";")[0]!.trim().toLowerCase();
 
-export function compareObservations(ref: Observation, cand: Observation, manifest: Pick<Manifest, "scrub" | "compare_headers">, level: MatchLevel, hits?: Map<string, number>): Difference[] {
-export function compareObservations(ref: Observation, cand: Observation, manifest: Pick<Manifest, "scrub" | "compare_headers"> & Partial<Pick<Manifest, "visual_tolerance">>, level: MatchLevel): Difference[] {
+export function compareObservations(ref: Observation, cand: Observation, manifest: Pick<Manifest, "scrub" | "compare_headers"> & Partial<Pick<Manifest, "visual_tolerance">>, level: MatchLevel, hits?: Map<string, number>): Difference[] {
     const out: Difference[] = [];
     // A journey's status only says whether its checks held, and the checks themselves are compared.
     if (level === "journey") return diffJourney(ref.journey, cand.journey, scrubberOf(manifest));

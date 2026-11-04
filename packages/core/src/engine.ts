@@ -393,8 +393,7 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
         } finally {
             await adapters.closeAll();
         }
-        const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), excludedDrafts: cases.excluded, surfaces: { [ref.name]: ref.surfaces, [cand.name]: cand.surfaces }, ...(fired.size ? { scrubFired: Object.fromEntries(fired) } : {}) });
-        const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), modelCalls: models.tally, excludedDrafts: cases.excluded, surfaces: { [ref.name]: ref.surfaces, [cand.name]: cand.surfaces } });
+        const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), modelCalls: models.tally, excludedDrafts: cases.excluded, surfaces: { [ref.name]: ref.surfaces, [cand.name]: cand.surfaces }, ...(fired.size ? { scrubFired: Object.fromEntries(fired) } : {}) });
         writeJson(path.join(dir, "REPORT.json"), report);
         fs.writeFileSync(path.join(dir, "REPORT.md"), renderReport(report), "utf8");
         ev.commit();

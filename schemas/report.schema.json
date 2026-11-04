@@ -158,7 +158,10 @@
             "enum": [
               "exact",
               "semantic",
-              "contract"
+              "contract",
+              "journey",
+              "structure",
+              "visual"
             ]
           },
           "result": {
@@ -455,7 +458,10 @@
           "enum": [
             "exact",
             "semantic",
-            "contract"
+            "contract",
+            "journey",
+            "structure",
+            "visual"
           ]
         },
         "overrides": {
@@ -490,6 +496,25 @@
     },
     "next": {
       "type": "string"
+    },
+    "model_calls": {
+      "type": "object",
+      "description": "How many model calls produced this report, as the adapters counted them. HTTP cases make none.",
+      "required": [
+        "total",
+        "cases_not_counted"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cases_not_counted": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     }
   }
 }

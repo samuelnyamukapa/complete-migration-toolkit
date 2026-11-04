@@ -71,8 +71,6 @@ test("no tool installs an adapter, and an agent can only hand a person the comma
     assert.ok(!Object.keys(JSON.parse(fs.readFileSync(path.join(root, "packages/mcp/package.json"), "utf8")).dependencies).includes("complete-migration-toolkit"));
 });
 
-test("the plugin: bundled server and command, one version everywhere, seven skills", async () => {
-test("the plugin: bundled server and command, one version everywhere, eight skills", async () => {
 test("the plugin: bundled server and command, one version everywhere, nine skills", async () => {
     const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
     const plugin = path.join(root, "plugin");

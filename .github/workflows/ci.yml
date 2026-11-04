@@ -100,3 +100,41 @@ jobs:
       - name: Wait for SQL Server
         run: for i in $(seq 1 30); do (echo > /dev/tcp/localhost/1433) 2>/dev/null && break; sleep 2; done
       - run: node --test adapters/queue/test/real-server.test.mjs adapters/database/test/real-server.test.mjs adapters/mailbox/test/real-server.test.mjs
+
+  web:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CMTK_REQUIRE_BROWSER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: node --test adapters/web/test/*.test.mjs
+        shell: bash
+
+  desktop:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    # A hosted runner's desktop session is unproven, so this reports without blocking.
+    continue-on-error: true
+    env:
+      CMTK_DESKTOP_TEST: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: node --test adapters/desktop/test/desktop.test.mjs

@@ -233,7 +233,10 @@
           "enum": [
             "exact",
             "semantic",
-            "contract"
+            "contract",
+            "journey",
+            "structure",
+            "visual"
           ]
         },
         "overrides": {

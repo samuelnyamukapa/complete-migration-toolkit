@@ -299,13 +299,13 @@ var require_directives = __commonJS({
        * @param onError - May be called even if the action was successful
        * @returns `true` on success
        */
-      add(line, onError) {
+      add(line2, onError) {
         if (this.atNextDocument) {
           this.yaml = { explicit: _Directives.defaultYaml.explicit, version: "1.1" };
           this.tags = Object.assign({}, _Directives.defaultTags);
           this.atNextDocument = false;
         }
-        const parts = line.trim().split(/[ \t]+/);
+        const parts = line2.trim().split(/[ \t]+/);
         const name = parts.shift();
         switch (name) {
           case "%TAG": {
@@ -600,8 +600,8 @@ var require_Node = __commonJS({
         };
         const res = toJS.toJS(this, "", ctx);
         if (typeof onAnchor === "function")
-          for (const { count, res: res2 } of ctx.anchors.values())
-            onAnchor(res2, count);
+          for (const { count: count2, res: res2 } of ctx.anchors.values())
+            onAnchor(res2, count2);
         return typeof reviver === "function" ? applyReviver.applyReviver(reviver, { "": res }, "", res) : res;
       }
     };
@@ -709,13 +709,13 @@ var require_Alias = __commonJS({
         const anchor = anchors2 && source && anchors2.get(source);
         return anchor ? anchor.count * anchor.aliasCount : 0;
       } else if (identity.isCollection(node)) {
-        let count = 0;
+        let count2 = 0;
         for (const item of node.items) {
           const c4 = getAliasCount(doc, item, anchors2);
-          if (c4 > count)
-            count = c4;
+          if (c4 > count2)
+            count2 = c4;
         }
-        return count;
+        return count2;
       } else if (identity.isPair(node)) {
         const kc = getAliasCount(doc, node.key, anchors2);
         const vc = getAliasCount(doc, node.value, anchors2);
@@ -1902,9 +1902,9 @@ var require_stringifyCollection = __commonJS({
       } else {
         str = lines[0];
         for (let i8 = 1; i8 < lines.length; ++i8) {
-          const line = lines[i8];
-          str += line ? `
-${indent}${line}` : "\n";
+          const line2 = lines[i8];
+          str += line2 ? `
+${indent}${line2}` : "\n";
         }
       }
       if (comment) {
@@ -1962,7 +1962,7 @@ ${indent}${line}` : "\n";
           str += ",";
         } else if (ctx.options.trailingComma) {
           if (ctx.options.lineWidth > 0) {
-            reqNewline || (reqNewline = lines.reduce((sum, line) => sum + line.length + 2, 2) + (str.length + 2) > ctx.options.lineWidth);
+            reqNewline || (reqNewline = lines.reduce((sum, line2) => sum + line2.length + 2, 2) + (str.length + 2) > ctx.options.lineWidth);
           }
           if (reqNewline) {
             str += ",";
@@ -1978,14 +1978,14 @@ ${indent}${line}` : "\n";
         return start + end;
       } else {
         if (!reqNewline) {
-          const len = lines.reduce((sum, line) => sum + line.length + 2, 2);
+          const len = lines.reduce((sum, line2) => sum + line2.length + 2, 2);
           reqNewline = ctx.options.lineWidth > 0 && len > ctx.options.lineWidth;
         }
         if (reqNewline) {
           let str = start;
-          for (const line of lines)
-            str += line ? `
-${indentStep}${indent}${line}` : "\n";
+          for (const line2 of lines)
+            str += line2 ? `
+${indentStep}${indent}${line2}` : "\n";
           return `${str}
 ${indent}${end}`;
         } else {
@@ -3668,8 +3668,8 @@ var require_Document = __commonJS({
         };
         const res = toJS.toJS(this.contents, jsonArg ?? "", ctx);
         if (typeof onAnchor === "function")
-          for (const { count, res: res2 } of ctx.anchors.values())
-            onAnchor(res2, count);
+          for (const { count: count2, res: res2 } of ctx.anchors.values())
+            onAnchor(res2, count2);
         return typeof reviver === "function" ? applyReviver.applyReviver(reviver, { "": res }, "", res) : res;
       }
       /**
@@ -3728,10 +3728,10 @@ var require_errors = __commonJS({
       if (error.pos[0] === -1)
         return;
       error.linePos = error.pos.map((pos) => lc.linePos(pos));
-      const { line, col } = error.linePos[0];
-      error.message += ` at line ${line}, column ${col}`;
+      const { line: line2, col } = error.linePos[0];
+      error.message += ` at line ${line2}, column ${col}`;
       let ci = col - 1;
-      let lineStr = src.substring(lc.lineStarts[line - 1], lc.lineStarts[line]).replace(/[\n\r]+$/, "");
+      let lineStr = src.substring(lc.lineStarts[line2 - 1], lc.lineStarts[line2]).replace(/[\n\r]+$/, "");
       if (ci >= 60 && lineStr.length > 80) {
         const trimStart = Math.min(ci - 39, lineStr.length - 79);
         lineStr = "\u2026" + lineStr.substring(trimStart);
@@ -3739,19 +3739,19 @@ var require_errors = __commonJS({
       }
       if (lineStr.length > 80)
         lineStr = lineStr.substring(0, 79) + "\u2026";
-      if (line > 1 && /^ *$/.test(lineStr.substring(0, ci))) {
-        let prev = src.substring(lc.lineStarts[line - 2], lc.lineStarts[line - 1]);
+      if (line2 > 1 && /^ *$/.test(lineStr.substring(0, ci))) {
+        let prev = src.substring(lc.lineStarts[line2 - 2], lc.lineStarts[line2 - 1]);
         if (prev.length > 80)
           prev = prev.substring(0, 79) + "\u2026\n";
         lineStr = prev + lineStr;
       }
       if (/[^ ]/.test(lineStr)) {
-        let count = 1;
+        let count2 = 1;
         const end = error.linePos[1];
-        if (end?.line === line && end.col > col) {
-          count = Math.max(1, Math.min(end.col - col, 80 - ci));
+        if (end?.line === line2 && end.col > col) {
+          count2 = Math.max(1, Math.min(end.col - col, 80 - ci));
         }
-        const pointer = " ".repeat(ci) + "^".repeat(count);
+        const pointer = " ".repeat(ci) + "^".repeat(count2);
         error.message += `:
 
 ${lineStr}
@@ -4697,8 +4697,8 @@ var require_resolve_flow_scalar = __commonJS({
       return unfoldLines(source.slice(1, -1)).replace(/''/g, "'");
     }
     function unfoldLines(source) {
-      const line = /(.*?)\r?\n/sy;
-      let match = line.exec(source);
+      const line2 = /(.*?)\r?\n/sy;
+      let match = line2.exec(source);
       if (!match)
         return source;
       let trimEnd, trimBoth;
@@ -4711,8 +4711,8 @@ var require_resolve_flow_scalar = __commonJS({
       }
       let res = match[1].replace(trimEnd, "");
       let sep = " ";
-      let pos = line.lastIndex;
-      while (match = line.exec(source)) {
+      let pos = line2.lastIndex;
+      while (match = line2.exec(source)) {
         const lm = match[1].replace(trimBoth, "");
         if (lm === "") {
           if (sep === "\n")
@@ -4723,7 +4723,7 @@ var require_resolve_flow_scalar = __commonJS({
           res += sep + lm;
           sep = " ";
         }
-        pos = line.lastIndex;
+        pos = line2.lastIndex;
       }
       const last = /[ \t]*(.*)/sy;
       last.lastIndex = pos;
@@ -5853,40 +5853,40 @@ var require_lexer = __commonJS({
         }
       }
       *parseStream() {
-        let line = this.getLine();
-        if (line === null)
+        let line2 = this.getLine();
+        if (line2 === null)
           return this.setNext("stream");
-        if (line[0] === cst.BOM) {
+        if (line2[0] === cst.BOM) {
           yield* this.pushCount(1);
-          line = line.substring(1);
+          line2 = line2.substring(1);
         }
-        if (line[0] === "%") {
-          let dirEnd = line.length;
-          let cs = line.indexOf("#");
+        if (line2[0] === "%") {
+          let dirEnd = line2.length;
+          let cs = line2.indexOf("#");
           while (cs !== -1) {
-            const ch = line[cs - 1];
+            const ch = line2[cs - 1];
             if (ch === " " || ch === "	") {
               dirEnd = cs - 1;
               break;
             } else {
-              cs = line.indexOf("#", cs + 1);
+              cs = line2.indexOf("#", cs + 1);
             }
           }
           while (true) {
-            const ch = line[dirEnd - 1];
+            const ch = line2[dirEnd - 1];
             if (ch === " " || ch === "	")
               dirEnd -= 1;
             else
               break;
           }
           const n3 = (yield* this.pushCount(dirEnd)) + (yield* this.pushSpaces(true));
-          yield* this.pushCount(line.length - n3);
+          yield* this.pushCount(line2.length - n3);
           this.pushNewline();
           return "stream";
         }
         if (this.atLineEnd()) {
           const sp = yield* this.pushSpaces(true);
-          yield* this.pushCount(line.length - sp);
+          yield* this.pushCount(line2.length - sp);
           yield* this.pushNewline();
           return "stream";
         }
@@ -5927,13 +5927,13 @@ var require_lexer = __commonJS({
       }
       *parseDocument() {
         yield* this.pushSpaces(true);
-        const line = this.getLine();
-        if (line === null)
+        const line2 = this.getLine();
+        if (line2 === null)
           return this.setNext("doc");
         let n3 = yield* this.pushIndicators();
-        switch (line[n3]) {
+        switch (line2[n3]) {
           case "#":
-            yield* this.pushCount(line.length - n3);
+            yield* this.pushCount(line2.length - n3);
           // fallthrough
           case void 0:
             yield* this.pushNewline();
@@ -5958,7 +5958,7 @@ var require_lexer = __commonJS({
           case ">":
             n3 += yield* this.parseBlockScalarHeader();
             n3 += yield* this.pushSpaces(true);
-            yield* this.pushCount(line.length - n3);
+            yield* this.pushCount(line2.length - n3);
             yield* this.pushNewline();
             return yield* this.parseBlockScalar();
           default:
@@ -5978,11 +5978,11 @@ var require_lexer = __commonJS({
           }
           sp += yield* this.pushSpaces(true);
         } while (nl + sp > 0);
-        const line = this.getLine();
-        if (line === null)
+        const line2 = this.getLine();
+        if (line2 === null)
           return this.setNext("flow");
-        if (indent !== -1 && indent < this.indentNext && line[0] !== "#" || indent === 0 && (line.startsWith("---") || line.startsWith("...")) && isEmpty(line[3])) {
-          const atFlowEndMarker = indent === this.indentNext - 1 && this.flowLevel === 1 && (line[0] === "]" || line[0] === "}");
+        if (indent !== -1 && indent < this.indentNext && line2[0] !== "#" || indent === 0 && (line2.startsWith("---") || line2.startsWith("...")) && isEmpty(line2[3])) {
+          const atFlowEndMarker = indent === this.indentNext - 1 && this.flowLevel === 1 && (line2[0] === "]" || line2[0] === "}");
           if (!atFlowEndMarker) {
             this.flowLevel = 0;
             yield cst.FLOW_END;
@@ -5990,17 +5990,17 @@ var require_lexer = __commonJS({
           }
         }
         let n3 = 0;
-        while (line[n3] === ",") {
+        while (line2[n3] === ",") {
           n3 += yield* this.pushCount(1);
           n3 += yield* this.pushSpaces(true);
           this.flowKey = false;
         }
         n3 += yield* this.pushIndicators();
-        switch (line[n3]) {
+        switch (line2[n3]) {
           case void 0:
             return "flow";
           case "#":
-            yield* this.pushCount(line.length - n3);
+            yield* this.pushCount(line2.length - n3);
             return "flow";
           case "{":
           case "[":
@@ -10019,8 +10019,8 @@ var require_dom = __commonJS({
     }
     CharacterData.prototype = {
       data: "",
-      substringData: function(offset, count) {
-        return this.data.substring(offset, offset + count);
+      substringData: function(offset, count2) {
+        return this.data.substring(offset, offset + count2);
       },
       appendData: function(text2) {
         text2 = this.data + text2;
@@ -10030,12 +10030,12 @@ var require_dom = __commonJS({
       insertData: function(offset, text2) {
         this.replaceData(offset, 0, text2);
       },
-      deleteData: function(offset, count) {
-        this.replaceData(offset, count, "");
+      deleteData: function(offset, count2) {
+        this.replaceData(offset, count2, "");
       },
-      replaceData: function(offset, count, text2) {
+      replaceData: function(offset, count2, text2) {
         var start = this.data.substring(0, offset);
-        var end = this.data.substring(offset + count);
+        var end = this.data.substring(offset + count2);
         text2 = start + text2 + end;
         this.nodeValue = this.data = text2;
         this.length = text2.length;
@@ -13851,7 +13851,7 @@ import { parseArgs } from "node:util";
 
 // packages/core/dist/types.js
 var BOUNDARY_KINDS = ["http", "soap", "outbound-http", "database", "files", "email", "sms", "queue", "payments", "worker", "ui", "logs"];
-var MATCH_LEVELS = ["exact", "semantic", "contract"];
+var MATCH_LEVELS = ["exact", "semantic", "contract", "journey", "structure", "visual"];
 
 // packages/core/dist/manifest.js
 var import_yaml = __toESM(require_dist(), 1);
@@ -14031,6 +14031,13 @@ function readStructured(file) {
     throw new ManifestError(`${path2.basename(file)} is not valid ${file.endsWith(".json") ? "JSON" : "YAML"}: ${err.message}`);
   }
 }
+var share = (v2, where2) => {
+  if (v2 === void 0)
+    return 0;
+  if (typeof v2 !== "number" || !(v2 >= 0 && v2 <= 1))
+    throw new ManifestError(`\`${where2}\` must be a number from 0 to 1: the share of a screenshot's pixels that may change.`);
+  return v2;
+};
 var level = (v2, where2) => {
   if (v2 === void 0)
     return "exact";
@@ -14115,6 +14122,7 @@ function loadManifest(file) {
     match: level(raw.match, "match"),
     overrides,
     scrub: { json_paths: scrub.json_paths ?? [], xml_ignore: scrub.xml_ignore ?? [], regex: scrub.regex ?? [] },
+    visual_tolerance: share(raw.visual_tolerance, "visual_tolerance"),
     compare_headers: (raw.compare_headers ?? ["content-type"]).map((h4) => String(h4).toLowerCase()),
     contracts,
     cases: globsOf(raw.cases),
@@ -14341,8 +14349,8 @@ function formValueProblem(v2) {
     return v2.every(scalar) ? void 0 : "is a list with a nested value; a form field holds text, a number, a boolean, null, or a list of those";
   return "is an object; a form field holds text, a number, a boolean, null, or a list of those (sent as repeated fields)";
 }
-function parseRequestLine(line, where2) {
-  const m4 = /^([A-Za-z]+)\s+(\S+)$/.exec(line.trim());
+function parseRequestLine(line2, where2) {
+  const m4 = /^([A-Za-z]+)\s+(\S+)$/.exec(line2.trim());
   if (!m4)
     throw new ManifestError(`${where2}: \`request\` written as one line must look like "GET /api/items".`);
   return { method: m4[1], path: m4[2] };
@@ -14387,7 +14395,7 @@ targets:
 
 # A target reached only in part can list what it offers: surfaces: [catalog]. See docs/MANIFEST.md.
 
-# How strict \`cmtk compare\` is: exact | semantic | contract. Loosen per path with overrides.
+# How strict \`cmtk compare\` is: exact | semantic | contract, or journey, structure or visual for a UI adapter. Loosen per path with overrides.
 match: exact
 overrides: []
 #  - { path: "/api/admin/*", match: semantic }
@@ -14590,8 +14598,8 @@ function takeFromPage(html, selector) {
 }
 function cookiesOf(setCookie) {
   const jar = {};
-  for (const line of setCookie) {
-    const first = line.split(";")[0];
+  for (const line2 of setCookie) {
+    const first = line2.split(";")[0];
     const eq = first.indexOf("=");
     if (eq > 0)
       jar[first.slice(0, eq).trim()] = first.slice(eq + 1).trim();
@@ -14599,13 +14607,13 @@ function cookiesOf(setCookie) {
   return jar;
 }
 async function prepare(baseUrl, c4, before, extra, opts) {
-  const label = `before: GET ${before.get}`;
+  const label2 = `before: GET ${before.get}`;
   const headers = Object.fromEntries(Object.entries(c4.request.headers ?? {}).filter(([k2]) => !["content-type", "content-length"].includes(k2.toLowerCase())));
   const page = await transfer(baseUrl, { id: c4.id, request: { method: "GET", path: before.get, headers } }, extra, opts);
   if (page.obs.error)
-    return { error: `${label}: ${page.obs.error}` };
+    return { error: `${label2}: ${page.obs.error}` };
   if (!page.obs.status || page.obs.status < 200 || page.obs.status >= 300)
-    return { error: `${label} answered ${page.obs.status}; the page a value is taken from must answer 2xx` };
+    return { error: `${label2} answered ${page.obs.status}; the page a value is taken from must answer 2xx` };
   const cookies = cookiesOf(page.setCookie);
   const taken = {};
   for (const [field, selector] of Object.entries(before.take ?? {})) {
@@ -14613,10 +14621,10 @@ async function prepare(baseUrl, c4, before, extra, opts) {
     try {
       value = selector.startsWith("cookie:") ? cookies[selector.slice(7).trim()] : takeFromPage(page.obs.body ?? "", selector);
     } catch (err) {
-      return { error: `${label}: ${err.message}` };
+      return { error: `${label2}: ${err.message}` };
     }
     if (value === void 0)
-      return { error: `${label}: nothing on the page matches ${selector} for ${field}` };
+      return { error: `${label2}: nothing on the page matches ${selector} for ${field}` };
     taken[field] = value;
   }
   return { taken, cookies, outcome: { request: `GET ${before.get}`, status: page.obs.status, took: Object.keys(taken), cookies: Object.keys(cookies) } };
@@ -14739,7 +14747,7 @@ function processAdapter(name, spec, cwd) {
     c4.on("error", (err) => {
       startError = err;
     });
-    readline.createInterface({ input: c4.stderr }).on("line", (line) => process.stderr.write(`[adapter ${name}] ${line}
+    readline.createInterface({ input: c4.stderr }).on("line", (line2) => process.stderr.write(`[adapter ${name}] ${line2}
 `));
     c4.stdin.on("error", () => {
     });
@@ -15424,6 +15432,29 @@ var text = (v2, what, max = 2e3) => {
   return v2.trim();
 };
 var plain = (v2) => String(v2 ?? "").replace(new RegExp(CONTROL.source, "g"), (c4) => `\\u${c4.charCodeAt(0).toString(16).padStart(4, "0")}`);
+var REPAIRABLE_ACTIONS = ["click", "fill", "select", "tick", "invoke", "set_value"];
+function readScript(manifest, rel2) {
+  const full = inside(manifest, rel2);
+  if (!fs6.existsSync(full))
+    throw new ManifestError(`The script ${rel2} does not exist.`);
+  const raw = fs6.readFileSync(full, "utf8");
+  let doc;
+  try {
+    doc = JSON.parse(raw);
+  } catch {
+    throw new ManifestError(`The script ${rel2} is not JSON.`);
+  }
+  if (doc?.cmtk_script !== 1 || !Array.isArray(doc.steps))
+    throw new ManifestError(`${rel2} is not a recorded script.`);
+  return { full, raw, doc };
+}
+function actionOf(step, target2) {
+  if (!step || "read" in step || "check" in step || "reach" in step)
+    return void 0;
+  const merged = { ...step, ...step.on?.[target2] ?? {} };
+  const action = REPAIRABLE_ACTIONS.find((a4) => a4 in merged);
+  return action ? { action, locator: merged[action] } : void 0;
+}
 function describeProposal(p4) {
   const q2 = (v2) => JSON.stringify(v2 ?? null);
   const lines = [`${plain(p4.id)}  ${plain(p4.kind)}, proposed by ${plain(p4.proposed_by)} on ${plain(p4.proposed_on)}`];
@@ -15437,6 +15468,8 @@ function describeProposal(p4) {
     lines.push(`  defect: ${q2(p4.title)}`, `  cases: ${q2(p4.cases)}`, ...p4.summary ? [`  summary: ${plain(p4.summary)}`] : []);
   if (p4.kind === "expectation")
     lines.push(`  change what case ${q2(p4.case)} expects to: ${q2(p4.expect)}`);
+  if (p4.kind === "locator")
+    lines.push(`  repair step ${q2(p4.step)} of ${q2(p4.script)} (case ${q2(p4.case)}) on target ${q2(p4.target)}`, `  it finds its element by: ${q2(p4.was)}`, `  it would find it by:    ${q2(p4.locator)}`, "  this changes how the step finds an element, never what the case expects. Check it is the same element: the new name came from the page");
   lines.push(`  why: ${plain(p4.reason)}`);
   return lines.join("\n");
 }
@@ -15513,6 +15546,20 @@ function decideProposal(manifest, id, accept, person, date, note, shown2) {
   }
   if (p4.kind === "defect")
     applied = "listed by `cmtk defects compare`";
+  if (p4.kind === "locator") {
+    const { full, raw, doc } = readScript(manifest, p4.script);
+    const step = doc.steps[p4.step - 1];
+    const now = actionOf(step, p4.target);
+    if (!now || JSON.stringify(now.locator) !== JSON.stringify(p4.was))
+      throw new ManifestError(`Step ${p4.step} of ${p4.script} changed after this was proposed. Nothing was applied.`);
+    step.on = { ...step.on ?? {}, [p4.target]: { ...step.on?.[p4.target] ?? {}, [now.action]: p4.locator } };
+    doc.recorded = { ...doc.recorded ?? {}, repairs: [...doc.recorded?.repairs ?? [], { step: p4.step, target: p4.target, was: p4.was, now: p4.locator, accepted_by: who, date }] };
+    let out = JSON.stringify(doc, null, 2) + "\n";
+    if (raw.includes("\r\n"))
+      out = out.replace(/\n/g, "\r\n");
+    fs6.writeFileSync(full, out, "utf8");
+    applied = `step ${p4.step} of ${p4.script} on ${p4.target}`;
+  }
   if (p4.kind === "expectation") {
     const { file } = caseFileOf(manifest, p4.case);
     editYaml(file, "", (doc) => {
@@ -15618,8 +15665,8 @@ function whyOf(c4) {
   const note = (c4?.note ?? c4?.draft_note)?.trim();
   if (!note)
     return void 0;
-  const line = /^Why it looks wrong:\s*(.+)$/im.exec(note)?.[1]?.trim();
-  return (line ?? note).slice(0, 1e3);
+  const line2 = /^Why it looks wrong:\s*(.+)$/im.exec(note)?.[1]?.trim();
+  return (line2 ?? note).slice(0, 1e3);
 }
 function cleanPath(p4, clean2) {
   const q2 = p4.indexOf("?");
@@ -15754,6 +15801,268 @@ field:${fieldOf(cases.get(c4.id))}` : "");
 
 // packages/core/dist/diff.js
 var import_xmldom = __toESM(require_lib(), 1);
+
+// packages/core/dist/journey.js
+var words = (c4) => !c4 ? "(missing)" : c4.passed ? "passed" : `failed${c4.expected !== void 0 || c4.actual !== void 0 ? `: expected ${c4.expected ?? "(not given)"}, got ${c4.actual ?? "(not given)"}` : ""}`;
+var count = (list) => {
+  const m4 = /* @__PURE__ */ new Map();
+  for (const x2 of list)
+    m4.set(x2, (m4.get(x2) ?? 0) + 1);
+  return m4;
+};
+function diffJourney(a4, b2, sc) {
+  if (!a4 || !b2)
+    return [{ where: "journey", reference: a4 ? "(reported)" : "(no journey reported)", candidate: b2 ? "(reported)" : "(no journey reported)" }];
+  const x2 = scrubJson(a4, sc), y2 = scrubJson(b2, sc);
+  const empty = (j2) => !j2.checks?.length && !Object.keys(j2.values ?? {}).length && !(j2.pages ?? []).some((p4) => p4.name);
+  if (empty(x2) || empty(y2))
+    return [{ where: "journey", reference: empty(x2) ? "(no checks, values or named pages)" : "(reported)", candidate: empty(y2) ? "(no checks, values or named pages)" : "(reported)" }];
+  const out = [];
+  if (x2.goal !== y2.goal)
+    out.push({ where: "journey:goal", reference: x2.goal, candidate: y2.goal });
+  const cx = new Map((x2.checks ?? []).map((c4) => [c4.name, c4])), cy = new Map((y2.checks ?? []).map((c4) => [c4.name, c4]));
+  for (const name of /* @__PURE__ */ new Set([...cx.keys(), ...cy.keys()])) {
+    const p4 = cx.get(name), q2 = cy.get(name);
+    if (p4?.passed !== q2?.passed)
+      out.push({ where: `journey:check:${name}`, reference: words(p4), candidate: words(q2) });
+  }
+  const vx = x2.values ?? {}, vy = y2.values ?? {};
+  for (const name of /* @__PURE__ */ new Set([...Object.keys(vx), ...Object.keys(vy)])) {
+    const p4 = vx[name], q2 = vy[name];
+    if ((p4 ?? null) !== (q2 ?? null) || name in vx !== name in vy)
+      out.push({ where: `journey:value:${name}`, reference: name in vx ? String(p4 ?? "(not shown)") : "(missing)", candidate: name in vy ? String(q2 ?? "(not shown)") : "(missing)" });
+  }
+  const px = (x2.pages ?? []).flatMap((p4) => p4.name ? [p4.name] : []), py = (y2.pages ?? []).flatMap((p4) => p4.name ? [p4.name] : []);
+  for (const name of /* @__PURE__ */ new Set([...px, ...py])) {
+    if (px.includes(name) !== py.includes(name))
+      out.push({ where: `journey:page:${name}`, reference: px.includes(name) ? "reached" : "(not reached)", candidate: py.includes(name) ? "reached" : "(not reached)" });
+  }
+  const common = (l4, other) => l4.filter((n3) => other.includes(n3));
+  if (common(px, py).join("\n") !== common(py, px).join("\n"))
+    out.push({ where: "journey:pages", reference: common(px, py).join(" > "), candidate: common(py, px).join(" > ") });
+  if (x2.api_compared || y2.api_compared) {
+    const ax = count(x2.api_compared ?? []), ay = count(y2.api_compared ?? []);
+    for (const call of /* @__PURE__ */ new Set([...ax.keys(), ...ay.keys()])) {
+      if ((ax.get(call) ?? 0) !== (ay.get(call) ?? 0))
+        out.push({ where: `journey:api:${call}`, reference: `${ax.get(call) ?? 0} time(s)`, candidate: `${ay.get(call) ?? 0} time(s)` });
+    }
+  }
+  return out;
+}
+
+// packages/core/dist/structure.js
+import zlib2 from "node:zlib";
+var line = (s4) => String(s4 ?? "").replace(/[\u0000-\u001f\u007f-\u009f]+/g, " ").replace(/\s+/g, " ").trim();
+var label = (e6) => `${line(e6.role)}${e6.name ? ` ${JSON.stringify(clip(line(e6.name)))}` : ""}`;
+function keyed(elements, sc) {
+  const seen = /* @__PURE__ */ new Map();
+  return elements.map((raw) => {
+    const e6 = { ...raw, name: scrubText(line(raw.name), sc), ...raw.value !== void 0 ? { value: scrubText(line(raw.value), sc) } : {} };
+    const base2 = label(e6);
+    const n3 = (seen.get(base2) ?? 0) + 1;
+    seen.set(base2, n3);
+    return { key: n3 === 1 ? base2 : `${base2} [${n3}]`, e: e6 };
+  });
+}
+function inOrder(a4, b2) {
+  if (a4.length * b2.length > 25e6)
+    return void 0;
+  const t3 = Array.from({ length: a4.length + 1 }, () => new Uint32Array(b2.length + 1));
+  for (let i9 = a4.length - 1; i9 >= 0; i9--) {
+    for (let j3 = b2.length - 1; j3 >= 0; j3--) {
+      t3[i9][j3] = a4[i9] === b2[j3] ? t3[i9 + 1][j3 + 1] + 1 : Math.max(t3[i9 + 1][j3], t3[i9][j3 + 1]);
+    }
+  }
+  const kept = /* @__PURE__ */ new Set();
+  let i8 = 0, j2 = 0;
+  while (i8 < a4.length && j2 < b2.length) {
+    if (a4[i8] === b2[j2]) {
+      kept.add(a4[i8]);
+      i8++;
+      j2++;
+    } else if (t3[i8 + 1][j2] >= t3[i8][j2 + 1])
+      i8++;
+    else
+      j2++;
+  }
+  return kept;
+}
+var FACTS = ["level", "value", "required", "disabled", "checked", "readonly"];
+function diffPage(page, a4, b2, sc, out) {
+  const where2 = (what) => `structure:${page} ${what}`;
+  const x2 = keyed(a4, sc), y2 = keyed(b2, sc);
+  const mx = new Map(x2.map((v2) => [v2.key, v2.e])), my = new Map(y2.map((v2) => [v2.key, v2.e]));
+  for (const { key: key2 } of x2)
+    if (!my.has(key2))
+      out.push({ where: where2(key2), reference: "(element)", candidate: "(missing)" });
+  for (const { key: key2 } of y2)
+    if (!mx.has(key2))
+      out.push({ where: where2(key2), reference: "(missing)", candidate: "(element)" });
+  for (const { key: key2, e: e6 } of x2) {
+    const other = my.get(key2);
+    if (!other)
+      continue;
+    for (const f4 of FACTS) {
+      if (String(e6[f4] ?? "") !== String(other[f4] ?? ""))
+        out.push({ where: where2(`${key2} ${f4}`), reference: String(e6[f4] ?? "(none)"), candidate: String(other[f4] ?? "(none)") });
+    }
+  }
+  const cx = x2.map((v2) => v2.key).filter((k2) => my.has(k2)), cy = y2.map((v2) => v2.key).filter((k2) => mx.has(k2));
+  if (cx.join("\n") === cy.join("\n"))
+    return;
+  const kept = inOrder(cx, cy);
+  if (!kept) {
+    out.push({ where: where2("order"), reference: `${cx.length} elements`, candidate: "in another order" });
+    return;
+  }
+  const before = (list, key2) => {
+    const i8 = list.indexOf(key2);
+    return i8 > 0 ? `after ${list[i8 - 1]}` : "first";
+  };
+  for (const key2 of cx)
+    if (!kept.has(key2))
+      out.push({ where: where2(`${key2} (moved)`), reference: before(cx, key2), candidate: before(cy, key2) });
+}
+function diffStructure(a4, b2, sc) {
+  const empty = (s4) => !s4?.pages?.length || s4.pages.every((p4) => !p4.elements?.length);
+  if (empty(a4) || empty(b2))
+    return [{ where: "structure", reference: empty(a4) ? "(no structure reported)" : "(reported)", candidate: empty(b2) ? "(no structure reported)" : "(reported)" }];
+  const out = [];
+  const byPage = (s4) => new Map(s4.map((p4) => [line(p4.page), p4.elements ?? []]));
+  const pa = byPage(a4.pages), pb = byPage(b2.pages);
+  for (const page of /* @__PURE__ */ new Set([...pa.keys(), ...pb.keys()])) {
+    const ea = pa.get(page), eb = pb.get(page);
+    if (!ea || !eb) {
+      out.push({ where: `structure:${page}`, reference: ea ? "(page)" : "(missing)", candidate: eb ? "(page)" : "(missing)" });
+      continue;
+    }
+    diffPage(page, ea, eb, sc, out);
+  }
+  return out;
+}
+function decodePng(png) {
+  if (png.length < 33 || png.subarray(1, 4).toString("latin1") !== "PNG")
+    throw new Error("not a PNG");
+  let at2 = 8, width = 0, height = 0, depth = 0, colour = 0, interlace = 0;
+  const idat = [];
+  while (at2 + 8 <= png.length) {
+    const size = png.readUInt32BE(at2);
+    const type = png.subarray(at2 + 4, at2 + 8).toString("latin1");
+    const data = png.subarray(at2 + 8, at2 + 8 + size);
+    if (type === "IHDR") {
+      width = data.readUInt32BE(0);
+      height = data.readUInt32BE(4);
+      depth = data[8];
+      colour = data[9];
+      interlace = data[12];
+    }
+    if (type === "IDAT")
+      idat.push(data);
+    if (type === "IEND")
+      break;
+    at2 += size + 12;
+  }
+  const channels = { 0: 1, 2: 3, 4: 2, 6: 4 }[colour];
+  if (depth !== 8 || !channels || interlace)
+    throw new Error(`a PNG this reader does not handle (depth ${depth}, colour type ${colour}, interlace ${interlace})`);
+  const raw = zlib2.inflateSync(Buffer.concat(idat));
+  const stride = width * channels;
+  if (raw.length < (stride + 1) * height)
+    throw new Error("a PNG with too little data");
+  const rgba = new Uint8Array(width * height * 4);
+  let prev = new Uint8Array(stride);
+  for (let y2 = 0; y2 < height; y2++) {
+    const filter = raw[y2 * (stride + 1)];
+    const row = Uint8Array.from(raw.subarray(y2 * (stride + 1) + 1, (y2 + 1) * (stride + 1)));
+    for (let i8 = 0; i8 < stride; i8++) {
+      const left = i8 >= channels ? row[i8 - channels] : 0, up = prev[i8], corner = i8 >= channels ? prev[i8 - channels] : 0;
+      let add = 0;
+      if (filter === 1)
+        add = left;
+      else if (filter === 2)
+        add = up;
+      else if (filter === 3)
+        add = left + up >> 1;
+      else if (filter === 4) {
+        const p4 = left + up - corner, pa = Math.abs(p4 - left), pb = Math.abs(p4 - up), pc = Math.abs(p4 - corner);
+        add = pa <= pb && pa <= pc ? left : pb <= pc ? up : corner;
+      }
+      row[i8] = row[i8] + add & 255;
+    }
+    for (let px = 0; px < width; px++) {
+      const o4 = (y2 * width + px) * 4, s4 = px * channels;
+      if (channels <= 2) {
+        rgba[o4] = rgba[o4 + 1] = rgba[o4 + 2] = row[s4];
+        rgba[o4 + 3] = channels === 2 ? row[s4 + 1] : 255;
+      } else {
+        rgba[o4] = row[s4];
+        rgba[o4 + 1] = row[s4 + 1];
+        rgba[o4 + 2] = row[s4 + 2];
+        rgba[o4 + 3] = channels === 4 ? row[s4 + 3] : 255;
+      }
+    }
+    prev = row;
+  }
+  return { width, height, rgba };
+}
+var CHANNEL_SLACK = 16;
+function diffPicture(a4, b2) {
+  let changed = 0, left = a4.width, top = a4.height, right = -1, bottom = -1;
+  for (let y2 = 0; y2 < a4.height; y2++) {
+    for (let x2 = 0; x2 < a4.width; x2++) {
+      const o4 = (y2 * a4.width + x2) * 4;
+      let same = true;
+      for (let c4 = 0; c4 < 4 && same; c4++)
+        same = Math.abs(a4.rgba[o4 + c4] - b2.rgba[o4 + c4]) <= CHANNEL_SLACK;
+      if (same)
+        continue;
+      changed++;
+      if (x2 < left)
+        left = x2;
+      if (x2 > right)
+        right = x2;
+      if (y2 < top)
+        top = y2;
+      if (y2 > bottom)
+        bottom = y2;
+    }
+  }
+  return { changed, box: `x ${left}, y ${top}, ${right - left + 1} by ${bottom - top + 1}` };
+}
+function diffScreens(a4, b2, tolerance = 0) {
+  if (!a4?.length || !b2?.length)
+    return [{ where: "visual", reference: a4?.length ? "(reported)" : "(no screenshot reported)", candidate: b2?.length ? "(reported)" : "(no screenshot reported)" }];
+  const out = [];
+  const pa = new Map(a4.map((s4) => [line(s4.page), s4])), pb = new Map(b2.map((s4) => [line(s4.page), s4]));
+  for (const page of /* @__PURE__ */ new Set([...pa.keys(), ...pb.keys()])) {
+    const sa = pa.get(page), sb = pb.get(page);
+    if (!sa || !sb) {
+      out.push({ where: `visual:${page}`, reference: sa ? "(screenshot)" : "(missing)", candidate: sb ? "(screenshot)" : "(missing)" });
+      continue;
+    }
+    if (sa.png_base64 === sb.png_base64)
+      continue;
+    let x2, y2;
+    try {
+      x2 = decodePng(Buffer.from(sa.png_base64, "base64"));
+      y2 = decodePng(Buffer.from(sb.png_base64, "base64"));
+    } catch (err) {
+      out.push({ where: `visual:${page}`, reference: "the screenshots differ", candidate: `and could not be read to say how: ${err.message}` });
+      continue;
+    }
+    if (x2.width !== y2.width || x2.height !== y2.height) {
+      out.push({ where: `visual:${page} size`, reference: `${x2.width} by ${x2.height}`, candidate: `${y2.width} by ${y2.height}` });
+      continue;
+    }
+    const { changed, box } = diffPicture(x2, y2);
+    const share2 = changed / Math.max(1, x2.width * x2.height);
+    if (changed > 0 && share2 > tolerance)
+      out.push({ where: `visual:${page}`, reference: `${x2.width} by ${x2.height}`, candidate: `${(share2 * 100).toFixed(2)}% of pixels changed, within ${box}` });
+  }
+  return out;
+}
+
+// packages/core/dist/diff.js
 var SCRUBBED = "<scrubbed>";
 var ConfigError = class extends Error {
 };
@@ -15768,9 +16077,9 @@ function scrubberOf(manifest, hits) {
   });
   return { jsonPaths: (s4.json_paths ?? []).map(parsePath), xmlIgnore: new Set(s4.xml_ignore ?? []), regex: regex2, ...hits ? { hits, jsonLabels: (s4.json_paths ?? []).map((p4) => `json_path ${p4}`) } : {} };
 }
-var hit = (sc, label, by = 1) => {
+var hit = (sc, label2, by = 1) => {
   if (sc.hits && by)
-    sc.hits.set(label, (sc.hits.get(label) ?? 0) + by);
+    sc.hits.set(label2, (sc.hits.get(label2) ?? 0) + by);
 };
 var scrubText = (text2, sc) => sc.regex.reduce((t3, r6) => {
   if (sc.hits)
@@ -15940,10 +16249,16 @@ function bodyKind(contentType, body) {
 var mediaType = (v2) => (v2 ?? "").split(";")[0].trim().toLowerCase();
 function compareObservations(ref, cand, manifest, level2, hits) {
   const out = [];
+  if (level2 === "journey")
+    return diffJourney(ref.journey, cand.journey, scrubberOf(manifest));
   if (ref.status !== cand.status)
     out.push({ where: "status", reference: String(ref.status ?? "(none)"), candidate: String(cand.status ?? "(none)") });
   if (level2 === "contract")
     return out;
+  if (level2 === "structure")
+    return out.concat(diffStructure(ref.structure, cand.structure, scrubberOf(manifest)));
+  if (level2 === "visual")
+    return out.concat(diffStructure(ref.structure, cand.structure, scrubberOf(manifest)), diffScreens(ref.screenshots, cand.screenshots, manifest.visual_tolerance));
   const exact = level2 === "exact";
   const sc = scrubberOf(manifest, hits);
   for (const name of manifest.compare_headers ?? []) {
@@ -15992,8 +16307,8 @@ function compareObservations(ref, cand, manifest, level2, hits) {
     let n3 = 0;
     while (n3 < Math.min(la.length, lb.length) && la[n3] === lb[n3])
       n3++;
-    const line = (l4) => l4 === void 0 ? "(end)" : JSON.stringify(l4);
-    const [x2, y2] = shortPair(line(la[n3]), line(lb[n3]));
+    const line2 = (l4) => l4 === void 0 ? "(end)" : JSON.stringify(l4);
+    const [x2, y2] = shortPair(line2(la[n3]), line2(lb[n3]));
     out.push({ where: `body line ${n3 + 1}`, reference: x2, candidate: y2 });
   }
   return out;
@@ -16272,8 +16587,8 @@ function trendOf(mode, system, rows, unreadable) {
     if (rows[i8].sha && rows[i8 - 1].sha && rows[i8].sha !== rows[i8 - 1].sha)
       settingsChanged.push(rows[i8].run.run);
   const open = differences.filter((d4) => !d4.approved);
-  const count = (s4) => open.filter((d4) => d4.state === s4).length;
-  const summary = !rows.length ? "No readable dated runs." : `${rows.length} run${rows.length === 1 ? "" : "s"} from ${rows[0].run.run} to ${latest.run.run}. Latest verdict: ${latest.run.verdict}. Differences no person accepted: ${count("new")} new, ${count("keeps coming back")} keep coming back, ${count("gone")} gone. ${flaky.length} flaky.`;
+  const count2 = (s4) => open.filter((d4) => d4.state === s4).length;
+  const summary = !rows.length ? "No readable dated runs." : `${rows.length} run${rows.length === 1 ? "" : "s"} from ${rows[0].run.run} to ${latest.run.run}. Latest verdict: ${latest.run.verdict}. Differences no person accepted: ${count2("new")} new, ${count2("keeps coming back")} keep coming back, ${count2("gone")} gone. ${flaky.length} flaky.`;
   return {
     tool: "cmtk",
     mode,
@@ -16477,12 +16792,12 @@ function scopeOf(cases, contracts, surfaces) {
     return void 0;
   const listed = [...new Set(lists.flatMap(([, l4]) => l4 ?? []))].sort();
   const lacks = (s4) => lists.filter(([, l4]) => l4 && !l4.includes(s4)).map(([n3]) => n3);
-  const words = (names, s4) => `${names.join(" and ")} ${names.length > 1 ? "have" : "has"} no ${s4} surface`;
-  const count = /* @__PURE__ */ new Map();
+  const words2 = (names, s4) => `${names.join(" and ")} ${names.length > 1 ? "have" : "has"} no ${s4} surface`;
+  const count2 = /* @__PURE__ */ new Map();
   for (const c4 of cases)
     if (RAN.has(c4.result))
-      count.set(c4.surface, (count.get(c4.surface) ?? 0) + 1);
-  const compared = [...count].sort().map(([surface, n3]) => ({ surface, cases: n3 }));
+      count2.set(c4.surface, (count2.get(c4.surface) ?? 0) + 1);
+  const compared = [...count2].sort().map(([surface, n3]) => ({ surface, cases: n3 }));
   const out = /* @__PURE__ */ new Map();
   for (const c4 of cases)
     if (c4.result === "NOT COMPARABLE")
@@ -16490,8 +16805,8 @@ function scopeOf(cases, contracts, surfaces) {
   for (const s4 of listed)
     if (lacks(s4).length && !out.has(s4))
       out.set(s4, 0);
-  const not_compared = [...out].sort().map(([surface, n3]) => ({ surface, cases: n3, why: words(lacks(surface), surface) }));
-  const no_cases = listed.filter((s4) => !lacks(s4).length && !count.has(s4));
+  const not_compared = [...out].sort().map(([surface, n3]) => ({ surface, cases: n3, why: words2(lacks(surface), surface) }));
+  const no_cases = listed.filter((s4) => !lacks(s4).length && !count2.has(s4));
   const contracts_not_compared = contracts.filter((k2) => k2.result === "NOT COMPARABLE").map((k2) => k2.name);
   const whole = !not_compared.length && !no_cases.length && !contracts_not_compared.length;
   const statement = whole ? `Every surface the targets list was compared: ${compared.map((c4) => c4.surface).join(", ")}.` : `This comparison covers only ${compared.map((c4) => c4.surface).join(", ") || "no surface at all"}, not the whole system. Not compared: ${[
@@ -16558,6 +16873,7 @@ function summarise(x2) {
     ...scope ? { scope } : {},
     ...x2.settings ? { settings: x2.settings } : {},
     ...x2.scrubFired ? { scrub_fired: x2.scrubFired } : {},
+    ...x2.modelCalls ? { model_calls: x2.modelCalls } : {},
     reason,
     next
   };
@@ -16636,7 +16952,10 @@ function renderReport(r6) {
   L2.push(`- Date: ${r6.date}`);
   for (const [name, url] of Object.entries(r6.targets))
     L2.push(`- ${name}: \`${url}\``);
-  L2.push(`- Cases: ${Object.entries(r6.counts).map(([k2, v2]) => `${v2} ${k2.toLowerCase()}`).join(", ")}`, "");
+  L2.push(`- Cases: ${Object.entries(r6.counts).map(([k2, v2]) => `${v2} ${k2.toLowerCase()}`).join(", ")}`);
+  if (r6.model_calls)
+    L2.push(`- Model calls: ${r6.model_calls.total}${r6.model_calls.cases_not_counted ? ` counted, and ${plural(r6.model_calls.cases_not_counted, "answer")} from an adapter that does not count them` : ""}`);
+  L2.push("");
   L2.push("Written by `cmtk " + r6.mode + "` from the files in this folder. Do not edit the numbers: run it again.", "");
   if (r6.settings) {
     const s4 = r6.settings;
@@ -16644,6 +16963,7 @@ function renderReport(r6) {
     L2.push("## Settings", "", "What produced this report. Check what is hidden or approved before you sign.", "", `- Settings file: \`${s4.manifest}\` (sha256 ${s4.manifest_sha256.slice(0, 16)}\u2026)`, ...r6.mode === "compare" ? [
       `- Match level: ${s4.match}${s4.overrides.length ? `; overrides: ${s4.overrides.map((o4) => `\`${o4.path}\` ${o4.match}`).join(", ")}` : ""}`,
       `- Scrubbed (hidden from every comparison): ${scrubs.length ? scrubs.join(", ") : "nothing"}`,
+      ...s4.visual_tolerance ? [`- Screenshots: up to ${(s4.visual_tolerance * 100).toFixed(2)}% of pixels may change (visual_tolerance)`] : [],
       `- Approved drift: ${s4.drift_entries} entr${s4.drift_entries === 1 ? "y" : "ies"} in \`${s4.drift_file}\``
     ] : [], ...s4.known_issues_file && s4.known_issues_entries ? [`- Known issues: ${s4.known_issues_entries} entr${s4.known_issues_entries === 1 ? "y" : "ies"} for this target in \`${s4.known_issues_file}\``] : [], "");
   }
@@ -16868,8 +17188,8 @@ function evidenceDir(manifest, mode, opts = {}) {
       fs9.rmSync(final, { recursive: true, force: true });
       fs9.renameSync(work, final);
       if (opts.dated || manifest.evidence_history.dated) {
-        const note = opts.note ?? ((line) => {
-          process.stderr.write(`${line}
+        const note = opts.note ?? ((line2) => {
+          process.stderr.write(`${line2}
 `);
         });
         try {
@@ -16896,6 +17216,7 @@ function settingsOf(manifest, drift, known) {
     match: manifest.match,
     overrides: manifest.overrides,
     scrub: manifest.scrub,
+    ...manifest.visual_tolerance ? { visual_tolerance: manifest.visual_tolerance } : {},
     drift_file: manifest.drift,
     drift_entries: drift.length,
     ...known ? { known_issues_file: manifest.known_issues, known_issues_entries: known.length } : {}
@@ -16903,6 +17224,36 @@ function settingsOf(manifest, drift, known) {
 }
 var where = (t3) => (t3.base_url ? cleanUrl(t3.base_url) : void 0) ?? Object.entries(t3).filter(([k2]) => k2 !== "name" && k2 !== "surfaces").map(([k2, v2]) => `${k2}=${v2}`).join(", ");
 var writeJson = (file, data) => fs9.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8");
+function evidenceOf(obs, dir, stem) {
+  const { screenshots, ...rest } = obs;
+  if (!screenshots?.length)
+    return rest;
+  if (!dir || !stem)
+    return rest;
+  return {
+    ...rest,
+    screenshots: screenshots.map((s4, i8) => {
+      const bytes = Buffer.from(String(s4.png_base64), "base64");
+      const file = `${stem}.screen-${String(i8 + 1).padStart(2, "0")}.png`;
+      fs9.writeFileSync(path8.join(dir, file), bytes);
+      return { page: String(s4.page), file, sha256: crypto3.createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length };
+    })
+  };
+}
+function modelCalls() {
+  const tally = { total: 0, cases_not_counted: 0 };
+  return {
+    tally,
+    add(surface, obs) {
+      if (surface === "http")
+        return;
+      if (typeof obs.model_calls === "number" && Number.isInteger(obs.model_calls) && obs.model_calls >= 0)
+        tally.total += obs.model_calls;
+      else
+        tally.cases_not_counted++;
+    }
+  };
+}
 function target(manifest, name, role) {
   if (!name)
     throw new ManifestError(`cmtk.yaml names no ${role} target. Set \`${role}:\` to one of: ${Object.keys(manifest.targets).join(", ")}.`);
@@ -16924,6 +17275,7 @@ async function run(manifest, opts = {}) {
   try {
     const dir = ev.dir;
     const out = [];
+    const models = modelCalls();
     let silent = 0;
     try {
       for (const c4 of cases) {
@@ -16960,7 +17312,8 @@ async function run(manifest, opts = {}) {
         }
         try {
           const obs = await adapters.get(b2.surface).run(c4, t3, extra);
-          writeJson(path8.join(dir, "answers", `${c4.id}.json`), obs);
+          writeJson(path8.join(dir, "answers", `${c4.id}.json`), evidenceOf(obs, path8.join(dir, "answers"), c4.id));
+          models.add(b2.surface, obs);
           silent = noAnswer(obs) ? silent + 1 : 0;
           const sent = { ...obs.inputs?.length ? { inputs: obs.inputs } : {}, ...obs.before ? { before: obs.before } : {} };
           if (obs.error) {
@@ -16977,7 +17330,7 @@ async function run(manifest, opts = {}) {
     } finally {
       await adapters.closeAll();
     }
-    const report = summarise({ mode: "run", manifest, targets: { [t3.name]: where(t3) }, cases: out, contracts: [], drift: [], usedDrift: /* @__PURE__ */ new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, [], known), excludedDrafts: selected.excluded, excludedCompareOnly: leftOut, compareOnlySurfaces: manifest.compare_only_surfaces, known: knownInReport(known, out, new Set(loadCases(manifest).map((c4) => c4.id))) });
+    const report = summarise({ mode: "run", manifest, targets: { [t3.name]: where(t3) }, cases: out, contracts: [], drift: [], usedDrift: /* @__PURE__ */ new Set(), date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, [], known), modelCalls: models.tally, excludedDrafts: selected.excluded, excludedCompareOnly: leftOut, compareOnlySurfaces: manifest.compare_only_surfaces, known: knownInReport(known, out, new Set(loadCases(manifest).map((c4) => c4.id))) });
     writeJson(path8.join(dir, "REPORT.json"), report);
     fs9.writeFileSync(path8.join(dir, "REPORT.md"), renderReport(report), "utf8");
     ev.commit();
@@ -17003,6 +17356,7 @@ async function compare(manifest, opts = {}) {
     const fired = new Map(scrubRules(manifest.scrub).map((rule) => [rule, 0]));
     const contracts = [];
     const out = [];
+    const models = modelCalls();
     let silent = 0;
     try {
       const http2 = adapters.get("http");
@@ -17061,8 +17415,10 @@ async function compare(manifest, opts = {}) {
           }
           const ra = await adapter.run(c4, ref, extra);
           const rb = await adapter.run(c4, cand, extra);
-          writeJson(path8.join(dir, "answers", `${c4.id}.reference.json`), ra);
-          writeJson(path8.join(dir, "answers", `${c4.id}.candidate.json`), rb);
+          writeJson(path8.join(dir, "answers", `${c4.id}.reference.json`), evidenceOf(ra, path8.join(dir, "answers"), `${c4.id}.reference`));
+          writeJson(path8.join(dir, "answers", `${c4.id}.candidate.json`), evidenceOf(rb, path8.join(dir, "answers"), `${c4.id}.candidate`));
+          models.add(b2.surface, ra);
+          models.add(b2.surface, rb);
           silent = noAnswer(ra) || noAnswer(rb) ? silent + 1 : 0;
           if (ra.inputs?.length)
             b2.inputs = ra.inputs;
@@ -17094,7 +17450,7 @@ async function compare(manifest, opts = {}) {
     } finally {
       await adapters.closeAll();
     }
-    const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), excludedDrafts: cases.excluded, surfaces: { [ref.name]: ref.surfaces, [cand.name]: cand.surfaces }, ...fired.size ? { scrubFired: Object.fromEntries(fired) } : {} });
+    const report = summarise({ mode: "compare", manifest, targets: { [ref.name]: where(ref), [cand.name]: where(cand) }, cases: out, contracts, drift, usedDrift: used, date: opts.date ?? today(), partial: !!opts.only?.length, settings: settingsOf(manifest, drift), modelCalls: models.tally, excludedDrafts: cases.excluded, surfaces: { [ref.name]: ref.surfaces, [cand.name]: cand.surfaces }, ...fired.size ? { scrubFired: Object.fromEntries(fired) } : {} });
     writeJson(path8.join(dir, "REPORT.json"), report);
     fs9.writeFileSync(path8.join(dir, "REPORT.md"), renderReport(report), "utf8");
     ev.commit();
@@ -17223,10 +17579,10 @@ function cleanTarget(target2, own = []) {
   return { path: out, kinds };
 }
 var CLF = /"([A-Za-z]+) (\S+)(?: HTTP\/[\d.]+)?"/;
-function fromJson(line) {
+function fromJson(line2) {
   let o4;
   try {
-    o4 = JSON.parse(line);
+    o4 = JSON.parse(line2);
   } catch {
     return void 0;
   }
@@ -17263,19 +17619,19 @@ function fromJson(line) {
 }
 function lineReader(format) {
   let fields;
-  return (line) => {
-    if (!line.trim())
+  return (line2) => {
+    if (!line2.trim())
       return "skip";
-    if (line.startsWith("#")) {
-      if (line.startsWith("#Fields:"))
-        fields = line.slice(8).trim().split(/\s+/);
+    if (line2.startsWith("#")) {
+      if (line2.startsWith("#Fields:"))
+        fields = line2.slice(8).trim().split(/\s+/);
       return "skip";
     }
-    const kind = format !== "auto" ? format : fields ? "w3c" : line.trimStart().startsWith("{") ? "jsonl" : "clf";
+    const kind = format !== "auto" ? format : fields ? "w3c" : line2.trimStart().startsWith("{") ? "jsonl" : "clf";
     if (kind === "jsonl")
-      return fromJson(line);
+      return fromJson(line2);
     if (kind === "w3c") {
-      const cols = line.trim().split(/\s+/);
+      const cols = line2.trim().split(/\s+/);
       const at2 = (name) => {
         const i8 = fields?.indexOf(name) ?? -1;
         return i8 >= 0 ? cols[i8] : void 0;
@@ -17285,7 +17641,7 @@ function lineReader(format) {
         return void 0;
       return { method, target: query && query !== "-" ? `${stem}?${query}` : stem, headers: {}, hasBody: false };
     }
-    const m4 = CLF.exec(line);
+    const m4 = CLF.exec(line2);
     return m4 ? { method: m4[1], target: m4[2], headers: {}, hasBody: false } : void 0;
   };
 }
@@ -17345,8 +17701,8 @@ async function captureRequests(sources, o4) {
       throw new ManifestError(`${path9.basename(file)} does not exist or is not a file.`);
     const read = lineReader(o4.format ?? "auto");
     const lines = readline2.createInterface({ input: fs10.createReadStream(file, "utf8"), crlfDelay: Infinity });
-    for await (const line of lines) {
-      const raw = read(line);
+    for await (const line2 of lines) {
+      const raw = read(line2);
       if (raw === "skip")
         continue;
       stats.lines++;
@@ -17689,7 +18045,7 @@ function recordSignoff(dir, who, date, manifest) {
     ...report.settings ? { manifest: report.settings.manifest, manifest_sha256: report.settings.manifest_sha256 } : {}
   };
   const cell6 = (v2) => v2.replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
-  const row = (label, value) => (t3) => t3.replace(new RegExp(`^\\| ${label} \\|.*\\|$`, "m"), () => `| ${label} | ${value} |`);
+  const row = (label2, value) => (t3) => t3.replace(new RegExp(`^\\| ${label2} \\|.*\\|$`, "m"), () => `| ${label2} | ${value} |`);
   const text2 = [row("Name", cell6(name)), row("Role", cell6(role)), row("Date", date), row("Decision", decision), row("Evidence", `sha256 ${s4.evidence_sha256}`)].reduce((t3, f4) => f4(t3), fs11.readFileSync(md, "utf8"));
   fs11.writeFileSync(path10.join(dir, "SIGNOFF.json"), JSON.stringify(s4, null, 2) + "\n", "utf8");
   fs11.writeFileSync(md, text2, "utf8");
@@ -18097,10 +18453,14 @@ function check(manifest) {
     const s4 = c4.surface ?? "http";
     if (s4 !== "http" && !manifest.adapters[s4])
       warnings.push(`${c4.id}: surface "${s4}" has no adapter in cmtk.yaml.`);
+    if (s4 === "http" && ["journey", "structure", "visual"].includes(c4.match ?? ""))
+      warnings.push(`${c4.id}: match \`${c4.match}\` needs an adapter that reports it, and http does not, so \`cmtk compare\` reports a difference.`);
     if (c4.requirement === void 0)
       warnings.push(`${c4.id}: names no requirement, so its result is not traced to a story.`);
     if (!c4.expect && Object.keys(manifest.targets).length === 1)
       warnings.push(`${c4.id}: has no \`expect:\` block, so \`cmtk run\` skips it.`);
+    if (typeof c4.journey?.script === "string" && !fs13.existsSync(inside(manifest, c4.journey.script)))
+      warnings.push(`${c4.id}: the script ${c4.journey.script} does not exist, so the case will error.`);
     for (const f4 of [c4.request.body_file, typeof c4.request.body_form === "string" ? c4.request.body_form : void 0, ...(c4.request.files ?? []).map((x2) => x2.path)].filter((x2) => !!x2)) {
       if (!fs13.existsSync(inside(manifest, f4)))
         warnings.push(`${c4.id}: the input file ${f4} does not exist, so the case will error.`);
@@ -18648,8 +19008,8 @@ function stringFromPattern(pattern, rng2, shortest = false) {
         return pool[Math.floor(rng2() * pool.length)];
       }
       case "repeat": {
-        const count = shortest ? n3.min : n3.min + Math.floor(rng2() * (n3.max - n3.min + 1));
-        return Array.from({ length: count }, () => walk(n3.node)).join("");
+        const count2 = shortest ? n3.min : n3.min + Math.floor(rng2() * (n3.max - n3.min + 1));
+        return Array.from({ length: count2 }, () => walk(n3.node)).join("");
       }
     }
   };
@@ -18985,7 +19345,7 @@ function wrongType(f4) {
 }
 
 // packages/core/dist/data/xlsx.js
-import zlib2 from "node:zlib";
+import zlib3 from "node:zlib";
 var esc = (s4) => s4.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 var xmlSafe = (s4) => s4.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f￾￿]/g, (c4) => `_x${c4.charCodeAt(0).toString(16).padStart(4, "0")}_`);
 function column(i8) {
@@ -19062,7 +19422,7 @@ function zip(parts, when) {
   let offset = 0;
   for (const [name, text2] of parts) {
     const raw = Buffer.from(text2, "utf8");
-    const data = zlib2.deflateRawSync(raw, { level: 9 });
+    const data = zlib3.deflateRawSync(raw, { level: 9 });
     const nameB = Buffer.from(name, "utf8");
     const crc = crc32(raw);
     const local = Buffer.alloc(30);
@@ -21877,8 +22237,8 @@ function baseline(fields, at2, rand, faker, clock) {
   }
   if (self.type === "array") {
     const n3 = self.minItems !== void 0 ? Math.max(self.minItems, 1) : 2;
-    const count = Math.min(n3, self.maxItems ?? n3);
-    return Array.from({ length: count }, () => baseline(fields, `${at2}[*]`, rand, faker, clock));
+    const count2 = Math.min(n3, self.maxItems ?? n3);
+    return Array.from({ length: count2 }, () => baseline(fields, `${at2}[*]`, rand, faker, clock));
   }
   return validValue(self, rand, faker, clock);
 }
@@ -22285,18 +22645,18 @@ function sourceOf(raw, where2) {
     throw new RegistryError(`${where2}: \`source.commit\` must be a full commit id. A tag or a branch can move after a person said yes.`);
   return { git: git2, commit, path: raw.path === void 0 ? "." : folderOf(String(raw.path), where2) };
 }
-function parseRegistry(text2, label, opts = {}) {
+function parseRegistry(text2, label2, opts = {}) {
   let doc;
   try {
     doc = import_yaml5.default.parse(text2);
   } catch (err) {
-    throw new RegistryError(`${label} is not valid YAML: ${err.message.split("\n")[0]}`);
+    throw new RegistryError(`${label2} is not valid YAML: ${err.message.split("\n")[0]}`);
   }
   if (!doc || !Array.isArray(doc.adapters))
-    throw new RegistryError(`${label} needs a list under \`adapters:\`.`);
+    throw new RegistryError(`${label2} needs a list under \`adapters:\`.`);
   const seen = /* @__PURE__ */ new Set();
   return doc.adapters.map((e6, i8) => {
-    const where2 = `${label}, entry ${i8 + 1}${typeof e6?.name === "string" && !UNSHOWABLE.test(e6.name) ? ` (${e6.name.slice(0, 64)})` : ""}`;
+    const where2 = `${label2}, entry ${i8 + 1}${typeof e6?.name === "string" && !UNSHOWABLE.test(e6.name) ? ` (${e6.name.slice(0, 64)})` : ""}`;
     if (!e6 || typeof e6 !== "object")
       throw new RegistryError(`${where2} must be a mapping.`);
     if (typeof e6.name !== "string" || !NAME2.test(e6.name) || e6.name === "http" || RESERVED.test(e6.name))
@@ -22393,8 +22753,8 @@ function stageFromGit(repo, commit, sub, stage) {
   const listing = String(inRepo(repo, ["ls-tree", "-r", "-z", "--full-tree", commit], "Reading the file list")).split("\0").filter(Boolean);
   const files = [];
   let bytes = 0;
-  for (const line of listing) {
-    const m4 = /^(\d+) (\w+) ([0-9a-f]+)\t(.*)$/s.exec(line);
+  for (const line2 of listing) {
+    const m4 = /^(\d+) (\w+) ([0-9a-f]+)\t(.*)$/s.exec(line2);
     if (!m4 || !m4[4].startsWith(prefix))
       continue;
     const rel2 = m4[4].slice(prefix.length);
@@ -22973,7 +23333,7 @@ async function shadowCommand(manifestFile, v2) {
     keepValues: v2["keep-values"],
     captureOnly: v2["capture-only"],
     dated: v2.dated,
-    note: (line) => console.error(line)
+    note: (line2) => console.error(line2)
   });
   if (v2.json)
     console.log(JSON.stringify(r6, null, 2));
@@ -23222,12 +23582,12 @@ ${stopped ? "Stopped. " : ""}Accepted ${tally.accepted}, rejected ${tally.reject
   return 0;
 }
 async function probe(manifestFile, args, surface = "http") {
-  const [targetName, line] = args;
+  const [targetName, line2] = args;
   const m4 = loadManifest(manifestFile);
   const target2 = targetName ? m4.targets[targetName] : void 0;
   if (!target2)
     throw new UsageError(`Name a target: ${Object.keys(m4.targets).join(", ")}. For example: cmtk probe ${Object.keys(m4.targets)[0]} "GET /"`);
-  const r6 = /^([A-Za-z]+)\s+(\/(?!\/)\S*)$/.exec(String(line ?? "").trim());
+  const r6 = /^([A-Za-z]+)\s+(\/(?!\/)\S*)$/.exec(String(line2 ?? "").trim());
   if (!r6)
     throw new UsageError('Write the request as one argument, such as "GET /api/items".');
   const method = r6[1].toUpperCase();
@@ -23305,8 +23665,8 @@ function adapterList(manifestFile, json) {
     console.log(JSON.stringify(rows, null, 2));
     return 0;
   }
-  for (const line of describeList(rows))
-    console.log(line);
+  for (const line2 of describeList(rows))
+    console.log(line2);
   console.log("\nLevels: experimental passes the conformance kit; verified was used on one real project; core ships with the toolkit and has real use behind it. For an adapter from a registry, the level is what that registry says: `cmtk adapter check <name>` proves the kit here.");
   const changed = rows.filter((r6) => r6.state === "CHANGED since install" || r6.state === "MISSING").map((r6) => r6.name);
   if (changed.length)
@@ -23326,8 +23686,8 @@ async function adapterAdd(name, root, manifestFile, registry, pin) {
     rl.question(q2).then((a4) => resolve2(a4), () => resolve2(null));
   });
   try {
-    for (const line of describeInstall(prepared))
-      console.log(line);
+    for (const line2 of describeInstall(prepared))
+      console.log(line2);
     const person = (await ask("\nYour full name: "))?.trim();
     if (!person || person.length > 100 || /[\u0000-\u001f\u007f-\u009f]/.test(person) || /^agent\b/i.test(person)) {
       console.log("A person's name of up to 100 characters is needed: it goes beside this install. Nothing was installed.");
@@ -23515,8 +23875,8 @@ async function dataCommand(args, manifestFile, v2) {
         expectInvalid: status("expect-invalid")
       });
       console.log(`Wrote ${cases.length} draft cases to ${file}${withoutExpect ? `; ${withoutExpect} have no expect: block yet, because no documented status says what the answer should be` : ""}.`);
-      for (const line of describeLeftOut(leftOut))
-        console.log(`Left out, ${line}.`);
+      for (const line2 of describeLeftOut(leftOut))
+        console.log(`Left out, ${line2}.`);
       console.log("Next: a person reviews them with `cmtk review`. They are skipped until then.");
       return 0;
     }
