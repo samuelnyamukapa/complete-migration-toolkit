@@ -9,7 +9,7 @@ import path from "node:path";
 import readline from "node:readline";
 import { fileURLToPath } from "node:url";
 
-import { addProposal, decideProposal, loadManifest } from "../../../packages/core/dist/index.js";
+import { addProposal, confirmSafe, decideProposal, loadCases, loadManifest } from "../../../packages/core/dist/index.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ADAPTER = path.join(HERE, "..");
@@ -44,6 +44,13 @@ function adapter(env = {}, cwd = REPO) {
     };
 }
 
+/** A person confirms `safe: true` in `cmtk review`. Without that, a case that writes needs both switches. */
+const confirmed = (dir) => {
+    const m = loadManifest(path.join(dir, "cmtk.yaml"));
+    for (const c of loadCases(m)) if (c.safe) confirmSafe(m, c.id, "Jo Tester", "2026-11-04", c);
+    return dir;
+};
+
 function project(v1 = "app-v1.json", v2 = "app-v2.json", more = "") {
     const dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), "cmtk-desktop-"));
     fs.mkdirSync(path.join(dir, "cmtk/cases"), { recursive: true });
@@ -60,7 +67,7 @@ adapters:
 ${more}
 `);
     fs.writeFileSync(path.join(dir, "cmtk/cases/order.yaml"), "cases:\n  - { id: ORDER, requirement: R, surface: desktop, match: journey, safe: true, request: POST /order, expect: { status: 200 }, journey: { script: cmtk/journeys/order.json, step_timeout_ms: 200 } }\n");
-    return dir;
+    return confirmed(dir);
 }
 const report = (dir, mode = "compare") => JSON.parse(fs.readFileSync(path.join(dir, "cmtk/evidence", mode, "REPORT.json"), "utf8"));
 
@@ -99,6 +106,7 @@ test("the same script on the same version passes, and the script's check decides
 test("at `structure`, the same window elements compare, and a planted total is named", async () => {
     const dir = project();
     fs.writeFileSync(path.join(dir, "cmtk/cases/order.yaml"), "cases:\n  - { id: ORDER, surface: desktop, match: structure, safe: true, request: POST /order, journey: { script: cmtk/journeys/order.json } }\n");
+    confirmed(dir);
     await cmtk(dir, "compare");
     const wheres = report(dir).cases[0].differences.map((d) => d.where);
     assert.deepEqual([...new Set(wheres)].sort(), ["status", 'structure:confirmation text "Total" value', 'structure:end text "Total" value']);
@@ -227,6 +235,7 @@ test("a broken locator is an error with candidates, and a repair is only a propo
     const p = addProposal(m, { kind: "locator", case: "ORDER", step: repair.step, target: repair.target, locator: repair.candidates[0].locator, reason: "renamed", proposed_by: "agent" }, "2026-11-04");
     assert.equal(fs.readFileSync(file, "utf8"), before, "a proposal applies nothing");
     decideProposal(m, p.id, true, "Jane Smith", "2026-11-04");
+    confirmed(dir); // the script changed, so the confirmation of the old one no longer counts
     const again = await cmtk(dir, "compare");
     assert.equal(report(dir).verdict, "PARITY", again.stdout + again.stderr);
     assert.deepEqual(JSON.parse(fs.readFileSync(file, "utf8")).steps.at(-1), JSON.parse(before).steps.at(-1), "the check did not change");
@@ -275,6 +284,7 @@ adapters:
   desktop: { command: "${process.execPath.replace(/\\/g, "/")}", args: ["${INDEX.replace(/\\/g, "/")}"], covers: [ui] }
 `);
     fs.writeFileSync(path.join(dir, "cmtk/cases/order.yaml"), "cases:\n  - { id: ORDER, surface: desktop, match: journey, safe: true, request: POST /order, journey: { script: order.json } }\n");
+    confirmed(dir);
     const r = await cmtk(dir, "compare");
     const rep = report(dir);
     assert.equal(rep.verdict, "NO PARITY", r.stdout + r.stderr + JSON.stringify(rep.cases));

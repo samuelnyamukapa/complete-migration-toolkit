@@ -7,6 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { totpCode } from "../totp.mjs";
+import { confirmSafe, loadCases, loadManifest } from "../../../packages/core/dist/index.js";
 import { adapter, ADAPTER, browserProblem, cmtk, everyFile, manifest, project, serve } from "./helpers.mjs";
 
 const skip = await browserProblem();
@@ -97,12 +98,19 @@ const LOGIN = (code = "with_totp_env: CMTK_TEST_TOTP_SEED") => `    journey:
           value: who
           equals: Test user
 `;
+/** A person confirms `safe: true` in `cmtk review`. Without that, a case that writes needs both switches. */
+const confirmed = (dir) => {
+    const m = loadManifest(path.join(dir, "cmtk.yaml"));
+    for (const c of loadCases(m)) if (c.safe) confirmSafe(m, c.id, "Jo Tester", "2026-11-04", c);
+    return dir;
+};
+
 const CASES = `cases:\n  - id: MFA\n    surface: web\n    match: journey\n    safe: true\n    request: POST /password\n    expect: { status: 200 }\n${LOGIN()}`;
 
 test("a journey through a TOTP login runs on both systems, and the seed is in no evidence file or log", web, async () => {
     const attempts = [];
     const [a, b] = [await totpSite({ attempts }), await totpSite({ attempts })];
-    const dir = project({ "cmtk.yaml": manifest(a.url, b.url), "cmtk/cases/mfa.yaml": CASES });
+    const dir = confirmed(project({ "cmtk.yaml": manifest(a.url, b.url), "cmtk/cases/mfa.yaml": CASES }));
     try {
         const r = await cmtk(dir, ["compare"], ENV);
         const rep = JSON.parse(fs.readFileSync(path.join(dir, "cmtk/evidence/compare/REPORT.json"), "utf8"));
@@ -126,7 +134,7 @@ test("a journey through a TOTP login runs on both systems, and the seed is in no
 
 test("a wrong seed fails the journey, so the code is what got it through", web, async () => {
     const [a, b] = [await totpSite(), await totpSite()];
-    const dir = project({ "cmtk.yaml": manifest(a.url, b.url), "cmtk/cases/mfa.yaml": CASES });
+    const dir = confirmed(project({ "cmtk.yaml": manifest(a.url, b.url), "cmtk/cases/mfa.yaml": CASES }));
     try {
         const r = await cmtk(dir, ["run", "--target", "legacy"], { ...ENV, CMTK_TEST_TOTP_SEED: "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ" });
         assert.equal(r.status, 1, r.stdout + r.stderr);

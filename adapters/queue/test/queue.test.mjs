@@ -8,6 +8,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { confirmSafe, loadCases, loadManifest } from "../../../packages/core/dist/index.js";
 import { createAdapter, looksLikeTest } from "../index.mjs";
 import { rabbitmqDriver, serviceBusDriver } from "../drivers.mjs";
 import { fakeAmqplib, fakeServiceBus, makeBroker } from "./support/fake-broker.mjs";
@@ -316,11 +317,17 @@ test("publishing needs both unsafe switches: with either one alone, nothing is p
             fs.rmSync(dir, { recursive: true, force: true });
         }
     }
-    // And `safe: true` is no way round them: the engine lets it through, the adapter refuses it.
+    // And `safe: true` is no way round them. Written into a file, the engine holds it back.
+    // Even once a person confirms it, so the engine lets it through, the adapter refuses it.
     const dir = project({ driver: "rabbitmq", cases: [{ ...PUBLISH, safe: true }] });
     const log = path.join(dir, "published.log");
     try {
-        const r = await cmtk(dir, { ...ENV.rabbitmq, STANDIN_LOG: log }, "compare", "--json");
+        let r = await cmtk(dir, { ...ENV.rabbitmq, STANDIN_LOG: log }, "compare", "--json");
+        assert.equal(JSON.parse(r.stdout).cases[0].result, "SKIPPED");
+        assert.equal(fs.existsSync(log), false);
+        const m = loadManifest(path.join(dir, "cmtk.yaml"));
+        confirmSafe(m, PUBLISH.id, "Jo Tester", "2026-11-04", loadCases(m)[0]);
+        r = await cmtk(dir, { ...ENV.rabbitmq, STANDIN_LOG: log }, "compare", "--json");
         assert.equal(JSON.parse(r.stdout).cases[0].result, "ERROR");
         assert.equal(fs.existsSync(log), false);
     } finally {

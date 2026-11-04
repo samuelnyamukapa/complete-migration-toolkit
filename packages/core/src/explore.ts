@@ -6,6 +6,7 @@ import path from "node:path";
 
 import { adaptersFor, envHeaders, evidenceOf, SAFE_METHODS } from "./engine.js";
 import { inside, ManifestError, ownedFolder } from "./manifest.js";
+import { overrideIn } from "./methods.js";
 import { editYaml, seqAt } from "./proposals.js";
 import type { Case, Expectation, Manifest, Observation } from "./types.js";
 
@@ -82,6 +83,8 @@ function parseRequest(r: unknown): Case["request"] {
     const method = String(req?.method ?? "GET").toUpperCase();
     if (!SAFE_METHODS.has(method)) throw new ManifestError(`Exploration only reads: ${method} is not allowed. Use GET, HEAD or OPTIONS.`);
     if (typeof req?.path !== "string" || !req.path.startsWith("/") || req.path.startsWith("//")) throw new ManifestError("The path must start with a single '/': a path, never a host.");
+    const asks = overrideIn(req.path);
+    if (asks !== undefined) throw new ManifestError(`Exploration only reads: the path asks to be treated as ${asks}, which is not allowed.`);
     const headers: Record<string, string> = {};
     for (const [k, v] of Object.entries(req.headers ?? {})) {
         // Headers some frameworks read to treat a GET as another method.

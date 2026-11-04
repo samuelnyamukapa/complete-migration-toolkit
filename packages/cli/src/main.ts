@@ -12,7 +12,7 @@ import { parseArgs } from "node:util";
 import YAML from "yaml";
 
 import {
-    acceptDraft, adaptersFor, BOUNDARY_KINDS, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
+    acceptDraft, adaptersFor, confirmSafe, describeSafe, overrideIn, removeSafe, unconfirmedSafe, BOUNDARY_KINDS, casesToYaml, check, compare, ConfigError, confirmExpectation, decideProposal, describeCheck, describeDiscovery, describeProposal, discover, describeSignoff, draftDefects,
     envHeaders, importHar, inside, loadCases, loadManifest, loadProposals, ManifestError, PathError, processAdapter, readStructured, recordSignoff,
     initProject, rejectDraft, rejectExpectation, run, SAFE_METHODS, signoffState, SignoffError, type Case, type Report, type Target, shadow, SHADOW_FORMATS, type ShadowFormat, cleanHistory, HISTORY_MODES, trend, type HistoryMode, planRecipe, makeData, makeRows, loadRecipe, checkQuotas, isHappy, writeCases, describeLeftOut, FAKER_VERSION, type DataFormat, DATA_FORMATS, compareTables, readTables, describeComparison, type Scrubbing, trafficAgainstSchema, loadDataFindings, writeSeed,
 } from "@cmtk/core";
@@ -404,11 +404,12 @@ async function review(manifestFile: string): Promise<number> {
     const drafts = loadCases(m).filter((c) => c.draft);
     const drafted = loadCases(m).filter((c) => c.expect_draft && !c.draft);
     const pending = loadProposals(m).filter((p) => p.status === "pending");
-    if (!drafts.length && !drafted.length && !pending.length) { console.log("Nothing to review: no draft cases, no drafted expectations and no proposals."); return 0; }
-    console.log(`${drafts.length} draft case${drafts.length === 1 ? "" : "s"}, ${drafted.length} drafted expectation${drafted.length === 1 ? "" : "s"} and ${pending.length} proposal${pending.length === 1 ? "" : "s"} to review.`);
+    const marked = unconfirmedSafe(m, loadCases(m)).filter((c) => !c.draft);
+    if (!drafts.length && !drafted.length && !pending.length && !marked.length) { console.log("Nothing to review: no draft cases, no drafted expectations and no proposals."); return 0; }
+    console.log(`${drafts.length} draft case${drafts.length === 1 ? "" : "s"}, ${drafted.length} drafted expectation${drafted.length === 1 ? "" : "s"}${marked.length ? `, ${marked.length} unconfirmed safe mark${marked.length === 1 ? "" : "s"}` : ""} and ${pending.length} proposal${pending.length === 1 ? "" : "s"} to review.`);
     console.log("For each: a = accept, r = reject (you give a reason), s = skip for now, q = stop.");
     console.log("A = accept this draft and every remaining draft in the same file (you confirm first): for the cases a recipe generated, once you have read the recipe.");
-    console.log("A drafted expectation records what the system answered, not what the requirement says, so you confirm each one on its own.\n");
+    console.log("A drafted expectation records what the system answered, not what the requirement says, so you confirm each one on its own. So is a case marked safe: true, which would run with neither unsafe switch.\n");
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const date = new Date().toISOString().slice(0, 10);
     const tally = { accepted: 0, rejected: 0, skipped: 0, failed: 0 };
@@ -420,7 +421,10 @@ async function review(manifestFile: string): Promise<number> {
         const ask = async (all = false): Promise<"a" | "A" | "r" | "s" | "q"> => {
             for (;;) {
                 const raw = (await rl.question(`Accept, reject, skip or quit? [a/${all ? "A/" : ""}r/s/q] `)).trim();
-                if (all && raw === "A") return "A";
+                if (raw === "A") {
+                    if (all) return "A";
+                    continue; // bulk accept is not on offer here, so "A" must not read as a plain yes
+                }
                 const v = raw.toLowerCase();
                 if (["a", "r", "s", "q"].includes(v)) return v as "a" | "r" | "s" | "q";
             }
@@ -431,8 +435,10 @@ async function review(manifestFile: string): Promise<number> {
                 if (done.has(c.id)) return true;
                 const { file: _file, draft: _d, ...shown } = c;
                 console.log(`\nDraft case ${c.id} in ${c.file}:\n${YAML.stringify(shown, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}`);
-                const rest = drafts.filter((d) => d.file === c.file && !done.has(d.id) && !d.expect_draft);
-                let v = await ask(!c.expect_draft && rest.length > 1);
+                if (c.safe !== undefined) console.log(`  ${describeSafe(c)}`);
+                // A case that would run with neither switch is never accepted in bulk: a person reads each one.
+                const rest = drafts.filter((d) => d.file === c.file && !done.has(d.id) && !d.expect_draft && d.safe === undefined);
+                let v = await ask(!c.expect_draft && c.safe === undefined && rest.length > 1);
                 while (v === "A") {
                     const yes = (await rl.question(`Accept all ${rest.length} remaining drafts in ${c.file}, ${c.id} included? Type yes to confirm: `)).trim().toLowerCase();
                     if (yes === "yes") break;
@@ -461,6 +467,16 @@ async function review(manifestFile: string): Promise<number> {
                 if (v === "q") return false;
                 if (v === "a") { confirmExpectation(m, c.id, name, date, c); tally.accepted++; }
                 if (v === "r") { rejectExpectation(m, c.id, name, date, (await rl.question("Why reject it? The case stays, with no expectation. ")).trim() || "no reason given", c); tally.rejected++; }
+                if (v === "s") tally.skipped++;
+                return true;
+            }),
+            ...marked.map((c) => async () => {
+                const { file: _file, ...shown } = c;
+                console.log(`\nCase ${c.id} in ${c.file}:\n${YAML.stringify(shown, { lineWidth: 0 }).trimEnd().replace(/^/gm, "  ")}\n  ${describeSafe(c)}\n  Reject it to remove the mark: the case then needs both switches.`);
+                const v = await ask();
+                if (v === "q") return false;
+                if (v === "a") { confirmSafe(m, c.id, name, date, c); tally.accepted++; }
+                if (v === "r") { removeSafe(m, c.id, c); tally.rejected++; }
                 if (v === "s") tally.skipped++;
                 return true;
             }),
@@ -504,6 +520,8 @@ async function probe(manifestFile: string, args: string[], surface = "http"): Pr
     if (!r) throw new UsageError('Write the request as one argument, such as "GET /api/items".');
     const method = r[1]!.toUpperCase();
     if (!SAFE_METHODS.has(method)) throw new UsageError(`probe only reads: use GET, HEAD or OPTIONS, not ${method}.`);
+    const asks = overrideIn(r[2]!);
+    if (asks !== undefined) throw new UsageError(`probe only reads: that path asks to be treated as ${asks}.`);
     const adapters = adaptersFor(m);
     try {
         const o = await adapters.get(surface).run({ id: "probe", request: { method, path: r[2]!, headers: {}, body: null }, surface }, target, envHeaders(m));

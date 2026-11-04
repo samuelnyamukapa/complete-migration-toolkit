@@ -4,6 +4,8 @@ export { shadow, captureRequests, cleanTarget, redactText, looksPersonal, endpoi
 export { keepDated, cleanHistory, datedRuns, sizeOf, stampOf, stampTime, historyFolder, DEFAULT_HISTORY, HISTORY_MODES, type HistoryMode, type CleanOptions } from "./history.js";
 export { trend, trendOf, renderTrend, scrubRules, type TrendReport, type TrendRun, type TrendDifference, type TrendFlaky } from "./trend.js";
 export { run, compare, matchFor, envHeaders, adaptersFor, evidenceOf, SAFE_METHODS, type RunOptions } from "./engine.js";
+export { overrideIn, writes, safeConfirmed, safePrint } from "./methods.js";
+export { looksLikeAgent } from "./people.js";
 export { compareObservations, diffJson, diffXml, parseXml, parseJsonKeepingNumbers, scrubberOf, scrubJson, shortPair, ConfigError, SCRUBBED } from "./diff.js";
 export { parseJsonExact, JsonNumber, JsonObject, jsonEqual } from "./json.js";
 export { recordSignoff, signoffState, describeSignoff, evidenceFingerprint, SignoffError, DECISIONS, type Signoff, type SignoffState } from "./signoff.js";
@@ -19,7 +21,7 @@ export { renderReport, summarise } from "./report.js";
 export { send, httpAdapter, processAdapter, decodeBody, requestBody, takeFromPage, cookiesOf, MAX_BODY, MULTIPART_BOUNDARY, type Adapter } from "./adapters.js";
 export { parsePath, matches, render, select, PathError } from "./jsonpath.js";
 export { check, describeCheck, type CheckResult } from "./check.js";
-export { addProposal, decideProposal, describeProposal, loadProposals, acceptDraft, rejectDraft, confirmExpectation, rejectExpectation, editYaml, PROPOSAL_KINDS, type Proposal, type ProposalInput, type ProposalKind, type ScrubRule } from "./proposals.js";
+export { addProposal, decideProposal, describeProposal, loadProposals, acceptDraft, rejectDraft, confirmSafe, removeSafe, unconfirmedSafe, describeSafe, confirmExpectation, rejectExpectation, editYaml, PROPOSAL_KINDS, type Proposal, type ProposalInput, type ProposalKind, type ScrubRule } from "./proposals.js";
 export { startSession, exploreRequest, addFinding, endSession, type Session, type FindingInput, type Probe } from "./explore.js";
 export { draftDefects, redactor, type DefectDraft } from "./defects.js";
 export { initProject } from "./init.js";

@@ -9,7 +9,7 @@ From 1.0.0, version numbers are major.minor.patch.
 - **A major version** may change anything on this page, and the changelog says how to move.
 - **A minor version** may add: a new optional setting, a new field in a report, a new command, a new tool. So read a report by the fields you know, and ignore the rest.
 - **A patch version** adds nothing here.
-- **The safety rules never loosen,** in any version: the two switches for unsafe methods, secrets only from environment variables, sandboxes only for money and messages, and only a person signs. See [TEST-PLAN.md](TEST-PLAN.md).
+- **The safety rules never loosen,** in any version: the two switches for unsafe methods (a `safe: true` counts only with a person's confirmation in `cmtk review`), secrets only from environment variables, sandboxes only for money and messages, and only a person signs. See [TEST-PLAN.md](TEST-PLAN.md).
 
 A difference that is reported today may be worded differently tomorrow. The words in `reason`, `next` and `why`, and everything in `REPORT.md`, are for people, and they can change in any version. A program reads the fields, the verdicts and the exit codes.
 

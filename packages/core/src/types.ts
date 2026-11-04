@@ -207,8 +207,12 @@ export interface Case {
     request: Request;
     expect?: Expectation;
     match?: MatchLevel;
-    /** A person confirmed this request changes nothing, though its method is not GET, HEAD or OPTIONS. */
+    /** Says this case changes nothing, though it is not a plain read. It counts only with a person's confirmation below. */
     safe?: boolean;
+    /** Who saw exactly this case in `cmtk review` and confirmed `safe: true`, when, and a fingerprint of what they saw. */
+    safe_confirmed_by?: string;
+    safe_confirmed_on?: string;
+    safe_print?: string;
     /** Where the case came from: a HAR file, a requirement, a person. */
     source?: string;
     /** Set by the loader: the file the case was read from, relative to the manifest. */

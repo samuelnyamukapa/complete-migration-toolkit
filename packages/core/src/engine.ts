@@ -18,10 +18,11 @@ import { coveringDrift } from "./drift.js";
 import { checkExpectation } from "./expect.js";
 import { knownInReport, loadKnownIssues, markKnown } from "./known.js";
 import { loadCases, loadDrift, ManifestError, ownedFolder } from "./manifest.js";
+import { safeConfirmed, SAFE_METHODS, writes } from "./methods.js";
 import { renderReport, summarise } from "./report.js";
 import type { Case, CaseOutcome, ContractOutcome, Drift, KnownIssue, Manifest, MatchLevel, Observation, Report, ReportSettings, ScreenshotFile, Target } from "./types.js";
 
-export const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+export { SAFE_METHODS };
 
 export interface RunOptions {
     /** Replay requests that change data. Needs allow_unsafe_methods in cmtk.yaml as well. */
@@ -109,10 +110,22 @@ function base(c: Case): Omit<CaseOutcome, "result"> {
     return { id: c.id, name: c.name ?? `${c.request.method} ${c.request.path}`, request: `${c.request.method} ${c.request.path}`, requirement: requirementsOf(c), surface: c.surface ?? "http" };
 }
 
+/**
+ * Held back unless both switches are on. `safe: true` lets a case past them only when a person saw exactly that
+ * case in `cmtk review`. A method override, or a body on a read, is a write whatever the method says.
+ */
 function unsafe(c: Case, manifest: Manifest, opts: RunOptions) {
-    const safe = SAFE_METHODS.has(c.request.method) || c.safe === true;
-    return !safe && !(manifest.allow_unsafe_methods && opts.allowUnsafe);
+    return writes(c) && !safeConfirmed(c, manifest.root) && !(manifest.allow_unsafe_methods && opts.allowUnsafe);
 }
+
+const unsafeWhy = (c: Case) => (c.safe !== undefined ? `${UNSAFE_WHY}. It is marked \`safe: true\`, but no person has confirmed this exact case: \`cmtk review\` shows it` : UNSAFE_WHY);
+
+/** What an adapter is told. An adapter trusts `safe`, so a mark no person confirmed never reaches it. */
+const asSent = (c: Case, manifest: Manifest): Case => {
+    if (c.safe === undefined || safeConfirmed(c, manifest.root)) return c;
+    const { safe: _safe, ...rest } = c;
+    return rest;
+};
 
 /** The targets that do not offer a surface. A target that lists no surfaces offers them all. */
 const lacking = (surface: string, ...targets: Target[]) => targets.filter((t) => t.surfaces && !t.surfaces.includes(surface)).map((t) => t.name);
@@ -285,10 +298,10 @@ export async function run(manifest: Manifest, opts: RunOptions = {}): Promise<Re
                 if (c.expect_draft) { out.push({ ...b, result: "SKIPPED", why: EXPECT_DRAFT_WHY }); continue; }
                 if (c.draft) { out.push({ ...b, result: "SKIPPED", why: DRAFT_WHY }); continue; }
                 if (!c.expect) { out.push({ ...b, result: "SKIPPED", why: "no `expect:` block, so there is nothing to check on one system" }); continue; }
-                if (unsafe(c, manifest, opts)) { out.push({ ...b, result: "SKIPPED", why: UNSAFE_WHY }); continue; }
+                if (unsafe(c, manifest, opts)) { out.push({ ...b, result: "SKIPPED", why: unsafeWhy(c) }); continue; }
                 if (silent >= STOP_AFTER_NO_ANSWER) { out.push({ ...b, result: "SKIPPED", why: STOPPED_WHY }); continue; }
                 try {
-                    const obs = await adapters.get(b.surface).run(c, t, extra);
+                    const obs = await adapters.get(b.surface).run(asSent(c, manifest), t, extra);
                     writeJson(path.join(dir, "answers", `${c.id}.json`), evidenceOf(obs, path.join(dir, "answers"), c.id));
                     models.add(b.surface, obs);
                     silent = noAnswer(obs) ? silent + 1 : 0;
@@ -367,13 +380,14 @@ export async function compare(manifest: Manifest, opts: RunOptions = {}): Promis
                 if (c.draft) { out.push({ ...b, result: "SKIPPED", why: DRAFT_WHY }); continue; }
                 const missing = lacking(b.surface, ref, cand);
                 if (missing.length) { out.push({ ...b, result: "NOT COMPARABLE", why: `not comparable: ${hasNo(missing, b.surface)}` }); continue; }
-                if (unsafe(c, manifest, opts)) { out.push({ ...b, result: "SKIPPED", why: UNSAFE_WHY }); continue; }
+                if (unsafe(c, manifest, opts)) { out.push({ ...b, result: "SKIPPED", why: unsafeWhy(c) }); continue; }
                 if (silent >= STOP_AFTER_NO_ANSWER) { out.push({ ...b, result: "SKIPPED", why: STOPPED_WHY }); continue; }
                 try {
                     const adapter = adapters.get(b.surface);
                     if (adapter.reset) { await adapter.reset(ref); await adapter.reset(cand); }
-                    const ra = await adapter.run(c, ref, extra);
-                    const rb = await adapter.run(c, cand, extra);
+                    const sent = asSent(c, manifest);
+                    const ra = await adapter.run(sent, ref, extra);
+                    const rb = await adapter.run(sent, cand, extra);
                     writeJson(path.join(dir, "answers", `${c.id}.reference.json`), evidenceOf(ra, path.join(dir, "answers"), `${c.id}.reference`));
                     writeJson(path.join(dir, "answers", `${c.id}.candidate.json`), evidenceOf(rb, path.join(dir, "answers"), `${c.id}.candidate`));
                     models.add(b.surface, ra);

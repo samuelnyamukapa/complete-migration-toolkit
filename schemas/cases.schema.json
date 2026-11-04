@@ -294,6 +294,15 @@
         "safe": {
           "type": "boolean"
         },
+        "safe_confirmed_by": {
+          "type": "string"
+        },
+        "safe_confirmed_on": {
+          "type": "string"
+        },
+        "safe_print": {
+          "type": "string"
+        },
         "source": {
           "type": "string"
         },

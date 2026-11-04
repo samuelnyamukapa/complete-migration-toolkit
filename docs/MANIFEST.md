@@ -53,7 +53,8 @@ A case file holds `cases:`, a list. Each case:
 | `journey` | no | For the [web adapter](../adapters/web/README.md): a task written as steps, with checks in code |
 | `mask` | no | For the web adapter: locators of areas painted over in screenshots, such as a clock |
 | `match` | no | This case's level, overriding everything else |
-| `safe` | no | `true` when a person has confirmed a non-GET request changes nothing, such as a read-only SOAP call |
+| `safe` | no | `true` says a request that isn't a plain read changes nothing, such as a read-only SOAP call. Writing it does nothing by itself: the case needs both unsafe switches until a person confirms it in `cmtk review`, which shows each one on its own and never in bulk. For the web and desktop adapters, a confirmed mark also lets a journey on a GET write |
+| `safe_confirmed_by`, `safe_confirmed_on`, `safe_print` | no | Written by `cmtk review` when a person confirms `safe: true`. `safe_print` is a fingerprint of the request and of any file it sends or plays. Change any of them and the confirmation no longer counts |
 | `draft` | no | `true` for a case an agent wrote that no person has accepted yet. It is reported as SKIPPED until `cmtk review` accepts it |
 | `draft_note` | no | Why the drafter wrote it this way, and any question for the reviewer. Kept as `note` when a person accepts the draft |
 | `note` | no | Where the case came from and what it depends on, in words |

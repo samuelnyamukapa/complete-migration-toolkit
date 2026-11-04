@@ -6,7 +6,7 @@ import { describeDiscovery, loadDiscovery } from "./discover.js";
 import { scrubberOf } from "./diff.js";
 import { loadKnownIssues } from "./known.js";
 import { inside, loadCases, loadDrift } from "./manifest.js";
-import { loadProposals } from "./proposals.js";
+import { loadProposals, unconfirmedSafe } from "./proposals.js";
 import type { Manifest } from "./types.js";
 
 export interface CheckResult {
@@ -40,6 +40,7 @@ export function check(manifest: Manifest): CheckResult {
             if (!fs.existsSync(inside(manifest, f))) warnings.push(`${c.id}: the input file ${f} does not exist, so the case will error.`);
         }
     }
+    for (const c of unconfirmedSafe(manifest, cases)) warnings.push(`${c.id}: says safe: true, but no person has confirmed this exact case, so it needs both switches. \`cmtk review\` shows it.`);
     const pair = [manifest.targets[manifest.reference], manifest.targets[manifest.candidate]].filter((t) => t?.surfaces);
     const counted = new Map<string, number>();
     for (const c of cases) counted.set(c.surface ?? "http", (counted.get(c.surface ?? "http") ?? 0) + 1);

@@ -37,7 +37,8 @@ Three rules for every test:
 
 These run in CI on every pull request, except the last one, which starts with each pilot. A pull request that breaks one is not merged.
 
-- **Changing data needs two switches.** POST, PUT, PATCH and DELETE are skipped unless `allow_unsafe_methods: true` is in `cmtk.yaml` and `--allow-unsafe` is on the run. Each switch is tested on its own: the request must not be sent.
+- **Changing data needs two switches.** POST, PUT, PATCH and DELETE are skipped unless `allow_unsafe_methods: true` is in `cmtk.yaml` and `--allow-unsafe` is on the run. Each switch is tested on its own: the request must not be sent. So is a read that asks to be something else: a method-override header, `_method`, `_HttpMethod` or `method=DELETE` in the query or after a `;`, and a body on an HTTP read.
+- **`safe: true` is the one exception, and a person sees it.** The mark alone does nothing: the case still needs both switches, and an adapter is not told it. It counts only when `cmtk review` recorded a person who saw that case on its own, with a warning. Bulk accept leaves it out. The confirmation holds a fingerprint of the request and of any file the case sends or plays, so changing them ends it. `cmtk check` warns about a mark nobody confirmed.
 - **Secrets never reach disk.** A test plants a known secret in `headers_from_env` and searches every file the run wrote.
 - **HAR import keeps credentials out.** It drops cookies and authorization, key and token headers, and redacts secret-looking query values and body fields.
 - **A recording is not a requirement.** `cmtk import-har --draft-expect` copies only the status and the media type of a recorded answer, never body text or another header. The case is skipped until a person confirms that expectation, one at a time, in `cmtk review`.

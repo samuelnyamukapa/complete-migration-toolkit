@@ -7,7 +7,9 @@ import YAML, { isMap, isSeq, type Document, YAMLMap, YAMLSeq } from "yaml";
 
 import { KNOWN_ISSUE_ID, knownFails, loadKnownIssues } from "./known.js";
 import { inside, loadCases, loadDrift, ManifestError } from "./manifest.js";
+import { looksLikeAgent } from "./people.js";
 import { parsePath } from "./jsonpath.js";
+import { safeConfirmed, safePrint } from "./methods.js";
 import { applyDataRule, checkDataRule, describeDataRule, type DataRule } from "./data/model.js";
 import type { Case, Expectation, KnownFailure, Manifest } from "./types.js";
 
@@ -370,12 +372,46 @@ export function acceptDraft(manifest: Manifest, caseId: string, person: string, 
         if (c.draft_note) node.set("note", c.draft_note);
         node.set("accepted_by", who);
         node.set("accepted_on", date);
+        // The person saw the whole case, `safe: true` included, one at a time: bulk accept leaves these out.
+        if (c.safe === true) stampSafe(node, who, date, safePrint(c, manifest.root));
         // The person saw the whole case, the drafted expectation included.
         if (c.expect_draft) {
             node.delete("expect_draft");
             node.set("expect_confirmed_by", who);
             node.set("expect_confirmed_on", date);
         }
+    });
+}
+
+function stampSafe(node: YAMLMap, who: string, date: string, print: string) {
+    node.set("safe_confirmed_by", who);
+    node.set("safe_confirmed_on", date);
+    node.set("safe_print", print);
+}
+
+/** Cases that say `safe: true`, or carry a confirmation for something else, with no person behind what they would do now. */
+export const unconfirmedSafe = (manifest: Manifest, cases: Case[]) => cases.filter((c) => c.safe !== undefined && !safeConfirmed(c, manifest.root));
+
+/** What `cmtk review` says before a person decides on `safe: true`. */
+export const describeSafe = (c: Case): string => `${plain(c.id)} is marked safe: true. If you accept this, ${plain(c.request.method)} ${plain(c.request.path)} is sent with neither switch on, on every run, to every target. Accept only if you know this exact request changes nothing. A journey or script may write, even on a GET. Changing the case later ends your confirmation.`;
+
+/** A person saw exactly this case, and says it changes nothing. Only `cmtk review` calls this. */
+export function confirmSafe(manifest: Manifest, caseId: string, person: string, date: string, shown: Case): void {
+    const who = text(person, "Your name", 100);
+    if (looksLikeAgent(who)) throw new ManifestError(`${JSON.stringify(who)} reads as an agent or a tool. Only a person confirms \`safe: true\`.`);
+    const { c, file } = caseFileOf(manifest, caseId);
+    if (c.safe !== true) throw new ManifestError(`${caseId} is not marked safe: true.`);
+    if (JSON.stringify(c) !== JSON.stringify(shown)) throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was confirmed; run \`cmtk review\` again.`);
+    editYaml(file, "", (doc) => stampSafe(caseNode(doc, caseId).node, who, date, safePrint(c, manifest.root)));
+}
+
+/** A person says no: the case stays, and now needs both switches like any other write. */
+export function removeSafe(manifest: Manifest, caseId: string, shown: Case): void {
+    const { c, file } = caseFileOf(manifest, caseId);
+    if (JSON.stringify(c) !== JSON.stringify(shown)) throw new ManifestError(`${caseId} changed after it was shown to you. Nothing was changed; run \`cmtk review\` again.`);
+    editYaml(file, "", (doc) => {
+        const { node } = caseNode(doc, caseId);
+        for (const k of ["safe", "safe_confirmed_by", "safe_confirmed_on", "safe_print"]) node.delete(k);
     });
 }
 

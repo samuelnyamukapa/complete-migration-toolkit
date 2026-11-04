@@ -14,6 +14,7 @@ import { coveringDrift } from "./drift.js";
 import { evidenceDir, envHeaders, matchFor, SAFE_METHODS, settingsOf, STOP_AFTER_NO_ANSWER } from "./engine.js";
 import { DROPPED_HEADERS, looksSecret, REDACTED } from "./har.js";
 import { loadDrift, ManifestError } from "./manifest.js";
+import { OVERRIDE_HEADERS, overrideIn } from "./methods.js";
 import { noiseKind } from "./report.js";
 import { scrubRules } from "./trend.js";
 import type { Case, Difference, Manifest, ReportSettings, Target } from "./types.js";
@@ -132,8 +133,6 @@ export interface ShadowReport {
 }
 
 const DEFAULT_HEADERS = new Set(["accept", "accept-language"]);
-const OVERRIDE_HEADERS = new Set(["x-http-method-override", "x-http-method", "x-method-override"]);
-const OVERRIDE_QUERY = /^(_method|\$method|x-http-method(-override)?|x-method-override)$/i;
 const NO_ANSWER = /^(ETIMEDOUT|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENETUNREACH|ENOTFOUND|EAI_AGAIN)\b/;
 const MAX_PATH = 8000;
 const MAX_PLACES = 200;
@@ -299,17 +298,7 @@ function lineReader(format: ShadowFormat) {
 function unsafeWhy(method: string, raw: RawRequest): string | undefined {
     if (!SAFE_METHODS.has(method)) return method;
     if (raw.hasBody) return `${method} with a body`;
-    for (const [k, v] of Object.entries(raw.headers)) {
-        if (OVERRIDE_HEADERS.has(k.toLowerCase()) && !SAFE_METHODS.has(v.trim().toUpperCase())) return `${method} that overrides its method`;
-    }
-    const q = raw.target.indexOf("?");
-    if (q >= 0) {
-        for (const pair of raw.target.slice(q + 1).split("&")) {
-            const eq = pair.indexOf("=");
-            if (eq > 0 && OVERRIDE_QUERY.test(decoded(pair.slice(0, eq))) && !SAFE_METHODS.has(decoded(pair.slice(eq + 1)).trim().toUpperCase())) return `${method} that overrides its method`;
-        }
-    }
-    return undefined;
+    return overrideIn(raw.target, raw.headers) === undefined ? undefined : `${method} that overrides its method`;
 }
 
 /** Numbers, GUIDs, long hex and redacted values become {id}, so one endpoint is one line of the report. */
