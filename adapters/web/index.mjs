@@ -8,7 +8,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import readline from "node:readline";
 
-import { clean, insideProject, runCase } from "./journey.mjs";
+import { clean, insideProject, runCase, secretsOf } from "./journey.mjs";
 
 const require = createRequire(import.meta.url);
 console.log = console.error; // nothing but the protocol on stdout
@@ -65,7 +65,7 @@ async function serveFolder(rel) {
 function redact(reply, secrets) {
     const { screenshots, ...rest } = reply;
     let text = JSON.stringify(rest);
-    for (const [name, value] of secrets) {
+    for (const [name, value] of [...secrets].sort((x, y) => String(y[1]).length - String(x[1]).length)) {
         if (String(value).length < 4) continue;
         const inJson = JSON.stringify(String(value)).slice(1, -1);
         text = text.split(inJson).join(`<secret ${clean(name)}>`);
@@ -84,7 +84,7 @@ function describe() {
 }
 
 async function run(testCase, target, headers) {
-    const secrets = new Map(Object.entries(headers ?? {}));
+    const secrets = secretsOf(headers);
     const base = target.serve_folder ? await serveFolder(target.serve_folder) : target.base_url;
     if (!base) return { error: `target ${target.name} has no base_url or serve_folder, so a web case cannot run on it` };
     let b;

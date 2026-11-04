@@ -29,8 +29,41 @@ export function insideProject(rel, what) {
     return full;
 }
 
-/** Page text as a report may hold it: one line, no control characters, not too long. */
-export const clean = (text) => String(text ?? "").replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁦-⁩]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 500);
+const oneLine = (text) => String(text ?? "").replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]+/g, " ").replace(/\s+/g, " ").trim();
+
+/** The longest first, so a whole header value goes before the token inside it. Short values would only mangle text. */
+const longestFirst = (secrets) => [...secrets].map(([name, value]) => [name, String(value)]).filter(([, value]) => value.length >= 4).sort((x, y) => y[1].length - x[1].length);
+
+/**
+ * Header credentials as a page might show them: the value, the token without its scheme, and what Basic encodes.
+ * A page can still split, reverse or re-encode a value: nothing here can find that.
+ */
+export function secretsOf(headers) {
+    const out = new Map();
+    for (const [name, raw] of Object.entries(headers ?? {})) {
+        const value = String(raw);
+        out.set(name, value);
+        const m = /^(\S+)\s+(\S.*)$/.exec(value);
+        if (!m) continue;
+        out.set(`${name} token`, m[2]);
+        if (m[1].toLowerCase() !== "basic") continue;
+        const decoded = Buffer.from(m[2], "base64").toString("utf8");
+        out.set(`${name} decoded`, decoded);
+        const colon = decoded.indexOf(":");
+        if (colon >= 0) out.set(`${name} password`, decoded.slice(colon + 1));
+    }
+    return out;
+}
+
+/** The secrets of the case running now. One process runs one case at a time. */
+let current = new Map();
+
+/** Page text as a report may hold it: one line, no control characters, no secret, not too long. Secrets go first: cutting first would leave part of one. */
+export const clean = (text) => {
+    let line = oneLine(text);
+    for (const [name, value] of longestFirst(current)) line = line.split(oneLine(value)).join(`<secret ${oneLine(name)}>`);
+    return line.slice(0, 500);
+};
 
 const pathOf = (url) => { try { return new URL(url).pathname; } catch { return String(url); } };
 const glob = (pattern) => new RegExp(`^${String(pattern).split("*").map((p) => p.replace(/[.+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`);
@@ -507,6 +540,7 @@ async function addAuthenticator(session, spec) {
 
 /** Runs one case on one target and returns an observation. */
 export async function runCase(browser, written, target, headers, baseUrl, secrets, { record } = {}) {
+    current = secrets;
     // The conformance kit sends a case as written, so a request may still be one line.
     const line = typeof written.request === "string" ? /^(\S+)\s+(\S+)$/.exec(written.request.trim()) : undefined;
     const c = line ? { ...written, request: { method: line[1], path: line[2] } } : written;
