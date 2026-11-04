@@ -1,0 +1,15 @@
+# Samples the conformance kit replays twice: `cmtk adapter check mailbox --target <name>`.
+# The target needs capture_url. MAIL-002 also needs a system at base_url with a /send that sends mail;
+# change its path to something your system does.
+cases:
+  - id: MAIL-001
+    name: what the mailbox holds now, read without touching anything
+    surface: mailbox
+    request: { method: GET, path: /mailbox }
+  - id: MAIL-002
+    name: a case that makes the system send a known email
+    surface: mailbox
+    request:
+      method: POST
+      path: /send
+      body: { template: receipt, to: ann@example.test }
