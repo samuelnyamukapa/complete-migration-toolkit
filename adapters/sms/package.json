@@ -1,0 +1,11 @@
+{
+    "name": "cmtk-adapter-sms",
+    "version": "0.0.0",
+    "private": true,
+    "description": "cmtk adapter: the text messages a system would send, from a local capture or Twilio test credentials.",
+    "type": "module",
+    "license": "Apache-2.0",
+    "engines": {
+        "node": ">=22.5"
+    }
+}

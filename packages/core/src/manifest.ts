@@ -3,6 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
 
+import { expectProblem } from "./expect-shape.js";
+import { historyOf } from "./history.js";
+import { looksLikeAgent } from "./people.js";
 import { BOUNDARY_KINDS, MATCH_LEVELS, type Case, type Drift, type Manifest, type MatchLevel, type Request, type Target } from "./types.js";
 
 export class ManifestError extends Error {}
@@ -28,6 +31,12 @@ export function readStructured(file: string): unknown {
     }
 }
 
+const share = (v: unknown, where: string): number => {
+    if (v === undefined) return 0;
+    if (typeof v !== "number" || !(v >= 0 && v <= 1)) throw new ManifestError(`\`${where}\` must be a number from 0 to 1: the share of a screenshot's pixels that may change.`);
+    return v;
+};
+
 const level = (v: unknown, where: string): MatchLevel => {
     if (v === undefined) return "exact";
     if (!MATCH_LEVELS.includes(v as MatchLevel)) throw new ManifestError(`${where}: match must be one of ${MATCH_LEVELS.join(", ")}.`);
@@ -47,6 +56,7 @@ export function loadManifest(file: string): Manifest {
         const target: Target = { name };
         for (const [k, v] of Object.entries(spec)) {
             if (k === "name") throw new ManifestError(`targets.${name}: \`name\` is set from the key; remove it.`);
+            if (k === "surfaces") { target.surfaces = surfaceList(v, `targets.${name}.surfaces`); continue; }
             if (!["string", "number", "boolean"].includes(typeof v)) throw new ManifestError(`targets.${name}.${k} must be text, a number or true/false.`);
             target[k] = v as string | number | boolean;
         }
@@ -68,10 +78,29 @@ export function loadManifest(file: string): Manifest {
         return { path: o.path, match: level(o.match, `overrides[${i}]`) };
     });
     const contracts = ((raw.contracts ?? []) as any[]).map((c, i) => {
+        if (String(c?.kind ?? "").toLowerCase() === "assembly") {
+            const list = (v: unknown) => Array.isArray(v) && v.length > 0 && v.every((x) => typeof x === "string" && x.trim());
+            if (typeof c.legacy !== "string" || typeof c.candidate !== "string") throw new ManifestError(`contracts[${i}] is kind assembly, so it needs \`legacy\` and \`candidate\`: each an assembly or REA's saved output, inside the project.`);
+            if (!list(c.types)) throw new ManifestError(`contracts[${i}] is kind assembly, so it needs \`types\`: the types that form the contract, such as [MyApp.Services.ICatalogService].`);
+            if (c.namespace_map !== undefined && (typeof c.namespace_map !== "object" || c.namespace_map === null || Array.isArray(c.namespace_map) || !Object.values(c.namespace_map).every((v) => typeof v === "string"))) throw new ManifestError(`contracts[${i}].namespace_map maps a legacy namespace to a candidate namespace, such as { MyApp: MyApp.Core }.`);
+            if (c.known_types !== undefined && !list(c.known_types)) throw new ManifestError(`contracts[${i}].known_types is a list of type names.`);
+            const name = String(c.name ?? c.legacy);
+            return { name, kind: "assembly", path: "", assembly: { legacy: c.legacy, candidate: c.candidate, types: c.types as string[], ...(c.namespace_map ? { namespace_map: c.namespace_map as Record<string, string> } : {}), ...(c.known_types ? { known_types: c.known_types as string[] } : {}) } };
+        }
         if (!c || typeof c.path !== "string" || !c.path.startsWith("/")) throw new ManifestError(`contracts[${i}] needs a \`path\` starting with '/', served by every target.`);
         return { name: String(c.name ?? c.path), kind: String(c.kind ?? "text"), path: c.path };
     });
     const scrub = raw.scrub ?? {};
+    const adapters = adaptersOf(raw.adapters);
+    const known = (surface: string, where: string) => {
+        if (surface !== "http" && !adapters[surface]) throw new ManifestError(`${where} names ${JSON.stringify(surface)}, which has no adapter. Add it under \`adapters:\` in cmtk.yaml, or use http.`);
+    };
+    for (const t of Object.values(targets)) {
+        for (const s of t.surfaces ?? []) known(s, `targets.${t.name}.surfaces`);
+        if (t.surfaces?.includes("http") && !t.base_url) throw new ManifestError(`targets.${t.name}.surfaces lists http, so it needs a base_url.`);
+    }
+    const compareOnly = raw.compare_only_surfaces === undefined ? [] : surfaceList(raw.compare_only_surfaces, "compare_only_surfaces");
+    for (const s of compareOnly) known(s, "compare_only_surfaces");
     return {
         system: raw.system,
         targets,
@@ -81,21 +110,31 @@ export function loadManifest(file: string): Manifest {
         match: level(raw.match, "match"),
         overrides,
         scrub: { json_paths: scrub.json_paths ?? [], xml_ignore: scrub.xml_ignore ?? [], regex: scrub.regex ?? [] },
+        visual_tolerance: share(raw.visual_tolerance, "visual_tolerance"),
         compare_headers: (raw.compare_headers ?? ["content-type"]).map((h: string) => String(h).toLowerCase()),
         contracts,
         cases: globsOf(raw.cases),
         drift: pathOf(raw.drift, "drift", "cmtk/drift.yaml"),
+        known_issues: pathOf(raw.known_issues, "known_issues", "cmtk/known-issues.yaml"),
         proposals: pathOf(raw.proposals, "proposals", "cmtk/proposals.yaml"),
         explore_requests_per_day: positive(raw.explore_requests_per_day, "explore_requests_per_day", 1000),
         evidence: pathOf(raw.evidence, "evidence", "cmtk/evidence"),
+        evidence_history: historyOf(raw.evidence_history),
         allow_unsafe_methods: raw.allow_unsafe_methods === true,
         headers_from_env: raw.headers_from_env ?? {},
         timeout_s: positive(raw.timeout_s, "timeout_s", 30),
         insecure_tls: raw.insecure_tls === true,
-        adapters: adaptersOf(raw.adapters),
+        compare_only_surfaces: compareOnly,
+        adapters,
+        adapter_registries: registriesOf(raw.adapter_registries),
         root: path.dirname(path.resolve(file)),
         file: path.resolve(file),
     };
+}
+
+function surfaceList(v: unknown, where: string): string[] {
+    if (!Array.isArray(v) || v.length === 0 || !v.every((s) => typeof s === "string" && NAME.test(s))) throw new ManifestError(`${where} must be a list of surface names, such as [http, catalog].`);
+    return [...new Set(v as string[])];
 }
 
 function globsOf(v: unknown): string[] {
@@ -118,6 +157,18 @@ function positive(v: unknown, key: string, fallback: number): number {
     const n = Number(v);
     if (!Number.isFinite(n) || n <= 0) throw new ManifestError(`\`${key}\` must be a number of seconds above 0.`);
     return n;
+}
+
+function registriesOf(raw: unknown): Record<string, string> {
+    if (raw === undefined || raw === null) return {};
+    if (typeof raw !== "object" || Array.isArray(raw)) throw new ManifestError("adapter_registries must map a name to a git address or a folder.");
+    for (const [name, at] of Object.entries(raw)) {
+        if (!NAME.test(name)) throw new ManifestError(`adapter_registries: the name ${JSON.stringify(name)} must be letters, digits, '.', '-' and '_'.`);
+        if (typeof at !== "string" || !at.trim()) throw new ManifestError(`adapter_registries.${name} must be a git address or a folder.`);
+        // The value is not repeated: it may be the very secret this refuses. Git's credential helper or an ssh key carries it instead.
+        if (/^https?:\/\/[^/]*@|^[a-z][a-z0-9+.-]*:\/\/[^/@]*:[^/@]*@|^[^/\s@]*:[^/\s@]*@/i.test(at)) throw new ManifestError(`adapter_registries.${name} holds a credential. Remove it from cmtk.yaml, and let git's credential helper or your ssh key supply it.`);
+    }
+    return raw as Record<string, string>;
 }
 
 function adaptersOf(raw: unknown): Manifest["adapters"] {
@@ -147,7 +198,12 @@ export function inside(manifest: Pick<Manifest, "root">, rel: string): string {
     if (!within(manifest.root, full)) throw new ManifestError(`${rel} is outside the project folder.`);
     let existing = full;
     const rest: string[] = [];
-    while (!fs.existsSync(existing) && path.dirname(existing) !== existing) { rest.unshift(path.basename(existing)); existing = path.dirname(existing); }
+    while (!fs.existsSync(existing) && path.dirname(existing) !== existing) {
+        // A link that points nowhere reads as missing, and writing through it would create its target, wherever that is.
+        if (fs.lstatSync(existing, { throwIfNoEntry: false })?.isSymbolicLink()) throw new ManifestError(`${rel} leads through a link that points nowhere (${existing}).`);
+        rest.unshift(path.basename(existing));
+        existing = path.dirname(existing);
+    }
     const real = path.join(fs.realpathSync.native(existing), ...rest);
     if (!within(fs.realpathSync.native(manifest.root), real)) throw new ManifestError(`${rel} leads outside the project folder through a link (to ${real}).`);
     return full;
@@ -188,6 +244,12 @@ export function loadCases(manifest: Manifest): Case[] {
             }
             if (c.match !== undefined) level(c.match, where);
             if (c.draft !== undefined && typeof c.draft !== "boolean") throw new ManifestError(`${where}: \`draft\` must be true or false.`);
+            if (c.expect_draft !== undefined && typeof c.expect_draft !== "boolean") throw new ManifestError(`${where}: \`expect_draft\` must be true or false.`);
+            if (c.expect !== undefined && c.expect !== null) {
+                const bad = expectProblem(c.expect);
+                if (bad) throw new ManifestError(`${where}: \`expect:\` ${bad}.`);
+            }
+            if (c.expect_draft && !c.expect) throw new ManifestError(`${where}: \`expect_draft\` marks a drafted \`expect:\` block, and this case has none.`);
             const method = String(req.method ?? "GET").toUpperCase();
             if (!/^[A-Z]+$/.test(method)) throw new ManifestError(`${where}: the method ${JSON.stringify(req.method)} must be letters only, such as GET or POST.`);
             const headers: Record<string, string> = {};
@@ -273,6 +335,8 @@ export function loadDrift(manifest: Manifest): Drift[] {
         for (const k of ["id", "where", "reason", "approved_by"]) {
             if (typeof d?.[k] !== "string" || !d[k].trim()) throw new ManifestError(`${manifest.drift} entry ${i + 1}: \`${k}\` is required. Only a named person approves drift.`);
         }
+        if (looksLikeAgent(d.approved_by)) throw new ManifestError(`${manifest.drift} entry ${i + 1}: \`approved_by\` must name a person, not an agent. An agent proposes with cmtk_propose, and a person approves with \`cmtk review\`.`);
+        if ((d.case ?? "*") === "*" && d.where.replace(/[*$.[\]\s:]/g, "").length < 2) throw new ManifestError(`${manifest.drift} entry ${i + 1}: this would approve every difference in every case. Name a case, or a place from a report such as $.items[*].price.`);
         return { id: d.id, case: d.case ?? "*", where: d.where, reason: d.reason, approved_by: d.approved_by, ...(d.date ? { date: String(d.date) } : {}) };
     });
 }
@@ -286,6 +350,7 @@ targets:
   candidate: { base_url: ${JSON.stringify(candidate)} }   # the system under test
 
 cases: [cmtk/cases/*.yaml]    # one case per acceptance criterion; agents' drafts wait for \`cmtk review\`
+# known_issues: cmtk/known-issues.yaml   # failures a named person accepted; only a person adds an entry
 evidence: cmtk/evidence
 
 allow_unsafe_methods: false   # POST, PUT, PATCH, DELETE only against disposable test data
@@ -303,7 +368,9 @@ targets:
   legacy:    { base_url: ${JSON.stringify(reference)} }   # the reference: today's system
   candidate: { base_url: ${JSON.stringify(candidate)} }   # the system under test
 
-# How strict \`cmtk compare\` is: exact | semantic | contract. Loosen per path with overrides.
+# A target reached only in part can list what it offers: surfaces: [catalog]. See docs/MANIFEST.md.
+
+# How strict \`cmtk compare\` is: exact | semantic | contract, or journey, structure or visual for a UI adapter. Loosen per path with overrides.
 match: exact
 overrides: []
 #  - { path: "/api/admin/*", match: semantic }
@@ -321,6 +388,7 @@ contracts: []
 
 cases: [cmtk/cases/*.yaml]
 drift: cmtk/drift.yaml        # approved differences, each with a named approver
+# known_issues: cmtk/known-issues.yaml   # failures a named person accepted; only a person adds an entry
 evidence: cmtk/evidence
 
 allow_unsafe_methods: false   # POST, PUT, PATCH, DELETE only against disposable test data

@@ -1,0 +1,3 @@
+# The sample inputs are bytes: a hash in the golden files depends on every one.
+samples/input/* -text
+*.ebc binary

@@ -100,7 +100,7 @@ export function draftDefects(manifest: Manifest, mode: "run" | "compare"): { fil
     const groups = new Map<string, { title: string; ids: string[]; expected: string; actual: string }>();
 
     for (const c of report.cases) {
-        if (mode === "run" && c.result === "FAIL") {
+        if (mode === "run" && c.result === "FAIL" && !c.known_issues) { // a known issue is already recorded, by a named person
             const f = c.failures ?? [];
             const key = f.map((x) => `${norm(x.check)}|${x.expected}|${x.actual}`).join("\n") + (fieldOf(cases.get(c.id)) ? `\nfield:${fieldOf(cases.get(c.id))}` : "");
             const g = groups.get(key) ?? {

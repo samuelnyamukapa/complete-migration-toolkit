@@ -1,0 +1,13 @@
+cmtk 0.6 on eShop, 2026-11-04T14:08:16
+legacy answers 200
+signatures still hold (run) | exit 0 | expected 0 | 
+signatures still hold (compare) | exit 0 | expected 0 | compare: PARITY on 2026-10-16, signed by samuel nyamukapa (manager): accept, 2026-10-18
+run on legacy | exit 1 | expected 1, 40 of 41 | Test verdict for eshop-legacy: FAIL | Cases: 40 pass, 1 fail, 0 skipped, 0 error
+compare with CatalogCore | exit 0 | expected 0, PARITY 24 of 24 | Comparison verdict for eshop-catalogcore: PARITY | Cases: 24 match, 0 drift, 0 different, 0 skipped, 0 error
+canary | exit 0 | expected 1, NO PARITY | Comparison verdict for eshop-canary: PARITY | Cases: 24 match, 0 drift, 0 different, 0 skipped, 0 error
+one manifest, run | exit 1 | expected 1, HTTP cases only | Test verdict for eshop: FAIL | Cases: 40 pass, 1 fail, 0 skipped, 0 error
+one manifest, compare | exit 4 | expected 4, PARTIAL COMPARISON | Comparison verdict for eshop: PARTIAL COMPARISON | Cases: 24 match, 0 drift, 0 different, 0 skipped, 0 error, 41 not comparable
+discover | exit 0 | expected 0 | 
+web adapter kit | exit 1 | expected 0 | 
+catalog journey in a browser | exit 2 | expected 0 | Test verdict for eshop-legacy: NO EVIDENCE | Cases: 0 pass, 0 fail, 0 skipped, 1 error
+desktop: no window called Orders

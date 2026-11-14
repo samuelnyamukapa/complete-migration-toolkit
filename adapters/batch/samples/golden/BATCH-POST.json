@@ -1,0 +1,26 @@
+{
+  "job": "post",
+  "exit_code": 0,
+  "files": [
+    {
+      "name": "balances.dat",
+      "size": 75,
+      "record_count": 3,
+      "keys": ["account"],
+      "sha256": "c66a78bb0c2c368f7ee4aa1d7c18d9cee30c34de6f5931b2303e9eeb049549c1",
+      "hash_of": "records sorted by key",
+      "records": {
+        "100001": { "account": "100001", "balance": "74.50" },
+        "100002": { "account": "100002", "balance": "7.50" },
+        "100003": { "account": "100003", "balance": "0.99" }
+      }
+    },
+    {
+      "name": "summary.txt",
+      "size": 22,
+      "sha256": "7f960789da476c0184b21e30e2fd0868d3d646a07b500a1b1f8f134f3696b6f2",
+      "record_count": 2,
+      "records": ["accounts=3", "total=8299"]
+    }
+  ]
+}

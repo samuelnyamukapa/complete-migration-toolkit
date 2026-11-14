@@ -216,13 +216,14 @@ test("cmtk compare: approved drift gives DRIFT ONLY, not PARITY", async () => {
 });
 
 test("secrets come from the environment, reach the system, and never reach disk", async () => {
-    const p = await project("cases:\n  - { id: WHO, request: GET /api/who, expect: { body_contains: [Bearer] } }\n", "headers_from_env: { Authorization: CMTK_TEST_TOKEN }\n");
+    const p = await project("cases:\n  - { id: WHO, request: GET /api/who, expect: { body_contains: [REDACTED] } }\n", "headers_from_env: { Authorization: CMTK_TEST_TOKEN }\n");
     process.env.CMTK_TEST_TOKEN = "Bearer s3cr3t-value";
     try {
         const r = await run(p.manifest(), { date: "2026-10-16" });
         assert.equal(r.verdict, "PASS");
         const answer = fs.readFileSync(path.join(p.dir, "cmtk/evidence/run/answers/WHO.json"), "utf8");
-        assert.match(answer, /s3cr3t/, "the system echoed it back, so its own answer holds it");
+        assert.doesNotMatch(answer, /s3cr3t/, "the system echoed it back, and the evidence still does not hold it");
+        assert.match(answer, /REDACTED/, "so it reached the system");
         for (const f of ["REPORT.md", "REPORT.json"]) assert.ok(!fs.readFileSync(path.join(p.dir, "cmtk/evidence/run", f), "utf8").includes("s3cr3t"), f);
         assert.ok(!fs.readFileSync(path.join(p.dir, "cmtk.yaml"), "utf8").includes("s3cr3t"));
     } finally {

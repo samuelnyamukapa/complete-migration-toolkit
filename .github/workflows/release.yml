@@ -1,0 +1,97 @@
+name: release
+
+# A tag such as v1.2.3 runs this. It tests on Windows and Linux, publishes with provenance (a signed record of where
+# each package was built), then tries the published packages on clean Windows and Linux machines.
+# The token lives only in GitHub's secret store, under the `npm` environment, and only the publish step can read it.
+# See docs/RELEASING.md.
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  test:
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: node scripts/check-package.mjs
+      - run: node scripts/check-release.mjs "${{ github.ref_name }}"
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      # No npm cache here: what is published is built from a clean install.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: node scripts/check-release.mjs "${{ github.ref_name }}"
+      - run: node scripts/check-package.mjs
+      - name: Publish with provenance
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          # In dependency order. A version already on npm is left alone, so a failed release can be run again.
+          for dir in packages/core packages/cli packages/mcp packages/npx-cmtk; do
+            name=$(node -p "require('./$dir/package.json').name")
+            version=$(node -p "require('./$dir/package.json').version")
+            if npm view "$name@$version" version > /dev/null 2>&1; then
+              echo "$name@$version is already on npm"
+            else
+              npm publish "./$dir" --provenance --access public --ignore-scripts
+            fi
+          done
+
+  try-it:
+    needs: publish
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: npx cmtk --version, from the registry
+        shell: bash
+        run: |
+          want="${GITHUB_REF_NAME#v}"
+          for attempt in 1 2 3 4 5 6; do
+            got=$(npx --yes "cmtk@$want" --version 2>/dev/null || true)
+            [ "$got" = "$want" ] && break
+            sleep 20
+          done
+          [ "$got" = "$want" ]
+          [ "$(npx --yes -p "complete-migration-toolkit@$want" cmtk --version)" = "$want" ]

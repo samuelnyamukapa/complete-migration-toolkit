@@ -1,0 +1,11 @@
+{
+    "name": "cmtk-adapter-mailbox",
+    "version": "0.0.0",
+    "private": true,
+    "description": "cmtk adapter: the emails a system sends, read from a Mailpit or MailHog capture server.",
+    "type": "module",
+    "license": "Apache-2.0",
+    "engines": {
+        "node": ">=22.5"
+    }
+}

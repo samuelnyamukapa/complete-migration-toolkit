@@ -1,0 +1,9 @@
+# The cases `cmtk adapter check desktop` runs, against the stub app, on any system.
+check_target: { stub_app: adapters/desktop/samples/app-v1.json }
+cases:
+  - id: sample-order
+    name: The recorded order journey
+    surface: desktop
+    safe: true
+    request: POST /order
+    journey: { script: adapters/desktop/samples/order.json }

@@ -1,0 +1,19 @@
+{
+  "job": "ledger",
+  "exit_code": 0,
+  "files": [
+    {
+      "name": "ledger.ebc",
+      "size": 78,
+      "record_count": 3,
+      "keys": ["account"],
+      "sha256": "e3e4632049be90d2066e438d30d29ec11e8217d928dd588a62f3ba8d0fdc303b",
+      "hash_of": "records sorted by key",
+      "records": {
+        "100001": { "account": "100001", "amount": "125.50", "quantity": "3", "name": "ANNE" },
+        "100002": { "account": "100002", "amount": "-42.00", "quantity": "12", "name": "BJÖRN" },
+        "100003": { "account": "100003", "amount": "0.99", "quantity": "1", "name": "CHLOÉ" }
+      }
+    }
+  ]
+}

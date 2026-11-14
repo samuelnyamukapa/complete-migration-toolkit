@@ -1,0 +1,8 @@
+{
+  "name": "cmtk-adapter-batch",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Run a batch job on copies of its input files and report its output files as name, size, hash and records.",
+  "main": "index.mjs"
+}

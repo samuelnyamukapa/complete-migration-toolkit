@@ -1,0 +1,158 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/samuelnyamukapa/complete-migration-toolkit/main/schemas/trend.schema.json",
+  "title": "TREND.json from cmtk trend",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "tool",
+    "mode",
+    "system",
+    "runs",
+    "unreadable",
+    "differences",
+    "flaky",
+    "fixed",
+    "regressed",
+    "drift_stopped_matching",
+    "drift_never_matched",
+    "scrubs_never_fired",
+    "settings_changed",
+    "summary"
+  ],
+  "properties": {
+    "tool": {
+      "const": "cmtk"
+    },
+    "mode": {
+      "enum": [
+        "run",
+        "compare",
+        "shadow"
+      ]
+    },
+    "system": {
+      "type": "string"
+    },
+    "runs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "run",
+          "verdict",
+          "counts",
+          "partial"
+        ],
+        "properties": {
+          "run": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}Z(-\\d+)?$"
+          },
+          "verdict": {
+            "type": "string"
+          },
+          "counts": {
+            "type": "object"
+          },
+          "partial": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "unreadable": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "differences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "where",
+          "state",
+          "runs",
+          "first_seen",
+          "last_seen",
+          "cases",
+          "approved"
+        ],
+        "properties": {
+          "state": {
+            "enum": [
+              "new",
+              "keeps coming back",
+              "gone",
+              "not checked"
+            ]
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "cases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "flaky": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "case",
+          "passed",
+          "failed",
+          "flips",
+          "errors",
+          "latest"
+        ]
+      }
+    },
+    "fixed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "regressed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "drift_stopped_matching": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "drift_never_matched": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scrubs_never_fired": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "settings_changed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "summary": {
+      "type": "string"
+    }
+  }
+}

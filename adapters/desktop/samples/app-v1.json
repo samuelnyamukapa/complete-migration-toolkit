@@ -1,0 +1,19 @@
+{
+  "start": "form",
+  "screens": {
+    "form": {
+      "title": "Orders 1.0",
+      "elements": [
+        { "automation_id": "qty", "name": "Quantity", "role": "edit", "value": "1" },
+        { "automation_id": "place", "name": "Place order", "role": "button", "go": "done" }
+      ]
+    },
+    "done": {
+      "title": "Order placed",
+      "elements": [
+        { "automation_id": "summary", "name": "Summary", "role": "text", "value": "{qty} items" },
+        { "automation_id": "total", "name": "Total", "role": "text", "value": "30.00" }
+      ]
+    }
+  }
+}

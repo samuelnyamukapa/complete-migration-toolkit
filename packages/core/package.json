@@ -1,16 +1,32 @@
 {
   "name": "@cmtk/core",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "Complete Migration Toolkit engine: cases, adapters, expectations, comparison, drift ledger and reports.",
   "license": "Apache-2.0",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samuelnyamukapa/complete-migration-toolkit.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/samuelnyamukapa/complete-migration-toolkit#readme",
+  "bugs": "https://github.com/samuelnyamukapa/complete-migration-toolkit/issues",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js"
   },
   "files": [
-    "dist"
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "NOTICE"
   ],
   "dependencies": {
     "@faker-js/faker": "10.6.0",

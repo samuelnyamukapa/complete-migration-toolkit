@@ -1,5 +1,67 @@
 # Changelog
 
+## 0.6.0 (2026-11-04)
+
+Everything below passes its tests in CI on Windows and Linux unless it says otherwise. Each adapter is **experimental**: none has been used on a real project yet.
+
+### Verdicts and scope
+
+- **Known issues (#40):** `cmtk/known-issues.yaml` records a legacy defect once, by a named person. New verdict PASS WITH KNOWN ISSUES, with exit code 4. New failures stay FAIL, and stale entries are reported. An item in `fails` must give `actual` (a `check: body` may give `expected`), so it can't accept any failure.
+- **Surfaces (#42):** a target may list its `surfaces`. A case on a surface one system lacks is "not comparable", the report states the scope, and the verdict is PARTIAL COMPARISON, exit code 4, never PARITY. `compare_only_surfaces` lets `cmtk run` pass on the same manifest.
+- **HAR drafts (#41):** `cmtk import-har --draft-expect` drafts the status and media type. Cases stay SKIPPED until a person confirms them.
+- **A case whose surface has no adapter no longer stops the run.** The report names it and cannot pass (exit 2, was 3).
+- **An answer over 5 MB no longer reads as PASS or PARITY.** It is INCOMPLETE, or PARTIAL COMPARISON at best. A contract over 5 MB is an error, never IDENTICAL.
+- **An `expect:` that checks nothing is refused.** A misspelt key, an empty block or a JSON check with no test in it stops at load, so `cmtk check` reports it.
+- **`cmtk compare` resets only before a case that writes.** A read compares what each system holds now, and says so on the case. An adapter asks for the old behaviour with `reset_before_reads` in `describe`.
+
+### Adapters
+
+- **The web adapter stops redirects and worker sockets off the target**, and credentials go only to the target. SMS checks every recipient form before any network call. The SQL guard allows function calls from a list. Batch, queue, database and desktop close path, host and stand-in gaps. Each README says what stays unprotected.
+- **C# template (#20):** `cmtk adapter new <name> --lang csharp`.
+- **`adapter check`:** `--target <name>` and `check_target:` in samples, for adapters that need settings.
+- **mailbox (#16):** Mailpit, tested against a real one in CI, and MailHog, on a stand-in.
+- **sms (#17):** a local capture, then Twilio test credentials. An allow-list refuses other numbers before any network call. Twilio has not run against the real service.
+- **payments (#18):** Stripe test mode. Live keys are refused before any network call. Tested on a stand-in; a run on a real test account is still to do.
+- **queue (#19):** RabbitMQ, tested against a real one in CI, and Azure Service Bus, not yet run against a real namespace.
+- **batch (#22):** copies of the inputs, fixed-width and EBCDIC records, matched by key. Not yet run on CardDemo.
+- **database (#23):** SQL Server and PostgreSQL, both tested against real servers in CI. Refuses a login that can write, and sends only SELECT.
+- **worker (#21):** a Windows service or .NET worker, by its files and event log. Not yet run against a real Windows service.
+- **Registries (#24):** `cmtk adapter add` (a person at a terminal, pinned to a commit) and `cmtk adapter list`, private registries, and [a contributing guide](docs/ADAPTER-CONTRIBUTING.md).
+
+### UI
+
+- **web (#25, #26, #28, #29):** journeys through Playwright with checks in code; `journey`, `structure` and `visual` match levels; masked screenshots; test authenticators (TOTP, virtual passkeys); recorded replay with zero model calls, shown in the report; locator repairs as proposals, which never change an expectation. Email and SMS codes are not wired to the capture adapters yet.
+- **desktop (#27):** recorded scripts with a Windows UI Automation reader, and the `/cmtk:desktop` skill. Experimental: `isolated_vm` is a declaration, not a check.
+
+### Discover and test data
+
+- **Assembly contracts (#44):** `kind: assembly`, through REA, with a namespace map. Findings are approved like drift.
+- **Routes (#46):** `cmtk discover --routes-from` reads `[Route]` from C# source. REA gives only a hash of the value, which confirms it.
+- **Discover (#45):** classes VSAM files and says what each boundary needs. Tried on a hand-written fixture, not on CardDemo.
+- **Data files (#50):** CSV options, edge files, copybooks and EBCDIC, and `cmtk data diff`, which compares by meaning. PDF and Word are not done.
+- **XSD and SOAP (#52):** rows from an XSD with patterns respected, XML negatives, and SOAP envelopes.
+- **Seeding (#51):** `cmtk data seed` and `reconcile`, from a DDL script, with virtual keys and load order. The live catalogue reader and the mapping step are not done.
+- **`/cmtk:data` (#53):** proposals wait for `cmtk review`, and disagreements are findings. `cmtk data traffic` compares a HAR with a schema.
+
+### Safety, from an independent review
+
+- **`safe: true` needs a person.** The mark alone does nothing: the case needs both switches, and an adapter isn't told. `cmtk review` shows it on its own, never in bulk, and records `safe_confirmed_by` with a fingerprint of the request and its files. **Existing cases marked `safe` need confirming once.**
+- **A read that asks to be a write needs both switches:** a method-override header, `_method` and its spellings in a query or after a `;`, and a body on an HTTP read. `cmtk run`, `compare`, `shadow`, `probe` and exploration share one check.
+- **Secrets in answers.** A `headers_from_env` value a system echoes is replaced in the evidence, in the forms it can spot, and so is a `Set-Cookie` value. Exploration logs REDACTED for what an agent passed.
+- **Names.** Both ledgers, review, sign-off and installs refuse a name that reads as an agent or a tool. The drift ledger refuses an entry that approves every difference in every case.
+- **Installed adapters.** One whose code, or `bin`, `obj` or `node_modules` files, no longer match what a person approved is not started, and its cases read ERROR. `cmtk adapter approve` lets a person accept their own build.
+- **Files.** A link that points nowhere and an `xs:include` that leaves the project are refused, `adapters/` as a link is refused, and table names are escaped in `control-totals.sql`.
+- **Redaction.** HAR import and `cmtk shadow` find more credentials and personal data, by shape and by name. It is still pattern matching, and [the test plan](docs/TEST-PLAN.md) states the limit.
+- **Terminals and agents.** `cmtk` shows control characters and text-direction marks as text. `cmtk_run` and `cmtk_compare` mark what a system sent as data.
+- **The terminal check is named for what it is.** It stops accidents and agents that follow the rules, not a determined script. [The test plan](docs/TEST-PLAN.md#what-the-terminal-check-does-and-does-not-stop) says what to require in CI where a decision must be binding.
+
+### Shadow traffic, trends, release
+
+- **`cmtk shadow` (#30):** replays read-only requests from a log to both systems. Nothing personal is stored.
+- **`--dated` and `cmtk trend` (#31):** verdicts over time, flaky cases, and clean-up that never follows links. Reports gain `scrub_fired`.
+- **Release (#32):** a workflow and package checks. Nothing has been published.
+- **Formats (#33):** [docs/FORMATS.md](docs/FORMATS.md), JSON Schemas in `schemas/`, and tested limits.
+
 ## 0.5.2 (2026-10-26)
 
 From reading the first form-post run on eShop (part 5 of the pilot).

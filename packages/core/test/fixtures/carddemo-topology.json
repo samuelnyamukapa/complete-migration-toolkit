@@ -1,0 +1,406 @@
+{
+ "_note": "Hand-written, in the shape of /modernize:map on AWS CardDemo. Not the output of a real run.",
+ "root": {
+  "kind": "system",
+  "name": "carddemo",
+  "id": "carddemo",
+  "children": [
+   {
+    "kind": "domain",
+    "name": "data",
+    "id": "data",
+    "children": [
+     {
+      "kind": "datastore",
+      "name": "ACCTDATA.VSAM.KSDS",
+      "id": "ACCTDATA.VSAM.KSDS",
+      "type": "VSAM KSDS",
+      "dsn": "AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS"
+     },
+     {
+      "kind": "datastore",
+      "name": "CARDDATA.VSAM.KSDS",
+      "id": "CARDDATA.VSAM.KSDS",
+      "type": "VSAM KSDS",
+      "dsn": "AWS.M2.CARDDEMO.CARDDATA.VSAM.KSDS"
+     },
+     {
+      "kind": "datastore",
+      "name": "CARDXREF.VSAM.KSDS",
+      "id": "CARDXREF.VSAM.KSDS",
+      "type": "VSAM KSDS",
+      "dsn": "AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS"
+     },
+     {
+      "kind": "datastore",
+      "name": "CUSTDATA.VSAM.KSDS",
+      "id": "CUSTDATA.VSAM.KSDS",
+      "type": "VSAM KSDS",
+      "dsn": "AWS.M2.CARDDEMO.CUSTDATA.VSAM.KSDS"
+     },
+     {
+      "kind": "datastore",
+      "name": "DISCGRP.VSAM.KSDS",
+      "id": "DISCGRP.VSAM.KSDS",
+      "type": "VSAM KSDS",
+      "dsn": "AWS.M2.CARDDEMO.DISCGRP.VSAM.KSDS"
+     },
+     {
+      "kind": "datastore",
+      "name": "TCATBALF.VSAM.KSDS",
+      "id": "TCATBALF.VSAM.KSDS",
+      "type": "VSAM KSDS",
+      "dsn": "AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS"
+     },
+     {
+      "kind": "datastore",
+      "name": "TRANCATG.VSAM.KSDS",
+      "id": "TRANCATG.VSAM.KSDS",
+      "type": "VSAM KSDS",
+      "dsn": "AWS.M2.CARDDEMO.TRANCATG.VSAM.KSDS"
+     },
+     {
+      "kind": "datastore",
+      "name": "TRANSACT.VSAM.KSDS",
+      "id": "TRANSACT.VSAM.KSDS",
+      "type": "VSAM KSDS",
+      "dsn": "AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS"
+     },
+     {
+      "kind": "datastore",
+      "name": "TRANTYPE.VSAM.KSDS",
+      "id": "TRANTYPE.VSAM.KSDS",
+      "type": "VSAM KSDS",
+      "dsn": "AWS.M2.CARDDEMO.TRANTYPE.VSAM.KSDS"
+     },
+     {
+      "kind": "datastore",
+      "name": "USRSEC.VSAM.KSDS",
+      "id": "USRSEC.VSAM.KSDS",
+      "type": "VSAM KSDS",
+      "dsn": "AWS.M2.CARDDEMO.USRSEC.VSAM.KSDS"
+     },
+     {
+      "kind": "datastore",
+      "name": "DALYTRAN.PS",
+      "id": "DALYTRAN.PS",
+      "type": "sequential",
+      "dsn": "AWS.M2.CARDDEMO.DALYTRAN.PS"
+     },
+     {
+      "kind": "datastore",
+      "name": "DALYREJS.PS",
+      "id": "DALYREJS.PS",
+      "type": "sequential",
+      "dsn": "AWS.M2.CARDDEMO.DALYREJS.PS"
+     },
+     {
+      "kind": "datastore",
+      "name": "SYSTRAN.PS",
+      "id": "SYSTRAN.PS",
+      "type": "sequential",
+      "dsn": "AWS.M2.CARDDEMO.SYSTRAN.PS"
+     },
+     {
+      "kind": "datastore",
+      "name": "TRANREPT.PS",
+      "id": "TRANREPT.PS",
+      "type": "sequential",
+      "dsn": "AWS.M2.CARDDEMO.TRANREPT.PS"
+     },
+     {
+      "kind": "datastore",
+      "name": "STATEMNT.PS",
+      "id": "STATEMNT.PS",
+      "type": "sequential",
+      "dsn": "AWS.M2.CARDDEMO.STATEMNT.PS"
+     }
+    ]
+   },
+   {
+    "kind": "domain",
+    "name": "batch",
+    "id": "batch",
+    "children": [
+     {
+      "kind": "job",
+      "name": "ACCTFILE",
+      "id": "ACCTFILE",
+      "type": "JCL",
+      "file": "app/jcl/ACCTFILE.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "CARDFILE",
+      "id": "CARDFILE",
+      "type": "JCL",
+      "file": "app/jcl/CARDFILE.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "CUSTFILE",
+      "id": "CUSTFILE",
+      "type": "JCL",
+      "file": "app/jcl/CUSTFILE.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "XREFFILE",
+      "id": "XREFFILE",
+      "type": "JCL",
+      "file": "app/jcl/XREFFILE.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "TRANFILE",
+      "id": "TRANFILE",
+      "type": "JCL",
+      "file": "app/jcl/TRANFILE.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "TCATBALF",
+      "id": "TCATBALF",
+      "type": "JCL",
+      "file": "app/jcl/TCATBALF.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "DISCGRP",
+      "id": "DISCGRP",
+      "type": "JCL",
+      "file": "app/jcl/DISCGRP.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "TRANCATG",
+      "id": "TRANCATG",
+      "type": "JCL",
+      "file": "app/jcl/TRANCATG.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "TRANTYPE",
+      "id": "TRANTYPE",
+      "type": "JCL",
+      "file": "app/jcl/TRANTYPE.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "DUSRSECJ",
+      "id": "DUSRSECJ",
+      "type": "JCL",
+      "file": "app/jcl/DUSRSECJ.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "DEFGDGB",
+      "id": "DEFGDGB",
+      "type": "JCL",
+      "file": "app/jcl/DEFGDGB.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "POSTTRAN",
+      "id": "POSTTRAN",
+      "type": "JCL",
+      "file": "app/jcl/POSTTRAN.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "INTCALC",
+      "id": "INTCALC",
+      "type": "JCL",
+      "file": "app/jcl/INTCALC.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "TRANBKP",
+      "id": "TRANBKP",
+      "type": "JCL",
+      "file": "app/jcl/TRANBKP.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "COMBTRAN",
+      "id": "COMBTRAN",
+      "type": "JCL",
+      "file": "app/jcl/COMBTRAN.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "CREASTMT",
+      "id": "CREASTMT",
+      "type": "JCL",
+      "file": "app/jcl/CREASTMT.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "TRANIDX",
+      "id": "TRANIDX",
+      "type": "JCL",
+      "file": "app/jcl/TRANIDX.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "OPENFIL",
+      "id": "OPENFIL",
+      "type": "JCL",
+      "file": "app/jcl/OPENFIL.jcl"
+     },
+     {
+      "kind": "job",
+      "name": "CLOSEFIL",
+      "id": "CLOSEFIL",
+      "type": "JCL",
+      "file": "app/jcl/CLOSEFIL.jcl"
+     }
+    ]
+   },
+   {
+    "kind": "domain",
+    "name": "online",
+    "id": "online",
+    "children": [
+     {
+      "kind": "screen",
+      "name": "COSGN00",
+      "id": "COSGN00",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "COMEN01",
+      "id": "COMEN01",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "COADM01",
+      "id": "COADM01",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "COACTVW",
+      "id": "COACTVW",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "COACTUP",
+      "id": "COACTUP",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "COCRDLI",
+      "id": "COCRDLI",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "COCRDSL",
+      "id": "COCRDSL",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "COCRDUP",
+      "id": "COCRDUP",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "COTRN00",
+      "id": "COTRN00",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "COTRN01",
+      "id": "COTRN01",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "COTRN02",
+      "id": "COTRN02",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "CORPT00",
+      "id": "CORPT00",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "COBIL00",
+      "id": "COBIL00",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "COUSR00",
+      "id": "COUSR00",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "COUSR01",
+      "id": "COUSR01",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "COUSR02",
+      "id": "COUSR02",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "screen",
+      "name": "COUSR03",
+      "id": "COUSR03",
+      "type": "CICS BMS map"
+     },
+     {
+      "kind": "program",
+      "name": "COSGN00C",
+      "id": "COSGN00C"
+     },
+     {
+      "kind": "program",
+      "name": "COMEN01C",
+      "id": "COMEN01C"
+     },
+     {
+      "kind": "program",
+      "name": "COACTVWC",
+      "id": "COACTVWC"
+     },
+     {
+      "kind": "program",
+      "name": "CBACT01C",
+      "id": "CBACT01C"
+     },
+     {
+      "kind": "program",
+      "name": "CBTRN02C",
+      "id": "CBTRN02C"
+     },
+     {
+      "kind": "program",
+      "name": "CBACT04C",
+      "id": "CBACT04C"
+     },
+     {
+      "kind": "program",
+      "name": "CBSTM03A",
+      "id": "CBSTM03A"
+     }
+    ]
+   }
+  ]
+ }
+}

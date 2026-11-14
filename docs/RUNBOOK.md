@@ -2,6 +2,8 @@
 
 Follow these steps in order. Each one says what to do, what you should see, and what to do if you don't. You need Node.js 22.5 or later.
 
+You also need the `cmtk` command. Today, from a clone of the toolkit, run `npm install`, `npm run build`, then `npm link -w packages/cli`. After the first release, write `npx cmtk` wherever these steps say `cmtk`, with nothing to install first.
+
 ## Part 1: test one system against its requirements
 
 1. **Start the system you want to test.** Note its address, for example `http://localhost:5002`.
@@ -32,8 +34,9 @@ Follow these steps in order. Each one says what to do, what you should see, and 
    cmtk run
    ```
 
-   - **You should see:** a verdict (PASS, FAIL, INCOMPLETE or NO EVIDENCE), the counts, any failures, and the path of the report.
-   - **FAIL:** read the failures. Either the system is wrong (raise a defect), or the expectation is wrong. Only the person who owns the requirement changes an expectation.
+   - **You should see:** a verdict (PASS, PASS WITH KNOWN ISSUES, FAIL, INCOMPLETE or NO EVIDENCE), the counts, any failures, and the path of the report.
+   - **FAIL:** read the failures. Either the system is wrong (raise a defect), or the expectation is wrong. Only the person who owns the requirement changes an expectation. If it is a defect that must stay for now, such as a legacy defect during a migration, a named person can record it in the [known-issues ledger](MANIFEST.md#known-issues-ledger-cmtkknown-issuesyaml) instead of changing the case.
+   - **PASS WITH KNOWN ISSUES:** every failure is one a named person accepted, and everything else passed. Those cases still fail: the report lists each with who accepted it. The exit code is 4.
    - **INCOMPLETE:** some cases were skipped or could not run, or you ran only some cases with `--only`. The report says why for each one. A skipped POST, for example, needs step 6.
    - **NO EVIDENCE:** nothing could be checked. The line after the verdict says why: no cases yet, or the system did not answer.
 
@@ -47,7 +50,7 @@ Follow these steps in order. Each one says what to do, what you should see, and 
    cmtk signoff run
    ```
 
-   It shows the verdict, then asks for your name, role and decision. It only works in a terminal, typed by a person, and it will not sign a report with no evidence. It records a fingerprint of the evidence, so `cmtk status` says "no longer counts" if anything in the folder changes, and running again clears the signature.
+   It shows the verdict, then asks for your name, role and decision. It refuses to run in a pipe or a CI job, and it will not sign a report with no evidence. That check stops accidents and agents that follow the rules, not a determined script. Where a signature must be binding, require a reviewed commit for `SIGNOFF.json`, as [TEST-PLAN.md](TEST-PLAN.md#what-the-terminal-check-does-and-does-not-stop) says. It records a fingerprint of the evidence, so `cmtk status` says "no longer counts" if anything in the folder changes, and running again clears the signature.
 
 ## Part 2: compare a migrated system with the old one
 
@@ -59,13 +62,14 @@ Follow these steps in order. Each one says what to do, what you should see, and 
 
    - `--assembly` reads a .NET assembly without running it, through REA (`npm install --global rea-agents`, which needs Node.js 22.19 or later). Give only the system's own assemblies, not `System.*` or NuGet packages.
    - `--config` reads `Web.config`, `App.config` or `appsettings.json`. Only the server and database of a connection string are copied, never a user name or password.
+   - `--routes-from` reads controllers' `[Route]` attributes from C# files or a folder. REA gives an attribute's length and sha256 but not its value, so real routes come from the source, and that sha256 proves the source matches the build. Without it, a controller with an attribute says so; only one with no attribute keeps a guess from its name. For saved output, give `rea inspect-managed-artifact <dll> --json` to `--rea-json` too.
    - `--har` reads a recording; `--topology` reads modernize's `analysis/<system>/topology.json`.
 
    Give the assembly and its settings in the same call, so a database context is matched to its connection string. `cmtk/discovery/BOUNDARIES.md` lists each boundary, where it was found, and which adapter covers it. For each **uncovered** kind, either write an adapter and list the kind under its `covers:` (see [ADAPTERS.md](ADAPTERS.md)), or have a person record why it is out of scope. Run `cmtk discover` again after adding a source: it adds to the inventory.
 
 2. **Start both systems,** for example the legacy one on `http://localhost:5001` and the new one on `http://localhost:5002`.
 
-3. **Make sure `cmtk.yaml` names both** under `targets:` as `legacy` and `candidate`. With a new project, `cmtk init --legacy <url> --candidate <url>` does this.
+3. **Make sure `cmtk.yaml` names both** under `targets:` as `legacy` and `candidate`. With a new project, `cmtk init --legacy <url> --candidate <url>` does this. If the new system has only part of what legacy has so far, list what each one offers, such as `surfaces: [catalog]`: see [One manifest or two](MANIFEST.md#one-manifest-or-two).
 
 4. **Add cases.** The cases from Part 1 work as they are. You can also record real use of the legacy system:
    1. In the browser, open the developer tools, use the old system, then export the traffic from the Network tab with Export HAR.
@@ -74,6 +78,12 @@ Follow these steps in order. Each one says what to do, what you should see, and 
    4. If it says it replaced values with REDACTED, open those cases and put in test values, or set up `headers_from_env` for them.
    5. Imported cases replay the browser's headers, including `Accept`. A Web API may then answer in a different format than it gives other callers, such as XML instead of JSON. Keep the header if that is what consumers send; remove it if not.
    6. Give each case you keep a `requirement` and an `expect:` block, then move it into a folder your `cases:` setting reads. Delete the HAR file: it is not evidence, and it can hold secrets.
+
+   **To draft the `expect:` blocks,** run `cmtk import-har recording.har --draft-expect`. Each case gets the status and content type the recording holds, and nothing else: no body text and no other header. A recorded answer is what legacy did, not what the requirement says, so `cmtk run` reports each one as SKIPPED, "draft expectation: review it", until a person confirms it:
+   - run `cmtk review`, and accept, reject or skip each one. There is no accept-all for these: you confirm each on its own;
+   - to confirm is to say this answer is correct. If legacy is wrong here, reject it and write what the requirement says;
+   - a request the browser answered from its own copy is recorded as 304, and a replay gets the page, so its draft allows 200 or 304. Keep the one you mean;
+   - a request with no recorded answer gets no draft: write that `expect:` by hand.
 
 5. **List the contracts consumers rely on** under `contracts:` in `cmtk.yaml`: the OpenAPI JSON and any WSDL, each at its path on both systems. Contracts are locked: every change, even an added operation, shows as a difference until a named person approves it in the drift ledger.
 
@@ -94,17 +104,28 @@ Follow these steps in order. Each one says what to do, what you should see, and 
 
    | Verdict | Meaning |
    |---|---|
-   | PARITY | No differences at all |
+   | PARITY | No differences at all, and every surface the targets list was compared |
    | DRIFT ONLY | Only approved differences |
+   | PARTIAL COMPARISON | No open differences, but only part of the system was compared. The report's Scope section says what was not. This is not parity. The exit code is 4 |
    | NO PARITY | At least one unexplained difference, or a breaking contract change |
    | INCOMPLETE | Something could not be checked; the report says what |
 
 9. **Sign it** with `cmtk signoff compare`.
 
+## Recording a known issue
+
+Use this for a failure that must stay for now, such as a legacy defect a migration has to match. Never change the case to hide it.
+
+1. **Copy what fails** from the Failures table in `cmtk/evidence/run/REPORT.md`: the `check`, `expected` and `actual` of each failure of that case. The ledger refuses an item with no `actual`, except `check: body`, which may give `expected` instead.
+2. **Add the entry to `cmtk/known-issues.yaml`** yourself, with your name, as in [MANIFEST.md](MANIFEST.md#known-issues-ledger-cmtkknown-issuesyaml). An agent can propose it instead, with `cmtk_propose`; you then accept it in `cmtk review`, which adds your name.
+3. **Run `cmtk run`.** You should see PASS WITH KNOWN ISSUES, and `FAIL (known issue <id>)` beside that case. If you still see FAIL, read the failures: one is not in the entry.
+4. **When the defect is fixed,** the report lists the entry under "No longer failing". Remove it, so that a later return of the failure is reported as new.
+
 ## When something goes wrong
 
 | You see | Do this |
 |---|---|
+| `accepted_by must name a person, not an agent` | Only a person accepts a known issue. Run `cmtk review`, or add the entry yourself, with your name |
 | `cmtk: cmtk.yaml does not exist` | Run the command from the project folder, or pass `--manifest <path>` |
 | `ECONNREFUSED` in a case | The system is not running at that address. Start it, or correct `base_url` |
 | `the environment variable … is not set` | Set it in this terminal (step 4 of Part 1) |
@@ -114,4 +135,6 @@ Follow these steps in order. Each one says what to do, what you should see, and 
 | `leads outside the project folder through a link` | `evidence` (or a case file) points through a link to another folder. Use a folder inside the project |
 | `npm` fails with "Cannot find module … npm-cli.js" (Windows) | Your `npm` command points at a missing install. Run Node's own copy: `& 'C:\Program Files\nodejs\npm.cmd' ci` |
 | `git pull` fails with "unable to write file … Permission denied" (Windows) | Run it again as `git -c core.fscache=false -c core.preloadindex=false pull` |
-| `has no base_url, so HTTP cases cannot run on it` | That target is reached through an adapter only. Give the case the adapter's `surface:`, or use a manifest whose cases suit that target |
+| `has no base_url, so HTTP cases cannot run on it` | That target is reached through an adapter only. List what it offers with `surfaces:`, give the case the adapter's `surface:`, or use a manifest whose cases suit that target |
+| `not comparable: candidate has no http surface` | Not a fault: that case cannot be compared until the candidate has the surface. The report's Scope section counts these |
+| `not run: candidate has no http surface` | `cmtk run` on a target that lacks that case's surface. The case stays unchecked on that target, so the verdict is INCOMPLETE |

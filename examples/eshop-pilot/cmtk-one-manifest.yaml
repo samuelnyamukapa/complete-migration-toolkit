@@ -1,0 +1,36 @@
+# eShop pilot, both parts in one manifest (#42).
+#
+# Legacy is reached over HTTP and through the catalog adapter. CatalogCore is a class library with no web host
+# yet, so only through the adapter. Each target lists what it offers:
+#   cmtk run --manifest cmtk-one-manifest.yaml
+#       HTTP cases on legacy, against the stories. Catalog cases are left out: they have no expect.
+#   cmtk compare --manifest cmtk-one-manifest.yaml
+#       Catalog cases on both. HTTP cases read "not comparable", and the verdict is PARTIAL COMPARISON
+#       at best, never PARITY.
+system: eshop
+
+targets:
+  legacy:
+    base_url: http://localhost:53190
+    probe: probe/bin/Release/net472/CatalogProbe.exe   # legacy eShopLegacyMVC.dll
+    surfaces: [http, catalog]
+  candidate:
+    probe: probe/bin/Release/net8.0/CatalogProbe.exe   # CatalogCore
+    surfaces: [catalog]
+
+default_target: legacy
+reference: legacy
+candidate: candidate
+match: exact
+compare_headers: [content-type]
+
+cases: [cmtk/cases/legacy/*.yaml, cmtk/cases/catalogcore/*.yaml]
+compare_only_surfaces: [catalog]   # these cases have no expect: they exist to be compared
+drift: cmtk/drift-catalogcore.yaml
+evidence: cmtk/evidence-0.6/one-manifest
+
+allow_unsafe_methods: false   # read-only: GET, HEAD and OPTIONS only
+headers_from_env: {}          # eShop has no login
+timeout_s: 120                # the first request compiles the site
+adapters:
+  catalog: { command: node, args: [adapters/catalog/index.mjs], timeout_s: 60 }

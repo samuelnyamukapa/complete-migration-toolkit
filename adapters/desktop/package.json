@@ -1,0 +1,7 @@
+{
+  "name": "cmtk-adapter-desktop",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Runs a recorded script against a desktop app, reading the screen through Windows UI Automation. On other systems only a stub app runs.",
+  "type": "module"
+}

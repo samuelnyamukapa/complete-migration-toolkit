@@ -14,6 +14,8 @@ You need Node.js 22.5 or later. You also need the `cmtk` command, which you can 
 - with the plugin installed, it is in the plugin's `server` folder (ask the agent for the exact commands: it gets them from `cmtk_commands_for_person`);
 - from a clone of the toolkit, run `npm install`, `npm run build`, then `npm link -w packages/cli`.
 
+After the first release there is a third way: `npx cmtk`, with nothing to install first.
+
 The commands below are written as `cmtk`.
 
 ## 1. Set up the project
@@ -133,7 +135,10 @@ The exit code tells the pipeline the verdict:
 - `0`: PASS;
 - `1`: FAIL;
 - `2`: INCOMPLETE or NO EVIDENCE;
-- `3`: a settings problem.
+- `3`: a settings problem;
+- `4`: PASS WITH KNOWN ISSUES: nothing new failed, but a named person accepted some failures, and they still fail. `cmtk compare` gives 4 too, for PARTIAL COMPARISON.
+
+Exit code 4 stops a pipeline until you decide it should not. To let a known issue through, say so in the pipeline. PowerShell: `cmtk run --accepted-only; if ($LASTEXITCODE -notin 0,4) { exit $LASTEXITCODE }`. bash: `cmtk run --accepted-only || [ $? -eq 4 ]`.
 
 Drafts never run in CI until a person accepts them; the report says how many were left out. Sign-off stays with a person, at a keyboard, after reading the report.
 

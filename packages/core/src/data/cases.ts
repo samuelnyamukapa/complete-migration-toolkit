@@ -9,6 +9,7 @@ import { casesToYaml } from "../har.js";
 import { inside, ManifestError } from "../manifest.js";
 import type { Before, Case, Manifest } from "../types.js";
 import { dataFolder, loadRecipe, type Recipe, type RecipeField } from "./recipe.js";
+import { soapHeaders } from "./xsd.js";
 
 export interface CasesOptions {
     /** The request path, such as /api/items. Default: the operation's path for an OpenAPI recipe. */
@@ -80,6 +81,9 @@ export function writeCases(m: Manifest, id: string, o: CasesOptions = {}): { fil
     if (!reqPath || !reqPath.startsWith("/") || reqPath.startsWith("//")) throw new ManifestError("Give the request path with --path /api/..., a path and never a host.");
     const method = (o.method ?? op?.[1] ?? "POST").toUpperCase();
     const encoding = o.encoding ?? "json";
+    const isXml = recipe.source.format === "xsd";
+    if (isXml && encoding === "form") throw new ManifestError(`Recipe ${id} makes XML documents, which aren't sent as a form.`);
+    const soapRows = isXml && recipe.soap;
     const which = o.rows ?? "all";
     const names = new Set(recipe.rows.map((r) => r.name));
     for (const n of [...(o.onlyRows ?? []), ...(o.exceptRows ?? [])]) if (!names.has(n)) throw new ManifestError(`There is no row called ${n} in recipe ${id}.`);
@@ -101,7 +105,7 @@ export function writeCases(m: Manifest, id: string, o: CasesOptions = {}): { fil
     for (const [i, row] of recipe.rows.entries()) {
         if (which !== "all" && row.expect_valid !== (which === "valid")) continue;
         if ((only && !only.has(row.name)) || except.has(row.name)) continue;
-        const rowFile = path.join(rowsDir, `${row.name}.json`);
+        const rowFile = path.join(rowsDir, `${row.name}${!isXml ? ".json" : soapRows ? ".soap.xml" : ".xml"}`);
         const value = made.get(row.name)?.value;
         const hasBody = value !== undefined;
         if (hasBody && !fs.existsSync(rowFile)) throw new ManifestError(`Row ${row.name} has no file: run \`cmtk data make ${id}\` again.`);
@@ -111,15 +115,18 @@ export function writeCases(m: Manifest, id: string, o: CasesOptions = {}): { fil
         }
         const query = made.get(row.name)?.query;
         const qs = query && Object.keys(query).length ? `?${new URLSearchParams(query).toString()}` : "";
-        const status = row.expect_valid ? ok : bad;
+        // A row whose only oracle is a person is never asserted automatically, whatever status was given.
+        const status = row.oracle === "human" ? undefined : row.expect_valid ? ok : bad;
         if (status === undefined) withoutExpect++;
         const rel = path.relative(m.root, rowFile).split(path.sep).join("/");
         const notes = [
             `From recipe ${id}, row ${row.name} (${row.technique}): ${row.coverage_item}. The schema says the body is ${row.expect_valid ? "valid" : `invalid (${row.invalid_because?.path} ${row.invalid_because?.keyword})`}; the oracle is ${row.oracle}.`,
             encoding === "form" ? "Sent as a browser posts a form (application/x-www-form-urlencoded), from the row's fields." : "",
+            soapRows ? `Sent in a SOAP ${recipe.soap!.version} envelope.` : "",
             o.before ? `Before it, ${o.before.get} is read for ${Object.keys(o.before.take ?? {}).join(", ") || "its cookies"}; the values taken are never written to evidence.` : "",
-            status === undefined ? "No documented status for this answer, so no expect: a person adds one."
-                : given(status, row.expect_valid ? documented.ok : documented.bad) ? `The expected status ${status} was given on the command line, not read from a document: the reviewer confirms it against the requirement.` : "",
+            row.oracle === "human" ? "Only a person can say what this row should get, so it has no expect, and none is added automatically." : "",
+            status === undefined && row.oracle !== "human" ? "No documented status for this answer, so no expect: a person adds one."
+                : status !== undefined && given(status, row.expect_valid ? documented.ok : documented.bad) ? `The expected status ${status} was given on the command line, not read from a document: the reviewer confirms it against the requirement.` : "",
             !SAFE.has(method) ? "This request changes data: it runs only with allow_unsafe_methods: true in the settings and --allow-unsafe on the run, against disposable test data." : "",
         ].filter(Boolean);
         cases.push({
@@ -128,7 +135,7 @@ export function writeCases(m: Manifest, id: string, o: CasesOptions = {}): { fil
             ...(requirement?.length ? { requirement: requirement.length === 1 ? requirement[0] : [...requirement] } : {}),
             request: {
                 method, path: reqPath + qs,
-                ...(o.headers ? { headers: o.headers } : {}),
+                ...(o.headers || isXml ? { headers: { ...(soapRows ? soapHeaders(recipe.soap!) : isXml ? { "Content-Type": "application/xml; charset=utf-8" } : {}), ...(o.headers ?? {}) } } : {}),
                 ...(hasBody ? (encoding === "form" ? { body_form: rel } : { body_file: rel }) : {}),
                 ...(o.before ? { before: structuredClone(o.before) } : {}),
             } as Case["request"],

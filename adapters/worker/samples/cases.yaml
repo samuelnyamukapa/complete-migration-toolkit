@@ -1,0 +1,17 @@
+# Samples the conformance kit (`cmtk adapter check worker`) replays twice, against the sample worker.
+# Build first: dotnet build -c Release adapters/worker, and the same for adapters/worker/sample-worker.
+check_target:
+  test_area: adapters/worker/test-area
+  input_folder: check/in
+  output_folder: check/out
+  start: dotnet adapters/worker/sample-worker/bin/Release/net8.0/sample-worker.dll
+  finish: input-gone
+cases:
+  - id: WORKER-001
+    name: a dropped file is processed
+    surface: worker
+    request: { method: POST, path: /hello.txt, body: "hello\nworld\n" }
+  - id: WORKER-002
+    name: a read only observes
+    surface: worker
+    request: { method: GET, path: /outputs }

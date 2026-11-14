@@ -1,0 +1,276 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/samuelnyamukapa/complete-migration-toolkit/main/schemas/shadow-report.schema.json",
+  "title": "REPORT.json from cmtk shadow",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "tool",
+    "mode",
+    "system",
+    "date",
+    "verdict",
+    "targets",
+    "sources",
+    "capture",
+    "replay",
+    "endpoints",
+    "values",
+    "capture_only",
+    "unused_drift",
+    "suggested_scrubs",
+    "settings",
+    "reason",
+    "next"
+  ],
+  "properties": {
+    "tool": {
+      "const": "cmtk"
+    },
+    "mode": {
+      "const": "shadow"
+    },
+    "system": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string"
+    },
+    "verdict": {
+      "enum": [
+        "NO UNEXPLAINED DIFFERENCES",
+        "UNEXPLAINED DIFFERENCES",
+        "INCOMPLETE",
+        "NO EVIDENCE"
+      ]
+    },
+    "targets": {
+      "type": "object"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "File names only, never a path."
+    },
+    "capture": {
+      "type": "object",
+      "required": [
+        "lines",
+        "unreadable",
+        "dropped",
+        "dropped_total",
+        "filtered",
+        "sampled_out",
+        "over_limit",
+        "kept",
+        "redacted_requests",
+        "redactions",
+        "credential_headers_stripped",
+        "sample",
+        "seed",
+        "max",
+        "rate_per_second"
+      ],
+      "properties": {
+        "dropped": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "redactions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "lines": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "kept": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dropped_total": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "replay": {
+      "type": "object",
+      "required": [
+        "sent",
+        "matched",
+        "drift",
+        "different",
+        "errors",
+        "not_sent",
+        "truncated"
+      ],
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "endpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "endpoint",
+          "requests",
+          "matched",
+          "drift",
+          "unexplained",
+          "errors",
+          "differences"
+        ],
+        "properties": {
+          "endpoint": {
+            "type": "string"
+          },
+          "differences": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "where",
+                "requests",
+                "first_request",
+                "reference",
+                "candidate"
+              ],
+              "properties": {
+                "where": {
+                  "type": "string"
+                },
+                "drift": {
+                  "type": "string"
+                },
+                "requests": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "first_request": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "reference": {
+                  "type": "string"
+                },
+                "candidate": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "values": {
+      "enum": [
+        "withheld",
+        "redacted"
+      ]
+    },
+    "capture_only": {
+      "type": "boolean"
+    },
+    "unused_drift": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "suggested_scrubs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "where",
+          "cases",
+          "why"
+        ],
+        "properties": {
+          "where": {
+            "type": "string"
+          },
+          "cases": {
+            "type": "integer"
+          },
+          "why": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "required": [
+        "manifest",
+        "manifest_sha256",
+        "match",
+        "overrides",
+        "scrub",
+        "drift_file",
+        "drift_entries"
+      ],
+      "properties": {
+        "manifest": {
+          "type": "string"
+        },
+        "manifest_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "match": {
+          "enum": [
+            "exact",
+            "semantic",
+            "contract",
+            "journey",
+            "structure",
+            "visual"
+          ]
+        },
+        "overrides": {
+          "type": "array"
+        },
+        "scrub": {
+          "type": "object"
+        },
+        "drift_file": {
+          "type": "string"
+        },
+        "drift_entries": {
+          "type": "integer"
+        },
+        "known_issues_file": {
+          "type": "string"
+        },
+        "known_issues_entries": {
+          "type": "integer"
+        }
+      }
+    },
+    "scrub_fired": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "reason": {
+      "type": "string"
+    },
+    "next": {
+      "type": "string"
+    }
+  }
+}

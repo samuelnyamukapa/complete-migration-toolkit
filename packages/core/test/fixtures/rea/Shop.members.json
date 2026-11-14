@@ -1,0 +1,1115 @@
+{
+ "recorded": {
+  "tool": "rea-agents 6.8.0",
+  "command": "rea inspect-managed-members Shop.dll --json",
+  "note": "cut down to the fields cmtk reads"
+ },
+ "subject": {
+  "name": "Shop.dll"
+ },
+ "normalized_result": {
+  "signature_resolution": "type-names-v1",
+  "coverage": {
+   "state": "complete"
+  },
+  "types": [
+   {
+    "token": "0x02000001",
+    "namespace": "",
+    "name": "<Module>",
+    "full_name": "<Module>",
+    "flags": 0,
+    "name_sha256": "661e2a35b65a2b3589b611990539b665b90be4b0325cd258a7d6a62c7d58f5dc"
+   },
+   {
+    "token": "0x02000002",
+    "namespace": "Shop.Models",
+    "name": "Item",
+    "full_name": "Shop.Models.Item",
+    "flags": 1048577,
+    "name_sha256": "4dcd891df792377f9da6043b10a84105c94b06ac4c3651ff9c1dc264ba12c6f2"
+   },
+   {
+    "token": "0x02000003",
+    "namespace": "Shop.Services",
+    "name": "ICatalogService",
+    "full_name": "Shop.Services.ICatalogService",
+    "flags": 161,
+    "name_sha256": "433f3a1d8aed9ebe4c0ac4c98e98f59b0f6b739334474ab7a2b905e6f06177e3"
+   },
+   {
+    "token": "0x02000004",
+    "namespace": "Shop.Services",
+    "name": "CatalogService",
+    "full_name": "Shop.Services.CatalogService",
+    "flags": 1048577,
+    "name_sha256": "b9d69fce202c7d72c1408109f652b352997b7caa81f670bf3207cdac683b505d"
+   },
+   {
+    "token": "0x02000005",
+    "namespace": "Shop.Controllers",
+    "name": "HomeController",
+    "full_name": "Shop.Controllers.HomeController",
+    "flags": 1048577,
+    "name_sha256": "cdafad8d2921f17d2005894e869cbeb242aaca75facaaef2d6c4584397ddf290"
+   },
+   {
+    "token": "0x02000006",
+    "namespace": "Shop.Controllers",
+    "name": "PicController",
+    "full_name": "Shop.Controllers.PicController",
+    "flags": 1048577,
+    "name_sha256": "be8b60f959af99bfd475376ca0b28151510fbda00e80d2a188bab7decabf473a"
+   },
+   {
+    "token": "0x02000007",
+    "namespace": "Shop.Controllers",
+    "name": "OrdersController",
+    "full_name": "Shop.Controllers.OrdersController",
+    "flags": 1048577,
+    "name_sha256": "1f872aabe58d43e4d1ef838f3b451ec32485cd9ac6da97f401baec50b6cef233"
+   },
+   {
+    "token": "0x02000008",
+    "namespace": "Shop.Api",
+    "name": "BrandsController",
+    "full_name": "Shop.Api.BrandsController",
+    "flags": 1048577,
+    "name_sha256": "2ddc36668ff21133da11274f429d3e8cdd907fb7f26ffa7183632524715849e0"
+   },
+   {
+    "token": "0x02000009",
+    "namespace": "System.Web.Mvc",
+    "name": "Controller",
+    "full_name": "System.Web.Mvc.Controller",
+    "flags": 1048705,
+    "name_sha256": "52f3d380201c94cba3e996c22d6a14d6c81ff5432be4dad2c4c6059662571004"
+   },
+   {
+    "token": "0x0200000a",
+    "namespace": "System.Web.Mvc",
+    "name": "RouteAttribute",
+    "full_name": "System.Web.Mvc.RouteAttribute",
+    "flags": 1048833,
+    "name_sha256": "ecc18f521b292c64a03505a46484b855e3741f80aa4c93b28da9009ea9edda15"
+   },
+   {
+    "token": "0x0200000b",
+    "namespace": "System.Web.Mvc",
+    "name": "RoutePrefixAttribute",
+    "full_name": "System.Web.Mvc.RoutePrefixAttribute",
+    "flags": 1048833,
+    "name_sha256": "84f6de280bed0fe4968dc22c9d8371917d62b1d246d58f5dc5df2de13ca9183d"
+   },
+   {
+    "token": "0x0200000c",
+    "namespace": "System.Web.Http",
+    "name": "ApiController",
+    "full_name": "System.Web.Http.ApiController",
+    "flags": 1048705,
+    "name_sha256": "22f371e202310268fdd0a114e56dca53911b3ca94fd91a2d258c103b6fa5d314"
+   },
+   {
+    "token": "0x0200000d",
+    "namespace": "System.Web.Http",
+    "name": "RouteAttribute",
+    "full_name": "System.Web.Http.RouteAttribute",
+    "flags": 1048833,
+    "name_sha256": "1574140bb2192d2f647f41ae6b0dd29ad954f00c03491f215d40b9f83e465554"
+   }
+  ],
+  "fields": [
+   {
+    "token": "0x04000001",
+    "declaring_type": "Shop.Models.Item",
+    "name": "<Id>k__BackingField",
+    "flags": 1,
+    "signature": {
+     "kind": "field",
+     "parse_status": "decoded",
+     "calling_convention": "field",
+     "field_type": "i4",
+     "raw_sha256": "557c754d26e2667287367a856ea5fcd584f35ab796d24a6a875d1648a4637d23",
+     "resolved_sha256": "557c754d26e2667287367a856ea5fcd584f35ab796d24a6a875d1648a4637d23"
+    }
+   },
+   {
+    "token": "0x04000002",
+    "declaring_type": "Shop.Models.Item",
+    "name": "<Name>k__BackingField",
+    "flags": 1,
+    "signature": {
+     "kind": "field",
+     "parse_status": "decoded",
+     "calling_convention": "field",
+     "field_type": "string",
+     "raw_sha256": "89c0c2d74467289c8bf954f4cde47f4f794bcf8e6ee65e19cd0b275e47aca3ec",
+     "resolved_sha256": "89c0c2d74467289c8bf954f4cde47f4f794bcf8e6ee65e19cd0b275e47aca3ec"
+    }
+   },
+   {
+    "token": "0x04000003",
+    "declaring_type": "Shop.Models.Item",
+    "name": "Price",
+    "flags": 6,
+    "signature": {
+     "kind": "field",
+     "parse_status": "decoded",
+     "calling_convention": "field",
+     "field_type": "valuetype:5",
+     "raw_sha256": "70e25a41a6ad2750ce486919c29177f4b0f8b296f65a0a4a1dfe327c2546c49d",
+     "resolved_sha256": "4740e0f7a86fdfb95bfb32b3d01f5c80bc837337f81051dd7e86e8401d8f7eb8"
+    }
+   },
+   {
+    "token": "0x04000004",
+    "declaring_type": "System.Web.Mvc.RouteAttribute",
+    "name": "<Template>k__BackingField",
+    "flags": 1,
+    "signature": {
+     "kind": "field",
+     "parse_status": "decoded",
+     "calling_convention": "field",
+     "field_type": "string",
+     "raw_sha256": "89c0c2d74467289c8bf954f4cde47f4f794bcf8e6ee65e19cd0b275e47aca3ec",
+     "resolved_sha256": "89c0c2d74467289c8bf954f4cde47f4f794bcf8e6ee65e19cd0b275e47aca3ec"
+    }
+   },
+   {
+    "token": "0x04000005",
+    "declaring_type": "System.Web.Mvc.RouteAttribute",
+    "name": "<Name>k__BackingField",
+    "flags": 1,
+    "signature": {
+     "kind": "field",
+     "parse_status": "decoded",
+     "calling_convention": "field",
+     "field_type": "string",
+     "raw_sha256": "89c0c2d74467289c8bf954f4cde47f4f794bcf8e6ee65e19cd0b275e47aca3ec",
+     "resolved_sha256": "89c0c2d74467289c8bf954f4cde47f4f794bcf8e6ee65e19cd0b275e47aca3ec"
+    }
+   },
+   {
+    "token": "0x04000006",
+    "declaring_type": "System.Web.Mvc.RouteAttribute",
+    "name": "<Order>k__BackingField",
+    "flags": 1,
+    "signature": {
+     "kind": "field",
+     "parse_status": "decoded",
+     "calling_convention": "field",
+     "field_type": "i4",
+     "raw_sha256": "557c754d26e2667287367a856ea5fcd584f35ab796d24a6a875d1648a4637d23",
+     "resolved_sha256": "557c754d26e2667287367a856ea5fcd584f35ab796d24a6a875d1648a4637d23"
+    }
+   },
+   {
+    "token": "0x04000007",
+    "declaring_type": "System.Web.Mvc.RoutePrefixAttribute",
+    "name": "<Prefix>k__BackingField",
+    "flags": 1,
+    "signature": {
+     "kind": "field",
+     "parse_status": "decoded",
+     "calling_convention": "field",
+     "field_type": "string",
+     "raw_sha256": "89c0c2d74467289c8bf954f4cde47f4f794bcf8e6ee65e19cd0b275e47aca3ec",
+     "resolved_sha256": "89c0c2d74467289c8bf954f4cde47f4f794bcf8e6ee65e19cd0b275e47aca3ec"
+    }
+   },
+   {
+    "token": "0x04000008",
+    "declaring_type": "System.Web.Http.RouteAttribute",
+    "name": "<Template>k__BackingField",
+    "flags": 1,
+    "signature": {
+     "kind": "field",
+     "parse_status": "decoded",
+     "calling_convention": "field",
+     "field_type": "string",
+     "raw_sha256": "89c0c2d74467289c8bf954f4cde47f4f794bcf8e6ee65e19cd0b275e47aca3ec",
+     "resolved_sha256": "89c0c2d74467289c8bf954f4cde47f4f794bcf8e6ee65e19cd0b275e47aca3ec"
+    }
+   },
+   {
+    "token": "0x04000009",
+    "declaring_type": "System.Web.Http.RouteAttribute",
+    "name": "<Name>k__BackingField",
+    "flags": 1,
+    "signature": {
+     "kind": "field",
+     "parse_status": "decoded",
+     "calling_convention": "field",
+     "field_type": "string",
+     "raw_sha256": "89c0c2d74467289c8bf954f4cde47f4f794bcf8e6ee65e19cd0b275e47aca3ec",
+     "resolved_sha256": "89c0c2d74467289c8bf954f4cde47f4f794bcf8e6ee65e19cd0b275e47aca3ec"
+    }
+   }
+  ],
+  "methods": [
+   {
+    "token": "0x06000001",
+    "declaring_type": "Shop.Models.Item",
+    "name": ".ctor",
+    "flags": 6278,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "void",
+     "parameter_types": [],
+     "raw_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df",
+     "resolved_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df"
+    }
+   },
+   {
+    "token": "0x06000002",
+    "declaring_type": "Shop.Models.Item",
+    "name": "get_Id",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "i4",
+     "parameter_types": [],
+     "raw_sha256": "19e1bd1daf2ae492b895802f55c905ef2d25aea509c6010868e218adb408c010",
+     "resolved_sha256": "19e1bd1daf2ae492b895802f55c905ef2d25aea509c6010868e218adb408c010"
+    }
+   },
+   {
+    "token": "0x06000003",
+    "declaring_type": "Shop.Models.Item",
+    "name": "set_Id",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "void",
+     "parameter_types": [
+      "i4"
+     ],
+     "raw_sha256": "c889396c66b535112cb33472b6ecf61ad5f09860a1ea642fb8c31a4ed004296a",
+     "resolved_sha256": "c889396c66b535112cb33472b6ecf61ad5f09860a1ea642fb8c31a4ed004296a"
+    }
+   },
+   {
+    "token": "0x06000004",
+    "declaring_type": "Shop.Models.Item",
+    "name": "get_Name",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "string",
+     "parameter_types": [],
+     "raw_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f",
+     "resolved_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f"
+    }
+   },
+   {
+    "token": "0x06000005",
+    "declaring_type": "Shop.Models.Item",
+    "name": "set_Name",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "void",
+     "parameter_types": [
+      "string"
+     ],
+     "raw_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005",
+     "resolved_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005"
+    }
+   },
+   {
+    "token": "0x06000006",
+    "declaring_type": "Shop.Services.ICatalogService",
+    "name": "FindItem",
+    "flags": 1478,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "class:8",
+     "parameter_types": [
+      "i4"
+     ],
+     "raw_sha256": "ea84b2ac09c45ab04e925f57bb0c327ea328a6d4bf9351ed5b96bc60d92e1d16",
+     "resolved_sha256": "d3ae8bf850f63f223842a81b6da9006520e7c49f36ccd19014c43b0025a15dee"
+    }
+   },
+   {
+    "token": "0x06000007",
+    "declaring_type": "Shop.Services.ICatalogService",
+    "name": "Search",
+    "flags": 1478,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 2,
+     "return_type": "class:41<class:8>",
+     "parameter_types": [
+      "string",
+      "i4"
+     ],
+     "raw_sha256": "4d904147ce6f75aaf4f6aa499a942d7459d1e77fde38f71550cae79f6e61ea16",
+     "resolved_sha256": "540cd8cc1111848e0f686dc10196c02d76ff916b6e7e7c735f5a0cb47e1f2543"
+    }
+   },
+   {
+    "token": "0x06000008",
+    "declaring_type": "Shop.Services.ICatalogService",
+    "name": "Remove",
+    "flags": 1478,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "void",
+     "parameter_types": [
+      "class:8"
+     ],
+     "raw_sha256": "c99b30029ee342b87cc96ddf66f546ef567e3a8d3f66b8d319ffe07d9f3f4c82",
+     "resolved_sha256": "5a584d7a6ce305b17dafc1309cf16dea7c373b6b658be6fa40b44b95e42f2d0a"
+    }
+   },
+   {
+    "token": "0x06000009",
+    "declaring_type": "Shop.Services.CatalogService",
+    "name": ".ctor",
+    "flags": 6278,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "void",
+     "parameter_types": [],
+     "raw_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df",
+     "resolved_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df"
+    }
+   },
+   {
+    "token": "0x0600000a",
+    "declaring_type": "Shop.Services.CatalogService",
+    "name": "FindItem",
+    "flags": 486,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "class:8",
+     "parameter_types": [
+      "i4"
+     ],
+     "raw_sha256": "ea84b2ac09c45ab04e925f57bb0c327ea328a6d4bf9351ed5b96bc60d92e1d16",
+     "resolved_sha256": "d3ae8bf850f63f223842a81b6da9006520e7c49f36ccd19014c43b0025a15dee"
+    }
+   },
+   {
+    "token": "0x0600000b",
+    "declaring_type": "Shop.Services.CatalogService",
+    "name": "Search",
+    "flags": 486,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 2,
+     "return_type": "class:41<class:8>",
+     "parameter_types": [
+      "string",
+      "i4"
+     ],
+     "raw_sha256": "4d904147ce6f75aaf4f6aa499a942d7459d1e77fde38f71550cae79f6e61ea16",
+     "resolved_sha256": "540cd8cc1111848e0f686dc10196c02d76ff916b6e7e7c735f5a0cb47e1f2543"
+    }
+   },
+   {
+    "token": "0x0600000c",
+    "declaring_type": "Shop.Services.CatalogService",
+    "name": "Remove",
+    "flags": 486,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "void",
+     "parameter_types": [
+      "class:8"
+     ],
+     "raw_sha256": "c99b30029ee342b87cc96ddf66f546ef567e3a8d3f66b8d319ffe07d9f3f4c82",
+     "resolved_sha256": "5a584d7a6ce305b17dafc1309cf16dea7c373b6b658be6fa40b44b95e42f2d0a"
+    }
+   },
+   {
+    "token": "0x0600000d",
+    "declaring_type": "Shop.Services.CatalogService",
+    "name": "Helper",
+    "flags": 129,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "class:8",
+     "parameter_types": [
+      "i4"
+     ],
+     "raw_sha256": "ea84b2ac09c45ab04e925f57bb0c327ea328a6d4bf9351ed5b96bc60d92e1d16",
+     "resolved_sha256": "d3ae8bf850f63f223842a81b6da9006520e7c49f36ccd19014c43b0025a15dee"
+    }
+   },
+   {
+    "token": "0x0600000e",
+    "declaring_type": "Shop.Services.CatalogService",
+    "name": "Audit",
+    "flags": 131,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "void",
+     "parameter_types": [],
+     "raw_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df",
+     "resolved_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df"
+    }
+   },
+   {
+    "token": "0x0600000f",
+    "declaring_type": "Shop.Controllers.HomeController",
+    "name": ".ctor",
+    "flags": 6278,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "void",
+     "parameter_types": [],
+     "raw_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df",
+     "resolved_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df"
+    }
+   },
+   {
+    "token": "0x06000010",
+    "declaring_type": "Shop.Controllers.HomeController",
+    "name": "Index",
+    "flags": 134,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "string",
+     "parameter_types": [],
+     "raw_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f",
+     "resolved_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f"
+    }
+   },
+   {
+    "token": "0x06000011",
+    "declaring_type": "Shop.Controllers.PicController",
+    "name": ".ctor",
+    "flags": 6278,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "void",
+     "parameter_types": [],
+     "raw_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df",
+     "resolved_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df"
+    }
+   },
+   {
+    "token": "0x06000012",
+    "declaring_type": "Shop.Controllers.PicController",
+    "name": "Get",
+    "flags": 134,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "string",
+     "parameter_types": [
+      "i4"
+     ],
+     "raw_sha256": "292ebb73f33aa5f0ebde2efbde8ce5cdaccd306af26f55dff747703e0c57404b",
+     "resolved_sha256": "292ebb73f33aa5f0ebde2efbde8ce5cdaccd306af26f55dff747703e0c57404b"
+    }
+   },
+   {
+    "token": "0x06000013",
+    "declaring_type": "Shop.Controllers.OrdersController",
+    "name": ".ctor",
+    "flags": 6278,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "void",
+     "parameter_types": [],
+     "raw_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df",
+     "resolved_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df"
+    }
+   },
+   {
+    "token": "0x06000014",
+    "declaring_type": "Shop.Controllers.OrdersController",
+    "name": "Lines",
+    "flags": 134,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "string",
+     "parameter_types": [
+      "i4"
+     ],
+     "raw_sha256": "292ebb73f33aa5f0ebde2efbde8ce5cdaccd306af26f55dff747703e0c57404b",
+     "resolved_sha256": "292ebb73f33aa5f0ebde2efbde8ce5cdaccd306af26f55dff747703e0c57404b"
+    }
+   },
+   {
+    "token": "0x06000015",
+    "declaring_type": "Shop.Controllers.OrdersController",
+    "name": "Recent",
+    "flags": 134,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "string",
+     "parameter_types": [],
+     "raw_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f",
+     "resolved_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f"
+    }
+   },
+   {
+    "token": "0x06000016",
+    "declaring_type": "Shop.Api.BrandsController",
+    "name": ".ctor",
+    "flags": 6278,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "void",
+     "parameter_types": [],
+     "raw_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df",
+     "resolved_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df"
+    }
+   },
+   {
+    "token": "0x06000017",
+    "declaring_type": "Shop.Api.BrandsController",
+    "name": "Get",
+    "flags": 134,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "string",
+     "parameter_types": [],
+     "raw_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f",
+     "resolved_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f"
+    }
+   },
+   {
+    "token": "0x06000018",
+    "declaring_type": "System.Web.Mvc.Controller",
+    "name": ".ctor",
+    "flags": 6276,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "void",
+     "parameter_types": [],
+     "raw_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df",
+     "resolved_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df"
+    }
+   },
+   {
+    "token": "0x06000019",
+    "declaring_type": "System.Web.Mvc.RouteAttribute",
+    "name": ".ctor",
+    "flags": 6278,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "void",
+     "parameter_types": [
+      "string"
+     ],
+     "raw_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005",
+     "resolved_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005"
+    }
+   },
+   {
+    "token": "0x0600001a",
+    "declaring_type": "System.Web.Mvc.RouteAttribute",
+    "name": "get_Template",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "string",
+     "parameter_types": [],
+     "raw_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f",
+     "resolved_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f"
+    }
+   },
+   {
+    "token": "0x0600001b",
+    "declaring_type": "System.Web.Mvc.RouteAttribute",
+    "name": "set_Template",
+    "flags": 2177,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "void",
+     "parameter_types": [
+      "string"
+     ],
+     "raw_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005",
+     "resolved_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005"
+    }
+   },
+   {
+    "token": "0x0600001c",
+    "declaring_type": "System.Web.Mvc.RouteAttribute",
+    "name": "get_Name",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "string",
+     "parameter_types": [],
+     "raw_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f",
+     "resolved_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f"
+    }
+   },
+   {
+    "token": "0x0600001d",
+    "declaring_type": "System.Web.Mvc.RouteAttribute",
+    "name": "set_Name",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "void",
+     "parameter_types": [
+      "string"
+     ],
+     "raw_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005",
+     "resolved_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005"
+    }
+   },
+   {
+    "token": "0x0600001e",
+    "declaring_type": "System.Web.Mvc.RouteAttribute",
+    "name": "get_Order",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "i4",
+     "parameter_types": [],
+     "raw_sha256": "19e1bd1daf2ae492b895802f55c905ef2d25aea509c6010868e218adb408c010",
+     "resolved_sha256": "19e1bd1daf2ae492b895802f55c905ef2d25aea509c6010868e218adb408c010"
+    }
+   },
+   {
+    "token": "0x0600001f",
+    "declaring_type": "System.Web.Mvc.RouteAttribute",
+    "name": "set_Order",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "void",
+     "parameter_types": [
+      "i4"
+     ],
+     "raw_sha256": "c889396c66b535112cb33472b6ecf61ad5f09860a1ea642fb8c31a4ed004296a",
+     "resolved_sha256": "c889396c66b535112cb33472b6ecf61ad5f09860a1ea642fb8c31a4ed004296a"
+    }
+   },
+   {
+    "token": "0x06000020",
+    "declaring_type": "System.Web.Mvc.RoutePrefixAttribute",
+    "name": ".ctor",
+    "flags": 6278,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "void",
+     "parameter_types": [
+      "string"
+     ],
+     "raw_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005",
+     "resolved_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005"
+    }
+   },
+   {
+    "token": "0x06000021",
+    "declaring_type": "System.Web.Mvc.RoutePrefixAttribute",
+    "name": "get_Prefix",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "string",
+     "parameter_types": [],
+     "raw_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f",
+     "resolved_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f"
+    }
+   },
+   {
+    "token": "0x06000022",
+    "declaring_type": "System.Web.Mvc.RoutePrefixAttribute",
+    "name": "set_Prefix",
+    "flags": 2177,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "void",
+     "parameter_types": [
+      "string"
+     ],
+     "raw_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005",
+     "resolved_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005"
+    }
+   },
+   {
+    "token": "0x06000023",
+    "declaring_type": "System.Web.Http.ApiController",
+    "name": ".ctor",
+    "flags": 6276,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "void",
+     "parameter_types": [],
+     "raw_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df",
+     "resolved_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df"
+    }
+   },
+   {
+    "token": "0x06000024",
+    "declaring_type": "System.Web.Http.RouteAttribute",
+    "name": ".ctor",
+    "flags": 6278,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "void",
+     "parameter_types": [
+      "string"
+     ],
+     "raw_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005",
+     "resolved_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005"
+    }
+   },
+   {
+    "token": "0x06000025",
+    "declaring_type": "System.Web.Http.RouteAttribute",
+    "name": "get_Template",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "string",
+     "parameter_types": [],
+     "raw_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f",
+     "resolved_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f"
+    }
+   },
+   {
+    "token": "0x06000026",
+    "declaring_type": "System.Web.Http.RouteAttribute",
+    "name": "set_Template",
+    "flags": 2177,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "void",
+     "parameter_types": [
+      "string"
+     ],
+     "raw_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005",
+     "resolved_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005"
+    }
+   },
+   {
+    "token": "0x06000027",
+    "declaring_type": "System.Web.Http.RouteAttribute",
+    "name": "get_Name",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "string",
+     "parameter_types": [],
+     "raw_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f",
+     "resolved_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f"
+    }
+   },
+   {
+    "token": "0x06000028",
+    "declaring_type": "System.Web.Http.RouteAttribute",
+    "name": "set_Name",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "void",
+     "parameter_types": [
+      "string"
+     ],
+     "raw_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005",
+     "resolved_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005"
+    }
+   }
+  ],
+  "member_refs": [
+   {
+    "parent_token": "0x01000002",
+    "parent_name": "System.Runtime.CompilerServices.CompilerGeneratedAttribute",
+    "name": ".ctor"
+   },
+   {
+    "parent_token": "0x01000003",
+    "parent_name": "System.Object",
+    "name": ".ctor"
+   },
+   {
+    "parent_token": "0x01000004",
+    "parent_name": "System.Diagnostics.DebuggerBrowsableAttribute",
+    "name": ".ctor"
+   },
+   {
+    "parent_token": "0x1b000001",
+    "parent_name": "System.Collections.Generic.List`1",
+    "name": ".ctor"
+   },
+   {
+    "parent_token": "0x01000007",
+    "parent_name": "System.AttributeUsageAttribute",
+    "name": ".ctor"
+   },
+   {
+    "parent_token": "0x01000009",
+    "parent_name": "System.Attribute",
+    "name": ".ctor"
+   },
+   {
+    "parent_token": "0x0100000b",
+    "parent_name": "System.Runtime.CompilerServices.RuntimeCompatibilityAttribute",
+    "name": ".ctor"
+   }
+  ],
+  "call_edges": [
+   {
+    "caller_token": "0x06000001",
+    "caller": "Shop.Models.Item..ctor",
+    "target_declaring_type": "System.Object",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x06000009",
+    "caller": "Shop.Services.CatalogService..ctor",
+    "target_declaring_type": "System.Object",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x0600000a",
+    "caller": "Shop.Services.CatalogService.FindItem",
+    "target_declaring_type": "Shop.Services.CatalogService",
+    "target_name": "Helper"
+   },
+   {
+    "caller_token": "0x0600000b",
+    "caller": "Shop.Services.CatalogService.Search",
+    "target_declaring_type": "System.Collections.Generic.List`1",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x0600000d",
+    "caller": "Shop.Services.CatalogService.Helper",
+    "target_declaring_type": "Shop.Models.Item",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x0600000f",
+    "caller": "Shop.Controllers.HomeController..ctor",
+    "target_declaring_type": "System.Web.Mvc.Controller",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x06000011",
+    "caller": "Shop.Controllers.PicController..ctor",
+    "target_declaring_type": "System.Web.Mvc.Controller",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x06000013",
+    "caller": "Shop.Controllers.OrdersController..ctor",
+    "target_declaring_type": "System.Web.Mvc.Controller",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x06000016",
+    "caller": "Shop.Api.BrandsController..ctor",
+    "target_declaring_type": "System.Web.Http.ApiController",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x06000018",
+    "caller": "System.Web.Mvc.Controller..ctor",
+    "target_declaring_type": "System.Object",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x06000019",
+    "caller": "System.Web.Mvc.RouteAttribute..ctor",
+    "target_declaring_type": "System.Attribute",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x06000019",
+    "caller": "System.Web.Mvc.RouteAttribute..ctor",
+    "target_declaring_type": "System.Web.Mvc.RouteAttribute",
+    "target_name": "set_Template"
+   },
+   {
+    "caller_token": "0x06000020",
+    "caller": "System.Web.Mvc.RoutePrefixAttribute..ctor",
+    "target_declaring_type": "System.Attribute",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x06000020",
+    "caller": "System.Web.Mvc.RoutePrefixAttribute..ctor",
+    "target_declaring_type": "System.Web.Mvc.RoutePrefixAttribute",
+    "target_name": "set_Prefix"
+   },
+   {
+    "caller_token": "0x06000023",
+    "caller": "System.Web.Http.ApiController..ctor",
+    "target_declaring_type": "System.Object",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x06000024",
+    "caller": "System.Web.Http.RouteAttribute..ctor",
+    "target_declaring_type": "System.Attribute",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x06000024",
+    "caller": "System.Web.Http.RouteAttribute..ctor",
+    "target_declaring_type": "System.Web.Http.RouteAttribute",
+    "target_name": "set_Template"
+   }
+  ]
+ }
+}

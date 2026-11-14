@@ -1,0 +1,48 @@
+# A nightly comparison with a trend report. Copy to .github/workflows/nightly.yml in your own project.
+# It needs cmtk on npm, so it works after the toolkit's first release. Pin the version you tested with.
+name: nightly comparison
+
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      CMTK_TOKEN: ${{ secrets.CMTK_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Restore the dated runs
+        uses: actions/cache/restore@v4
+        with:
+          path: cmtk/evidence/history
+          key: cmtk-history-${{ github.run_id }}
+          restore-keys: cmtk-history-
+      - name: Compare, and read the trend
+        id: nightly
+        shell: bash
+        run: |
+          set +e
+          npx --yes -p complete-migration-toolkit cmtk compare --dated
+          code=$?
+          npx --yes -p complete-migration-toolkit cmtk trend --mode compare
+          cat cmtk/evidence/trend/compare/TREND.md >> "$GITHUB_STEP_SUMMARY"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+      - name: Save the dated runs
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: cmtk/evidence/history
+          key: cmtk-history-${{ github.run_id }}
+      - name: End with the comparison's exit code
+        shell: bash
+        run: exit "${{ steps.nightly.outputs.code }}"

@@ -105,6 +105,24 @@ test("adapter new writes a working adapter that passes the conformance kit", asy
     assert.equal((await cmtk(dir, "adapter", "new", "http")).status, 3, "http is built in");
 });
 
+test("adapter check --target gives the adapter that target's settings, and refuses a target that is not there", async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cmtk-cli-kit-target-"));
+    assert.equal((await cmtk(dir, "adapter", "new", "mailbox")).status, 0);
+    assert.equal((await cmtk(dir, "adapter", "check", "mailbox", "--target", "legacy")).status, 3, "no cmtk.yaml");
+    const f = path.join(dir, "adapters/mailbox/index.mjs");
+    // This adapter only works with the setting, as an adapter that reads a capture server does.
+    fs.writeFileSync(f, fs.readFileSync(f, "utf8").replace("async function run(testCase, target, headers) {", 'async function run(testCase, target, headers) {\n    if (target.capture_url !== "http://capture.test") return { error: "no capture_url" };'));
+    fs.writeFileSync(path.join(dir, "cmtk.yaml"), "system: shop\ntargets:\n  legacy: { capture_url: http://capture.test }\n");
+    let r = await cmtk(dir, "adapter", "check", "mailbox");
+    assert.equal(r.status, 1, "the dummy target has no settings");
+    assert.match(r.stdout, /no capture_url/);
+    r = await cmtk(dir, "adapter", "check", "mailbox", "--target", "legacy");
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    r = await cmtk(dir, "adapter", "check", "mailbox", "--target", "nope");
+    assert.equal(r.status, 3);
+    assert.match(r.stderr, /--target nope is not in the targets/);
+});
+
 test("tester commands: init for one system, check, probe, review only at a keyboard, defects", async () => {
     const sys = await server('{"name":"shop"}');
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cmtk-cli-tester-"));

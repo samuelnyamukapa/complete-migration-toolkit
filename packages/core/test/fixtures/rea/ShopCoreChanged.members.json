@@ -1,0 +1,367 @@
+{
+ "recorded": {
+  "tool": "rea-agents 6.8.0",
+  "command": "rea inspect-managed-members ShopCoreChanged.dll --json",
+  "note": "cut down to the fields cmtk reads"
+ },
+ "subject": {
+  "name": "ShopCoreChanged.dll"
+ },
+ "normalized_result": {
+  "signature_resolution": "type-names-v1",
+  "coverage": {
+   "state": "complete"
+  },
+  "types": [
+   {
+    "token": "0x02000001",
+    "namespace": "",
+    "name": "<Module>",
+    "full_name": "<Module>",
+    "flags": 0,
+    "name_sha256": "661e2a35b65a2b3589b611990539b665b90be4b0325cd258a7d6a62c7d58f5dc"
+   },
+   {
+    "token": "0x02000002",
+    "namespace": "ShopCore.Models",
+    "name": "Item",
+    "full_name": "ShopCore.Models.Item",
+    "flags": 1048577,
+    "name_sha256": "1fe91f5af2ea161b9d48720af47273a49edc6b7ba25d000f296678690f9eb74f"
+   },
+   {
+    "token": "0x02000003",
+    "namespace": "ShopCore.Services",
+    "name": "ICatalogService",
+    "full_name": "ShopCore.Services.ICatalogService",
+    "flags": 161,
+    "name_sha256": "b5293cedfe897ee0f8f24a3379039199be6d55fd03391bf05fba4943276af6cf"
+   },
+   {
+    "token": "0x02000004",
+    "namespace": "ShopCore.Services",
+    "name": "CatalogService",
+    "full_name": "ShopCore.Services.CatalogService",
+    "flags": 1048577,
+    "name_sha256": "184b2a9757fbbadd8e43ef191552bc4ca8bf22933907f718bc3a3e8821defbe2"
+   }
+  ],
+  "fields": [
+   {
+    "token": "0x04000001",
+    "declaring_type": "ShopCore.Models.Item",
+    "name": "<Id>k__BackingField",
+    "flags": 1,
+    "signature": {
+     "kind": "field",
+     "parse_status": "decoded",
+     "calling_convention": "field",
+     "field_type": "i4",
+     "raw_sha256": "557c754d26e2667287367a856ea5fcd584f35ab796d24a6a875d1648a4637d23",
+     "resolved_sha256": "557c754d26e2667287367a856ea5fcd584f35ab796d24a6a875d1648a4637d23"
+    }
+   },
+   {
+    "token": "0x04000002",
+    "declaring_type": "ShopCore.Models.Item",
+    "name": "<Name>k__BackingField",
+    "flags": 1,
+    "signature": {
+     "kind": "field",
+     "parse_status": "decoded",
+     "calling_convention": "field",
+     "field_type": "string",
+     "raw_sha256": "89c0c2d74467289c8bf954f4cde47f4f794bcf8e6ee65e19cd0b275e47aca3ec",
+     "resolved_sha256": "89c0c2d74467289c8bf954f4cde47f4f794bcf8e6ee65e19cd0b275e47aca3ec"
+    }
+   },
+   {
+    "token": "0x04000003",
+    "declaring_type": "ShopCore.Models.Item",
+    "name": "Price",
+    "flags": 6,
+    "signature": {
+     "kind": "field",
+     "parse_status": "decoded",
+     "calling_convention": "field",
+     "field_type": "valuetype:5",
+     "raw_sha256": "70e25a41a6ad2750ce486919c29177f4b0f8b296f65a0a4a1dfe327c2546c49d",
+     "resolved_sha256": "4740e0f7a86fdfb95bfb32b3d01f5c80bc837337f81051dd7e86e8401d8f7eb8"
+    }
+   }
+  ],
+  "methods": [
+   {
+    "token": "0x06000001",
+    "declaring_type": "ShopCore.Models.Item",
+    "name": ".ctor",
+    "flags": 6278,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "void",
+     "parameter_types": [],
+     "raw_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df",
+     "resolved_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df"
+    }
+   },
+   {
+    "token": "0x06000002",
+    "declaring_type": "ShopCore.Models.Item",
+    "name": "get_Id",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "i4",
+     "parameter_types": [],
+     "raw_sha256": "19e1bd1daf2ae492b895802f55c905ef2d25aea509c6010868e218adb408c010",
+     "resolved_sha256": "19e1bd1daf2ae492b895802f55c905ef2d25aea509c6010868e218adb408c010"
+    }
+   },
+   {
+    "token": "0x06000003",
+    "declaring_type": "ShopCore.Models.Item",
+    "name": "set_Id",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "void",
+     "parameter_types": [
+      "i4"
+     ],
+     "raw_sha256": "c889396c66b535112cb33472b6ecf61ad5f09860a1ea642fb8c31a4ed004296a",
+     "resolved_sha256": "c889396c66b535112cb33472b6ecf61ad5f09860a1ea642fb8c31a4ed004296a"
+    }
+   },
+   {
+    "token": "0x06000004",
+    "declaring_type": "ShopCore.Models.Item",
+    "name": "get_Name",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "string",
+     "parameter_types": [],
+     "raw_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f",
+     "resolved_sha256": "df29f5ab2554df47369dafce3bc8630f16eabc3f72c21bbd24c5e73c286f650f"
+    }
+   },
+   {
+    "token": "0x06000005",
+    "declaring_type": "ShopCore.Models.Item",
+    "name": "set_Name",
+    "flags": 2182,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "void",
+     "parameter_types": [
+      "string"
+     ],
+     "raw_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005",
+     "resolved_sha256": "c65dc7d303e94729245de0fa4db4b80ac687af6d0bb38c5c884bc9c11f01e005"
+    }
+   },
+   {
+    "token": "0x06000006",
+    "declaring_type": "ShopCore.Services.ICatalogService",
+    "name": "FindItem",
+    "flags": 1478,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "class:8",
+     "parameter_types": [
+      "i8"
+     ],
+     "raw_sha256": "71c3f9ec4fc900c6bba3791035bf84fa2ed74f68973a7e7c87ccbbe4fb430d9b",
+     "resolved_sha256": "080fc9029b06cbf70427d814b260c022078664dbf63e7ac9779adaabe8c195e0"
+    }
+   },
+   {
+    "token": "0x06000007",
+    "declaring_type": "ShopCore.Services.ICatalogService",
+    "name": "Search",
+    "flags": 1478,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 2,
+     "return_type": "class:29<class:8>",
+     "parameter_types": [
+      "string",
+      "i4"
+     ],
+     "raw_sha256": "751363485c3019546e09b2c500ff322955418dea96cecff08623b4294517700b",
+     "resolved_sha256": "a5146f7ae795746798c51bf797f815d3379583dd0325019f3ec9841168642b97"
+    }
+   },
+   {
+    "token": "0x06000008",
+    "declaring_type": "ShopCore.Services.ICatalogService",
+    "name": "Count",
+    "flags": 1478,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "i4",
+     "parameter_types": [],
+     "raw_sha256": "19e1bd1daf2ae492b895802f55c905ef2d25aea509c6010868e218adb408c010",
+     "resolved_sha256": "19e1bd1daf2ae492b895802f55c905ef2d25aea509c6010868e218adb408c010"
+    }
+   },
+   {
+    "token": "0x06000009",
+    "declaring_type": "ShopCore.Services.CatalogService",
+    "name": ".ctor",
+    "flags": 6278,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "void",
+     "parameter_types": [],
+     "raw_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df",
+     "resolved_sha256": "0c9373898d2dd1c85902837a9e979cb88484e2548a008ad2b2176cc7119d09df"
+    }
+   },
+   {
+    "token": "0x0600000a",
+    "declaring_type": "ShopCore.Services.CatalogService",
+    "name": "FindItem",
+    "flags": 486,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 1,
+     "return_type": "class:8",
+     "parameter_types": [
+      "i8"
+     ],
+     "raw_sha256": "71c3f9ec4fc900c6bba3791035bf84fa2ed74f68973a7e7c87ccbbe4fb430d9b",
+     "resolved_sha256": "080fc9029b06cbf70427d814b260c022078664dbf63e7ac9779adaabe8c195e0"
+    }
+   },
+   {
+    "token": "0x0600000b",
+    "declaring_type": "ShopCore.Services.CatalogService",
+    "name": "Search",
+    "flags": 486,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 2,
+     "return_type": "class:29<class:8>",
+     "parameter_types": [
+      "string",
+      "i4"
+     ],
+     "raw_sha256": "751363485c3019546e09b2c500ff322955418dea96cecff08623b4294517700b",
+     "resolved_sha256": "a5146f7ae795746798c51bf797f815d3379583dd0325019f3ec9841168642b97"
+    }
+   },
+   {
+    "token": "0x0600000c",
+    "declaring_type": "ShopCore.Services.CatalogService",
+    "name": "Count",
+    "flags": 486,
+    "signature": {
+     "kind": "method",
+     "parse_status": "decoded",
+     "calling_convention": "default has-this",
+     "generic_parameter_count": null,
+     "parameter_count": 0,
+     "return_type": "i4",
+     "parameter_types": [],
+     "raw_sha256": "19e1bd1daf2ae492b895802f55c905ef2d25aea509c6010868e218adb408c010",
+     "resolved_sha256": "19e1bd1daf2ae492b895802f55c905ef2d25aea509c6010868e218adb408c010"
+    }
+   }
+  ],
+  "member_refs": [
+   {
+    "parent_token": "0x01000002",
+    "parent_name": "System.Runtime.CompilerServices.CompilerGeneratedAttribute",
+    "name": ".ctor"
+   },
+   {
+    "parent_token": "0x01000003",
+    "parent_name": "System.Object",
+    "name": ".ctor"
+   },
+   {
+    "parent_token": "0x01000004",
+    "parent_name": "System.Diagnostics.DebuggerBrowsableAttribute",
+    "name": ".ctor"
+   },
+   {
+    "parent_token": "0x1b000001",
+    "parent_name": "System.Collections.Generic.List`1",
+    "name": ".ctor"
+   },
+   {
+    "parent_token": "0x01000008",
+    "parent_name": "System.Runtime.CompilerServices.RuntimeCompatibilityAttribute",
+    "name": ".ctor"
+   }
+  ],
+  "call_edges": [
+   {
+    "caller_token": "0x06000001",
+    "caller": "ShopCore.Models.Item..ctor",
+    "target_declaring_type": "System.Object",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x06000009",
+    "caller": "ShopCore.Services.CatalogService..ctor",
+    "target_declaring_type": "System.Object",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x0600000a",
+    "caller": "ShopCore.Services.CatalogService.FindItem",
+    "target_declaring_type": "ShopCore.Models.Item",
+    "target_name": ".ctor"
+   },
+   {
+    "caller_token": "0x0600000b",
+    "caller": "ShopCore.Services.CatalogService.Search",
+    "target_declaring_type": "System.Collections.Generic.List`1",
+    "target_name": ".ctor"
+   }
+  ]
+ }
+}

@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/samuelnyamukapa/complete-migration-toolkit/main/schemas/adapter-request.schema.json",
+  "title": "One line the toolkit writes to an adapter's standard input",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "describe"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "op"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "run"
+        },
+        "case": {
+          "type": "object",
+          "required": [
+            "id",
+            "request"
+          ]
+        },
+        "target": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Credentials from headers_from_env. Use them, and never report them."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "case",
+        "target",
+        "headers"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "reset"
+        },
+        "target": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "target"
+      ]
+    }
+  ]
+}
